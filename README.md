@@ -33,6 +33,10 @@ release `.exe`, packages it together with `assets/` and uploads it as the artifa
 - Runs on pushes to `main`, on tags `v*`, and manually via
   *Actions → Build Windows → Run workflow*.
 - Commits containing `[skip ci]` do not trigger it (see [AGENTS.md](AGENTS.md)).
+- Build results are cached. The cache is saved right after building and testing, even when a
+  step failed or the run was cancelled, so the next run continues instead of starting over.
+  Only the very first run (or one after a Rust update) compiles everything.
+- A new run of the same branch waits for a running one instead of cancelling it.
 
 ## Gameplay
 

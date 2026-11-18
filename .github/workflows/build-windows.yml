@@ -6,24 +6,60 @@ on:
     branches: [main]
     tags: ["v*"]
 
+# Never run two Windows builds of the same ref side by side. A new run waits
+# instead of cancelling the running one, so that one can still save its cache.
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dtolnay/rust-toolchain@stable
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Test
-        run: cargo test --release
+      # Restore the newest matching cache: same toolchain and Cargo.lock first,
+      # otherwise the newest one of the same toolchain.
+      - name: Restore build cache
+        id: cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: windows-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            windows-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-
+            windows-${{ steps.toolchain.outputs.cachekey }}-
 
       - name: Build
-        run: cargo build --release
+        run: cargo build --release --locked
+
+      - name: Test
+        run: cargo test --release --locked
+
+      # Save right away – also when a step failed or the run was cancelled –
+      # so the next run continues where this one stopped instead of starting over.
+      # Every run saves under its own key; GitHub evicts old caches on its own.
+      - name: Save build cache
+        if: always() && steps.cache.outcome == 'success'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ steps.cache.outputs.cache-primary-key }}
 
       - name: Package
         shell: pwsh
@@ -34,7 +70,7 @@ jobs:
           Copy-Item -Recurse assets "$out/assets"
           Get-ChildItem -Recurse -Filter .gitkeep $out | Remove-Item
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: SpareChangeForSpirits-windows
           path: dist/SpareChangeForSpirits
