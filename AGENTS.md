@@ -2,6 +2,8 @@
 
 ## Commits
 
+- Always commit and push directly to `main`. No feature branches, no pull requests.
+  Fetch `origin/main` before pushing and rebase onto it if it moved; never force-push.
 - Commit with the repository's existing author identity
   (`git log -1 --format='%an <%ae>'`). Use it for both author and committer, e.g.
   `git -c user.name="<name>" -c user.email="<email>" commit ...`.
