@@ -1,0 +1,41 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test
+        run: cargo test --release
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $out = "dist/SpareChangeForSpirits"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          Copy-Item target/release/spare_change_for_spirits.exe "$out/SpareChangeForSpirits.exe"
+          Copy-Item -Recurse assets "$out/assets"
+          Get-ChildItem -Recurse -Filter .gitkeep $out | Remove-Item
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpareChangeForSpirits-windows
+          path: dist/SpareChangeForSpirits
+          if-no-files-found: error

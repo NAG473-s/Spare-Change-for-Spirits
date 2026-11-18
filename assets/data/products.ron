@@ -1,0 +1,28 @@
+// Products. price/crate_cost in button units. fade_after = nights until the item fades.
+// Images (optional): assets/sprites/products/<id>.png
+[
+    (id: "rain_jar", name: "Jar of Rain Scent", price: 6, crate_cost: 14, crate_size: 4, fade_after: 3,
+     hints: ["Something that smells of rain …", "I miss the summer thunderstorms."]),
+    (id: "letter_paper", name: "Yellowed Letter Paper", price: 4, crate_cost: 9, crate_size: 5, fade_after: 4,
+     hints: ["I never wrote to her …", "Some words still need to be said."]),
+    (id: "music_box", name: "Little Music Box", price: 18, crate_cost: 30, crate_size: 2, fade_after: 5,
+     hints: ["A melody … she always hummed it.", "Tinkle, tinkle. Like back then, before falling asleep."]),
+    (id: "pocket_watch", name: "Stopped Pocket Watch", price: 22, crate_cost: 36, crate_size: 2, fade_after: 5,
+     hints: ["I have lost my time.", "What time is it? What time was it?"]),
+    (id: "wool_scarf", name: "Wool Scarf", price: 9, crate_cost: 20, crate_size: 3, fade_after: 4,
+     hints: ["I am so cold. For so long now.", "Something soft for my neck …"]),
+    (id: "marbles", name: "Glass Marbles", price: 3, crate_cost: 8, crate_size: 6, fade_after: 4,
+     hints: ["Will you play with me?", "The colourful round ones! With the swirl inside!"]),
+    (id: "tea_tin", name: "Empty Tea Tin", price: 5, crate_cost: 11, crate_size: 4, fade_after: 3,
+     hints: ["The rattle of a tin in the morning …", "The kitchen used to smell of bergamot."]),
+    (id: "faceless_photo", name: "Faceless Photograph", price: 12, crate_cost: 24, crate_size: 3, fade_after: 3,
+     hints: ["I no longer remember what I looked like.", "Was there ever a picture of us?"]),
+    (id: "rusty_key", name: "Rusty Key", price: 8, crate_cost: 16, crate_size: 3, fade_after: 5,
+     hints: ["Somewhere there is still a door for me.", "I am locked out. Out of everything."]),
+    (id: "powder_compact", name: "Silver Powder Compact", price: 16, crate_cost: 28, crate_size: 2, fade_after: 4,
+     hints: ["I must look pretty when he comes.", "A little shine for my cheeks."]),
+    (id: "lavender", name: "Dried Lavender", price: 4, crate_cost: 9, crate_size: 5, fade_after: 2,
+     hints: ["Grandmother's wardrobe always smelled like this.", "Something purple and calming."]),
+    (id: "tin_soldier", name: "Tin Soldier", price: 7, crate_cost: 15, crate_size: 3, fade_after: 5,
+     hints: ["My brother had a whole regiment.", "One was always missing. The drummer."]),
+]

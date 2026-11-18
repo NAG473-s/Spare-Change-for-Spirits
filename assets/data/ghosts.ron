@@ -1,0 +1,32 @@
+// Ghost types.
+// needs: conditions on the atmosphere – AtLeast(Stat, value) / AtMost(Stat, value)
+//        Stat = Light | Warmth | Silence | Reflection. Not met -> the ghost flees.
+// pays_with: allowed coins (Button, Candle, Spoon). Empty/omitted = all.
+// Images (optional): assets/sprites/ghosts/<id>.png
+[
+    (id: "shy", name: "Shy Ghost", color: (0.65, 0.8, 1.0),
+     spawn_weight: 3.0, pay_multiplier: 1.0, patience_secs: 28.0,
+     needs: [AtMost(Light, 3)],
+     wishes: ["letter_paper", "lavender", "faceless_photo", "tea_tin"]),
+    (id: "vain", name: "Vain Ghost", color: (1.0, 0.82, 0.95),
+     spawn_weight: 2.0, pay_multiplier: 1.5, patience_secs: 16.0,
+     needs: [AtLeast(Reflection, 1)],
+     wishes: ["powder_compact", "faceless_photo", "pocket_watch"]),
+    (id: "poltergeist", name: "Poltergeist", color: (0.95, 0.55, 0.45),
+     spawn_weight: 2.0, pay_multiplier: 0.8, patience_secs: 16.0,
+     needs: [],
+     wishes: ["tin_soldier", "rusty_key", "marbles"]),
+    (id: "forgetful", name: "Forgetful Ghost", color: (0.8, 0.8, 0.7),
+     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 36.0,
+     needs: [AtLeast(Silence, 2)],
+     wishes: ["pocket_watch", "rusty_key", "faceless_photo", "rain_jar"]),
+    (id: "child", name: "Child Ghost", color: (0.7, 1.0, 0.78),
+     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 14.0,
+     needs: [AtLeast(Warmth, 2)],
+     wishes: ["marbles", "music_box", "tin_soldier"],
+     pays_with: [Button]),
+    (id: "old_regular", name: "Old Regular", color: (0.9, 0.88, 0.6),
+     spawn_weight: 1.0, pay_multiplier: 1.2, patience_secs: 40.0,
+     needs: [],
+     wishes: ["rain_jar", "wool_scarf", "music_box", "tea_tin"]),
+]

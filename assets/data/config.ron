@@ -1,0 +1,26 @@
+// Balancing values. Restarting the game is enough, no recompiling needed.
+(
+    // Starting money in the drawer (button = 1, candle stub = 5, silver spoon = 25)
+    start_coins: (buttons: 12, candles: 6, spoons: 2),
+    start_reputation: 0,
+
+    // Maximum number of crates the ferryman brings per evening.
+    crates_per_night: 4,
+
+    // Length of one night (00:00–05:00) in real seconds.
+    night_length_secs: 240.0,
+    // Time between new ghosts (min, max) in seconds.
+    spawn_interval_secs: (7.0, 13.0),
+    max_ghosts_in_shop: 6,
+
+    grid_cols: 10,
+    grid_rows: 5,
+
+    nights_in_demo: 5,
+
+    // Atmosphere of the empty shop. Decor is added on top.
+    base_atmosphere: (light: 0, warmth: 0, silence: 1, reflection: 0),
+
+    // Assist mode: shows the change due at the register.
+    show_change_due: false,
+)
