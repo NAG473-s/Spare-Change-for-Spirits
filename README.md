@@ -95,23 +95,28 @@ only wishes for products that exist.
 
 ## Adding images
 
-Until there is an image, the game shows coloured placeholders. Put a PNG with a transparent
-background under the matching name and it is picked up automatically:
+Until there is an image, the game shows coloured placeholders. [docs/ART_PROMPTS.md](docs/ART_PROMPTS.md)
+has a style block and a ready prompt for every image. Prepare each generated image with
 
-| What | Path | Display size |
-|---|---|---|
-| Ghost | `assets/sprites/ghosts/<id>.png` | 40 × 56 |
-| Decor | `assets/sprites/decor/<id>.png` | 52 × 52 |
-| Product | `assets/sprites/products/<id>.png` | 22 × 22 |
-| Door / counter | `assets/sprites/shop/door.png`, `counter.png` | 50 × 110 / 40 × 260 |
+```bash
+python3 tools/prepare_sprite.py path/to/image.png KIND [ID]
+```
 
-`<id>` is the `id` from the corresponding RON file (e.g. `shy.png`, `candle.png`).
-Generate them at 2–4× size; the game scales them down.
+which trims, fits and scales it and writes it to the right place (needs Pillow,
+`pip install -r tools/requirements.txt`):
 
-Tips for consistent AI-generated images:
-- Prepend a fixed style description to every prompt (perspective, palette, light direction, line weight).
-- Afterwards reduce all images to one shared colour palette.
-- **Steam:** AI-generated content must be disclosed in the Steamworks content survey.
+| Kind | Written to | Drawn at | Generate at |
+|---|---|---|---|
+| `ghost` | `assets/sprites/ghosts/<id>.png` | 44 × 66 | 1024 × 1536 |
+| `decor` | `assets/sprites/decor/<id>.png` (keepsakes too) | 52 × 52 | 1024 × 1024 |
+| `product` | `assets/sprites/products/<id>.png` | 24 × 24 | 1024 × 1024 |
+| `door` | `assets/sprites/shop/door.png` | 64 × 96 | 1024 × 1536 |
+| `counter` | `assets/sprites/shop/counter.png` | 48 × 272 | 1024 × 1536 |
+| `floor` | `assets/sprites/shop/floor.png` (one tile) | 62 × 62 | 1024 × 1024 |
+| `background` | `assets/sprites/shop/background.png` | 1280 × 720 | 1536 × 1024 |
+
+`<id>` is the `id` from the corresponding RON file (e.g. `shy`, `candle`).
+**Steam:** AI-generated content must be disclosed in the Steamworks content survey.
 
 ## Next steps (ideas)
 

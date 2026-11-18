@@ -14,7 +14,8 @@ use crate::shop::{ShopLayout, small_font, sprite_for};
 use crate::ui::{GameLog, UiFont};
 
 const SPEED: f32 = 110.0;
-const GHOST_SIZE: Vec2 = Vec2::new(40.0, 56.0);
+/// Drawn size of a ghost (2:3, like the generated portrait images).
+const GHOST_SIZE: Vec2 = Vec2::new(44.0, 66.0);
 
 pub struct GhostPlugin;
 

@@ -15,6 +15,10 @@ use crate::ui::{Action, GameLog, UiFont};
 pub const CELL: f32 = 64.0;
 /// Centre of the grid in world coordinates (the side panel sits on the right).
 const GRID_CENTER: Vec2 = Vec2::new(-200.0, -20.0);
+// Drawn sizes; tools/prepare_sprite.py produces images with these aspect ratios.
+const DOOR_SIZE: Vec2 = Vec2::new(64.0, 96.0);
+const COUNTER_SIZE: Vec2 = Vec2::new(48.0, 272.0);
+const PRODUCT_SIZE: Vec2 = Vec2::new(24.0, 24.0);
 
 pub struct ShopPlugin;
 
@@ -190,19 +194,39 @@ fn spawn_shop(
 ) {
     let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
 
+    // Back wall behind everything (optional image).
+    if asset_exists("sprites/shop/background.png") {
+        commands.spawn((
+            Sprite {
+                image: asset_server.load("sprites/shop/background.png"),
+                custom_size: Some(Vec2::new(1280.0, 720.0)),
+                ..default()
+            },
+            Transform::from_xyz(0.0, 0.0, -10.0),
+            Pickable::IGNORE,
+        ));
+    }
+
+    let has_floor = asset_exists("sprites/shop/floor.png");
     for idx in 0..layout.cells.len() {
-        let checker = if (idx % layout.cols + idx / layout.cols).is_multiple_of(2) {
-            0.13
+        let even = (idx % layout.cols + idx / layout.cols).is_multiple_of(2);
+        let sprite = if has_floor {
+            // A light checker tint keeps the grid readable on a floor texture.
+            let tint = if even { 1.0 } else { 0.88 };
+            Sprite {
+                image: asset_server.load("sprites/shop/floor.png"),
+                custom_size: Some(Vec2::splat(CELL - 2.0)),
+                color: Color::srgb(tint, tint, tint),
+                ..default()
+            }
         } else {
-            0.11
+            let c = if even { 0.13 } else { 0.11 };
+            Sprite::from_color(Color::srgb(c, c, c + 0.03), Vec2::splat(CELL - 2.0))
         };
         commands
             .spawn((
                 GridCell(idx),
-                Sprite::from_color(
-                    Color::srgb(checker, checker, checker + 0.03),
-                    Vec2::splat(CELL - 2.0),
-                ),
+                sprite,
                 Transform::from_translation(layout.cell_pos(idx).extend(0.0)),
                 Pickable::default(),
             ))
@@ -216,7 +240,7 @@ fn spawn_shop(
             &asset_server,
             "sprites/shop/door.png",
             Color::srgb(0.25, 0.18, 0.12),
-            Vec2::new(50.0, 110.0),
+            DOOR_SIZE,
         ),
         Transform::from_translation(door.extend(0.0)),
     ));
@@ -226,7 +250,7 @@ fn spawn_shop(
             &asset_server,
             "sprites/shop/counter.png",
             Color::srgb(0.35, 0.24, 0.15),
-            Vec2::new(40.0, 260.0),
+            COUNTER_SIZE,
         ),
         Transform::from_translation(counter.extend(0.0)),
     ));
@@ -234,7 +258,9 @@ fn spawn_shop(
         Text2d::new("Counter"),
         small_font(&font, 12.0),
         TextColor(Color::srgb(0.8, 0.75, 0.6)),
-        Transform::from_translation((counter + Vec2::new(0.0, 145.0)).extend(1.0)),
+        Transform::from_translation(
+            (counter + Vec2::new(0.0, COUNTER_SIZE.y / 2.0 + 12.0)).extend(1.0),
+        ),
     ));
 
     commands.insert_resource(layout);
@@ -375,7 +401,7 @@ fn sync_cell_visuals(
                 &asset_server,
                 &format!("sprites/products/{p}.png"),
                 Color::srgb(0.85, 0.8, 0.6),
-                Vec2::splat(22.0),
+                PRODUCT_SIZE,
             );
             children.push(
                 commands
