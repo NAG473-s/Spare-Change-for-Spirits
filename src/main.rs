@@ -14,8 +14,10 @@ mod day_cycle;
 mod economy;
 mod ghosts;
 mod inventory;
+mod menu;
 mod register;
 mod rng;
+mod save;
 mod shop;
 mod ui;
 
@@ -57,6 +59,8 @@ fn main() {
             shop::ShopPlugin,
             ghosts::GhostPlugin,
             register::RegisterPlugin,
+            save::SavePlugin,
+            menu::MenuPlugin,
         ))
         .add_systems(Startup, |mut commands: Commands| {
             commands.spawn(Camera2d);

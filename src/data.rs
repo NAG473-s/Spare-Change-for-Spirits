@@ -215,6 +215,20 @@ pub struct Config {
     pub coin_tells_fake: Vec<String>,
 }
 
+/// Tips for the first night, one per situation.
+#[derive(Deserialize, Clone, Debug)]
+pub struct TipsDef {
+    pub order: String,
+    pub shelve: String,
+    pub open: String,
+    pub browse: String,
+    pub whisper: String,
+    pub change: String,
+    pub double_pay: String,
+    pub first_sale: String,
+    pub morning: String,
+}
+
 #[derive(Resource)]
 pub struct GameData {
     pub config: Config,
@@ -222,6 +236,7 @@ pub struct GameData {
     pub ghosts: Vec<GhostDef>,
     pub decor: Vec<DecorDef>,
     pub story: StoryDef,
+    pub tips: TipsDef,
 }
 
 impl GameData {
@@ -233,6 +248,7 @@ impl GameData {
             ghosts: load_ron("data/ghosts.ron"),
             decor: load_ron("data/decor.ron"),
             story: load_ron("data/story.ron"),
+            tips: load_ron("data/tips.ron"),
         };
         data.validate();
         data

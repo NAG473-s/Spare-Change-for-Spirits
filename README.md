@@ -22,7 +22,20 @@ On Linux you need the usual Bevy dependencies
 cargo test
 ```
 
-tests the money logic (paying, change).
+tests the game logic and loads every data file.
+
+The game starts in the main menu. **Esc** pauses (resume, save and quit to menu, tips on/off,
+quit). The game autosaves at the start of every evening and night and at dawn; a save always
+continues at an evening (a night in progress restarts). Saves and settings live in
+`%APPDATA%\SpareChangeForSpirits` (Windows), `~/Library/Application Support/SpareChangeForSpirits`
+(macOS) or `~/.local/share/spare-change-for-spirits` (Linux). Set `SCFS_SAVE_DIR` to use another
+folder, e.g. for test runs:
+
+```bash
+SCFS_SAVE_DIR=/tmp/scfs-test cargo run
+```
+
+During the first night a tips box explains each step (texts in `assets/data/tips.ron`).
 
 ## Windows build
 
@@ -74,10 +87,12 @@ src/
   register.rs    handing over items, payment, change
   economy.rs     coins, purses, paying and change logic (+ tests)
   ui.rs          top bar, side panel per phase, message log, buttons → actions
+  menu.rs        main menu, pause menu, tips box
+  save.rs        saving, loading, new game
   data.rs        loading the RON files
   rng.rs         small random number generator
 assets/
-  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron  ← content and balancing
+  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, tips.ron
   fonts/         Inter (SIL Open Font License, see Inter-LICENSE.txt)
   sprites/       your own images (optional, see below)
 ```
@@ -123,7 +138,7 @@ which trims, fits and scales it and writes it to the right place (needs Pillow,
 - [x] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
 - [x] Forgetful ghost: wants to pay twice – accept or be honest?
 - [x] Edwin: a story across five nights, keepsakes as decor
-- [ ] Main menu, save games
+- [x] Main menu, pause, save games, first-night tips
 - [ ] Sound: shop bell, coins, ticking grandfather clock
 - [ ] Animations (ghost sprite sheets), particles when passing into the light
 - [ ] Localisation (e.g. German)

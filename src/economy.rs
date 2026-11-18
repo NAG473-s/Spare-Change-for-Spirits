@@ -3,7 +3,7 @@
 //! All amounts are counted internally in "button units" (button = 1).
 
 use bevy::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::rng::Rng;
 
@@ -40,7 +40,7 @@ impl Coin {
 }
 
 /// A set of coins – a ghost's purse, the cash drawer, change …
-#[derive(Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[serde(default)]
 pub struct Purse {
     pub buttons: u32,

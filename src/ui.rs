@@ -18,10 +18,10 @@ use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
 use crate::shop::{Keepsakes, ShopLayout, Tool};
 
-const PANEL_WIDTH: f32 = 380.0;
-const BG_PANEL: Color = Color::srgba(0.06, 0.06, 0.1, 0.94);
+pub(crate) const PANEL_WIDTH: f32 = 380.0;
+pub(crate) const BG_PANEL: Color = Color::srgba(0.06, 0.06, 0.1, 0.94);
 const TEXT: Color = Color::srgb(0.88, 0.86, 0.8);
-const TEXT_DIM: Color = Color::srgb(0.6, 0.6, 0.65);
+pub(crate) const TEXT_DIM: Color = Color::srgb(0.6, 0.6, 0.65);
 const ACCENT: Color = Color::srgb(0.95, 0.8, 0.45);
 const BTN: Color = Color::srgb(0.17, 0.16, 0.24);
 const BTN_HOVER: Color = Color::srgb(0.26, 0.24, 0.36);
@@ -39,6 +39,7 @@ impl Plugin for UiPlugin {
             .add_systems(Startup, spawn_ui)
             .add_observer(on_activate)
             .add_systems(OnEnter(Phase::Morning), build_morning_panel)
+            .add_systems(OnEnter(Phase::Menu), clear_for_menu)
             .add_systems(OnEnter(Phase::DemoEnd), build_demo_end_panel)
             .add_systems(
                 Update,
@@ -87,6 +88,12 @@ pub enum Action {
     KeepSecondPayment,
     RefuseSecondPayment,
     NextEvening,
+    NewGame,
+    Continue,
+    Resume,
+    QuitToMenu,
+    QuitGame,
+    ToggleTips,
 }
 
 #[derive(Component, Clone)]
@@ -118,6 +125,10 @@ pub struct GameLog {
 }
 
 impl GameLog {
+    pub fn clear(&mut self) {
+        self.lines.clear();
+    }
+
     pub fn push(&mut self, line: impl Into<String>) {
         let line = line.into();
         info!("{line}");
@@ -232,6 +243,10 @@ fn update_hud(
     drawer: Res<Drawer>,
     mut hud: Single<&mut Text, With<HudText>>,
 ) {
+    if *phase.get() == Phase::Menu {
+        hud.0.clear();
+        return;
+    }
     let time = if *phase.get() == Phase::Night {
         format!(" {}", clock.time_string())
     } else {
@@ -247,6 +262,16 @@ fn update_hud(
         drawer.total(),
         progress.reputation
     );
+}
+
+/// The menu starts from a clean screen: no side panel, no old messages.
+fn clear_for_menu(
+    mut commands: Commands,
+    panel: Single<Entity, With<SidePanel>>,
+    mut log: ResMut<GameLog>,
+) {
+    commands.entity(*panel).despawn_related::<Children>();
+    log.clear();
 }
 
 fn update_log(log: Res<GameLog>, mut text: Single<&mut Text, With<LogText>>) {
@@ -607,6 +632,8 @@ fn build_demo_end_panel(
         ));
     }
     ui.dim("Thanks for playing! Wishlist Spare Change for Spirits on Steam.");
+    ui.spacer();
+    ui.primary("Back to the menu", Action::QuitToMenu);
 }
 
 /// "3× Glass Marbles, 1× Rusty Key" – in order of first appearance.
@@ -636,7 +663,7 @@ pub fn text_font(font: &Handle<Font>, size: f32) -> TextFont {
     }
 }
 
-struct PanelBuilder<'a, 'w, 's> {
+pub(crate) struct PanelBuilder<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
     root: Entity,
     font: &'a UiFont,
@@ -644,7 +671,7 @@ struct PanelBuilder<'a, 'w, 's> {
 
 impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     /// Clears the panel and starts over.
-    fn new(commands: &'a mut Commands<'w, 's>, root: Entity, font: &'a UiFont) -> Self {
+    pub(crate) fn new(commands: &'a mut Commands<'w, 's>, root: Entity, font: &'a UiFont) -> Self {
         commands.entity(root).despawn_related::<Children>();
         Self {
             commands,
@@ -653,11 +680,18 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         }
     }
 
-    fn root(&self) -> Entity {
+    pub(crate) fn root(&self) -> Entity {
         self.root
     }
 
-    fn add_text(&mut self, parent: Entity, text: &str, bold: bool, size: f32, color: Color) {
+    pub(crate) fn add_text(
+        &mut self,
+        parent: Entity,
+        text: &str,
+        bold: bool,
+        size: f32,
+        color: Color,
+    ) {
         let font = if bold {
             &self.font.bold
         } else {
@@ -671,11 +705,11 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         ));
     }
 
-    fn heading(&mut self, text: &str) {
+    pub(crate) fn heading(&mut self, text: &str) {
         self.add_text(self.root, text, true, 20.0, ACCENT);
     }
 
-    fn section(&mut self, text: &str) {
+    pub(crate) fn section(&mut self, text: &str) {
         self.commands.spawn((
             Node {
                 height: px(6),
@@ -686,15 +720,15 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         self.add_text(self.root, text, true, 15.0, TEXT);
     }
 
-    fn text(&mut self, text: &str) {
+    pub(crate) fn text(&mut self, text: &str) {
         self.add_text(self.root, text, false, 14.0, TEXT);
     }
 
-    fn dim(&mut self, text: &str) {
+    pub(crate) fn dim(&mut self, text: &str) {
         self.add_text(self.root, text, false, 13.0, TEXT_DIM);
     }
 
-    fn spacer(&mut self) {
+    pub(crate) fn spacer(&mut self) {
         self.commands.spawn((
             Node {
                 flex_grow: 1.0,
@@ -705,7 +739,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     /// Row in which buttons wrap.
-    fn row(&mut self) -> Entity {
+    pub(crate) fn row(&mut self) -> Entity {
         self.commands
             .spawn((
                 Node {
@@ -719,7 +753,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             .id()
     }
 
-    fn button_in(
+    pub(crate) fn button_in(
         &mut self,
         parent: Entity,
         label: &str,
@@ -735,11 +769,11 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         self.spawn_button(parent, label, action, color, enabled, 12.0);
     }
 
-    fn primary(&mut self, label: &str, action: Action) {
+    pub(crate) fn primary(&mut self, label: &str, action: Action) {
         self.spawn_button(self.root, label, action, BTN_PRIMARY, true, 16.0);
     }
 
-    fn spawn_button(
+    pub(crate) fn spawn_button(
         &mut self,
         parent: Entity,
         label: &str,

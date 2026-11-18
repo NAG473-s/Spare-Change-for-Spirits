@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::data::{Atmosphere, GameData, asset_exists, rgb};
 use crate::day_cycle::Phase;
@@ -41,7 +42,7 @@ impl Plugin for ShopPlugin {
     }
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CellContent {
     pub decor: Option<String>,
     /// Shelves only: which product is displayed there.

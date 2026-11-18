@@ -15,7 +15,8 @@ impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Stock>()
             .init_resource::<CratesOrdered>()
-            .add_systems(OnEnter(Phase::Evening), |mut c: ResMut<CratesOrdered>| {
+            // Reset for the next evening; a loaded save keeps its own count.
+            .add_systems(OnEnter(Phase::Morning), |mut c: ResMut<CratesOrdered>| {
                 c.0 = 0
             })
             .add_systems(Update, handle_orders.run_if(in_state(Phase::Evening)));
@@ -29,6 +30,15 @@ pub struct Stock {
 }
 
 impl Stock {
+    /// All units with their ages, for saving.
+    pub fn units(&self) -> &BTreeMap<String, Vec<u32>> {
+        &self.units
+    }
+
+    pub fn from_units(units: BTreeMap<String, Vec<u32>>) -> Self {
+        Self { units }
+    }
+
     pub fn count(&self, id: &str) -> u32 {
         self.units.get(id).map_or(0, |v| v.len() as u32)
     }

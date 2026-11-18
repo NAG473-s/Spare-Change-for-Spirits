@@ -12,6 +12,7 @@ use crate::ui::{Action, GameLog};
 #[derive(States, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Phase {
     #[default]
+    Menu,
     Evening,
     Night,
     Morning,
@@ -21,6 +22,7 @@ pub enum Phase {
 impl Phase {
     pub fn label(self) -> &'static str {
         match self {
+            Phase::Menu => "Menu",
             Phase::Evening => "Evening",
             Phase::Night => "Open",
             Phase::Morning => "Dawn",
@@ -168,7 +170,7 @@ fn close_at_dawn(
     }
 }
 
-fn start_morning(
+pub fn start_morning(
     data: Res<GameData>,
     mut stock: ResMut<Stock>,
     mut drawer: ResMut<Drawer>,
