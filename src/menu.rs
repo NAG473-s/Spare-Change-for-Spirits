@@ -85,6 +85,14 @@ fn overlay(commands: &mut Commands, dim: f32) -> (Entity, Entity) {
     (layer, panel)
 }
 
+fn sound_label(settings: &Settings) -> &'static str {
+    if settings.sound {
+        "Sound: on"
+    } else {
+        "Sound: off"
+    }
+}
+
 fn tips_label(settings: &Settings) -> &'static str {
     if settings.tips {
         "Tips: on"
@@ -122,6 +130,13 @@ fn build_main_menu(
         ui.primary("New game", Action::NewGame);
     }
     ui.button_in(root, tips_label(&settings), Action::ToggleTips, false, true);
+    ui.button_in(
+        root,
+        sound_label(&settings),
+        Action::ToggleSound,
+        false,
+        true,
+    );
     ui.button_in(root, "Quit", Action::QuitGame, false, true);
 }
 
@@ -163,10 +178,12 @@ fn main_menu_actions(
 
 fn toggle_tips(mut actions: MessageReader<Action>, mut settings: ResMut<Settings>) {
     for action in actions.read() {
-        if *action == Action::ToggleTips {
-            settings.tips = !settings.tips;
-            settings.store();
+        match action {
+            Action::ToggleTips => settings.tips = !settings.tips,
+            Action::ToggleSound => settings.sound = !settings.sound,
+            _ => continue,
         }
+        settings.store();
     }
 }
 
@@ -237,6 +254,13 @@ fn sync_pause(
     };
     ui.button_in(root, quit_label, Action::QuitToMenu, false, true);
     ui.button_in(root, tips_label(&settings), Action::ToggleTips, false, true);
+    ui.button_in(
+        root,
+        sound_label(&settings),
+        Action::ToggleSound,
+        false,
+        true,
+    );
     ui.button_in(root, "Quit game", Action::QuitGame, false, true);
     ui.dim("Press Esc to resume.");
 }

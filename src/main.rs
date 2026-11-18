@@ -9,9 +9,11 @@
 // Bevy systems take many parameters and complex queries by design.
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+mod audio;
 mod data;
 mod day_cycle;
 mod economy;
+mod fx;
 mod ghosts;
 mod inventory;
 mod menu;
@@ -61,6 +63,8 @@ fn main() {
             register::RegisterPlugin,
             save::SavePlugin,
             menu::MenuPlugin,
+            fx::FxPlugin,
+            audio::SoundPlugin,
         ))
         .add_systems(Startup, |mut commands: Commands| {
             commands.spawn(Camera2d);

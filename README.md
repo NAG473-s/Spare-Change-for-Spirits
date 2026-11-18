@@ -88,6 +88,8 @@ src/
   economy.rs     coins, purses, paying and change logic (+ tests)
   ui.rs          top bar, side panel per phase, message log, buttons → actions
   menu.rs        main menu, pause menu, tips box
+  audio.rs       sound effects and music
+  fx.rs          glow, night shade, particles, the Cue message
   save.rs        saving, loading, new game
   data.rs        loading the RON files
   rng.rs         small random number generator
@@ -133,12 +135,24 @@ which trims, fits and scales it and writes it to the right place (needs Pillow,
 `<id>` is the `id` from the corresponding RON file (e.g. `shy`, `candle`).
 **Steam:** AI-generated content must be disclosed in the Steamworks content survey.
 
+## Sound and effects
+
+All sounds are synthesised by `tools/make_sounds.py` (numpy + ffmpeg) into `assets/sounds/*.ogg`:
+shop bell, coins, chime, crash, click, sigh, a music-box waltz for the evening and a night
+ambience loop. They are generated from scratch, so there are no licence questions. To use your own
+recording, replace the file of the same name. Sound can be switched off in the menus.
+
+Visual atmosphere (`src/fx.rs`): candles, lamps and other light-giving decor glow and flicker, the
+shop darkens at night, dust drifts through the air, and particles mark ghosts passing into the
+light and items crashing off shelves. Gameplay triggers sounds and effects through the `Cue` message.
+
 ## Next steps (ideas)
 
 - [x] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
 - [x] Forgetful ghost: wants to pay twice – accept or be honest?
 - [x] Edwin: a story across five nights, keepsakes as decor
 - [x] Main menu, pause, save games, first-night tips
-- [ ] Sound: shop bell, coins, ticking grandfather clock
-- [ ] Animations (ghost sprite sheets), particles when passing into the light
+- [x] Sound: shop bell, coins, chime, music box, night ambience
+- [x] Particles when passing into the light, candle glow, night shade
+- [ ] Ghost animations (sprite sheets)
 - [ ] Localisation (e.g. German)

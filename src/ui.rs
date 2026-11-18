@@ -13,6 +13,7 @@ use bevy::ui_widgets::{Activate, Button};
 use crate::data::GameData;
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
 use crate::economy::{Coin, Drawer};
+use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
@@ -94,6 +95,7 @@ pub enum Action {
     QuitToMenu,
     QuitGame,
     ToggleTips,
+    ToggleSound,
 }
 
 #[derive(Component, Clone)]
@@ -209,9 +211,11 @@ fn on_activate(
     activate: On<Activate>,
     buttons: Query<&ActionButton>,
     mut writer: MessageWriter<Action>,
+    mut cues: MessageWriter<Cue>,
 ) {
     if let Ok(button) = buttons.get(activate.entity) {
         writer.write(button.0.clone());
+        cues.write(Cue::Click);
     }
 }
 

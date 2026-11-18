@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::data::{Atmosphere, GameData, asset_exists, rgb};
 use crate::day_cycle::Phase;
 use crate::economy::Drawer;
+use crate::fx::{GlowTexture, Z_GLOW, glow};
 use crate::inventory::Stock;
 use crate::ui::{Action, GameLog, UiFont};
 
@@ -362,6 +363,7 @@ fn sync_cell_visuals(
     font: Res<UiFont>,
     asset_server: Res<AssetServer>,
     stock: Res<Stock>,
+    glow_texture: Res<GlowTexture>,
     cells: Query<(Entity, &GridCell)>,
 ) {
     for (entity, GridCell(idx)) in &cells {
@@ -392,7 +394,8 @@ fn sync_cell_visuals(
                     TextColor(Color::WHITE),
                     TextLayout::justify(Justify::Center),
                     bevy::text::TextBounds::new_horizontal(CELL - 4.0),
-                    Transform::from_xyz(0.0, -20.0, 3.0),
+                    // Above the night shade and the glow, so labels stay readable.
+                    Transform::from_xyz(0.0, -20.0, Z_GLOW + 0.2),
                     Pickable::IGNORE,
                 ))
                 .id(),
@@ -407,6 +410,14 @@ fn sync_cell_visuals(
             children.push(
                 commands
                     .spawn((icon, Transform::from_xyz(0.0, 6.0, 2.0), Pickable::IGNORE))
+                    .id(),
+            );
+        }
+        if def.effect.light > 0 {
+            let phase = *idx as f32 * 1.7;
+            children.push(
+                commands
+                    .spawn(glow(&glow_texture, def.effect.light, phase))
                     .id(),
             );
         }

@@ -8,6 +8,7 @@ use bevy::prelude::*;
 
 use crate::data::{GameData, GhostDef, rgb};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
+use crate::fx::Cue;
 use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::shop::{ShopLayout, small_font, sprite_for};
@@ -113,6 +114,7 @@ fn spawn_ghosts(
     mut timer: ResMut<SpawnTimer>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
     mut report: ResMut<NightReport>,
     ghosts: Query<(), With<Ghost>>,
 ) {
@@ -173,6 +175,7 @@ fn spawn_ghosts(
         &mut rng,
         visit,
     );
+    cues.write(Cue::GhostEnters);
 }
 
 /// What a newly arriving ghost comes for.
@@ -256,6 +259,7 @@ fn spawn_story_ghost(
     mut rng: ResMut<Rng>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
 ) {
     let story = &data.story;
     let chapter = progress.story_chapter;
@@ -290,6 +294,7 @@ fn spawn_story_ghost(
         &mut rng,
         visit,
     );
+    cues.write(Cue::GhostEnters);
 }
 
 fn ghost_ai(
@@ -302,6 +307,7 @@ fn ghost_ai(
     mut progress: ResMut<Progress>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
     mut rng: ResMut<Rng>,
     mut ghosts: Query<(Entity, &mut Ghost)>,
 ) {
@@ -326,6 +332,9 @@ fn ghost_ai(
                         data.ghosts[g.def].the_cap(),
                         data.product_name(&product)
                     ));
+                    if let Some(cell) = g.browse_cell {
+                        cues.write(Cue::Knock(layout.cell_pos(cell)));
+                    }
                     report.knocked.push(product);
                 }
             }
@@ -352,6 +361,7 @@ fn ghost_ai(
                     queue.remove(entity);
                     progress.reputation -= 1;
                     report.unhappy += 1;
+                    cues.write(Cue::Disappointed);
                 }
             }
             GhostState::Fleeing if g.arrived() => {

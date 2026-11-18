@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use crate::data::{Config, GameData};
 use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse, ghost_payment};
+use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::inventory::Stock;
 use crate::rng::Rng;
@@ -131,6 +132,7 @@ fn serve_front_ghost(
     mut report: ResMut<NightReport>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
 ) {
     for action in actions.read() {
@@ -160,6 +162,7 @@ fn serve_front_ghost(
                     queue.remove(front);
                     progress.reputation -= 1;
                     report.unhappy += 1;
+                    cues.write(Cue::Disappointed);
                     continue;
                 }
                 let base = data.product(product).map_or(1, |p| p.price);
@@ -169,6 +172,7 @@ fn serve_front_ghost(
                 let coins = paid_coins(&purse, counterfeit, &data.config, &mut rng);
                 // Payment goes straight into the drawer – change is taken from there too.
                 drawer.merge(&purse);
+                cues.write(Cue::Paid);
                 ghost.state = GhostState::AtRegister;
                 log.push(format!(
                     "{} places {} on the counter.",
@@ -210,6 +214,7 @@ fn make_change(
     mut keepsakes: ResMut<Keepsakes>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
 ) {
     for action in actions.read() {
@@ -272,10 +277,14 @@ fn make_change(
                 let def = &data.ghosts[ghost.def];
                 let name = def.the_cap();
                 let correct = given == due;
+                if given > 0 {
+                    cues.write(Cue::ChangeGiven);
+                }
 
                 if given < due {
                     report.change_wrong += 1;
                     progress.reputation -= 2;
+                    cues.write(Cue::Disappointed);
                     log.push(format!(
                         "Too little change ({given} instead of {due}). {name} feels cheated."
                     ));
@@ -303,6 +312,7 @@ fn make_change(
                     if progress.story_chapter >= story.chapters.len() {
                         log.push(story.ending.clone());
                         report.redeemed.push(story.name.clone());
+                        cues.write(Cue::Ascend(ghost.pos));
                         ghost.state = GhostState::Ascending;
                         ghost.timer = 0.0;
                     } else {
@@ -320,6 +330,7 @@ fn make_change(
                         amount: sale.price,
                     });
                 } else {
+                    cues.write(Cue::Ascend(ghost.pos));
                     ghost.state = GhostState::Ascending;
                     ghost.timer = 0.0;
                     report.redeemed.push(def.name.clone());
@@ -348,6 +359,7 @@ fn answer_double_pay(
     mut progress: ResMut<Progress>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
 ) {
     for action in actions.read() {
@@ -367,6 +379,7 @@ fn answer_double_pay(
         let name = def.the_cap();
         if keep {
             drawer.merge(&Purse::greedy(question.amount));
+            cues.write(Cue::Paid);
             progress.reputation -= 1;
             report.dishonest += 1;
             ghost.state = GhostState::Leaving;
@@ -376,6 +389,7 @@ fn answer_double_pay(
         } else {
             progress.reputation += 2;
             report.honest += 1;
+            cues.write(Cue::Ascend(ghost.pos));
             report.redeemed.push(def.name.clone());
             ghost.state = GhostState::Ascending;
             ghost.timer = 0.0;

@@ -50,14 +50,20 @@ pub struct SaveGame {
 }
 
 #[derive(Resource, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct Settings {
     /// Show the tips box during the first night.
     pub tips: bool,
+    /// Play music and sound effects.
+    pub sound: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { tips: true }
+        Self {
+            tips: true,
+            sound: true,
+        }
     }
 }
 
@@ -250,7 +256,10 @@ mod tests {
         // SAFETY: only this test sets the variable; other tests do not read it.
         unsafe { std::env::set_var(SAVE_DIR_ENV, &dir) };
         assert_eq!(save_dir(), Some(dir.clone()));
-        let settings = Settings { tips: false };
+        let settings = Settings {
+            tips: false,
+            sound: false,
+        };
         settings.store();
         assert_eq!(Settings::load(), settings);
         let _ = std::fs::remove_dir_all(&dir);
