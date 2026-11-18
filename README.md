@@ -50,6 +50,18 @@ If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost
 door. Served correctly **and** given exact change → the ghost passes into the light and your
 reputation rises. Better reputation = more customers.
 
+Special customers:
+
+- **Poltergeist** – knocks items off the shelf it browses unless the shop is quiet enough
+  (silence ≥ 5), and sometimes pays with a counterfeit coin. Every paid coin is listed with a
+  description at the register; click a suspicious one to inspect it. Doubting a genuine coin costs
+  reputation, and counterfeits left in the drawer turn to dust at dawn.
+- **Forgetful Ghost** – sometimes forgets it has paid and offers to pay again. Keep the money or
+  tell it the truth.
+- **Edwin** – a story ghost who comes once per night with one wish per chapter (`story.ron`).
+  Each fulfilled wish leaves a **keepsake**: free decor that only he can give. An unfulfilled
+  chapter repeats the next night.
+
 ## Project layout
 
 ```
@@ -65,7 +77,7 @@ src/
   data.rs        loading the RON files
   rng.rs         small random number generator
 assets/
-  data/          config.ron, products.ron, ghosts.ron, decor.ron  ← balancing happens here
+  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron  ← content and balancing
   fonts/         Inter (SIL Open Font License, see Inter-LICENSE.txt)
   sprites/       your own images (optional, see below)
 ```
@@ -103,9 +115,9 @@ Tips for consistent AI-generated images:
 
 ## Next steps (ideas)
 
-- [ ] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
-- [ ] Forgetful ghost: wants to pay twice – accept or be honest?
-- [ ] Old Regular: a story across several nights, keepsakes as decor
+- [x] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
+- [x] Forgetful ghost: wants to pay twice – accept or be honest?
+- [x] Edwin: a story across five nights, keepsakes as decor
 - [ ] Main menu, save games
 - [ ] Sound: shop bell, coins, ticking grandfather clock
 - [ ] Animations (ghost sprite sheets), particles when passing into the light

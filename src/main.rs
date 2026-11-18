@@ -46,6 +46,7 @@ fn main() {
         .insert_resource(Progress {
             night: 1,
             reputation: data.config.start_reputation,
+            story_chapter: 0,
         })
         .insert_resource(rng::Rng::from_time())
         .insert_resource(data)

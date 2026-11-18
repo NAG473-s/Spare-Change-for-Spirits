@@ -16,7 +16,7 @@ use crate::economy::{Coin, Drawer};
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
-use crate::shop::{ShopLayout, Tool};
+use crate::shop::{Keepsakes, ShopLayout, Tool};
 
 const PANEL_WIDTH: f32 = 380.0;
 const BG_PANEL: Color = Color::srgba(0.06, 0.06, 0.1, 0.94);
@@ -52,7 +52,8 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<Stock>)
                                 .or_else(resource_changed::<Tool>)
                                 .or_else(resource_changed::<ShopLayout>)
-                                .or_else(resource_changed::<Drawer>),
+                                .or_else(resource_changed::<Drawer>)
+                                .or_else(resource_changed::<Keepsakes>),
                         ),
                     ),
                     build_night_panel.run_if(
@@ -78,9 +79,13 @@ pub enum Action {
     StartNight,
     Offer(String),
     Decline,
+    /// Inspect (and reject, if fake) the paid coin with this index.
+    CheckCoin(usize),
     AddChange(Coin),
     ResetChange,
     GiveChange,
+    KeepSecondPayment,
+    RefuseSecondPayment,
     NextEvening,
 }
 
@@ -270,6 +275,7 @@ fn build_evening_panel(
     crates: Res<CratesOrdered>,
     tool: Res<Tool>,
     layout: Res<ShopLayout>,
+    keepsakes: Res<Keepsakes>,
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
     ui.heading("Evening – Preparation");
@@ -287,7 +293,7 @@ fn build_evening_panel(
 
     ui.section("Furnish (pick a tool, then click a cell)");
     let row = ui.row();
-    for d in &data.decor {
+    for d in data.decor.iter().filter(|d| !d.keepsake) {
         let selected = *tool == Tool::Place(d.id.clone());
         ui.button_in(
             row,
@@ -304,6 +310,26 @@ fn build_evening_panel(
         *tool == Tool::Remove,
         true,
     );
+
+    let owned: Vec<_> = data
+        .decor
+        .iter()
+        .filter(|d| d.keepsake && keepsakes.count(&d.id) > 0)
+        .collect();
+    if !owned.is_empty() {
+        ui.section("Keepsakes (free to place)");
+        let row = ui.row();
+        for d in owned {
+            let selected = *tool == Tool::Place(d.id.clone());
+            ui.button_in(
+                row,
+                &d.name,
+                Action::ToolPlace(d.id.clone()),
+                selected,
+                true,
+            );
+        }
+    }
 
     ui.section("Put products on shelves");
     let row = ui.row();
@@ -359,11 +385,19 @@ fn build_night_panel(
         ui.section("Register");
         ui.text(&format!("Item: {}", data.product_name(&sale.product)));
         ui.text(&format!("Price: {}", sale.price));
-        ui.text(&format!(
-            "Paid: {} (= {})",
-            sale.paid.describe(),
-            sale.paid.total()
-        ));
+        let paid = sale.paid();
+        ui.text(&format!("Paid: {} (= {})", paid.describe(), paid.total()));
+        ui.dim("Click a coin to inspect it. Doubting a genuine coin offends the customer.");
+        let row = ui.row();
+        for (i, c) in sale.coins.iter().enumerate() {
+            ui.button_in(
+                row,
+                &format!("{} · {}", c.coin.name(1), c.tell),
+                Action::CheckCoin(i),
+                false,
+                !c.checked,
+            );
+        }
         if data.config.show_change_due {
             ui.dim(&format!("Change due: {}", sale.change_due()));
         }
@@ -390,11 +424,37 @@ fn build_night_panel(
         return;
     }
 
+    if let Some(question) = &register.question {
+        let name = ghosts
+            .get(question.ghost)
+            .map(|g| data.ghosts[g.def].the_cap())
+            .unwrap_or_default();
+        ui.section(&format!("{name} wants to pay again"));
+        ui.text(&format!(
+            "It has already paid, but it holds out {} once more.",
+            question.amount
+        ));
+        ui.spacer();
+        ui.button_in(
+            ui.root(),
+            "Keep the second payment",
+            Action::KeepSecondPayment,
+            false,
+            true,
+        );
+        ui.primary("Tell it the truth", Action::RefuseSecondPayment);
+        return;
+    }
+
     let front = queue.front().and_then(|e| ghosts.get(e).ok());
     match front {
         Some(ghost) if ghost.state == GhostState::Waiting => {
             let def = &data.ghosts[ghost.def];
-            ui.section(&format!("The {} whispers:", def.name));
+            if ghost.chapter.is_some() {
+                ui.section(&format!("{} says:", data.story.name));
+            } else {
+                ui.section(&format!("{} whispers:", def.the_cap()));
+            }
             ui.text(&format!("\u{201c}{}\u{201d}", ghost.hint));
             ui.section("What do you hand over?");
             let row = ui.row();
@@ -459,6 +519,44 @@ fn build_morning_panel(
         report.reputation_start, progress.reputation
     ));
 
+    if let Some(line) = &report.story_line {
+        ui.section(&data.story.name);
+        ui.dim(&format!("\u{201c}{line}\u{201d}"));
+    }
+    if !report.keepsakes.is_empty() {
+        let names: Vec<&str> = report
+            .keepsakes
+            .iter()
+            .map(|k| data.decor(k).map_or(k.as_str(), |d| d.name.as_str()))
+            .collect();
+        ui.dim(&format!("Keepsake received: {}", names.join(", ")));
+    }
+    if report.honest + report.dishonest > 0 {
+        ui.text(&format!(
+            "Second payments refused: {} · kept: {}",
+            report.honest, report.dishonest
+        ));
+    }
+    if report.counterfeits_caught > 0 {
+        ui.text(&format!(
+            "Counterfeits spotted: {}",
+            report.counterfeits_caught
+        ));
+    }
+    if !report.counterfeits_found.is_empty() {
+        ui.text(&format!(
+            "Counterfeits found in the drawer: {} (−{})",
+            report.counterfeits_found.describe(),
+            report.counterfeits_found.total()
+        ));
+    }
+    if !report.knocked.is_empty() {
+        ui.text(&format!(
+            "Knocked off the shelves: {}",
+            count_list(&report.knocked, |p| data.product_name(p))
+        ));
+    }
+
     if !report.redeemed.is_empty() {
         ui.section("Passed into the light");
         ui.dim(&report.redeemed.join(", "));
@@ -489,6 +587,7 @@ fn build_demo_end_panel(
     mut commands: Commands,
     panel: Single<Entity, With<SidePanel>>,
     font: Res<UiFont>,
+    data: Res<GameData>,
     progress: Res<Progress>,
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
@@ -497,7 +596,33 @@ fn build_demo_end_panel(
         "Your reputation among the spirits: {}",
         progress.reputation
     ));
+    let story = &data.story;
+    if progress.story_chapter >= story.chapters.len() {
+        ui.dim(&story.ending);
+    } else {
+        ui.dim(&format!(
+            "{} still has {} wish(es) left. Perhaps next time.",
+            story.name,
+            story.chapters.len() - progress.story_chapter
+        ));
+    }
     ui.dim("Thanks for playing! Wishlist Spare Change for Spirits on Steam.");
+}
+
+/// "3× Glass Marbles, 1× Rusty Key" – in order of first appearance.
+fn count_list<'a>(ids: &'a [String], name: impl Fn(&'a str) -> &'a str) -> String {
+    let mut counts: Vec<(&str, u32)> = Vec::new();
+    for id in ids {
+        match counts.iter_mut().find(|(i, _)| *i == id.as_str()) {
+            Some((_, n)) => *n += 1,
+            None => counts.push((id.as_str(), 1)),
+        }
+    }
+    counts
+        .iter()
+        .map(|(id, n)| format!("{n}× {}", name(id)))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 // ---------------------------------------------------------------------------
@@ -649,5 +774,16 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         if !enabled {
             button.insert(InteractionDisabled);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn count_list_groups_in_order() {
+        let ids: Vec<String> = ["a", "b", "a", "a"].iter().map(|s| s.to_string()).collect();
+        assert_eq!(count_list(&ids, |s| s), "3× a, 1× b");
     }
 }

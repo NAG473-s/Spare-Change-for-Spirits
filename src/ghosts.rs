@@ -6,8 +6,9 @@
 
 use bevy::prelude::*;
 
-use crate::data::{GameData, rgb};
+use crate::data::{GameData, GhostDef, rgb};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
+use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::shop::{ShopLayout, small_font, sprite_for};
 use crate::ui::{GameLog, UiFont};
@@ -30,7 +31,13 @@ impl Plugin for GhostPlugin {
             )
             .add_systems(
                 Update,
-                (spawn_ghosts, ghost_ai, move_ghosts, fade_ghosts)
+                (
+                    spawn_ghosts,
+                    spawn_story_ghost,
+                    ghost_ai,
+                    move_ghosts,
+                    fade_ghosts,
+                )
                     .chain()
                     .run_if(in_state(Phase::Night)),
             );
@@ -63,6 +70,10 @@ pub struct Ghost {
     pub timer: f32,
     pub patience: f32,
     pub max_patience: f32,
+    /// Story chapter this visit belongs to (story ghost only).
+    pub chapter: Option<usize>,
+    /// Shelf cell the ghost browses, if any.
+    browse_cell: Option<usize>,
     bob_offset: f32,
 }
 
@@ -136,48 +147,88 @@ fn spawn_ghosts(
     let product = data.product(&wish).expect("checked in GameData::validate");
     let hint = product.hints[rng.index(product.hints.len())].clone();
 
-    let shelves = layout.shelf_cells(&data);
-    let browse_target = if shelves.is_empty() {
-        layout.cell_pos(rng.index(layout.cells.len()))
-    } else {
-        layout.cell_pos(shelves[rng.index(shelves.len())]) + Vec2::new(0.0, -28.0)
+    let unmet = def.unmet_need(&atmosphere);
+    if let Some(need) = unmet {
+        log.push(format!(
+            "{} hesitates at the door – {}.",
+            def.the_cap(),
+            need.complaint()
+        ));
+        report.fled += 1;
+    }
+    let visit = Visit {
+        def_idx,
+        wish,
+        hint,
+        chapter: None,
+        flees: unmet.is_some(),
     };
+    spawn_ghost(
+        &mut commands,
+        &data,
+        &layout,
+        &font,
+        &asset_server,
+        &mut rng,
+        visit,
+    );
+}
 
-    let (state, target) = match def.unmet_need(&atmosphere) {
-        Some(need) => {
-            log.push(format!(
-                "The {} hesitates at the door – {}.",
-                def.name,
-                need.complaint()
-            ));
-            report.fled += 1;
-            (
-                GhostState::Fleeing,
-                layout.door_pos() + Vec2::new(70.0, 0.0),
-            )
-        }
-        None => (GhostState::Entering, browse_target),
+/// What a newly arriving ghost comes for.
+struct Visit {
+    def_idx: usize,
+    wish: String,
+    hint: String,
+    chapter: Option<usize>,
+    flees: bool,
+}
+
+fn spawn_ghost(
+    commands: &mut Commands,
+    data: &GameData,
+    layout: &ShopLayout,
+    font: &UiFont,
+    asset_server: &AssetServer,
+    rng: &mut Rng,
+    visit: Visit,
+) {
+    let def: &GhostDef = &data.ghosts[visit.def_idx];
+    let shelves = layout.shelf_cells(data);
+    let browse_cell = (!shelves.is_empty()).then(|| shelves[rng.index(shelves.len())]);
+    let (state, target) = if visit.flees {
+        (
+            GhostState::Fleeing,
+            layout.door_pos() + Vec2::new(70.0, 0.0),
+        )
+    } else {
+        let target = match browse_cell {
+            Some(cell) => layout.cell_pos(cell) + Vec2::new(0.0, -28.0),
+            None => layout.cell_pos(rng.index(layout.cells.len())),
+        };
+        (GhostState::Entering, target)
     };
 
     let start = layout.door_pos();
     let color = rgb(def.color).with_alpha(0.75);
     let sprite = sprite_for(
-        &asset_server,
+        asset_server,
         &format!("sprites/ghosts/{}.png", def.id),
         color,
         GHOST_SIZE,
     );
     commands.spawn((
         Ghost {
-            def: def_idx,
-            wish,
-            hint,
+            def: visit.def_idx,
+            wish: visit.wish,
+            hint: visit.hint,
             state,
             pos: start,
             target,
             timer: 0.0,
             patience: def.patience_secs,
             max_patience: def.patience_secs,
+            chapter: visit.chapter,
+            browse_cell,
             bob_offset: rng.range(0.0, std::f32::consts::TAU),
         },
         sprite,
@@ -185,11 +236,59 @@ fn spawn_ghosts(
         DespawnOnExit(Phase::Night),
         children![(
             Text2d::new(def.name.clone()),
-            small_font(&font, 10.0),
+            small_font(font, 10.0),
             TextColor(Color::srgba(0.9, 0.9, 1.0, 0.8)),
-            Transform::from_xyz(0.0, 38.0, 1.0),
+            Transform::from_xyz(0.0, GHOST_SIZE.y / 2.0 + 10.0, 1.0),
         )],
     ));
+}
+
+/// The story ghost arrives once per night until his story is finished.
+fn spawn_story_ghost(
+    mut commands: Commands,
+    data: Res<GameData>,
+    layout: Res<ShopLayout>,
+    clock: Res<NightClock>,
+    progress: Res<Progress>,
+    font: Res<UiFont>,
+    asset_server: Res<AssetServer>,
+    mut rng: ResMut<Rng>,
+    mut report: ResMut<NightReport>,
+    mut log: ResMut<GameLog>,
+) {
+    let story = &data.story;
+    let chapter = progress.story_chapter;
+    if report.story_arrived
+        || chapter >= story.chapters.len()
+        || clock.elapsed < story.arrive_at * clock.length
+    {
+        return;
+    }
+    let Some(def_idx) = data.ghost_index(&story.ghost) else {
+        return;
+    };
+    report.story_arrived = true;
+    let c = &story.chapters[chapter];
+    log.push(format!(
+        "{} shuffles in, shaking imaginary rain off his coat.",
+        story.name
+    ));
+    let visit = Visit {
+        def_idx,
+        wish: c.wish.clone(),
+        hint: c.intro.clone(),
+        chapter: Some(chapter),
+        flees: false,
+    };
+    spawn_ghost(
+        &mut commands,
+        &data,
+        &layout,
+        &font,
+        &asset_server,
+        &mut rng,
+        visit,
+    );
 }
 
 fn ghost_ai(
@@ -197,6 +296,7 @@ fn ghost_ai(
     time: Res<Time>,
     data: Res<GameData>,
     layout: Res<ShopLayout>,
+    mut stock: ResMut<Stock>,
     mut queue: ResMut<Queue>,
     mut progress: ResMut<Progress>,
     mut report: ResMut<NightReport>,
@@ -210,6 +310,23 @@ fn ghost_ai(
             GhostState::Entering if g.arrived() => {
                 g.state = GhostState::Browsing;
                 g.timer = rng.range(2.0, 4.5);
+                let quirks = &data.ghosts[g.def].quirks;
+                let calm = quirks
+                    .calm_with
+                    .is_some_and(|n| n.is_met(&layout.atmosphere(&data)));
+                if !calm
+                    && rng.chance(quirks.knock_chance)
+                    && let Some(product) =
+                        g.browse_cell.and_then(|c| layout.cells[c].product.clone())
+                    && stock.take_one(&product)
+                {
+                    log.push(format!(
+                        "Crash! {} sends the {} flying off the shelf.",
+                        data.ghosts[g.def].the_cap(),
+                        data.product_name(&product)
+                    ));
+                    report.knocked.push(product);
+                }
             }
             GhostState::Browsing => {
                 g.timer -= dt;
@@ -226,9 +343,9 @@ fn ghost_ai(
             GhostState::Waiting => {
                 g.patience -= dt;
                 if g.patience <= 0.0 {
-                    let name = &data.ghosts[g.def].name;
+                    let name = data.ghosts[g.def].the_cap();
                     log.push(format!(
-                        "The {name} has waited long enough and fades away, grumbling."
+                        "{name} has waited long enough and fades away, grumbling."
                     ));
                     g.state = GhostState::Leaving;
                     queue.remove(entity);
@@ -257,6 +374,7 @@ fn ghost_ai(
     }
 
     // Let the queue move up.
+    let len = queue.0.len();
     for (place, e) in queue.0.iter().enumerate() {
         if let Ok((_, mut g)) = ghosts.get_mut(*e)
             && matches!(
@@ -264,7 +382,7 @@ fn ghost_ai(
                 GhostState::ToCounter | GhostState::Waiting | GhostState::AtRegister
             )
         {
-            g.target = layout.queue_pos(place);
+            g.target = layout.queue_pos(place, len);
             if g.state == GhostState::Waiting && !g.arrived() {
                 g.state = GhostState::ToCounter;
             }

@@ -69,6 +69,10 @@ impl Purse {
         *self.get_mut(coin) += count;
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.total() == 0
+    }
+
     pub fn total(&self) -> u32 {
         Coin::ASCENDING
             .iter()

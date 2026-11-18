@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 
 use crate::data::GameData;
+use crate::economy::{Coin, Drawer, Purse};
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::inventory::Stock;
 use crate::register::Register;
@@ -55,6 +56,8 @@ impl Plugin for DayCyclePlugin {
 pub struct Progress {
     pub night: u32,
     pub reputation: i32,
+    /// Index of the next story chapter; equal to the chapter count when finished.
+    pub story_chapter: usize,
 }
 
 #[derive(Resource, Default)]
@@ -87,6 +90,23 @@ pub struct NightReport {
     pub redeemed: Vec<String>,
     pub faded: Vec<(String, u32)>,
     pub reputation_start: i32,
+    /// Items the poltergeist knocked off the shelves (product ids).
+    pub knocked: Vec<String>,
+    /// Counterfeit coins spotted at the register.
+    pub counterfeits_caught: u32,
+    /// Counterfeit coins accepted without noticing.
+    pub counterfeits_taken: Vec<Coin>,
+    /// Counterfeit coins found in the drawer in the morning (removed from it).
+    pub counterfeits_found: Purse,
+    /// Double payments refused / kept.
+    pub honest: u32,
+    pub dishonest: u32,
+    /// The story ghost has come tonight.
+    pub story_arrived: bool,
+    /// What the story ghost said tonight when served.
+    pub story_line: Option<String>,
+    /// Keepsakes received tonight (decor ids).
+    pub keepsakes: Vec<String>,
 }
 
 fn open_shop(mut actions: MessageReader<Action>, mut next: ResMut<NextState<Phase>>) {
@@ -129,7 +149,7 @@ fn close_at_dawn(
         return;
     }
     for (entity, mut ghost) in &mut ghosts {
-        let busy = register.sale.as_ref().is_some_and(|s| s.ghost == entity);
+        let busy = register.is_busy_with(entity);
         if !busy
             && matches!(
                 ghost.state,
@@ -148,8 +168,28 @@ fn close_at_dawn(
     }
 }
 
-fn start_morning(data: Res<GameData>, mut stock: ResMut<Stock>, mut report: ResMut<NightReport>) {
+fn start_morning(
+    data: Res<GameData>,
+    mut stock: ResMut<Stock>,
+    mut drawer: ResMut<Drawer>,
+    mut report: ResMut<NightReport>,
+) {
     report.faded = stock.age_and_fade(&data);
+    report.counterfeits_found = remove_counterfeits(&mut drawer.0, &report.counterfeits_taken);
+}
+
+/// Counterfeit coins that are still in the drawer turn to dust at dawn.
+/// Those already handed out as change are gone anyway.
+pub fn remove_counterfeits(drawer: &mut Purse, taken: &[Coin]) -> Purse {
+    let mut found = Purse::default();
+    for coin in taken {
+        let mut one = Purse::default();
+        one.add(*coin, 1);
+        if drawer.remove(&one) {
+            found.add(*coin, 1);
+        }
+    }
+    found
 }
 
 fn next_evening(
@@ -166,5 +206,36 @@ fn next_evening(
     } else {
         progress.night += 1;
         next.set(Phase::Evening);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn counterfeits_are_removed_only_if_still_in_drawer() {
+        let mut drawer = Purse {
+            buttons: 3,
+            candles: 0,
+            spoons: 1,
+        };
+        let found = remove_counterfeits(&mut drawer, &[Coin::Spoon, Coin::Candle]);
+        assert_eq!(
+            found,
+            Purse {
+                buttons: 0,
+                candles: 0,
+                spoons: 1
+            }
+        );
+        assert_eq!(
+            drawer,
+            Purse {
+                buttons: 3,
+                candles: 0,
+                spoons: 0
+            }
+        );
     }
 }

@@ -2,11 +2,14 @@
 //!
 //! In the evening the player picks a tool in the side panel and clicks a cell.
 
+use std::collections::BTreeMap;
+
 use bevy::prelude::*;
 
 use crate::data::{Atmosphere, GameData, asset_exists, rgb};
 use crate::day_cycle::Phase;
 use crate::economy::Drawer;
+use crate::inventory::Stock;
 use crate::ui::{Action, GameLog, UiFont};
 
 pub const CELL: f32 = 64.0;
@@ -18,6 +21,7 @@ pub struct ShopPlugin;
 impl Plugin for ShopPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Tool>()
+            .init_resource::<Keepsakes>()
             .add_systems(Startup, spawn_shop)
             .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| {
                 *t = Tool::None
@@ -26,7 +30,8 @@ impl Plugin for ShopPlugin {
                 Update,
                 (
                     select_tool.run_if(in_state(Phase::Evening)),
-                    sync_cell_visuals.run_if(resource_changed::<ShopLayout>),
+                    sync_cell_visuals
+                        .run_if(resource_changed::<ShopLayout>.or_else(resource_changed::<Stock>)),
                 ),
             );
     }
@@ -84,8 +89,10 @@ impl ShopLayout {
     }
 
     /// Spots in front of the counter where ghosts queue.
-    pub fn queue_pos(&self, place: usize) -> Vec2 {
-        self.counter_pos() + Vec2::new(-46.0, 100.0 - place as f32 * 72.0)
+    /// A long line moves closer together so it stays above the message log.
+    pub fn queue_pos(&self, place: usize, len: usize) -> Vec2 {
+        let spacing = (300.0 / len.max(1) as f32).min(72.0);
+        self.counter_pos() + Vec2::new(-46.0, 100.0 - place as f32 * spacing)
     }
 
     pub fn shelf_cells(&self, data: &GameData) -> Vec<usize> {
@@ -122,6 +129,44 @@ impl ShopLayout {
         }
         a
     }
+}
+
+/// Keepsakes the player owns but has not placed yet (decor id → count).
+#[derive(Resource, Default)]
+pub struct Keepsakes(pub BTreeMap<String, u32>);
+
+impl Keepsakes {
+    pub fn count(&self, id: &str) -> u32 {
+        self.0.get(id).copied().unwrap_or(0)
+    }
+
+    pub fn give(&mut self, id: &str) {
+        *self.0.entry(id.to_string()).or_default() += 1;
+    }
+
+    /// Takes one out of the box; `false` if there is none.
+    pub fn take(&mut self, id: &str) -> bool {
+        match self.0.get_mut(id) {
+            Some(n) if *n > 0 => {
+                *n -= 1;
+                true
+            }
+            _ => false,
+        }
+    }
+}
+
+/// Clears a cell. A keepsake that stood there goes back into the box.
+fn clear_cell(layout: &mut ShopLayout, idx: usize, data: &GameData, keepsakes: &mut Keepsakes) {
+    if let Some(d) = layout.cells[idx]
+        .decor
+        .as_deref()
+        .and_then(|d| data.decor(d))
+        && d.keepsake
+    {
+        keepsakes.give(&d.id);
+    }
+    layout.cells[idx] = CellContent::default();
 }
 
 /// Current tool in the evening.
@@ -209,9 +254,10 @@ fn on_cell_click(
     cells: Query<&GridCell>,
     tool: Res<Tool>,
     data: Res<GameData>,
-    stock: Res<crate::inventory::Stock>,
+    stock: Res<Stock>,
     mut layout: ResMut<ShopLayout>,
     mut drawer: ResMut<Drawer>,
+    mut keepsakes: ResMut<Keepsakes>,
     mut log: ResMut<GameLog>,
 ) {
     if *phase.get() != Phase::Evening {
@@ -224,20 +270,26 @@ fn on_cell_click(
     match &*tool {
         Tool::None => {}
         Tool::Remove => {
-            layout.cells[idx] = CellContent::default();
+            clear_cell(&mut layout, idx, &data, &mut keepsakes);
         }
         Tool::Place(id) => {
             let Some(def) = data.decor(id) else { return };
             if layout.cells[idx].decor.as_deref() == Some(id.as_str()) {
                 return;
             }
-            if !drawer.pay(def.cost) {
+            if def.keepsake {
+                if !keepsakes.take(id) {
+                    log.push(format!("{} is already in the shop.", def.name));
+                    return;
+                }
+            } else if !drawer.pay(def.cost) {
                 log.push(format!(
                     "{} costs {} – not enough in the drawer.",
                     def.name, def.cost
                 ));
                 return;
             }
+            clear_cell(&mut layout, idx, &data, &mut keepsakes);
             layout.cells[idx] = CellContent {
                 decor: Some(id.clone()),
                 product: None,
@@ -282,6 +334,7 @@ fn sync_cell_visuals(
     data: Res<GameData>,
     font: Res<UiFont>,
     asset_server: Res<AssetServer>,
+    stock: Res<Stock>,
     cells: Query<(Entity, &GridCell)>,
 ) {
     for (entity, GridCell(idx)) in &cells {
@@ -298,7 +351,7 @@ fn sync_cell_visuals(
             Vec2::splat(CELL - 12.0),
         );
         let label = match content.product.as_deref() {
-            Some(p) => data.product_name(p).to_string(),
+            Some(p) => format!("{} ×{}", data.product_name(p), stock.count(p)),
             None => def.name.clone(),
         };
         let mut children = vec![
@@ -344,5 +397,27 @@ pub fn sprite_for(asset_server: &AssetServer, path: &str, color: Color, size: Ve
         }
     } else {
         Sprite::from_color(color, size)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn keepsakes_go_back_into_the_box_when_replaced() {
+        let data = GameData::load();
+        let mut layout = ShopLayout::new(4, 4);
+        let mut keepsakes = Keepsakes::default();
+        keepsakes.give("umbrella");
+        assert!(keepsakes.take("umbrella"));
+        assert!(!keepsakes.take("umbrella"));
+        layout.cells[0].decor = Some("umbrella".into());
+        clear_cell(&mut layout, 0, &data, &mut keepsakes);
+        assert_eq!(keepsakes.count("umbrella"), 1);
+        // Bought decor is simply gone.
+        layout.cells[1].decor = Some("candle".into());
+        clear_cell(&mut layout, 1, &data, &mut keepsakes);
+        assert_eq!(keepsakes.count("candle"), 0);
     }
 }

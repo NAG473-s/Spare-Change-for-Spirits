@@ -116,9 +116,37 @@ pub struct GhostDef {
     /// Allowed coins. Empty = all.
     #[serde(default)]
     pub pays_with: Vec<Coin>,
+    #[serde(default)]
+    pub quirks: Quirks,
+    /// `name` is a proper name ("Edwin"), so texts use it without "the".
+    #[serde(default)]
+    pub proper_name: bool,
+}
+
+/// Special behaviour of a ghost type. All chances are 0..1.
+#[derive(Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct Quirks {
+    /// Chance to knock one item off the shelf it browses.
+    pub knock_chance: f32,
+    /// While this condition is met the ghost is calm and knocks nothing over.
+    pub calm_with: Option<Need>,
+    /// Chance that one of the paid coins is counterfeit.
+    pub counterfeit_chance: f32,
+    /// Chance to forget it has paid and offer to pay a second time.
+    pub double_pay_chance: f32,
 }
 
 impl GhostDef {
+    /// Name for the start of a sentence: "The Shy Ghost" or "Edwin".
+    pub fn the_cap(&self) -> String {
+        if self.proper_name {
+            self.name.clone()
+        } else {
+            format!("The {}", self.name)
+        }
+    }
+
     /// First unmet condition, if any.
     pub fn unmet_need(&self, a: &Atmosphere) -> Option<Need> {
         self.needs.iter().copied().find(|n| !n.is_met(a))
@@ -135,6 +163,36 @@ pub struct DecorDef {
     #[serde(default)]
     pub effect: Atmosphere,
     pub color: (f32, f32, f32),
+    /// Keepsakes cannot be bought; they are gifts from story ghosts.
+    #[serde(default)]
+    pub keepsake: bool,
+}
+
+/// A story ghost who returns night after night.
+#[derive(Deserialize, Clone, Debug)]
+pub struct StoryDef {
+    /// Ghost id from ghosts.ron (usually with spawn_weight 0).
+    pub ghost: String,
+    /// Display name used in texts, e.g. "Edwin".
+    pub name: String,
+    /// When the ghost arrives, as a fraction of the night (0..1).
+    pub arrive_at: f32,
+    pub chapters: Vec<ChapterDef>,
+    /// Shown when the last chapter is completed.
+    pub ending: String,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct ChapterDef {
+    /// Product the ghost needs in this chapter.
+    pub wish: String,
+    /// What the ghost says at the counter (replaces the product hint).
+    pub intro: String,
+    /// What the ghost says when served correctly.
+    pub thanks: String,
+    /// Decor id of the keepsake left behind.
+    #[serde(default)]
+    pub keepsake: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -151,6 +209,10 @@ pub struct Config {
     pub base_atmosphere: Atmosphere,
     /// Assist mode: shows the change due at the register.
     pub show_change_due: bool,
+    /// Descriptions of genuine coins at the register.
+    pub coin_tells_genuine: Vec<String>,
+    /// Descriptions that give a counterfeit coin away.
+    pub coin_tells_fake: Vec<String>,
 }
 
 #[derive(Resource)]
@@ -159,6 +221,7 @@ pub struct GameData {
     pub products: Vec<ProductDef>,
     pub ghosts: Vec<GhostDef>,
     pub decor: Vec<DecorDef>,
+    pub story: StoryDef,
 }
 
 impl GameData {
@@ -169,6 +232,7 @@ impl GameData {
             products: load_ron("data/products.ron"),
             ghosts: load_ron("data/ghosts.ron"),
             decor: load_ron("data/decor.ron"),
+            story: load_ron("data/story.ron"),
         };
         data.validate();
         data
@@ -189,6 +253,35 @@ impl GameData {
         for p in &self.products {
             assert!(!p.hints.is_empty(), "product '{}' has no hints", p.id);
         }
+        assert!(
+            self.ghost_index(&self.story.ghost).is_some(),
+            "story ghost '{}' is not in ghosts.ron",
+            self.story.ghost
+        );
+        for (i, c) in self.story.chapters.iter().enumerate() {
+            assert!(
+                self.product(&c.wish).is_some(),
+                "story chapter {} wishes for unknown product '{}'",
+                i + 1,
+                c.wish
+            );
+            if let Some(k) = &c.keepsake {
+                assert!(
+                    self.decor(k).is_some_and(|d| d.keepsake),
+                    "story chapter {} gives '{}', which is not a keepsake in decor.ron",
+                    i + 1,
+                    k
+                );
+            }
+        }
+        assert!(
+            !self.config.coin_tells_genuine.is_empty() && !self.config.coin_tells_fake.is_empty(),
+            "config.ron needs coin_tells_genuine and coin_tells_fake"
+        );
+    }
+
+    pub fn ghost_index(&self, id: &str) -> Option<usize> {
+        self.ghosts.iter().position(|g| g.id == id)
     }
 
     pub fn product(&self, id: &str) -> Option<&ProductDef> {
@@ -233,4 +326,22 @@ pub fn asset_exists(rel: &str) -> bool {
 
 pub fn rgb((r, g, b): (f32, f32, f32)) -> Color {
     Color::srgb(r, g, b)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Loads the real data files, so a broken RON file fails `cargo test`.
+    #[test]
+    fn data_files_are_valid() {
+        let data = GameData::load();
+        assert!(!data.products.is_empty());
+        // Every product is wished for by some ghost or the story.
+        for p in &data.products {
+            let wished = data.ghosts.iter().any(|g| g.wishes.contains(&p.id))
+                || data.story.chapters.iter().any(|c| c.wish == p.id);
+            assert!(wished, "nobody ever asks for '{}'", p.id);
+        }
+    }
 }

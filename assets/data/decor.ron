@@ -14,4 +14,16 @@
      effect: (warmth: 2, silence: 1), color: (0.55, 0.2, 0.25)),
     (id: "grandfather_clock", name: "Grandfather Clock", cost: 15,
      effect: (warmth: 1, silence: -2), color: (0.35, 0.25, 0.18)),
+
+    // Keepsakes: not for sale, left behind by Edwin (story.ron).
+    (id: "umbrella", name: "Edwin's Umbrella", cost: 0, keepsake: true,
+     effect: (silence: 1), color: (0.3, 0.35, 0.5)),
+    (id: "teacup", name: "Chipped Teacup", cost: 0, keepsake: true,
+     effect: (warmth: 1), color: (0.85, 0.85, 0.8)),
+    (id: "blanket", name: "Knitted Blanket", cost: 0, keepsake: true,
+     effect: (warmth: 2), color: (0.7, 0.45, 0.35)),
+    (id: "wedding_photo", name: "Wedding Photo", cost: 0, keepsake: true,
+     effect: (warmth: 1, reflection: 1), color: (0.8, 0.75, 0.55)),
+    (id: "pocket_lantern", name: "Edwin's Lantern", cost: 0, keepsake: true,
+     effect: (light: 1, warmth: 1), color: (1.0, 0.75, 0.35)),
 ]
