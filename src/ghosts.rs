@@ -6,10 +6,10 @@
 
 use bevy::prelude::*;
 
-use crate::data::{rgb, GameData};
+use crate::data::{GameData, rgb};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
 use crate::rng::Rng;
-use crate::shop::{small_font, sprite_for, ShopLayout};
+use crate::shop::{ShopLayout, small_font, sprite_for};
 use crate::ui::{GameLog, UiFont};
 
 const SPEED: f32 = 110.0;
@@ -21,10 +21,13 @@ impl Plugin for GhostPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Queue>()
             .insert_resource(SpawnTimer(2.0))
-            .add_systems(OnEnter(Phase::Night), |mut q: ResMut<Queue>, mut t: ResMut<SpawnTimer>| {
-                q.0.clear();
-                t.0 = 2.0;
-            })
+            .add_systems(
+                OnEnter(Phase::Night),
+                |mut q: ResMut<Queue>, mut t: ResMut<SpawnTimer>| {
+                    q.0.clear();
+                    t.0 = 2.0;
+                },
+            )
             .add_systems(
                 Update,
                 (spawn_ghosts, ghost_ai, move_ghosts, fade_ghosts)
@@ -124,7 +127,9 @@ fn spawn_ghosts(
             g.spawn_weight * if fits { 1.0 } else { 0.35 }
         })
         .collect();
-    let Some(def_idx) = rng.weighted(&weights) else { return };
+    let Some(def_idx) = rng.weighted(&weights) else {
+        return;
+    };
     let def = &data.ghosts[def_idx];
 
     let wish = def.wishes[rng.index(def.wishes.len())].clone();
@@ -140,16 +145,28 @@ fn spawn_ghosts(
 
     let (state, target) = match def.unmet_need(&atmosphere) {
         Some(need) => {
-            log.push(format!("The {} hesitates at the door – {}.", def.name, need.complaint()));
+            log.push(format!(
+                "The {} hesitates at the door – {}.",
+                def.name,
+                need.complaint()
+            ));
             report.fled += 1;
-            (GhostState::Fleeing, layout.door_pos() + Vec2::new(70.0, 0.0))
+            (
+                GhostState::Fleeing,
+                layout.door_pos() + Vec2::new(70.0, 0.0),
+            )
         }
         None => (GhostState::Entering, browse_target),
     };
 
     let start = layout.door_pos();
     let color = rgb(def.color).with_alpha(0.75);
-    let sprite = sprite_for(&asset_server, &format!("sprites/ghosts/{}.png", def.id), color, GHOST_SIZE);
+    let sprite = sprite_for(
+        &asset_server,
+        &format!("sprites/ghosts/{}.png", def.id),
+        color,
+        GHOST_SIZE,
+    );
     commands.spawn((
         Ghost {
             def: def_idx,
@@ -161,7 +178,7 @@ fn spawn_ghosts(
             timer: 0.0,
             patience: def.patience_secs,
             max_patience: def.patience_secs,
-            bob_offset: rng.range(0.0, 6.28),
+            bob_offset: rng.range(0.0, std::f32::consts::TAU),
         },
         sprite,
         Transform::from_translation(start.extend(5.0)),
@@ -210,7 +227,9 @@ fn ghost_ai(
                 g.patience -= dt;
                 if g.patience <= 0.0 {
                     let name = &data.ghosts[g.def].name;
-                    log.push(format!("The {name} has waited long enough and fades away, grumbling."));
+                    log.push(format!(
+                        "The {name} has waited long enough and fades away, grumbling."
+                    ));
                     g.state = GhostState::Leaving;
                     queue.remove(entity);
                     progress.reputation -= 1;
@@ -239,12 +258,15 @@ fn ghost_ai(
 
     // Let the queue move up.
     for (place, e) in queue.0.iter().enumerate() {
-        if let Ok((_, mut g)) = ghosts.get_mut(*e) {
-            if matches!(g.state, GhostState::ToCounter | GhostState::Waiting | GhostState::AtRegister) {
-                g.target = layout.queue_pos(place);
-                if g.state == GhostState::Waiting && !g.arrived() {
-                    g.state = GhostState::ToCounter;
-                }
+        if let Ok((_, mut g)) = ghosts.get_mut(*e)
+            && matches!(
+                g.state,
+                GhostState::ToCounter | GhostState::Waiting | GhostState::AtRegister
+            )
+        {
+            g.target = layout.queue_pos(place);
+            if g.state == GhostState::Waiting && !g.arrived() {
+                g.state = GhostState::ToCounter;
             }
         }
     }
@@ -254,7 +276,11 @@ fn move_ghosts(time: Res<Time>, mut ghosts: Query<(&mut Ghost, &mut Transform)>)
     let dt = time.delta_secs();
     let t = time.elapsed_secs();
     for (mut g, mut transform) in &mut ghosts {
-        let speed = if g.state == GhostState::Ascending { 60.0 } else { SPEED };
+        let speed = if g.state == GhostState::Ascending {
+            60.0
+        } else {
+            SPEED
+        };
         let pos = g.pos;
         g.pos = pos.move_towards(g.target, speed * dt);
         let bob = (t * 2.2 + g.bob_offset).sin() * 4.0;
@@ -273,7 +299,11 @@ fn fade_ghosts(data: Res<GameData>, mut ghosts: Query<(&Ghost, &mut Sprite)>) {
             GhostState::Ascending => (1.0 - g.timer / 1.8).clamp(0.0, 1.0),
             _ => 0.8,
         };
-        let color = if g.state == GhostState::Ascending { Color::srgb(1.0, 0.97, 0.8) } else { base };
+        let color = if g.state == GhostState::Ascending {
+            Color::srgb(1.0, 0.97, 0.8)
+        } else {
+            base
+        };
         // With real images only change the transparency, not the colour.
         sprite.color = if sprite.image == Handle::default() {
             color.with_alpha(alpha)

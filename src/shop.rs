@@ -4,7 +4,7 @@
 
 use bevy::prelude::*;
 
-use crate::data::{asset_exists, rgb, Atmosphere, GameData};
+use crate::data::{Atmosphere, GameData, asset_exists, rgb};
 use crate::day_cycle::Phase;
 use crate::economy::Drawer;
 use crate::ui::{Action, GameLog, UiFont};
@@ -19,7 +19,9 @@ impl Plugin for ShopPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Tool>()
             .add_systems(Startup, spawn_shop)
-            .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| *t = Tool::None)
+            .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| {
+                *t = Tool::None
+            })
             .add_systems(
                 Update,
                 (
@@ -68,11 +70,17 @@ impl ShopLayout {
     }
 
     pub fn door_pos(&self) -> Vec2 {
-        Vec2::new(GRID_CENTER.x - self.cols as f32 * CELL / 2.0 - 60.0, GRID_CENTER.y)
+        Vec2::new(
+            GRID_CENTER.x - self.cols as f32 * CELL / 2.0 - 60.0,
+            GRID_CENTER.y,
+        )
     }
 
     pub fn counter_pos(&self) -> Vec2 {
-        Vec2::new(GRID_CENTER.x + self.cols as f32 * CELL / 2.0 + 70.0, GRID_CENTER.y)
+        Vec2::new(
+            GRID_CENTER.x + self.cols as f32 * CELL / 2.0 + 70.0,
+            GRID_CENTER.y,
+        )
     }
 
     /// Spots in front of the counter where ghosts queue.
@@ -96,10 +104,10 @@ impl ShopLayout {
     pub fn displayed_products(&self) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
         for c in &self.cells {
-            if let Some(p) = &c.product {
-                if !out.contains(p) {
-                    out.push(p.clone());
-                }
+            if let Some(p) = &c.product
+                && !out.contains(p)
+            {
+                out.push(p.clone());
             }
         }
         out
@@ -138,11 +146,18 @@ fn spawn_shop(
     let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
 
     for idx in 0..layout.cells.len() {
-        let checker = if (idx % layout.cols + idx / layout.cols) % 2 == 0 { 0.13 } else { 0.11 };
+        let checker = if (idx % layout.cols + idx / layout.cols).is_multiple_of(2) {
+            0.13
+        } else {
+            0.11
+        };
         commands
             .spawn((
                 GridCell(idx),
-                Sprite::from_color(Color::srgb(checker, checker, checker + 0.03), Vec2::splat(CELL - 2.0)),
+                Sprite::from_color(
+                    Color::srgb(checker, checker, checker + 0.03),
+                    Vec2::splat(CELL - 2.0),
+                ),
                 Transform::from_translation(layout.cell_pos(idx).extend(0.0)),
                 Pickable::default(),
             ))
@@ -152,12 +167,22 @@ fn spawn_shop(
     // Door and counter (placeholders until there are images).
     let door = layout.door_pos();
     commands.spawn((
-        sprite_for(&asset_server, "sprites/shop/door.png", Color::srgb(0.25, 0.18, 0.12), Vec2::new(50.0, 110.0)),
+        sprite_for(
+            &asset_server,
+            "sprites/shop/door.png",
+            Color::srgb(0.25, 0.18, 0.12),
+            Vec2::new(50.0, 110.0),
+        ),
         Transform::from_translation(door.extend(0.0)),
     ));
     let counter = layout.counter_pos();
     commands.spawn((
-        sprite_for(&asset_server, "sprites/shop/counter.png", Color::srgb(0.35, 0.24, 0.15), Vec2::new(40.0, 260.0)),
+        sprite_for(
+            &asset_server,
+            "sprites/shop/counter.png",
+            Color::srgb(0.35, 0.24, 0.15),
+            Vec2::new(40.0, 260.0),
+        ),
         Transform::from_translation(counter.extend(0.0)),
     ));
     commands.spawn((
@@ -207,7 +232,10 @@ fn on_cell_click(
                 return;
             }
             if !drawer.pay(def.cost) {
-                log.push(format!("{} costs {} – not enough in the drawer.", def.name, def.cost));
+                log.push(format!(
+                    "{} costs {} – not enough in the drawer.",
+                    def.name, def.cost
+                ));
                 return;
             }
             layout.cells[idx] = CellContent {
@@ -263,7 +291,12 @@ fn sync_cell_visuals(
             continue;
         };
 
-        let sprite = sprite_for(&asset_server, &format!("sprites/decor/{}.png", def.id), rgb(def.color), Vec2::splat(CELL - 12.0));
+        let sprite = sprite_for(
+            &asset_server,
+            &format!("sprites/decor/{}.png", def.id),
+            rgb(def.color),
+            Vec2::splat(CELL - 12.0),
+        );
         let label = match content.product.as_deref() {
             Some(p) => data.product_name(p).to_string(),
             None => def.name.clone(),
@@ -285,7 +318,12 @@ fn sync_cell_visuals(
                 .id(),
         ];
         if let Some(p) = content.product.as_deref() {
-            let icon = sprite_for(&asset_server, &format!("sprites/products/{p}.png"), Color::srgb(0.85, 0.8, 0.6), Vec2::splat(22.0));
+            let icon = sprite_for(
+                &asset_server,
+                &format!("sprites/products/{p}.png"),
+                Color::srgb(0.85, 0.8, 0.6),
+                Vec2::splat(22.0),
+            );
             children.push(
                 commands
                     .spawn((icon, Transform::from_xyz(0.0, 6.0, 2.0), Pickable::IGNORE))

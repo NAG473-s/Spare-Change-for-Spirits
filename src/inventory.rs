@@ -15,7 +15,9 @@ impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Stock>()
             .init_resource::<CratesOrdered>()
-            .add_systems(OnEnter(Phase::Evening), |mut c: ResMut<CratesOrdered>| c.0 = 0)
+            .add_systems(OnEnter(Phase::Evening), |mut c: ResMut<CratesOrdered>| {
+                c.0 = 0
+            })
             .add_systems(Update, handle_orders.run_if(in_state(Phase::Evening)));
     }
 }
@@ -84,7 +86,9 @@ fn handle_orders(
 ) {
     for action in actions.read() {
         let Action::Order(id) = action else { continue };
-        let Some(product) = data.product(id) else { continue };
+        let Some(product) = data.product(id) else {
+            continue;
+        };
         if crates.0 >= data.config.crates_per_night {
             log.push("The ferryman shakes his head: his boat is full.");
             continue;

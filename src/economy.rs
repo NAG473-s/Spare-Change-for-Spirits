@@ -70,7 +70,10 @@ impl Purse {
     }
 
     pub fn total(&self) -> u32 {
-        Coin::ASCENDING.iter().map(|c| c.value() * self.get(*c)).sum()
+        Coin::ASCENDING
+            .iter()
+            .map(|c| c.value() * self.get(*c))
+            .sum()
     }
 
     pub fn merge(&mut self, other: &Purse) {
@@ -80,7 +83,9 @@ impl Purse {
     }
 
     pub fn contains(&self, other: &Purse) -> bool {
-        Coin::ASCENDING.iter().all(|c| self.get(*c) >= other.get(*c))
+        Coin::ASCENDING
+            .iter()
+            .all(|c| self.get(*c) >= other.get(*c))
     }
 
     /// Removes exactly these coins. Returns `false` (and changes nothing)
@@ -197,7 +202,11 @@ mod tests {
     use super::*;
 
     fn purse(spoons: u32, candles: u32, buttons: u32) -> Purse {
-        Purse { buttons, candles, spoons }
+        Purse {
+            buttons,
+            candles,
+            spoons,
+        }
     }
 
     #[test]

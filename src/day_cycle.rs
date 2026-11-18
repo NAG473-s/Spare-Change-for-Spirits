@@ -41,7 +41,9 @@ impl Plugin for DayCyclePlugin {
                 Update,
                 (
                     open_shop.run_if(in_state(Phase::Evening)),
-                    (tick_clock, close_at_dawn).chain().run_if(in_state(Phase::Night)),
+                    (tick_clock, close_at_dawn)
+                        .chain()
+                        .run_if(in_state(Phase::Night)),
                     next_evening.run_if(in_state(Phase::Morning)),
                 ),
             );
@@ -128,7 +130,15 @@ fn close_at_dawn(
     }
     for (entity, mut ghost) in &mut ghosts {
         let busy = register.sale.as_ref().is_some_and(|s| s.ghost == entity);
-        if !busy && matches!(ghost.state, GhostState::Entering | GhostState::Browsing | GhostState::ToCounter | GhostState::Waiting) {
+        if !busy
+            && matches!(
+                ghost.state,
+                GhostState::Entering
+                    | GhostState::Browsing
+                    | GhostState::ToCounter
+                    | GhostState::Waiting
+            )
+        {
             ghost.state = GhostState::Leaving;
             queue.remove(entity);
         }
@@ -138,11 +148,7 @@ fn close_at_dawn(
     }
 }
 
-fn start_morning(
-    data: Res<GameData>,
-    mut stock: ResMut<Stock>,
-    mut report: ResMut<NightReport>,
-) {
+fn start_morning(data: Res<GameData>, mut stock: ResMut<Stock>, mut report: ResMut<NightReport>) {
     report.faded = stock.age_and_fade(&data);
 }
 

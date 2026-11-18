@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::data::GameData;
 use crate::day_cycle::{NightReport, Phase, Progress};
-use crate::economy::{ghost_payment, Drawer, Purse};
+use crate::economy::{Drawer, Purse, ghost_payment};
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::inventory::Stock;
 use crate::rng::Rng;
@@ -15,7 +15,9 @@ pub struct RegisterPlugin;
 impl Plugin for RegisterPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Register>()
-            .add_systems(OnExit(Phase::Night), |mut r: ResMut<Register>| r.sale = None)
+            .add_systems(OnExit(Phase::Night), |mut r: ResMut<Register>| {
+                r.sale = None
+            })
             .add_systems(
                 Update,
                 (serve_front_ghost, make_change).run_if(in_state(Phase::Night)),
@@ -65,7 +67,9 @@ fn serve_front_ghost(
             continue;
         }
         let Some(front) = queue.front() else { continue };
-        let Ok(mut ghost) = ghosts.get_mut(front) else { continue };
+        let Ok(mut ghost) = ghosts.get_mut(front) else {
+            continue;
+        };
         if ghost.state != GhostState::Waiting {
             continue;
         }
@@ -107,7 +111,10 @@ fn serve_front_ghost(
                 });
             }
             Action::Decline => {
-                log.push(format!("You apologise. The {} nods silently and leaves.", def.name));
+                log.push(format!(
+                    "You apologise. The {} nods silently and leaves.",
+                    def.name
+                ));
                 ghost.state = GhostState::Leaving;
                 queue.remove(front);
             }
@@ -130,7 +137,9 @@ fn make_change(
     mut ghosts: Query<&mut Ghost>,
 ) {
     for action in actions.read() {
-        let Some(sale) = register.sale.as_mut() else { continue };
+        let Some(sale) = register.sale.as_mut() else {
+            continue;
+        };
         match action {
             Action::AddChange(coin) => {
                 if sale.given.get(*coin) < drawer.get(*coin) {
@@ -148,7 +157,9 @@ fn make_change(
 
                 let due = sale.change_due();
                 let given = sale.given.total();
-                let Ok(mut ghost) = ghosts.get_mut(sale.ghost) else { continue };
+                let Ok(mut ghost) = ghosts.get_mut(sale.ghost) else {
+                    continue;
+                };
                 let name = data.ghosts[ghost.def].name.clone();
 
                 if given == due {

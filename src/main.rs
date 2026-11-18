@@ -6,6 +6,8 @@
 
 // No console window in Windows release builds.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// Bevy systems take many parameters and complex queries by design.
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
 mod data;
 mod day_cycle;

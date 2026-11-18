@@ -146,7 +146,12 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
             ..default()
         },
         BackgroundColor(BG_PANEL),
-        children![(HudText, Text::new(""), text_font(&font.bold, 15.0), TextColor(TEXT))],
+        children![(
+            HudText,
+            Text::new(""),
+            text_font(&font.bold, 15.0),
+            TextColor(TEXT)
+        )],
     ));
 
     // Side panel – its content is rebuilt per phase.
@@ -184,14 +189,26 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
     ));
 }
 
-fn on_activate(activate: On<Activate>, buttons: Query<&ActionButton>, mut writer: MessageWriter<Action>) {
+fn on_activate(
+    activate: On<Activate>,
+    buttons: Query<&ActionButton>,
+    mut writer: MessageWriter<Action>,
+) {
     if let Ok(button) = buttons.get(activate.entity) {
         writer.write(button.0.clone());
     }
 }
 
 fn button_hover(
-    mut buttons: Query<(&Hovered, &ButtonColor, &mut BackgroundColor, Has<InteractionDisabled>), Changed<Hovered>>,
+    mut buttons: Query<
+        (
+            &Hovered,
+            &ButtonColor,
+            &mut BackgroundColor,
+            Has<InteractionDisabled>,
+        ),
+        Changed<Hovered>,
+    >,
 ) {
     for (hovered, base, mut bg, disabled) in &mut buttons {
         *bg = if hovered.get() && !disabled && base.0 == BTN {
@@ -272,9 +289,21 @@ fn build_evening_panel(
     let row = ui.row();
     for d in &data.decor {
         let selected = *tool == Tool::Place(d.id.clone());
-        ui.button_in(row, &format!("{} ({})", d.name, d.cost), Action::ToolPlace(d.id.clone()), selected, true);
+        ui.button_in(
+            row,
+            &format!("{} ({})", d.name, d.cost),
+            Action::ToolPlace(d.id.clone()),
+            selected,
+            true,
+        );
     }
-    ui.button_in(row, "Remove", Action::ToolRemove, *tool == Tool::Remove, true);
+    ui.button_in(
+        row,
+        "Remove",
+        Action::ToolRemove,
+        *tool == Tool::Remove,
+        true,
+    );
 
     ui.section("Put products on shelves");
     let row = ui.row();
@@ -286,7 +315,13 @@ fn build_evening_panel(
         }
         any = true;
         let selected = *tool == Tool::Stock(p.id.clone());
-        ui.button_in(row, &format!("{} ×{}", p.name, n), Action::ToolStock(p.id.clone()), selected, true);
+        ui.button_in(
+            row,
+            &format!("{} ×{}", p.name, n),
+            Action::ToolStock(p.id.clone()),
+            selected,
+            true,
+        );
     }
     if !any {
         ui.dim("The storeroom is empty. Order something from the ferryman.");
@@ -324,7 +359,11 @@ fn build_night_panel(
         ui.section("Register");
         ui.text(&format!("Item: {}", data.product_name(&sale.product)));
         ui.text(&format!("Price: {}", sale.price));
-        ui.text(&format!("Paid: {} (= {})", sale.paid.describe(), sale.paid.total()));
+        ui.text(&format!(
+            "Paid: {} (= {})",
+            sale.paid.describe(),
+            sale.paid.total()
+        ));
         if data.config.show_change_due {
             ui.dim(&format!("Change due: {}", sale.change_due()));
         }
@@ -366,13 +405,25 @@ fn build_night_panel(
                     continue;
                 }
                 any = true;
-                ui.button_in(row, &format!("{} ×{}", data.product_name(&id), n), Action::Offer(id.clone()), false, true);
+                ui.button_in(
+                    row,
+                    &format!("{} ×{}", data.product_name(&id), n),
+                    Action::Offer(id.clone()),
+                    false,
+                    true,
+                );
             }
             if !any {
                 ui.dim("Nothing on the shelves …");
             }
             ui.spacer();
-            ui.button_in(ui.root(), "Apologise (decline)", Action::Decline, false, true);
+            ui.button_in(
+                ui.root(),
+                "Apologise (decline)",
+                Action::Decline,
+                false,
+                true,
+            );
         }
         _ => {
             ui.dim("The shop is quiet. Candles flicker.");
@@ -391,12 +442,18 @@ fn build_morning_panel(
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
     ui.heading("Dawn – Accounts");
-    ui.text(&format!("Sales: {} · Revenue: {}", report.sales, report.revenue));
+    ui.text(&format!(
+        "Sales: {} · Revenue: {}",
+        report.sales, report.revenue
+    ));
     ui.text(&format!(
         "Change correct: {} · wrong: {}",
         report.change_correct, report.change_wrong
     ));
-    ui.text(&format!("Left unhappy: {} · Fled: {}", report.unhappy, report.fled));
+    ui.text(&format!(
+        "Left unhappy: {} · Fled: {}",
+        report.unhappy, report.fled
+    ));
     ui.text(&format!(
         "Reputation: {} → {}",
         report.reputation_start, progress.reputation
@@ -418,7 +475,14 @@ fn build_morning_panel(
 
     ui.spacer();
     let last = progress.night >= data.config.nights_in_demo;
-    ui.primary(if last { "To the end of the demo  →" } else { "Next evening  →" }, Action::NextEvening);
+    ui.primary(
+        if last {
+            "To the end of the demo  →"
+        } else {
+            "Next evening  →"
+        },
+        Action::NextEvening,
+    );
 }
 
 fn build_demo_end_panel(
@@ -429,7 +493,10 @@ fn build_demo_end_panel(
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
     ui.heading("End of the demo");
-    ui.text(&format!("Your reputation among the spirits: {}", progress.reputation));
+    ui.text(&format!(
+        "Your reputation among the spirits: {}",
+        progress.reputation
+    ));
     ui.dim("Thanks for playing! Wishlist Spare Change for Spirits on Steam.");
 }
 
@@ -454,7 +521,11 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     /// Clears the panel and starts over.
     fn new(commands: &'a mut Commands<'w, 's>, root: Entity, font: &'a UiFont) -> Self {
         commands.entity(root).despawn_related::<Children>();
-        Self { commands, root, font }
+        Self {
+            commands,
+            root,
+            font,
+        }
     }
 
     fn root(&self) -> Entity {
@@ -462,7 +533,11 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     fn add_text(&mut self, parent: Entity, text: &str, bold: bool, size: f32, color: Color) {
-        let font = if bold { &self.font.bold } else { &self.font.regular };
+        let font = if bold {
+            &self.font.bold
+        } else {
+            &self.font.regular
+        };
         self.commands.spawn((
             Text::new(text),
             text_font(font, size),
@@ -476,7 +551,13 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     fn section(&mut self, text: &str) {
-        self.commands.spawn((Node { height: px(6), ..default() }, ChildOf(self.root)));
+        self.commands.spawn((
+            Node {
+                height: px(6),
+                ..default()
+            },
+            ChildOf(self.root),
+        ));
         self.add_text(self.root, text, true, 15.0, TEXT);
     }
 
@@ -489,7 +570,13 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     fn spacer(&mut self) {
-        self.commands.spawn((Node { flex_grow: 1.0, ..default() }, ChildOf(self.root)));
+        self.commands.spawn((
+            Node {
+                flex_grow: 1.0,
+                ..default()
+            },
+            ChildOf(self.root),
+        ));
     }
 
     /// Row in which buttons wrap.
@@ -507,7 +594,14 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             .id()
     }
 
-    fn button_in(&mut self, parent: Entity, label: &str, action: Action, selected: bool, enabled: bool) {
+    fn button_in(
+        &mut self,
+        parent: Entity,
+        label: &str,
+        action: Action,
+        selected: bool,
+        enabled: bool,
+    ) {
         let color = match (enabled, selected) {
             (false, _) => BTN_DISABLED,
             (true, true) => BTN_SELECTED,
@@ -520,7 +614,15 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         self.spawn_button(self.root, label, action, BTN_PRIMARY, true, 16.0);
     }
 
-    fn spawn_button(&mut self, parent: Entity, label: &str, action: Action, color: Color, enabled: bool, size: f32) {
+    fn spawn_button(
+        &mut self,
+        parent: Entity,
+        label: &str,
+        action: Action,
+        color: Color,
+        enabled: bool,
+        size: f32,
+    ) {
         let text_color = if enabled { TEXT } else { TEXT_DIM };
         let mut button = self.commands.spawn((
             Button,
