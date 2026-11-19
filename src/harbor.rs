@@ -12,13 +12,14 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor};
 use bevy::light::NotShadowCaster;
-use bevy::mesh::VertexAttributeValues;
+use bevy::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 
 use crate::data::asset_exists;
 use crate::day_cycle::Phase;
+use crate::fx::Flicker;
 use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::scene::{Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, world_label};
@@ -98,7 +99,11 @@ struct Rowboat {
 
 /// Pivot of the lighthouse beam; it turns slowly.
 #[derive(Component)]
-struct LighthouseBeam(Handle<StandardMaterial>);
+struct LighthouseBeam;
+
+/// The visible light scattered by mist along the spotlight's axis.
+#[derive(Component)]
+struct BeamMist;
 
 #[derive(Component)]
 struct Lantern {
@@ -172,6 +177,7 @@ impl Kit<'_, '_, '_> {
                     color: Color::srgb(1.0, 0.75, 0.45),
                     intensity,
                     range,
+                    radius: 0.14,
                     shadow_maps_enabled: shadows,
                     ..default()
                 },
@@ -404,10 +410,8 @@ fn spawn_harbor(
     let iron = Color::srgb(0.1, 0.1, 0.12);
     if kit
         .model("lamp_post", Transform::from_translation(lamp))
-        .is_some()
+        .is_none()
     {
-        kit.light(lamp + Vec3::Y * 2.45, 220_000.0, 9.0, true);
-    } else {
         kit.add(
             Cylinder::new(0.06, 2.6),
             iron,
@@ -418,19 +422,15 @@ fn spawn_harbor(
             iron,
             Transform::from_translation(lamp + Vec3::Y * 2.62),
         );
-        let light = kit.glow(
+        kit.glow(
             Cuboid::new(0.22, 0.3, 0.22),
             LinearRgba::rgb(6.0, 3.8, 1.5),
             lamp + Vec3::Y * 2.45,
         );
-        kit.commands.entity(light).insert(PointLight {
-            color: Color::srgb(1.0, 0.75, 0.45),
-            intensity: 220_000.0,
-            range: 9.0,
-            shadow_maps_enabled: true,
-            ..default()
-        });
     }
+    // The model's metal housing casts shadows. Put the light just below its
+    // sill and in front of the post so the pool reaches the planks and ferry.
+    kit.light(lamp + Vec3::new(0.0, 2.20, 0.14), 88_000.0, 7.5, true);
 
     // A small lighthouse at the end of the harbour wall; its beam sweeps
     // over the water.
@@ -472,35 +472,23 @@ fn spawn_harbor(
     let beam_pivot = kit
         .commands
         .spawn((
+            LighthouseBeam,
             Transform::from_translation(HARBOR + tower + Vec3::Y * 3.62),
             Visibility::default(),
         ))
         .id();
-    let beam_mesh = kit.meshes.add(
-        Cone {
-            radius: 1.6,
-            height: 9.0,
-        }
-        .mesh()
-        .build()
-        // Tip at the lamp, opening outwards along -y before turning.
-        .translated_by(Vec3::Y * -4.5),
-    );
     let beam_mat = kit.materials.add(StandardMaterial {
-        base_color: Color::srgba(1.0, 0.95, 0.7, BEAM_ALPHA),
+        base_color: Color::srgba(1.0, 0.89, 0.66, 0.19),
         alpha_mode: AlphaMode::Add,
         unlit: true,
         cull_mode: None,
         ..default()
     });
-    kit.commands
-        .entity(beam_pivot)
-        .insert(LighthouseBeam(beam_mat.clone()));
     kit.commands.spawn((
-        Mesh3d(beam_mesh),
+        BeamMist,
+        Mesh3d(kit.meshes.add(beam_ribbon())),
         MeshMaterial3d(beam_mat),
-        // Lie the cone down so it points sideways, slightly downwards.
-        Transform::from_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2 + 0.12)),
+        Transform::default().looking_to(BEAM_DIRECTION, Vec3::Y),
         NotShadowCaster,
         Pickable::IGNORE,
         ChildOf(beam_pivot),
@@ -508,17 +496,14 @@ fn spawn_harbor(
     kit.commands.spawn((
         SpotLight {
             color: Color::srgb(1.0, 0.92, 0.7),
-            intensity: 120_000.0,
-            range: 18.0,
-            outer_angle: 0.22,
-            inner_angle: 0.12,
+            intensity: 430_000.0,
+            range: BEAM_RANGE,
+            outer_angle: BEAM_ANGLE,
+            inner_angle: BEAM_ANGLE * 0.45,
             shadow_maps_enabled: false,
             ..default()
         },
-        // Spot lights shine along -z; aim it out and a little down.
-        Transform::from_rotation(
-            Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2) * Quat::from_rotation_x(-0.2),
-        ),
+        Transform::default().looking_to(BEAM_DIRECTION, Vec3::Y),
         ChildOf(beam_pivot),
     ));
 
@@ -707,7 +692,8 @@ fn spawn_harbor(
     let float_mesh = meshes.add(Cylinder::new(0.12, 0.04));
     let float_mat = materials.add(Color::srgb(0.18, 0.14, 0.1));
     for i in 0..7 {
-        let glow = if i % 3 != 2 {
+        let warm = lantern_model || i % 3 != 2;
+        let glow = if warm {
             LinearRgba::rgb(4.0, 2.2, 0.8)
         } else {
             LinearRgba::rgb(1.2, 2.4, 3.6)
@@ -725,6 +711,28 @@ fn spawn_harbor(
                 Pickable::IGNORE,
             ))
             .id();
+        // Moving, short-range lights put real highlights on the swell as the
+        // paper rafts drift. Their shared model has amber paper.
+        const LANTERN_LUMENS: f32 = 2_200.0;
+        commands.spawn((
+            PointLight {
+                color: if warm {
+                    Color::srgb(1.0, 0.72, 0.41)
+                } else {
+                    Color::srgb(0.55, 0.78, 1.0)
+                },
+                intensity: LANTERN_LUMENS,
+                radius: 0.09,
+                range: 1.65,
+                ..default()
+            },
+            Flicker {
+                base: LANTERN_LUMENS,
+                phase: i as f32 * 2.4,
+            },
+            Transform::from_xyz(0.0, 0.18, 0.0),
+            ChildOf(lantern),
+        ));
         if lantern_model {
             commands.spawn((
                 WorldAssetRoot(
@@ -917,7 +925,7 @@ fn walk(mut actions: MessageReader<Action>, mut location: ResMut<Location>) {
 fn move_camera(
     mut commands: Commands,
     location: Res<Location>,
-    mut camera: Single<&mut Transform, With<MainCamera>>,
+    mut camera: Single<(&mut Transform, &mut Camera), With<MainCamera>>,
     mut first: Local<bool>,
 ) {
     let offset = match *location {
@@ -925,8 +933,14 @@ fn move_camera(
         Location::Harbor => HARBOR,
         Location::Market => crate::market::MARKET,
     };
-    **camera = Transform::from_translation(CAMERA_POS + offset)
+    let (transform, camera) = &mut *camera;
+    **transform = Transform::from_translation(CAMERA_POS + offset)
         .looking_at(CAMERA_TARGET + offset, Vec3::Y);
+    camera.clear_color = if *location == Location::Harbor {
+        ClearColorConfig::Custom(Color::srgb(0.075, 0.105, 0.17))
+    } else {
+        ClearColorConfig::Default
+    };
     // No fade at startup.
     if *first {
         spawn_fade(&mut commands, 0.6);
@@ -1169,26 +1183,60 @@ fn bob_rowboats(time: Res<Time>, mut boats: Query<(&Rowboat, &mut Transform)>) {
     }
 }
 
-/// The lighthouse beam sweeps round and round.
-/// Brightness of the visible beam cone (it is drawn additively).
-const BEAM_ALPHA: f32 = 0.06;
+// The light reaches the water about ten metres from the tower. The mist
+// follows the same direction and opening angle as the spotlight.
+const BEAM_DIRECTION: Vec3 = Vec3::new(1.0, -0.36, 0.0);
+const BEAM_ANGLE: f32 = 0.16;
+const BEAM_RANGE: f32 = 18.0;
 
-/// The lighthouse beam sweeps round and round. Pointing at the camera the
-/// cone would show as a big pale disc, so it fades out there.
-fn sweep_beam(
-    time: Res<Time>,
-    mut beams: Query<(&LighthouseBeam, &mut Transform)>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for (beam, mut transform) in &mut beams {
-        transform.rotation = Quat::from_rotation_y(time.elapsed_secs() * 0.6);
-        // The cone points along local +x; the camera looks from +z.
-        let towards_camera = (transform.rotation * Vec3::X).z.max(0.0);
-        if let Some(mut m) = materials.get_mut(&beam.0) {
-            m.base_color
-                .set_alpha(BEAM_ALPHA * (1.0 - towards_camera).powi(2));
+fn beam_ribbon() -> Mesh {
+    let across = [-1.0_f32, -0.65, -0.30, 0.0, 0.30, 0.65, 1.0];
+    let mut positions = Vec::new();
+    let mut colors = Vec::new();
+    let mut indices = Vec::new();
+    for (row, (fraction, density)) in [
+        (0.0, 0.45),
+        (0.08, 1.0),
+        (0.36, 0.72),
+        (0.65, 0.30),
+        (0.88, 0.0),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let distance = BEAM_RANGE * fraction;
+        let radius = 0.06 + distance * BEAM_ANGLE.tan();
+        for (col, u) in across.into_iter().enumerate() {
+            positions.push([radius * u, 0.0, -distance]);
+            colors.push([1.0, 1.0, 1.0, density * (1.0 - u * u).powi(3)]);
+            if row > 0 && col > 0 {
+                let i = (row * across.len() + col) as u32;
+                let above = i - across.len() as u32;
+                indices.extend([above - 1, above, i, above - 1, i, i - 1]);
+            }
         }
     }
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(
+        Mesh::ATTRIBUTE_NORMAL,
+        vec![[0.0, 1.0, 0.0]; positions.len()],
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
+    .with_inserted_indices(Indices::U32(indices))
+}
+
+fn sweep_beam(
+    time: Res<Time>,
+    mut pivot: Single<&mut Transform, (With<LighthouseBeam>, Without<BeamMist>)>,
+    mut mist: Single<&mut Transform, (With<BeamMist>, Without<LighthouseBeam>)>,
+) {
+    pivot.rotation = Quat::from_rotation_y(time.elapsed_secs() * 0.6);
+    let to_camera = HARBOR + CAMERA_POS - pivot.translation;
+    mist.look_to(BEAM_DIRECTION, pivot.rotation.inverse() * to_camera);
 }
 
 /// The bell sways in the night wind.
