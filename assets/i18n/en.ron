@@ -173,6 +173,9 @@
     "evening.display_summary": "Shelves: {shelves} · products on display: {products}",
     "evening.tonight": "Tonight: {name}",
     "evening.new_tonight": "New tonight: {items}",
+    "evening.expected": "Likely guests tonight",
+    "evening.expected_line": "{ghost} ({percent} %) asks for: {wishes}",
+    "evening.expected_hint": "Who comes depends on the atmosphere and tonight's events. ×N: you already have that many in stock.",
     "evening.open": "Open the shop  →",
 
     // Night panel.

@@ -173,6 +173,9 @@
     "evening.display_summary": "Kệ: {shelves} · hàng đang bày: {products}",
     "evening.tonight": "Đêm nay: {name}",
     "evening.new_tonight": "Mới đêm nay: {items}",
+    "evening.expected": "Khách có thể đến đêm nay",
+    "evening.expected_line": "{ghost} ({percent} %) muốn: {wishes}",
+    "evening.expected_hint": "Ai đến phụ thuộc vào bầu không khí và sự kiện của đêm. ×N: bạn đã có chừng ấy trong kho.",
     "evening.open": "Mở cửa tiệm  →",
 
     // Night panel.

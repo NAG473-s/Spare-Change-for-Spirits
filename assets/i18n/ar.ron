@@ -173,6 +173,9 @@
     "evening.display_summary": "الرفوف: {shelves} · المنتجات المعروضة: {products}",
     "evening.tonight": "الليلة: {name}",
     "evening.new_tonight": "جديد الليلة: {items}",
+    "evening.expected": "الضيوف المتوقعون الليلة",
+    "evening.expected_line": "{ghost} ({percent} %) يطلب: {wishes}",
+    "evening.expected_hint": "يعتمد من يأتي على الأجواء وأحداث الليلة. ×N: لديك هذا العدد في المخزن بالفعل.",
     "evening.open": "افتح المتجر  →",
 
     // Night panel.

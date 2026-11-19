@@ -173,6 +173,9 @@
     "evening.display_summary": "Рафтове: {shelves} · стоки на показ: {products}",
     "evening.tonight": "Тази нощ: {name}",
     "evening.new_tonight": "Ново тази нощ: {items}",
+    "evening.expected": "Очаквани гости тази нощ",
+    "evening.expected_line": "{ghost} ({percent} %) иска: {wishes}",
+    "evening.expected_hint": "Кой ще дойде зависи от атмосферата и събитията през нощта. ×N: толкова вече имаш в склада.",
     "evening.open": "Отвори магазина  →",
 
     // Night panel.

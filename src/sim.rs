@@ -248,32 +248,19 @@ impl<'a> Game<'a> {
     /// stay (its needs are met by the atmosphere).
     fn ghost_weights(&self) -> Vec<(usize, f32, bool)> {
         let atmosphere = self.layout.atmosphere(self.data, self.night);
+        let odds = self.data.ghost_odds(self.night, &atmosphere);
         self.data
             .ghosts
             .iter()
             .enumerate()
-            .filter(|(_, g)| g.unlock_night <= self.night && g.spawn_weight > 0.0)
-            .map(|(i, g)| {
-                let fits = g.unmet_need(&atmosphere).is_none();
-                let w = g.spawn_weight
-                    * if fits { 1.0 } else { 0.35 }
-                    * self.data.ghost_weight_factor(self.night, &g.id);
-                (i, w, fits)
-            })
+            .filter(|(i, _)| odds[*i] > 0.0)
+            .map(|(i, g)| (i, odds[i], g.unmet_need(&atmosphere).is_none()))
             .collect()
     }
 
     fn wishes(&self, ghost: usize) -> Vec<&'a str> {
-        let data = self.data;
-        data.ghosts[ghost]
-            .wishes
-            .iter()
-            .filter(|w| {
-                data.product(w)
-                    .is_some_and(|p| p.unlock_night <= self.night)
-            })
-            .map(String::as_str)
-            .collect()
+        self.data
+            .wishes_tonight(&self.data.ghosts[ghost], self.night)
     }
 
     fn mean_interval(&self) -> f32 {

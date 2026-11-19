@@ -173,6 +173,9 @@
     "evening.display_summary": "ชั้นวาง: {shelves} · สินค้าที่วางโชว์: {products}",
     "evening.tonight": "คืนนี้: {name}",
     "evening.new_tonight": "มาใหม่คืนนี้: {items}",
+    "evening.expected": "แขกที่น่าจะมาคืนนี้",
+    "evening.expected_line": "{ghost} ({percent} %) ต้องการ: {wishes}",
+    "evening.expected_hint": "ใครจะมาขึ้นอยู่กับบรรยากาศและเหตุการณ์ของคืนนี้ ×N: คุณมีของชิ้นนั้นในคลังอยู่แล้วเท่านี้",
     "evening.open": "เปิดร้าน  →",
 
     // Night panel.

@@ -173,6 +173,9 @@
     "evening.display_summary": "Prateleiras: {shelves} · produtos em exposição: {products}",
     "evening.tonight": "Esta noite: {name}",
     "evening.new_tonight": "Novidades esta noite: {items}",
+    "evening.expected": "Clientes prováveis esta noite",
+    "evening.expected_line": "{ghost} ({percent} %) pede: {wishes}",
+    "evening.expected_hint": "Quem aparece depende da atmosfera e dos acontecimentos da noite. ×N: já tens essa quantidade no armazém.",
     "evening.open": "Abrir a loja  →",
 
     // Night panel.

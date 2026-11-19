@@ -173,6 +173,9 @@
     "evening.display_summary": "Hylder: {shelves} · varer udstillet: {products}",
     "evening.tonight": "I nat: {name}",
     "evening.new_tonight": "Nyt i nat: {items}",
+    "evening.expected": "Forventede gæster i nat",
+    "evening.expected_line": "{ghost} ({percent} %) ønsker sig: {wishes}",
+    "evening.expected_hint": "Hvem der kommer, afhænger af stemningen og nattens begivenheder. ×N: så mange har du allerede på lager.",
     "evening.open": "Åbn butikken  →",
 
     // Night panel.

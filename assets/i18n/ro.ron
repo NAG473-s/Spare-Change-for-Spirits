@@ -173,6 +173,9 @@
     "evening.display_summary": "Rafturi: {shelves} · produse expuse: {products}",
     "evening.tonight": "În noaptea asta: {name}",
     "evening.new_tonight": "Nou în noaptea asta: {items}",
+    "evening.expected": "Oaspeți probabili în noaptea asta",
+    "evening.expected_line": "{ghost} ({percent} %) cere: {wishes}",
+    "evening.expected_hint": "Cine vine depinde de atmosferă și de întâmplările nopții. ×N: ai deja atâtea în magazie.",
     "evening.open": "Deschide magazinul  →",
 
     // Night panel.

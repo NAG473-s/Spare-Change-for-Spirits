@@ -173,6 +173,9 @@
     "evening.display_summary": "Hyllyt: {shelves} · tuotteita esillä: {products}",
     "evening.tonight": "Tänä yönä: {name}",
     "evening.new_tonight": "Uutta tänä yönä: {items}",
+    "evening.expected": "Todennäköiset vieraat tänä yönä",
+    "evening.expected_line": "{ghost} ({percent} %) toivoo: {wishes}",
+    "evening.expected_hint": "Tulijat riippuvat tunnelmasta ja yön tapahtumista. ×N: sinulla on jo näin monta varastossa.",
     "evening.open": "Avaa puoti  →",
 
     // Night panel.

@@ -173,6 +173,9 @@
     "evening.display_summary": "Полки: {shelves} · товаров на витрине: {products}",
     "evening.tonight": "Этой ночью: {name}",
     "evening.new_tonight": "Впервые этой ночью: {items}",
+    "evening.expected": "Ожидаемые гости этой ночью",
+    "evening.expected_line": "{ghost} ({percent} %) просит: {wishes}",
+    "evening.expected_hint": "Кто придёт, зависит от атмосферы и событий ночи. ×N: столько у вас уже есть на складе.",
     "evening.open": "Открыть лавку  →",
 
     // Night panel.

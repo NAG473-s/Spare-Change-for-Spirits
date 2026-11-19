@@ -173,6 +173,9 @@
     "evening.display_summary": "Ράφια: {shelves} · προϊόντα σε έκθεση: {products}",
     "evening.tonight": "Απόψε: {name}",
     "evening.new_tonight": "Νέα απόψε: {items}",
+    "evening.expected": "Πιθανοί επισκέπτες απόψε",
+    "evening.expected_line": "{ghost} ({percent} %) ζητά: {wishes}",
+    "evening.expected_hint": "Το ποιος θα έρθει εξαρτάται από την ατμόσφαιρα και τα γεγονότα της νύχτας. ×N: τόσα έχεις ήδη στην αποθήκη.",
     "evening.open": "Άνοιξε το μαγαζί  →",
 
     // Night panel.

@@ -173,6 +173,9 @@
     "evening.display_summary": "Scaffali: {shelves} · prodotti esposti: {products}",
     "evening.tonight": "Stanotte: {name}",
     "evening.new_tonight": "Novità di stanotte: {items}",
+    "evening.expected": "Ospiti probabili stanotte",
+    "evening.expected_line": "{ghost} ({percent} %) chiede: {wishes}",
+    "evening.expected_hint": "Chi arriva dipende dall’atmosfera e dagli eventi della notte. ×N: ne hai già tanti in magazzino.",
     "evening.open": "Apri la bottega  →",
 
     // Night panel.

@@ -173,6 +173,9 @@
     "evening.display_summary": "Regale: {shelves} · Waren in der Auslage: {products}",
     "evening.tonight": "Heute Nacht: {name}",
     "evening.new_tonight": "Neu heute Nacht: {items}",
+    "evening.expected": "Erwartete Gäste heute Nacht",
+    "evening.expected_line": "{ghost} ({percent} %) wünscht sich: {wishes}",
+    "evening.expected_hint": "Wer kommt, hängt von der Atmosphäre und den Ereignissen der Nacht ab. ×N: So viele hast du schon im Lager.",
     "evening.open": "Laden öffnen  →",
 
     // Night panel.

@@ -174,29 +174,14 @@ fn spawn_ghosts(
     }
 
     let atmosphere = layout.atmosphere(&data, night);
-    let weights: Vec<f32> = data
-        .ghosts
-        .iter()
-        .map(|g| {
-            if g.unlock_night > night {
-                return 0.0;
-            }
-            let fits = g.unmet_need(&atmosphere).is_none();
-            g.spawn_weight * if fits { 1.0 } else { 0.35 } * data.ghost_weight_factor(night, &g.id)
-        })
-        .collect();
+    let weights = data.ghost_odds(night, &atmosphere);
     let Some(def_idx) = rng.weighted(&weights) else {
         return;
     };
     let def = &data.ghosts[def_idx];
 
-    // Only wish for what the ferryman already sells.
-    let wishes: Vec<&String> = def
-        .wishes
-        .iter()
-        .filter(|w| data.product(w).is_some_and(|p| p.unlock_night <= night))
-        .collect();
-    let wish = wishes[rng.index(wishes.len())].clone();
+    let wishes = data.wishes_tonight(def, night);
+    let wish = wishes[rng.index(wishes.len())].to_string();
     let hints = lang.count(&format!("product.{wish}.hint."));
     let hint = format!("product.{wish}.hint.{}", rng.index(hints) + 1);
 

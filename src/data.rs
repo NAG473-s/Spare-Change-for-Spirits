@@ -32,6 +32,9 @@ pub struct ProductDef {
 
 /// Containers the ferryman ships products in (each a model and a lid,
 /// `assets/models/shop/<id>.glb` and `<id>_lid.glb`).
+/// How much less often a ghost comes when the atmosphere does not suit it.
+pub const UNFIT_GHOST_ODDS: f32 = 0.35;
+
 pub const CONTAINERS: [&str; 4] = ["crate", "chest", "basket", "keg"];
 
 fn default_container() -> String {
@@ -635,6 +638,34 @@ impl GameData {
         self.event(night)
             .and_then(|e| e.ghost_weights.iter().find(|(id, _)| id == ghost))
             .map_or(1.0, |(_, f)| *f)
+    }
+
+    /// Chance of each ghost type (same order as `ghosts`) to be the next one
+    /// through the door tonight, relative to the others. A ghost whose needs
+    /// the atmosphere does not meet still comes, but less often.
+    pub fn ghost_odds(&self, night: u32, atmosphere: &Atmosphere) -> Vec<f32> {
+        self.ghosts
+            .iter()
+            .map(|g| {
+                if g.unlock_night > night {
+                    return 0.0;
+                }
+                let fits = g.unmet_need(atmosphere).is_none();
+                g.spawn_weight
+                    * if fits { 1.0 } else { UNFIT_GHOST_ODDS }
+                    * self.ghost_weight_factor(night, &g.id)
+            })
+            .collect()
+    }
+
+    /// What a ghost may wish for tonight: only what the ferryman already sells.
+    pub fn wishes_tonight<'a>(&'a self, ghost: &'a GhostDef, night: u32) -> Vec<&'a str> {
+        ghost
+            .wishes
+            .iter()
+            .filter(|w| self.product(w).is_some_and(|p| p.unlock_night <= night))
+            .map(String::as_str)
+            .collect()
     }
 
     pub fn price_factor(&self, night: u32) -> f32 {

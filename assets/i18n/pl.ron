@@ -173,6 +173,9 @@
     "evening.display_summary": "Półki: {shelves} · towary na wystawie: {products}",
     "evening.tonight": "Tej nocy: {name}",
     "evening.new_tonight": "Nowe tej nocy: {items}",
+    "evening.expected": "Spodziewani goście tej nocy",
+    "evening.expected_line": "{ghost} ({percent} %) prosi o: {wishes}",
+    "evening.expected_hint": "To, kto przyjdzie, zależy od nastroju i wydarzeń nocy. ×N: tyle masz już w magazynie.",
     "evening.open": "Otwórz sklep  →",
 
     // Night panel.

@@ -988,6 +988,8 @@ fn build_evening_panel(
                 )],
             ));
         }
+        let odds = data.ghost_odds(night, &layout.atmosphere(&data, night));
+        expected_guests(&mut ui, &lang, &data, &stock, night, &odds);
         ui.section(&lang.t("evening.shelve"));
         let in_stock: Vec<String> = data
             .products
@@ -1025,6 +1027,9 @@ fn build_evening_panel(
             ui.dim(&lang.f("evening.new_tonight", &[("items", &lang.join(&names))]));
         }
     }
+
+    let odds = data.ghost_odds(night, &layout.atmosphere(&data, night));
+    expected_guests(&mut ui, &lang, &data, &stock, night, &odds);
 
     ui.section(&lang.f(
         "evening.ferryman",
@@ -1124,6 +1129,52 @@ fn build_evening_panel(
 
     ui.spacer();
     ui.primary(&lang.t("evening.open"), Action::StartNight);
+}
+
+/// How many ghost types the evening forecast lists.
+const EXPECTED_GUESTS: usize = 3;
+
+/// The ghost types most likely to come tonight, how likely, and what they
+/// ask for – so the player knows what to order and put on the shelves.
+fn expected_guests(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    stock: &Stock,
+    night: u32,
+    odds: &[f32],
+) {
+    let total: f32 = odds.iter().sum();
+    if total <= 0.0 {
+        return;
+    }
+    let mut likely: Vec<usize> = (0..odds.len()).filter(|&i| odds[i] > 0.0).collect();
+    likely.sort_by(|&a, &b| odds[b].total_cmp(&odds[a]));
+    ui.section(&lang.t("evening.expected"));
+    for &i in likely.iter().take(EXPECTED_GUESTS) {
+        let ghost = &data.ghosts[i];
+        let wishes: Vec<String> = data
+            .wishes_tonight(ghost, night)
+            .into_iter()
+            .map(|w| match stock.count(w) {
+                0 => lang.product(w),
+                n => lang.f(
+                    "evening.stock_button",
+                    &[("item", &lang.product(w)), ("count", &n)],
+                ),
+            })
+            .collect();
+        let percent = (odds[i] / total * 100.0).round() as u32;
+        ui.text(&lang.f(
+            "evening.expected_line",
+            &[
+                ("ghost", &lang.ghost(&ghost.id)),
+                ("percent", &percent),
+                ("wishes", &lang.join(&wishes)),
+            ],
+        ));
+    }
+    ui.dim(&lang.t("evening.expected_hint"));
 }
 
 /// What the night panel shows besides the register: the ghost at the

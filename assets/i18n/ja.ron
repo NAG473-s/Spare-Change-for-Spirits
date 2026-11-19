@@ -173,6 +173,9 @@
     "evening.display_summary": "棚：{shelves} · 陳列中の商品：{products}",
     "evening.tonight": "今夜：{name}",
     "evening.new_tonight": "今夜初登場：{items}",
+    "evening.expected": "今夜来そうなお客",
+    "evening.expected_line": "{ghost}（{percent} %）の望み：{wishes}",
+    "evening.expected_hint": "誰が来るかは雰囲気とその夜の出来事しだい。×N：倉庫にすでにある数です。",
     "evening.open": "開店する  →",
 
     // Night panel.

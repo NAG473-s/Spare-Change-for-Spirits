@@ -173,6 +173,9 @@
     "evening.display_summary": "Hyllor: {shelves} · varor framme: {products}",
     "evening.tonight": "I natt: {name}",
     "evening.new_tonight": "Nytt i natt: {items}",
+    "evening.expected": "Väntade gäster i natt",
+    "evening.expected_line": "{ghost} ({percent} %) önskar sig: {wishes}",
+    "evening.expected_hint": "Vilka som kommer beror på stämningen och nattens händelser. ×N: så många har du redan i lagret.",
     "evening.open": "Öppna butiken  →",
 
     // Night panel.

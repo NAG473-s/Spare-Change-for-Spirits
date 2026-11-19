@@ -173,6 +173,9 @@
     "evening.display_summary": "Raf: {shelves} · sergilenen ürün: {products}",
     "evening.tonight": "Bu gece: {name}",
     "evening.new_tonight": "Bu gece yeni: {items}",
+    "evening.expected": "Bu gece beklenen misafirler",
+    "evening.expected_line": "{ghost} ({percent} %) şunu istiyor: {wishes}",
+    "evening.expected_hint": "Kimin geleceği atmosfere ve gecenin olaylarına bağlı. ×N: depoda zaten bu kadar var.",
     "evening.open": "Dükkânı aç  →",
 
     // Night panel.

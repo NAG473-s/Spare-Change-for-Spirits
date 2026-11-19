@@ -173,6 +173,9 @@
     "evening.display_summary": "货架：{shelves} · 陈列商品：{products}",
     "evening.tonight": "今夜：{name}",
     "evening.new_tonight": "今夜新登场：{items}",
+    "evening.expected": "今晚可能来的客人",
+    "evening.expected_line": "{ghost}（{percent} %）想要：{wishes}",
+    "evening.expected_hint": "来客取决于氛围和当晚的事件。×N：仓库里已有这么多。",
     "evening.open": "开门营业  →",
 
     // Night panel.
