@@ -203,8 +203,9 @@ pub fn start_morning(
     mut stock: ResMut<Stock>,
     mut drawer: ResMut<Drawer>,
     mut report: ResMut<NightReport>,
+    upgrades: Res<crate::upgrades::Upgrades>,
 ) {
-    report.faded = stock.age_and_fade(&data);
+    report.faded = stock.age_and_fade(&data, upgrades.fade_bonus(&data));
     report.counterfeits_found = remove_counterfeits(&mut drawer.0, &report.counterfeits_taken);
 }
 

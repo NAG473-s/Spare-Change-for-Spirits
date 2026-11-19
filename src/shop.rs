@@ -25,6 +25,7 @@ use crate::register::Register;
 use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
 use crate::tooltip::{HoverTip, TipKind};
 use crate::ui::{Action, GameLog, Icons, UiFont};
+use crate::upgrades::Upgrades;
 
 /// One grid cell is one metre.
 pub const CELL: f32 = 1.0;
@@ -95,7 +96,7 @@ impl ShopLayout {
         // Starting furniture: two shelves and a candle.
         layout.cells[cols + 2].decor = Some("shelf".into());
         layout.cells[cols + 4].decor = Some("shelf".into());
-        layout.cells[3 * cols + 3].decor = Some("candle".into());
+        layout.cells[2 * cols + 3].decor = Some("candle".into());
         layout
     }
 
@@ -402,6 +403,7 @@ fn on_cell_click(
     mut storeroom: ResMut<Storeroom>,
     mut log: ResMut<GameLog>,
     lang: Res<Lang>,
+    upgrades: Res<Upgrades>,
 ) {
     if *phase.get() != Phase::Evening {
         return;
@@ -410,6 +412,10 @@ fn on_cell_click(
         return;
     };
     let idx = *idx;
+    if matches!(*tool, Tool::Place(_)) && !upgrades.usable(&data, &layout, idx) {
+        log.push(lang.t("log.cell_blocked"));
+        return;
+    }
     match &*tool {
         Tool::None => {}
         Tool::Remove => {
@@ -524,6 +530,7 @@ fn shelf_tooltip(
     register: Res<Register>,
     ghosts: Query<&Ghost>,
     queue: Res<Queue>,
+    upgrades: Res<Upgrades>,
     mut tip: ResMut<HoverTip>,
     mut shown: Local<bool>,
 ) {
@@ -555,7 +562,8 @@ fn shelf_tooltip(
     );
     // The oldest unit is the next to fade.
     if let Some(oldest) = stock.units().get(&p.id).and_then(|ages| ages.iter().max()) {
-        let left = p.fade_after.saturating_sub(*oldest);
+        let lasts = p.fade_after + upgrades.fade_bonus(&data);
+        let left = lasts.saturating_sub(*oldest);
         let kind = if left <= 1 {
             TipKind::Bad
         } else {

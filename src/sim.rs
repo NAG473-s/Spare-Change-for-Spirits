@@ -13,6 +13,7 @@
 //! unhappy. The player is assumed to give the right change and to be
 //! honest; counterfeits are caught with a fixed chance.
 
+use crate::data::DecorDef;
 use crate::data::GameData;
 use crate::economy::Purse;
 use crate::ferry::sale_price;
@@ -20,6 +21,7 @@ use crate::inventory::Stock;
 use crate::loan::is_stuck;
 use crate::rng::Rng;
 use crate::shop::ShopLayout;
+use crate::upgrades::Upgrades;
 
 /// Seconds a ghost spends between the door and the queue (walking, browsing).
 const TO_COUNTER_SECS: f32 = 6.0;
@@ -33,6 +35,8 @@ const SPOT_COUNTERFEIT: f32 = 0.7;
 const LAST_ARRIVAL_SECS: f32 = 20.0;
 /// Money kept back at the market for the ferryman.
 const MARKET_RESERVE: u32 = 30;
+/// Money kept back when buying a shop improvement.
+const IMPROVEMENT_RESERVE: u32 = 60;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Strategy {
@@ -46,15 +50,22 @@ pub enum Strategy {
     DemandDecor,
     /// Always orders the cheapest crates.
     Cheapest,
+    /// Like `DemandDecor`, and buys the shop improvements at the market.
+    Improvements,
 }
 
 impl Strategy {
-    const ALL: [Strategy; 4] = [
+    const ALL: [Strategy; 5] = [
         Strategy::Demand,
         Strategy::DemandDecor,
+        Strategy::Improvements,
         Strategy::Eager,
         Strategy::Cheapest,
     ];
+
+    fn buys_furniture(self) -> bool {
+        matches!(self, Strategy::DemandDecor | Strategy::Improvements)
+    }
 
     fn name(self) -> &'static str {
         match self {
@@ -62,6 +73,7 @@ impl Strategy {
             Strategy::Eager => "eager: like demand, but always fills every crate",
             Strategy::DemandDecor => "demand + furniture for unmet needs",
             Strategy::Cheapest => "cheapest crates",
+            Strategy::Improvements => "demand + furniture + shop improvements",
         }
     }
 }
@@ -135,6 +147,9 @@ struct Game<'a> {
     stock: Stock,
     layout: ShopLayout,
     owed: u32,
+    upgrades: Upgrades,
+    /// Products on the shelves tonight; only these can be sold.
+    displayed: Vec<String>,
 }
 
 impl<'a> Game<'a> {
@@ -148,7 +163,83 @@ impl<'a> Game<'a> {
             stock: Stock::default(),
             layout: ShopLayout::new(data.config.grid_cols, data.config.grid_rows),
             owed: 0,
+            upgrades: Upgrades::default(),
+            displayed: Vec::new(),
         }
+    }
+
+    /// A cell that is free and not blocked by old junk.
+    fn free_cell(&self) -> Option<usize> {
+        (0..self.layout.cells.len()).find(|&i| {
+            self.layout.cells[i].decor.is_none() && self.upgrades.usable(self.data, &self.layout, i)
+        })
+    }
+
+    /// Shelf slots in the shop: how many kinds of wares can be offered.
+    fn slots(&self) -> usize {
+        self.layout
+            .cells
+            .iter()
+            .filter_map(|c| c.decor.as_deref().and_then(|d| self.data.decor(d)))
+            .map(|d| d.slots.len())
+            .sum()
+    }
+
+    /// Products by expected demand tonight, most wanted first.
+    fn ranked(&self) -> Vec<(&'a str, f32)> {
+        let mut demand = self.expected_demand();
+        demand.sort_by(|a, b| b.1.total_cmp(&a.1));
+        demand
+    }
+
+    /// Improvements: the floor only when it is full, the others when there
+    /// is money to spare.
+    fn buy_improvements(&mut self) -> u32 {
+        let mut spent = 0;
+        let mut offered: Vec<_> = self
+            .data
+            .upgrades
+            .iter()
+            .filter(|u| self.upgrades.offered(u, self.night))
+            .collect();
+        offered.sort_by_key(|u| u.cost);
+        for u in offered {
+            let floor = u.effect.cols + u.effect.rows > 0;
+            if floor && self.free_cell().is_some() {
+                continue;
+            }
+            if self.drawer < u.cost + IMPROVEMENT_RESERVE {
+                continue;
+            }
+            self.drawer -= u.cost;
+            spent += u.cost;
+            self.upgrades.0.insert(u.id.clone());
+        }
+        spent
+    }
+
+    /// Shelves until every product the ghosts often ask for has a slot.
+    fn buy_shelves(&mut self) -> u32 {
+        let wanted = self.ranked().iter().filter(|(_, d)| *d >= 1.0).count();
+        let mut spent = 0;
+        while self.slots() < wanted {
+            let Some(free) = self.free_cell() else { break };
+            let best = self
+                .data
+                .decor
+                .iter()
+                .filter(|d| d.is_shelf() && !d.keepsake && d.unlock_night <= self.night)
+                .filter(|d| self.drawer >= d.cost + MARKET_RESERVE)
+                .max_by(|a, b| {
+                    let score = |d: &&DecorDef| d.slots.len() as f32 / d.cost.max(1) as f32;
+                    score(a).total_cmp(&score(b))
+                });
+            let Some(d) = best else { break };
+            self.layout.cells[free].decor = Some(d.id.clone());
+            self.drawer -= d.cost;
+            spent += d.cost;
+        }
+        spent
     }
 
     /// Relative weight of every ghost type tonight, and whether it would
@@ -186,7 +277,10 @@ impl<'a> Game<'a> {
     fn mean_interval(&self) -> f32 {
         let (min, max) = self.data.config.spawn_interval_secs;
         let rep_factor = self.data.config.reputation_spawn_factor(self.reputation);
-        (min + max) / 2.0 * rep_factor * self.data.spawn_factor(self.night)
+        (min + max) / 2.0
+            * rep_factor
+            * self.data.spawn_factor(self.night)
+            * self.upgrades.spawn_factor(self.data)
     }
 
     /// Expected units asked for tonight, per product.
@@ -215,10 +309,14 @@ impl<'a> Game<'a> {
 
     /// The village market (from the second day on).
     fn market(&mut self, strategy: Strategy) -> u32 {
-        if strategy != Strategy::DemandDecor || self.night < 2 {
+        if !strategy.buys_furniture() || self.night < 2 {
             return 0;
         }
         let mut spent = 0;
+        if strategy == Strategy::Improvements {
+            spent += self.buy_improvements();
+        }
+        spent += self.buy_shelves();
         loop {
             // The furniture that lets the most (weighted) ghosts stay.
             let staying = |game: &Self| -> f32 {
@@ -229,7 +327,7 @@ impl<'a> Game<'a> {
                     .sum()
             };
             let now = staying(self);
-            let Some(free) = self.layout.cells.iter().position(|c| c.decor.is_none()) else {
+            let Some(free) = self.free_cell() else {
                 break;
             };
             let mut best: Option<(String, u32, f32)> = None;
@@ -268,7 +366,14 @@ impl<'a> Game<'a> {
             stats.loans = 1.0;
         }
         let demand = self.expected_demand();
-        let limit = data.crates_tonight(self.night);
+        // Only what fits on the shelves can be sold: order for those.
+        let shelf: Vec<&str> = self
+            .ranked()
+            .into_iter()
+            .take(self.slots())
+            .map(|(id, _)| id)
+            .collect();
+        let limit = self.upgrades.crates_tonight(data, self.night);
         let mut ordered = 0;
         while ordered < limit {
             let affordable = data
@@ -277,11 +382,16 @@ impl<'a> Game<'a> {
                 .filter(|p| p.unlock_night <= self.night && p.crate_cost <= self.drawer);
             let pick = match strategy {
                 Strategy::Cheapest => affordable.min_by_key(|p| p.crate_cost),
-                Strategy::Demand | Strategy::DemandDecor | Strategy::Eager => affordable
+                Strategy::Demand
+                | Strategy::DemandDecor
+                | Strategy::Improvements
+                | Strategy::Eager => affordable
+                    .filter(|p| shelf.contains(&p.id.as_str()))
                     .map(|p| {
                         // Demand until the ware fades or the game ends.
                         let nights_left = data.config.final_night() + 1 - self.night;
-                        let horizon = p.fade_after.min(nights_left) as f32;
+                        let lasts = p.fade_after + self.upgrades.fade_bonus(data);
+                        let horizon = lasts.min(nights_left) as f32;
                         let wanted = horizon
                             * demand
                                 .iter()
@@ -305,6 +415,26 @@ impl<'a> Game<'a> {
             ordered += 1;
         }
         stats.crates = ordered as f64;
+        // On the shelves: the most wanted products in stock.
+        let mut in_stock: Vec<(String, f32)> = self
+            .stock
+            .units()
+            .iter()
+            .filter(|(_, u)| !u.is_empty())
+            .map(|(id, _)| {
+                let d = demand
+                    .iter()
+                    .find(|(p, _)| *p == id)
+                    .map_or(0.0, |(_, d)| *d);
+                (id.clone(), d)
+            })
+            .collect();
+        in_stock.sort_by(|a, b| b.1.total_cmp(&a.1));
+        self.displayed = in_stock
+            .into_iter()
+            .take(self.slots())
+            .map(|(id, _)| id)
+            .collect();
     }
 
     /// The night, second by second of the arrivals.
@@ -320,7 +450,10 @@ impl<'a> Game<'a> {
         loop {
             let (min, max) = config.spawn_interval_secs;
             let rep_factor = data.config.reputation_spawn_factor(self.reputation);
-            t += self.rng.range(min, max) * rep_factor * data.spawn_factor(self.night);
+            t += self.rng.range(min, max)
+                * rep_factor
+                * data.spawn_factor(self.night)
+                * self.upgrades.spawn_factor(data);
             if t > end {
                 break;
             }
@@ -360,13 +493,14 @@ impl<'a> Game<'a> {
             let wish = wishes[self.rng.index(wishes.len())];
             let at_counter = t + TO_COUNTER_SECS;
             let start = at_counter.max(register_free);
-            if start - at_counter > def.patience_secs {
+            let patience = def.patience_secs * self.upgrades.patience_factor(data);
+            if start - at_counter > patience {
                 stats.unhappy += 1.0;
                 self.reputation -= 1;
-                leaving.push(at_counter + def.patience_secs);
+                leaving.push(at_counter + patience);
                 continue;
             }
-            if !self.stock.take_one(wish) {
+            if !self.displayed.iter().any(|d| d == wish) || !self.stock.take_one(wish) {
                 // "Sorry, we have none" is quick.
                 register_free = start + DECLINE_SECS;
                 leaving.push(register_free);
@@ -399,7 +533,7 @@ impl<'a> Game<'a> {
     fn morning(&mut self, stats: &mut NightStats) {
         let faded: u32 = self
             .stock
-            .age_and_fade(self.data)
+            .age_and_fade(self.data, self.upgrades.fade_bonus(self.data))
             .iter()
             .map(|(_, n)| n)
             .sum();

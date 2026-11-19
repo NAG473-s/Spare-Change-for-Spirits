@@ -340,6 +340,9 @@ pub struct Config {
     pub ferryman_loan: crate::loan::LoanTerms,
     /// How reputation changes the time between ghosts.
     pub reputation_spawn: ReputationSpawn,
+    /// The part of the floor free of old junk at the start; the rest is
+    /// cleared by improvements (`upgrades.ron`).
+    pub start_area: StartArea,
 }
 
 /// Each reputation point shortens (or, below zero, lengthens) the time
@@ -378,6 +381,7 @@ pub struct GameData {
     pub events: Vec<NightEvent>,
     pub props: Vec<PropDef>,
     pub vendors: Vec<VendorDef>,
+    pub upgrades: Vec<UpgradeDef>,
 }
 
 /// A trader at the village market (`market.ron`).
@@ -407,6 +411,68 @@ pub enum Ware {
     Hourglass,
     /// This many single pieces of different products, a new choice every day.
     RarePieces(u32),
+    /// A shop improvement from `upgrades.ron`, bought once.
+    Upgrade(String),
+}
+
+/// A shop improvement (`upgrades.ron`), bought once at the market.
+#[derive(Deserialize, Clone, Debug)]
+pub struct UpgradeDef {
+    pub id: String,
+    pub cost: u32,
+    #[serde(default = "one")]
+    pub unlock_night: u32,
+    /// Another improvement that has to be bought first.
+    #[serde(default)]
+    pub requires: Option<String>,
+    #[serde(default)]
+    pub effect: UpgradeEffect,
+    /// What stands in the shop once it is bought.
+    #[serde(default)]
+    pub model: Option<UpgradeModel>,
+}
+
+/// What an improvement changes; see `upgrades.ron`.
+#[derive(Deserialize, Clone, Copy, Debug)]
+#[serde(default)]
+pub struct UpgradeEffect {
+    pub cols: usize,
+    pub rows: usize,
+    pub extra_crates: i32,
+    pub fade_bonus: u32,
+    pub spawn_factor: f32,
+    pub patience_factor: f32,
+}
+
+impl Default for UpgradeEffect {
+    fn default() -> Self {
+        Self {
+            cols: 0,
+            rows: 0,
+            extra_crates: 0,
+            fade_bonus: 0,
+            spawn_factor: 1.0,
+            patience_factor: 1.0,
+        }
+    }
+}
+
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct UpgradeModel {
+    pub pos: (f32, f32, f32),
+    #[serde(default)]
+    pub turn: f32,
+    pub size: (f32, f32, f32),
+    pub color: (f32, f32, f32),
+    #[serde(default)]
+    pub light_height: f32,
+}
+
+/// Columns and rows of the floor that are free of old junk at the start.
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct StartArea {
+    pub cols: usize,
+    pub rows: usize,
 }
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -431,12 +497,48 @@ impl GameData {
             events: load_ron("data/events.ron"),
             props: load_ron("data/props.ron"),
             vendors: load_ron("data/market.ron"),
+            upgrades: load_ron("data/upgrades.ron"),
         };
         data.validate();
         data
     }
 
     fn validate(&self) {
+        let c = &self.config;
+        assert!(
+            c.start_area.cols <= c.grid_cols && c.start_area.rows <= c.grid_rows,
+            "start_area is bigger than the grid"
+        );
+        for u in &self.upgrades {
+            let sellers = self
+                .vendors
+                .iter()
+                .filter(|v| v.wares.contains(&Ware::Upgrade(u.id.clone())))
+                .count();
+            assert_eq!(
+                sellers, 1,
+                "upgrade '{}' must be sold by exactly one trader",
+                u.id
+            );
+            if let Some(r) = &u.requires {
+                assert!(
+                    self.upgrade(r).is_some(),
+                    "upgrade '{}' requires unknown '{r}'",
+                    u.id
+                );
+            }
+        }
+        for v in &self.vendors {
+            for w in &v.wares {
+                if let Ware::Upgrade(id) = w {
+                    assert!(
+                        self.upgrade(id).is_some(),
+                        "vendor '{}' sells unknown upgrade '{id}'",
+                        v.id
+                    );
+                }
+            }
+        }
         for v in &self.vendors {
             for w in &v.wares {
                 if let Ware::Decor(d) = w {
@@ -574,6 +676,10 @@ impl GameData {
 
     pub fn product(&self, id: &str) -> Option<&ProductDef> {
         self.products.iter().find(|p| p.id == id)
+    }
+
+    pub fn upgrade(&self, id: &str) -> Option<&UpgradeDef> {
+        self.upgrades.iter().find(|u| u.id == id)
     }
 
     pub fn decor(&self, id: &str) -> Option<&DecorDef> {

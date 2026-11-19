@@ -26,6 +26,7 @@ use crate::scene::{billboard_material, billboard_mesh, world_label};
 use crate::shop::{Storeroom, model_or_box, product_model};
 use crate::tooltip::{HoverTip, TipKind};
 use crate::ui::{Action, GameLog, Icons, UiFont};
+use crate::upgrades::Upgrades;
 
 pub struct MarketPlugin;
 
@@ -54,6 +55,11 @@ pub const MARKET: Vec3 = Vec3::new(-160.0, 0.0, 0.0);
 const TABLE: Vec3 = Vec3::new(1.7, 0.85, 0.7);
 /// Furniture is shown as a small sample: its largest side, in metres.
 const SAMPLE_SIZE: f32 = 0.5;
+/// A rolled-up plan stands for improvements without a model of their own
+/// (clearing the floor): `assets/models/market/plan.glb`.
+const PLAN_MODEL: &str = "models/market/plan.glb";
+const PLAN_SIZE: Vec3 = Vec3::new(0.4, 0.12, 0.12);
+const PLAN_COLOR: Color = Color::srgb(0.88, 0.8, 0.62);
 /// The Reaper's hourglass: price, and how much longer the night gets.
 pub const HOURGLASS_PRICE: u32 = 12;
 const HOURGLASS_BONUS: f32 = 1.25;
@@ -126,6 +132,8 @@ enum WareKind {
     Exchange(Exchange),
     Hourglass,
     Rare(String),
+    /// A shop improvement; it leaves the table once bought.
+    Upgrade(String),
 }
 
 /// A pennant on the bunting; it flutters.
@@ -595,6 +603,7 @@ fn open_market(
     mut location: ResMut<Location>,
     mut rng: ResMut<Rng>,
     mut sky: ResMut<ClearColor>,
+    upgrades: Res<Upgrades>,
 ) {
     *location = Location::Market;
     sky.0 = DAY_SKY;
@@ -645,6 +654,11 @@ fn open_market(
                         if let Some(id) = rare.next() {
                             kinds.push(WareKind::Rare(id));
                         }
+                    }
+                }
+                Ware::Upgrade(id) => {
+                    if data.upgrade(id).is_some_and(|u| upgrades.offered(u, night)) {
+                        kinds.push(WareKind::Upgrade(id.clone()));
                     }
                 }
             }
@@ -699,6 +713,30 @@ fn spawn_ware_visual(k: &mut Kit, data: &GameData, item: Entity, kind: &WareKind
                 &path,
                 size,
                 rgb(def.color),
+            );
+            k.commands.entity(visual).insert(ChildOf(sample));
+        }
+        WareKind::Upgrade(id) => {
+            // The improvement in miniature, or a rolled-up plan of the work.
+            let Some(def) = data.upgrade(id) else { return };
+            let (path, size, color) = match def.model {
+                Some(m) => (
+                    format!("models/shop/{id}.glb"),
+                    Vec3::new(m.size.0, m.size.1, m.size.2),
+                    rgb(m.color),
+                ),
+                None => (PLAN_MODEL.to_string(), PLAN_SIZE, PLAN_COLOR),
+            };
+            let scale = (SAMPLE_SIZE / size.max_element()).min(1.0);
+            let sample = k.node(Some(item), Transform::from_scale(Vec3::splat(scale)));
+            let visual = model_or_box(
+                &mut k.commands,
+                k.asset_server,
+                k.meshes,
+                k.materials,
+                &path,
+                size,
+                color,
             );
             k.commands.entity(visual).insert(ChildOf(sample));
         }
@@ -827,6 +865,7 @@ fn price(data: &GameData, kind: &WareKind) -> u32 {
         WareKind::Rare(id) => data.product(id).map_or(0, |p| p.price),
         WareKind::Hourglass => HOURGLASS_PRICE,
         WareKind::Exchange(_) => 0,
+        WareKind::Upgrade(id) => data.upgrade(id).map_or(0, |u| u.cost),
     }
 }
 
@@ -848,8 +887,11 @@ fn blocked(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn on_ware_click(
     click: On<PointerClick>,
+    mut commands: Commands,
+    mut upgrades: ResMut<Upgrades>,
     items: Query<&WareItem>,
     data: Res<GameData>,
     lang: Res<Lang>,
@@ -917,6 +959,22 @@ fn on_ware_click(
                     drawer.merge(&get);
                     accounts.market += fee;
                     log.push(lang.f("log.exchanged", &[("vendor", &vendor)]));
+                }
+                WareKind::Upgrade(id) => {
+                    if !drawer.pay(cost) {
+                        return;
+                    }
+                    accounts.upgrades += cost;
+                    upgrades.0.insert(id.clone());
+                    log.push(lang.f(
+                        "log.market_bought",
+                        &[
+                            ("item", &lang.t(&format!("upgrade.{id}.name"))),
+                            ("vendor", &vendor),
+                        ],
+                    ));
+                    // Done for good: it leaves the table.
+                    commands.entity(click.event_target()).despawn();
                 }
             }
             true
@@ -1019,6 +1077,15 @@ fn ware_tooltip(
                 TipKind::Text,
                 lang.f("market.tip_price", &[("price", &cost)]),
             );
+        }
+        WareKind::Upgrade(id) => {
+            t.title = lang.t(&format!("upgrade.{id}.name"));
+            t.line(TipKind::Text, lang.t(&format!("upgrade.{id}.text")));
+            t.line(
+                TipKind::Text,
+                lang.f("market.tip_price", &[("price", &cost)]),
+            );
+            t.line(TipKind::Good, lang.t("market.tip_upgrade"));
         }
         WareKind::Exchange(e) => {
             let key = match e {

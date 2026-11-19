@@ -793,6 +793,7 @@ fn update_tips(
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
     data: Res<GameData>,
+    upgrades: Res<crate::upgrades::Upgrades>,
     lang: Res<Lang>,
     progress: Res<Progress>,
     crates: Res<CratesOrdered>,
@@ -821,7 +822,10 @@ fn update_tips(
             )
         })
         .flatten()
-        .map(|key| lang.f(key, &[("count", &data.crates_tonight(progress.night))]));
+        .map(|key| {
+            let crates = upgrades.crates_tonight(&data, progress.night);
+            lang.f(key, &[("count", &crates)])
+        });
     if *shown == tip {
         return;
     }

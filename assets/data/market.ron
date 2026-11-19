@@ -8,14 +8,17 @@
 //   Exchange(...)   the raven changes coins: SpoonToCandles, CandleToButtons, CandlesToSpoon
 //   Hourglass       the coming night lasts a quarter longer; one a day
 //   RarePieces(n)   n single pieces of different products, a new choice every day
+//   Upgrade("<id>") a shop improvement from upgrades.ron, bought once
 [
     (id: "carpenter", pos: (-5.0, -2.2), turn: 12.0, color: (0.6, 0.45, 0.28),
      wares: [Decor("small_shelf"), Decor("shelf"), Decor("display_table"),
-             Decor("tall_bookcase"), Decor("glass_cabinet")]),
+             Decor("tall_bookcase"), Decor("glass_cabinet"),
+             Upgrade("clear_corner"), Upgrade("back_room"), Upgrade("knock_through"),
+             Upgrade("waiting_bench")]),
     (id: "candlemaker", pos: (-1.7, -2.6), color: (0.95, 0.75, 0.35),
-     wares: [Decor("candle"), Decor("oil_lamp"), Decor("stove")]),
+     wares: [Decor("candle"), Decor("oil_lamp"), Decor("stove"), Upgrade("door_lantern")]),
     (id: "herbalist", pos: (1.6, -2.6), color: (0.4, 0.6, 0.4),
-     wares: [Decor("incense"), Decor("fern")]),
+     wares: [Decor("incense"), Decor("fern"), Upgrade("herb_sachets")]),
     (id: "glazier", pos: (4.9, -2.2), turn: -12.0, color: (0.55, 0.15, 0.2),
      wares: [Decor("mirror"), Decor("vanity")]),
     (id: "weaver", pos: (-4.2, 1.4), turn: 25.0, color: (0.65, 0.35, 0.4),
@@ -23,5 +26,6 @@
     (id: "raven", pos: (0.0, 1.9), color: (0.2, 0.22, 0.3),
      wares: [Exchange(SpoonToCandles), Exchange(CandleToButtons), Exchange(CandlesToSpoon)]),
     (id: "reaper", pos: (4.3, 1.4), turn: -25.0, color: (0.15, 0.13, 0.18),
-     wares: [RarePieces(3), Hourglass, Decor("grandfather_clock"), Decor("gramophone")]),
+     wares: [RarePieces(3), Hourglass, Decor("grandfather_clock"), Decor("gramophone"),
+             Upgrade("ferry_contract")]),
 ]

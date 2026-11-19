@@ -20,9 +20,10 @@ use crate::economy::{Drawer, Purse};
 use crate::inventory::{CratesOrdered, Stock};
 use crate::loan::{Loan, lend, repay};
 use crate::shop::{CellContent, ShopLayout, Storeroom};
+use crate::upgrades::Upgrades;
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 2;
+pub const SAVE_VERSION: u32 = 3;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -56,6 +57,9 @@ pub struct SaveGame {
     /// Still owed to the ferryman (the bankruptcy rule).
     #[serde(default)]
     pub loan: u32,
+    /// Shop improvements bought at the market.
+    #[serde(default)]
+    pub upgrades: Vec<String>,
     /// Saved at dawn: the game continues at the village market.
     #[serde(default)]
     pub market_open: bool,
@@ -324,6 +328,7 @@ pub struct GameState<'w> {
     pub storeroom: ResMut<'w, Storeroom>,
     pub crates: ResMut<'w, CratesOrdered>,
     pub loan: ResMut<'w, Loan>,
+    pub upgrades: ResMut<'w, Upgrades>,
 }
 
 impl GameState<'_> {
@@ -339,6 +344,7 @@ impl GameState<'_> {
             storeroom: self.storeroom.0.clone(),
             crates_ordered: self.crates.0,
             loan: self.loan.owed,
+            upgrades: self.upgrades.0.iter().cloned().collect(),
             market_open,
             finished,
         }
@@ -361,6 +367,7 @@ impl GameState<'_> {
         self.storeroom.0 = save.storeroom.clone();
         self.crates.0 = save.crates_ordered;
         self.loan.owed = save.loan;
+        self.upgrades.0 = save.upgrades.iter().cloned().collect();
     }
 
     pub fn reset(&mut self, data: &GameData) {
@@ -375,6 +382,7 @@ impl GameState<'_> {
         self.storeroom.0.clear();
         self.crates.0 = 0;
         self.loan.owed = 0;
+        self.upgrades.0.clear();
     }
 }
 
@@ -454,6 +462,7 @@ mod tests {
             storeroom: BTreeMap::new(),
             crates_ordered: 0,
             loan: 0,
+            upgrades: Vec::new(),
             market_open: false,
             finished: true,
         };
@@ -486,6 +495,7 @@ mod tests {
             storeroom: BTreeMap::from([("umbrella".to_string(), 1)]),
             crates_ordered: 2,
             loan: 7,
+            upgrades: vec!["clear_corner".into()],
             market_open: true,
             finished: false,
         };
@@ -506,6 +516,7 @@ mod tests {
             storeroom: BTreeMap::new(),
             crates_ordered: 0,
             loan: 0,
+            upgrades: Vec::new(),
             market_open: false,
             finished: false,
         }

@@ -24,6 +24,7 @@ use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
 use crate::save::{Knob, Slot};
 use crate::shop::{ShopLayout, Storeroom, Tool};
+use crate::upgrades::Upgrades;
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
 pub(crate) const BG_PANEL: Color = Color::srgb(0.11, 0.08, 0.12);
@@ -874,10 +875,11 @@ fn build_evening_panel(
     icons: Res<Icons>,
     bought: Res<BoughtTonight>,
     location: Res<Location>,
+    upgrades: Res<Upgrades>,
 ) {
     let night = progress.night;
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
-    let max_crates = data.crates_tonight(night);
+    let max_crates = upgrades.crates_tonight(&data, night);
     let bought_units = bought.units(&data);
 
     if *location == Location::Harbor {
@@ -987,6 +989,10 @@ fn build_evening_panel(
     );
     if owned.is_empty() {
         ui.dim(&lang.t("evening.no_furniture"));
+    }
+    // Part of the floor is still blocked by old junk.
+    if upgrades.area(&data) != (data.config.grid_cols, data.config.grid_rows) {
+        ui.dim(&lang.t("evening.junk"));
     }
 
     ui.section(&lang.t("evening.shelve"));

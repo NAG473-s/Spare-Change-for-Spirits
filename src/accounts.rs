@@ -13,6 +13,7 @@ use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::loan::{Loan, repay};
 use crate::ui::{Action, Icons, PanelBuilder, UiFont, UiTheme, overlay};
+use crate::upgrades::Upgrades;
 
 pub struct AccountsPlugin;
 
@@ -61,6 +62,8 @@ pub struct Accounts {
     /// Other market spending: the Reaper's pieces, the hourglass, the
     /// raven's change fees.
     pub market: u32,
+    /// Shop improvements bought at the market.
+    pub upgrades: u32,
     /// In the drawer when the shop opened.
     pub night_start: u32,
     /// What the night brought in: the drawer at dawn (before counterfeits
@@ -192,6 +195,7 @@ fn build_ledger(
     progress: Res<Progress>,
     stock: Res<Stock>,
     loan: Res<Loan>,
+    upgrades: Res<Upgrades>,
     asset_server: Res<AssetServer>,
     existing: Query<Entity, With<Ledger>>,
 ) {
@@ -288,6 +292,15 @@ fn build_ledger(
         money(-(a.furniture as i64)),
         false,
     );
+    if a.upgrades > 0 {
+        line(
+            &mut ui,
+            &lang.t("accounts.upgrades"),
+            signed(-(a.upgrades as i64)),
+            money(-(a.upgrades as i64)),
+            false,
+        );
+    }
     if a.market > 0 {
         line(
             &mut ui,
@@ -564,7 +577,7 @@ fn build_ledger(
     chips(
         &mut ui,
         &lang.t("accounts.fading_soon"),
-        product_chips(&fading_next_dawn(&stock, &data)),
+        product_chips(&fading_next_dawn(&stock, &data, upgrades.fade_bonus(&data))),
     );
 
     // Footer.
@@ -596,12 +609,14 @@ fn money(n: i64) -> Color {
 }
 
 /// Units that will fade at the next dawn if they are not sold tonight.
-pub fn fading_next_dawn(stock: &Stock, data: &GameData) -> Vec<String> {
+pub fn fading_next_dawn(stock: &Stock, data: &GameData, bonus: u32) -> Vec<String> {
     stock
         .units()
         .iter()
         .flat_map(|(id, ages)| {
-            let limit = data.product(id).map_or(u32::MAX, |p| p.fade_after);
+            let limit = data
+                .product(id)
+                .map_or(u32::MAX, |p| p.fade_after.saturating_add(bonus));
             let n = ages.iter().filter(|age| **age + 1 >= limit).count();
             std::iter::repeat_n(id.clone(), n)
         })
@@ -662,6 +677,6 @@ mod tests {
             "lavender".to_string(),
             vec![p.fade_after - 1, 0, p.fade_after - 1],
         )]));
-        assert_eq!(fading_next_dawn(&stock, &data).len(), 2);
+        assert_eq!(fading_next_dawn(&stock, &data, 0).len(), 2);
     }
 }

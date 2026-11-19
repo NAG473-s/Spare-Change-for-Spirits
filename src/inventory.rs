@@ -82,10 +82,13 @@ impl Stock {
 
     /// Ages everything by one night and removes faded items.
     /// Returns how much of what has faded.
-    pub fn age_and_fade(&mut self, data: &GameData) -> Vec<(String, u32)> {
+    /// `bonus`: nights the wares last longer (herb sachets in the storeroom).
+    pub fn age_and_fade(&mut self, data: &GameData, bonus: u32) -> Vec<(String, u32)> {
         let mut faded = Vec::new();
         for (id, units) in &mut self.units {
-            let limit = data.product(id).map_or(u32::MAX, |p| p.fade_after);
+            let limit = data
+                .product(id)
+                .map_or(u32::MAX, |p| p.fade_after.saturating_add(bonus));
             for age in units.iter_mut() {
                 *age += 1;
             }

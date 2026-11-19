@@ -9,8 +9,12 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-There are no open model orders. The ferry containers and lids, village houses, shop and harbour
-props, furniture, animals, market stalls, traders and hourglass are all in `assets/models/`.
+- Shop improvements: `junk_1`, `junk_2`, `junk_3`, `waiting_bench`, `door_lantern`,
+  `herb_sachets`, `ferry_contract` (section *Shop improvements* below).
+- The village market: `plan` (section *The village market* below).
+
+Everything else – the ferry containers and lids, village houses, shop and harbour props,
+furniture, animals, market stalls, traders and hourglass – is in `assets/models/`.
 
 To check a fresh checkout, pull `main` and run `python3 tools/check_models.py`. A `missing` line
 identifies an absent asset. The sections below retain the dimensions, pivots and prompts for
@@ -132,6 +136,26 @@ apply an offset): the floor is **not** part of the room model (the game draws th
   with frame and emissive moonlit glass; dark wallpaper with a faded pattern, wooden wainscot up
   to 0.9 m, a few cobwebs in the upper corners.
 - Leave the right side and the front open (the camera looks in from the front).
+
+## Shop improvements – `assets/models/shop/<id>.glb`
+
+Improvements are bought at the village market (`assets/data/upgrades.ron`). At the start part of
+the floor is blocked by **old junk**; clearing it is an improvement, so the junk piles disappear
+cell by cell. The game turns each pile a little differently and uses the three in turn. The other
+improvements stand in the shop once bought; the game adds the lantern's light.
+
+Origin at the **bottom centre**; the front faces **−Y** (towards the camera for things on the
+back wall; the game turns the wall pieces on the left wall towards the room).
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `junk_1` | 0.85 × 0.75 × 0.85 | A pile of old junk filling one floor tile: two stacked dusty wooden crates under a grey dust sheet, a cobweb between them. |
+| `junk_2` | 0.85 × 0.75 × 0.85 | A pile of old junk: a broken chair upside down on a small trunk, a rolled carpet leaning against it, dust. |
+| `junk_3` | 0.85 × 0.75 × 0.85 | A pile of old junk: a covered birdcage, a stack of old books and a cracked flower pot on a low box, all under a thin layer of dust. |
+| `waiting_bench` | 1.4 × 0.55 × 0.45 | A worn little wooden bench with a curved backrest and two embroidered cushions, standing against the back wall. |
+| `door_lantern` | 0.3 × 0.45 × 0.3 | A small brass wall lantern with glass panes, its glass front towards −Y and a wrought-iron bracket at the back (+Y) that holds it against the wall; a candle inside with an emissive flame. |
+| `herb_sachets` | 1.0 × 0.5 × 0.15 | Four bundles of dried herbs and small linen sachets tied with string, hanging from a short wooden rail; lavender, sage and rosemary colours. |
+| `ferry_contract` | 0.5 × 0.65 × 0.05 | A framed old contract on yellowed paper with ornate handwriting (no readable words), a red wax seal and a tiny drawing of a boat, in a thin dark wooden frame. |
 
 ## The ferryman – `assets/models/shop/<id>.glb`
 
@@ -280,6 +304,7 @@ back carrying an awning at about 2.2 m. Traders: origin at the feet, facing −Y
 | `vendor_raven` | 0.4 × 1.4 × 0.4 | Corvus, a large black raven with a tiny monocle sitting on top of a wooden perch post (the post 1.0 m high); origin at the bottom of the post. |
 | `vendor_reaper` | 0.7 × 1.7 × 0.6 | The Reaper, tall and polite, in a long black hooded robe, two pale glowing eyes (emissive) in the dark hood, holding his scythe upright. |
 | `hourglass` | 0.2 × 0.3 × 0.2 | A brass-framed hourglass with pale sand, standing upright. |
+| `plan` | 0.4 × 0.12 × 0.12 | A rolled-up building plan on yellowed paper, tied with a red ribbon, lying on its side (it stands for the carpenter's work on the shop). |
 
 ## Delivery: push every model on its own
 

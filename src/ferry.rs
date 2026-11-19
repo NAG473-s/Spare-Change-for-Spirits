@@ -23,6 +23,7 @@ use crate::rng::Rng;
 use crate::scene::world_label;
 use crate::shop::{model_or_box, product_model};
 use crate::ui::{BG_PANEL, GameLog, Icons, PanelBuilder, TEXT_DIM, UiFont, UiTheme};
+use crate::upgrades::Upgrades;
 
 pub struct FerryPlugin;
 
@@ -235,11 +236,11 @@ fn blocked(
     data: &GameData,
     crates: &CratesOrdered,
     drawer: &Drawer,
-    night: u32,
+    max_crates: u32,
     id: &str,
 ) -> Option<&'static str> {
     let p = data.product(id)?;
-    if crates.0 >= data.crates_tonight(night) {
+    if crates.0 >= max_crates {
         Some("ferry.tip_full")
     } else if drawer.total() < p.crate_cost {
         Some("ferry.tip_poor")
@@ -771,7 +772,7 @@ fn on_crate_click(
     mut crates_q: Query<(&mut Crate, &GlobalTransform)>,
     mut men: Query<&mut Ferryman>,
     data: Res<GameData>,
-    progress: Res<Progress>,
+    (progress, upgrades): (Res<Progress>, Res<Upgrades>),
     lang: Res<Lang>,
     mut stock: ResMut<Stock>,
     mut drawer: ResMut<Drawer>,
@@ -792,7 +793,13 @@ fn on_crate_click(
     let id = item.id.clone();
     let Some(p) = data.product(&id) else { return };
     match click.button {
-        PointerButton::Primary => match blocked(&data, &crates, &drawer, progress.night, &id) {
+        PointerButton::Primary => match blocked(
+            &data,
+            &crates,
+            &drawer,
+            upgrades.crates_tonight(&data, progress.night),
+            &id,
+        ) {
             Some("ferry.tip_full") => log.push(lang.t("log.boat_full")),
             Some(_) => log.push(lang.f(
                 "log.crate_too_expensive",
@@ -862,6 +869,7 @@ fn animate_crates(
     progress: Res<Progress>,
     crates: Res<CratesOrdered>,
     drawer: Res<Drawer>,
+    upgrades: Res<Upgrades>,
     mut boxes: Query<(Entity, &mut Crate, &mut Transform)>,
     mut parts: Query<&mut Transform, Without<Crate>>,
 ) {
@@ -869,7 +877,14 @@ fn animate_crates(
     let t = time.elapsed_secs();
     for (entity, mut item, mut transform) in &mut boxes {
         item.bump = (item.bump - dt).max(0.0);
-        let available = blocked(&data, &crates, &drawer, progress.night, &item.id).is_none();
+        let available = blocked(
+            &data,
+            &crates,
+            &drawer,
+            upgrades.crates_tonight(&data, progress.night),
+            &item.id,
+        )
+        .is_none();
         let is_hovered = hovered.0 == Some(entity);
         let (lid, lift) = if item.bump > 0.25 || !available {
             (0.0, -0.25)
@@ -982,7 +997,7 @@ fn update_tooltip(
     icons: Res<Icons>,
     lang: Res<Lang>,
     data: Res<GameData>,
-    progress: Res<Progress>,
+    (progress, upgrades): (Res<Progress>, Res<Upgrades>),
     stock: Res<Stock>,
     drawer: Res<Drawer>,
     crates: Res<CratesOrdered>,
@@ -1068,12 +1083,21 @@ fn update_tooltip(
         14.0,
         if profit >= 0 { GREEN } else { RED },
     );
-    ui.text(&lang.f("ferry.tip_lasts", &[("nights", &p.fade_after)]));
+    ui.text(&lang.f(
+        "ferry.tip_lasts",
+        &[("nights", &(p.fade_after + upgrades.fade_bonus(&data)))],
+    ));
     ui.text(&lang.f("ferry.tip_stock", &[("count", &stock.count(&id))]));
     if let Some(n) = bought.0.get(&id) {
         ui.text(&lang.f("ferry.tip_bought", &[("count", n)]));
     }
-    match blocked(&data, &crates, &drawer, night, &id) {
+    match blocked(
+        &data,
+        &crates,
+        &drawer,
+        upgrades.crates_tonight(&data, night),
+        &id,
+    ) {
         Some(key) => ui.add_text(body, &lang.t(key), false, 13.0, RED),
         None => ui.add_text(body, &lang.t("ferry.tip_controls"), false, 12.0, TEXT_DIM),
     }
@@ -1089,14 +1113,14 @@ mod tests {
         let p = &data.products[0];
         let max = data.crates_tonight(1);
         let rich = Drawer(Purse::greedy(p.crate_cost * 10));
-        assert_eq!(blocked(&data, &CratesOrdered(0), &rich, 1, &p.id), None);
+        assert_eq!(blocked(&data, &CratesOrdered(0), &rich, max, &p.id), None);
         assert_eq!(
-            blocked(&data, &CratesOrdered(max), &rich, 1, &p.id),
+            blocked(&data, &CratesOrdered(max), &rich, max, &p.id),
             Some("ferry.tip_full")
         );
         let poor = Drawer(Purse::greedy(p.crate_cost - 1));
         assert_eq!(
-            blocked(&data, &CratesOrdered(0), &poor, 1, &p.id),
+            blocked(&data, &CratesOrdered(0), &poor, max, &p.id),
             Some("ferry.tip_poor")
         );
     }

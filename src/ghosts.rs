@@ -15,6 +15,7 @@ use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::save::Settings;
 use crate::tooltip::{HoverTip, TipKind};
+use crate::upgrades::Upgrades;
 use bevy::light::NotShadowCaster;
 
 use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
@@ -146,6 +147,7 @@ fn spawn_ghosts(
     mut cues: MessageWriter<Cue>,
     mut report: ResMut<NightReport>,
     ghosts: Query<(), With<Ghost>>,
+    upgrades: Res<Upgrades>,
 ) {
     timer.0 -= time.delta_secs();
     // Nobody new arrives in the last 20 seconds.
@@ -156,7 +158,8 @@ fn spawn_ghosts(
     let (min, max) = data.config.spawn_interval_secs;
     let rep_factor = data.config.reputation_spawn_factor(progress.reputation);
     let night = progress.night;
-    timer.0 = rng.range(min, max) * rep_factor * data.spawn_factor(night);
+    timer.0 =
+        rng.range(min, max) * rep_factor * data.spawn_factor(night) * upgrades.spawn_factor(&data);
 
     if ghosts.iter().count() >= data.config.max_ghosts_in_shop {
         return;
@@ -206,6 +209,7 @@ fn spawn_ghosts(
         hint,
         chapter: None,
         flees: unmet.is_some(),
+        patience_factor: upgrades.patience_factor(&data),
     };
     spawn_ghost(
         &mut commands,
@@ -405,6 +409,8 @@ struct Visit {
     hint: String,
     chapter: Option<usize>,
     flees: bool,
+    /// The waiting bench: ghosts wait longer.
+    patience_factor: f32,
 }
 
 fn spawn_ghost(
@@ -458,8 +464,8 @@ fn spawn_ghost(
                 pos: start,
                 target,
                 timer: 0.0,
-                patience: def.patience_secs,
-                max_patience: def.patience_secs,
+                patience: def.patience_secs * visit.patience_factor,
+                max_patience: def.patience_secs * visit.patience_factor,
                 lift: 0.0,
                 vel: Vec2::ZERO,
                 facing: 1.0,
@@ -538,6 +544,7 @@ fn spawn_story_ghost(
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
+    upgrades: Res<Upgrades>,
 ) {
     let story = &data.story;
     let chapter = progress.story_chapter;
@@ -559,6 +566,7 @@ fn spawn_story_ghost(
         hint: format!("story.{}.intro", chapter + 1),
         chapter: Some(chapter),
         flees: false,
+        patience_factor: upgrades.patience_factor(&data),
     };
     spawn_ghost(
         &mut commands,

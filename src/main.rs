@@ -36,6 +36,7 @@ mod sim;
 mod title;
 mod tooltip;
 mod ui;
+mod upgrades;
 
 use bevy::prelude::*;
 
@@ -104,6 +105,7 @@ fn main() {
             market::MarketPlugin,
             loan::LoanPlugin,
             playtest::PlaytestPlugin,
+            upgrades::UpgradesPlugin,
         ))
         .run();
 }

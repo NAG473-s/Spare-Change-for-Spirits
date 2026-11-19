@@ -40,7 +40,22 @@ MARKET_SIZES = {
     "vendor_raven": (0.4, 1.4, 0.4),
     "vendor_candlemaker": (0.5, 1.6, 0.5),
     "hourglass": (0.2, 0.3, 0.2),
+    "plan": (0.4, 0.12, 0.12),
 }
+# Old junk on the floor that is not cleared yet (src/upgrades.rs, JUNK_SIZE).
+JUNK_SIZES = {f"junk_{n}": (0.85, 0.75, 0.85) for n in (1, 2, 3)}
+
+
+def upgrade_sizes():
+    """Models of the shop improvements in assets/data/upgrades.ron that have one."""
+    text = (ROOT / "assets" / "data" / "upgrades.ron").read_text(encoding="utf-8")
+    sizes = {}
+    for chunk in text.split('(id: "')[1:]:
+        uid = chunk.split('"', 1)[0]
+        m = re.search(r"model: Some\(\(.*?size: \(([^)]*)\)", chunk, re.S)
+        if m:
+            sizes[uid] = tuple(float(v) for v in m.group(1).split(","))
+    return sizes
 # Containers on the ferryman's boat besides the crate (src/ferry.rs, CONTAINER_SPECS).
 CONTAINER_SIZES = {
     "chest": (0.5, 0.28, 0.36),
@@ -250,6 +265,8 @@ def main():
             wall_clock=(0.78, 0.78, 0.08),
             shop_sign=(1.0, 0.75, 0.05),
             **CONTAINER_SIZES,
+            **JUNK_SIZES,
+            **upgrade_sizes(),
         ),
         "harbor": HARBOR_SIZES,
         "props": prop_sizes(),
