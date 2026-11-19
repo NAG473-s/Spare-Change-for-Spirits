@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "I fished a button out of the river.",
+    "intro.story.2": "A ghost was waiting in your shop.",
+    "intro.story.3": "“My mother sewed it on,” he whispered.",
     "menu.version": "Demo · version {version}",
     "menu.version_full": "Version {version}",
     "menu.tagline": "A little shop that only opens between midnight and dawn.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Delete and start a new game",
     "menu.language": "Language: {language}",
     "menu.choose_language": "Choose your language",
+    "menu.language_auto": "Automatic",
     "menu.back": "Back",
     "menu.settings": "Settings",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Settings",
     "settings.music": "Music: {percent}%",
     "settings.effects": "Sound effects: {percent}%",
+    "settings.narration": "Narration: {percent}%",
     "settings.ui_size": "Interface size: {percent}%",
     "settings.fullscreen_on": "Fullscreen: on",
     "settings.fullscreen_off": "Fullscreen: off",
