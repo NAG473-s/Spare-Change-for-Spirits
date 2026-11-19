@@ -227,7 +227,7 @@ pub(crate) fn finish(top: Color, bottom: Color) -> BackgroundGradient {
 }
 
 #[derive(Component, Clone, Copy)]
-enum ButtonTone {
+pub(crate) enum ButtonTone {
     Walnut,
     Selected,
     Brass,
@@ -243,7 +243,7 @@ impl ButtonTone {
         }
     }
 
-    fn paint(self, hovered: bool) -> (BackgroundGradient, BorderColor) {
+    pub(crate) fn paint(self, hovered: bool) -> (BackgroundGradient, BorderColor) {
         let (top, bottom, trim) = match (self, hovered) {
             (Self::Walnut, false) => ((60, 43, 46), (40, 28, 35), (103, 72, 57)),
             (Self::Walnut, true) => ((92, 62, 52), (57, 39, 42), (177, 127, 77)),

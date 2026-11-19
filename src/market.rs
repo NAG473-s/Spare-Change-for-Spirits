@@ -18,6 +18,7 @@ use crate::data::{Exchange, GameData, Ware, asset_exists, rgb};
 use crate::day_cycle::{NightBonus, Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse};
 use crate::fx::Cue;
+use crate::harbor::spawn_wayfinder;
 use crate::harbor::{Location, repeating};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
@@ -123,7 +124,6 @@ enum FigureKind {
 struct WareItem {
     vendor: usize,
     kind: WareKind,
-    base: Vec3,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -135,6 +135,15 @@ enum WareKind {
     /// A shop improvement; it leaves the table once bought.
     Upgrade(String),
 }
+
+/// The visible part of a ware; it lifts and grows a little when hovered,
+/// while the ware's hover box stays where it is.
+#[derive(Component)]
+struct WareVisual;
+
+/// Size of a ware's hover box (its width is its place on the table).
+const HIT_HEIGHT: f32 = 0.7;
+const HIT_DEPTH: f32 = 0.5;
 
 /// A pennant on the bunting; it flutters.
 #[derive(Component)]
@@ -335,13 +344,15 @@ fn spawn_market(
         );
     }
     k.commands.entity(sign).observe(on_signpost_click);
-    k.commands.spawn(world_label(
+    spawn_wayfinder(
+        &mut k.commands,
         &font,
-        lang.t("market.back"),
-        13.0,
+        &lang,
+        "market.back",
+        Action::EndDay,
         sign,
         Vec3::Y * 2.3,
-    ));
+    );
 
     // The stalls and their traders.
     for (i, v) in data.vendors.iter().enumerate() {
@@ -665,6 +676,18 @@ fn open_market(
         }
         let n = kinds.len().max(1) as f32;
         let step = ((TABLE.x - 0.3) / n).min(0.5);
+        // One fixed, invisible hover box per ware, as wide as its place on
+        // the table: the ware itself lifts and grows when hovered, and must
+        // not slip away from under the pointer or onto its neighbour.
+        let hit_mesh = k
+            .meshes
+            .add(Cuboid::new(step * 0.94, HIT_HEIGHT, HIT_DEPTH));
+        let hit_material = k.materials.add(StandardMaterial {
+            base_color: Color::NONE,
+            alpha_mode: AlphaMode::Blend,
+            unlit: true,
+            ..default()
+        });
         for (j, kind) in kinds.into_iter().enumerate() {
             let x = (j as f32 - (n - 1.0) / 2.0) * step;
             let base = Vec3::new(x, TABLE.y, 0.08);
@@ -674,7 +697,6 @@ fn open_market(
                     WareItem {
                         vendor: *i,
                         kind: kind.clone(),
-                        base,
                     },
                     Transform::from_translation(base),
                     Visibility::default(),
@@ -691,7 +713,16 @@ fn open_market(
                     }
                 })
                 .id();
-            spawn_ware_visual(&mut k, &data, item, &kind);
+            k.commands.spawn((
+                Mesh3d(hit_mesh.clone()),
+                MeshMaterial3d(hit_material.clone()),
+                Transform::from_xyz(0.0, HIT_HEIGHT / 2.0 - 0.02, 0.0),
+                NotShadowCaster,
+                ChildOf(item),
+            ));
+            let visual = k.node(Some(item), Transform::default());
+            k.commands.entity(visual).insert(WareVisual);
+            spawn_ware_visual(&mut k, &data, visual, &kind);
         }
     }
 }
@@ -1118,15 +1149,16 @@ fn ware_tooltip(
 fn animate_wares(
     time: Res<Time>,
     hovered: Res<HoveredWare>,
-    mut items: Query<(Entity, &WareItem, &mut Transform)>,
+    mut visuals: Query<(&ChildOf, &mut Transform), With<WareVisual>>,
 ) {
     let dt = time.delta_secs();
-    for (entity, item, mut transform) in &mut items {
-        let lift = if hovered.0 == Some(entity) { 0.06 } else { 0.0 };
-        let target = item.base + Vec3::Y * lift;
+    for (parent, mut transform) in &mut visuals {
+        let is_hovered = hovered.0 == Some(parent.parent());
+        let lift = if is_hovered { 0.06 } else { 0.0 };
+        let target = Vec3::Y * lift;
         let now = transform.translation;
         transform.translation = now + (target - now) * (dt * 10.0).min(1.0);
-        let scale = if hovered.0 == Some(entity) { 1.12 } else { 1.0 };
+        let scale = if is_hovered { 1.12 } else { 1.0 };
         transform.scale = Vec3::splat(scale);
     }
 }

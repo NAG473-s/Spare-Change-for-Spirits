@@ -24,7 +24,9 @@ use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::scene::{Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, world_label};
 use crate::title::spawn_fade;
-use crate::ui::{Action, PANEL_EDGE, UiFont, finish, text_font};
+use crate::ui::{Action, ActionButton, ButtonTone, UiFont, text_font};
+use bevy::picking::hover::Hovered;
+use bevy::ui_widgets::Button;
 
 pub struct HarborPlugin;
 
@@ -682,6 +684,7 @@ fn spawn_harbor(
         &font,
         &lang,
         "harbor.back",
+        Action::BackToShop,
         sign,
         Vec3::new(0.22, 2.35, 0.0),
     );
@@ -846,20 +849,26 @@ fn label_shop_door(
         &font,
         &lang,
         "harbor.door",
+        Action::GoToHarbor,
         *door,
         Vec3::new(1.1, 2.5, 0.0),
     );
     commands.entity(label).insert(DespawnOnExit(Phase::Evening));
 }
 
-fn spawn_wayfinder(
+/// A sign above a way out (the shop door, the signposts at the harbour and
+/// the market). It is a button: clicking it goes where it says, like
+/// clicking the door or signpost itself.
+pub(crate) fn spawn_wayfinder(
     commands: &mut Commands,
     font: &UiFont,
     lang: &Lang,
     key: &'static str,
+    action: Action,
     target: Entity,
     offset: Vec3,
 ) -> Entity {
+    let (surface, trim) = ButtonTone::Walnut.paint(false);
     commands
         .spawn(world_label(font, lang.t(key), 13.0, target, offset))
         .insert((
@@ -877,8 +886,13 @@ fn spawn_wayfinder(
                 border_radius: BorderRadius::all(px(4)),
                 ..default()
             },
-            BorderColor::all(PANEL_EDGE),
-            finish(Color::srgb_u8(77, 50, 38), Color::srgb_u8(44, 29, 29)),
+            surface,
+            trim,
+            Button,
+            Hovered::default(),
+            ActionButton(action),
+            ButtonTone::Walnut,
+            Pickable::default(),
         ))
         .id()
 }
