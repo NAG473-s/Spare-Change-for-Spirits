@@ -13,7 +13,7 @@ update this file in the same change.
 |---|---|
 | **Adjustable Difficulty** | Settings → *Assists*: *Patient ghosts* (no waiting limit at the counter) and *Show change due* (the register shows the change to give back). Each can be switched on and off separately; the settings page explains both. |
 | **Custom Volume Controls** | Settings: music and sound effects each from 0 to 100 % in 10 % steps, plus *Sound on/off*. The game has no speech. |
-| **Adjustable Text Size** | Settings → *Interface size* from 70 to 200 %, on top of the automatic scaling with the window height (designed for 720 p). At 1080 p and 200 %, body text (14 px at 720 p) is 42 px, above Valve's recommended 38 px. Menus scroll when they no longer fit. |
+| **Adjustable Text Size** | Settings → *Interface size* from 70 to 200 %, on top of the automatic scaling with the window height (designed for 720 p). At 1080 p and 200 %, body text (14 px at 720 p) is 42 px, above Valve's recommended 38 px. Menus scroll when they no longer fit. Hovering a painted direction board or the open/closed sign shows its complete wording at the selected interface size. |
 | **Color Alternatives** | No information is shown by colour alone: money gains and losses carry + and − signs, good and bad tooltip lines are worded, coins differ by picture and name, a crate you cannot buy says why in its tooltip, a ghost running out of patience fades and looks worried. |
 | **Camera Comfort** | Fixed camera: no screen shake, camera bob or motion blur. Moving between the shop, the harbour and the market is a fade. |
 | **Mouse Only Option** | Everything is done with the mouse; the *Menu* button in the top bar pauses (Esc does the same). |
