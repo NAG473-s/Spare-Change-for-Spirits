@@ -9,14 +9,8 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-These models are still missing (`python3 tools/check_models.py` lists them). Each one replaces a
-placeholder as soon as it is pushed.
-
-| Where | Models |
-|---|---|
-| [Shop](#shop--assetsmodelsshopidglb) | `wall_clock`, `shop_sign` |
-| [The ferryman](#the-ferryman--assetsmodelsshopidglb) | `ferry_boat`, `crate`, `crate_lid`, `ferryman` |
-| [The harbour](#the-harbour--assetsmodelsharboridglb) | `harbour_hut`, `lighthouse`, `lamp_post`, `village_house`, `barrel`, `mooring_post`, `bell_post`, `ferry_bell`, `hand_cart`, `signpost`, `rowboat`, `jetty`, `paper_lantern` |
+The shop clock, hanging sign, ferryman's equipment and harbour models are in the game.
+Run `python3 tools/check_models.py` to review their dimensions, origins and triangle counts.
 
 ## Technical rules (all models)
 
@@ -29,8 +23,9 @@ placeholder as soon as it is pushed.
   repairs them.
 - **Scale:** 1 Blender unit = 1 metre. Keep each model inside the size given in its table row
   (width × height × depth). The game does not rescale models.
-- **Origin:** at the **bottom centre** of the model (the point that stands on the floor).
-  Apply all transforms (Ctrl+A → All Transforms) before exporting.
+- **Origin:** at the **bottom centre** of the model (the point that stands on the floor) unless
+  the table gives a specific gameplay pivot. Apply all transforms (Ctrl+A → All Transforms)
+  before exporting.
 - **Orientation:** the **front faces Blender's −Y axis**, i.e. what you see in *Front* view
   (numpad 1). Height goes along +Z.
 - **Polygons:** low-poly, at most ~3,000 triangles per model (products ~800).
@@ -156,10 +151,10 @@ glowing glass and windows are just emissive materials.
 | `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
 | `barrel` | 0.6 × 0.72 × 0.6 | An old wooden barrel with iron hoops. |
 | `mooring_post` | 0.3 × 0.6 × 0.3 | A short weathered wooden mooring post (bollard) with a coil of thick rope around it. |
-| `bell_post` | 0.6 × 1.95 × 0.2 | A wooden post with a short arm sticking out to the right (+X) at the top; the end of the arm is **0.38 m right of the post, 1.85 m high**, where the bell hangs (the bell itself is a separate model). |
+| `bell_post` | 0.6 × 1.95 × 0.2 | A wooden post with its origin at the foot. A short arm sticks out to the right (+X), with a hook **0.38 m right of the post, 1.85 m high** for the separate bell. |
 | `ferry_bell` | 0.25 × 0.22 × 0.25 | A small, slightly tarnished brass bell with a clapper and a ring at the top. Origin at the **top of the ring** (where it hangs), the bell below it, so the game can swing it. |
-| `hand_cart` | 2.0 × 0.75 × 1.0 | A wooden two-wheeled hand cart: a flat loading bed of planks **0.42 m high, 1.2 × 0.8 m**, with a low rim, two spoked wheels under the middle, two long handles reaching out to the left (−X). The game stacks bought crates on the bed. |
-| `signpost` | 0.95 × 1.95 × 0.2 | A crooked wooden signpost with two arrow-shaped boards pointing to the right, one at 1.6 m and one at 1.3 m, **no lettering**. |
+| `hand_cart` | 2.0 × 0.75 × 1.0 | A wooden two-wheeled hand cart: a flat loading bed of planks **0.42 m high, 1.2 × 0.8 m**, with a low rim, two spoked wheels under the middle, two long handles reaching out to the left (−X). The origin is on the ground below the centre of the bed where the game stacks bought crates. |
+| `signpost` | 0.95 × 1.95 × 0.2 | A crooked wooden signpost with its origin at the foot and two arrow-shaped boards pointing to the right, one at 1.6 m and one at 1.3 m, **no lettering**. |
 | `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along the Y axis (front to back), two seats, a pair of oars resting inside. |
 | `jetty` | 1.1 × 0.7 × 3.8 | A narrow wooden jetty: a deck of planks running along the Y axis (3.8 m long, 1.0 m wide) on four posts. Origin at the **centre of the deck surface**; the posts reach about 0.6 m below it. |
 | `paper_lantern` | 0.26 × 0.34 × 0.26 | A small floating paper lantern on a tiny round wooden raft: a box of warm paper glowing amber (emissive). |

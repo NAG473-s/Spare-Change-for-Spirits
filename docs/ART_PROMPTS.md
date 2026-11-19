@@ -4,9 +4,9 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Images are only needed for:
 
 - **Ghosts** – hand-drawn sprites that float in the room and always face the camera.
-- **Icons** – small pictures of every product and piece of furniture on the buttons of the side
-  panel (ordering, furnishing, stocking shelves, handing over). A product picture is also shown
-  on the shelf while the product has no 3D model yet.
+- **Icons** – small pictures of the products, furniture and coins used in the interface. A product
+  picture is also shown on the shelf while the product has no 3D model yet.
+- **The interface frame** – painted walnut and brass trim for menus, shop panels and crate tooltips.
 - **The floor texture.**
 - **The title screen** – a dedicated Full HD background and the game logo.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
@@ -22,10 +22,7 @@ python3 tools/check_models.py
 
 ## To do
 
-| What | Prompts |
-|---|---|
-| 3D models for the harbour, the ferryman, the shop sign and the wall clock | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
-| Painted coin icons (replacing the simple drawings) | [Coins](#coins-optional--canvas-1024--1024) |
+There are no open illustration orders.
 
 ## Workflow
 
@@ -185,11 +182,10 @@ the later ones:
 | `stove` | A little round cast-iron stove on four feet with a short chimney pipe, its small door glowing warm orange. |
 | `vanity` | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
 
-## Coins (optional) – canvas 1024 × 1024
+## Coins – canvas 1024 × 1024 (done)
 
 The coin bar at the top and the change buttons at the register show a small picture of each coin:
-`assets/sprites/coins/<coin>.png` (96 × 96). The current ones are simple drawings made by
-`python3 tools/make_coin_icons.py`; painted versions replace them. Prepare with
+`assets/sprites/coins/<coin>.png` (96 × 96). Prepare a painted replacement with
 `python3 tools/prepare_sprite.py ~/Downloads/image.png product <coin> --out assets/sprites/coins/<coin>.png --colors 48`
 and deliver one commit per image, `Add <coin> coin icon [skip ci]`.
 
@@ -198,6 +194,12 @@ and deliver one commit per image, `Add <coin> coin icon [skip ci]`.
 | `button` | A single large old sewing button made of warm brown horn, four holes, a slightly raised rim, seen from the front. |
 | `candle` | A short stub of a cream wax candle with a few drips and a small warm flame. |
 | `spoon` | A small tarnished silver teaspoon with an ornate handle, lying diagonally. |
+
+## Interface frame – 512 × 512 (done)
+
+`assets/sprites/ui/ledger_frame.png`: a square painted walnut frame with worn brass leaf corners,
+a straight border on each side and a quiet dark plum centre. Keep the area outside the frame
+transparent. The game stretches the centre and edges around the corner paintings.
 
 ## Floor – canvas 1024 × 1024 (done)
 
