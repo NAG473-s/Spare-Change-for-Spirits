@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "我從河裡撈起一顆鈕扣。",
+    "intro.story.2": "一個幽靈正在你的店裡等著。",
+    "intro.story.3": "「是媽媽幫我縫上去的。」他輕聲說。",
     "menu.version": "試玩版 · 版本 {version}",
     "menu.version_full": "版本 {version}",
     "menu.tagline": "一間只在午夜到黎明之間營業的小店。",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "刪除並開始新遊戲",
     "menu.language": "語言：{language}",
     "menu.choose_language": "選擇語言",
+    "menu.language_auto": "自動",
     "menu.back": "返回",
     "menu.settings": "設定",
     "hud.menu": "選單",
@@ -31,6 +35,7 @@
     "settings.title": "設定",
     "settings.music": "音樂：{percent}%",
     "settings.effects": "音效：{percent}%",
+    "settings.narration": "旁白音量：{percent}%",
     "settings.ui_size": "介面大小：{percent}%",
     "settings.fullscreen_on": "全螢幕：開",
     "settings.fullscreen_off": "全螢幕：關",
