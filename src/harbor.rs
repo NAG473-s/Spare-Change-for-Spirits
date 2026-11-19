@@ -12,6 +12,7 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor};
 use bevy::light::NotShadowCaster;
+use bevy::mesh::VertexAttributeValues;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
@@ -45,7 +46,7 @@ impl Plugin for HarborPlugin {
                     spread_ripples,
                     ring_bell,
                     bob_rowboats,
-                    move_waves,
+                    move_waves.run_if(resource_equals(Location::Harbor)),
                     sweep_beam,
                 ),
             );
@@ -65,7 +66,7 @@ pub enum Location {
 /// The harbour's origin in the world. Its local coordinates match the
 /// shop's, so the same camera angle frames both.
 pub const HARBOR: Vec3 = Vec3::new(-80.0, 0.0, 0.0);
-/// Height of the water surface.
+/// Mean water level, before the swell is applied.
 pub const WATER_Y: f32 = -0.12;
 /// Front edge of the quay (local z): water from here towards the camera.
 const QUAY_EDGE: f32 = -0.7;
@@ -225,11 +226,13 @@ fn spawn_harbor(
     mut images: ResMut<Assets<Image>>,
     mut rng: ResMut<Rng>,
 ) {
-    // Water: dark and glossy, with small waves (a scrolling normal map) so
-    // the moon and the lamps break into glints on it.
+    // The grid carries the swell. The scrolling normal map adds fine ripples
+    // that break the moonlight and lamplight into smaller glints.
     let water = Plane3d::default()
         .mesh()
         .size(44.0, 16.0)
+        .subdivisions_x(95)
+        .subdivisions_z(35)
         .build()
         .with_generated_tangents()
         .expect("a plane has normals and UVs");
@@ -254,8 +257,8 @@ fn spawn_harbor(
                 Color::srgb(0.035, 0.07, 0.11)
             },
             base_color_texture: painted,
-            perceptual_roughness: 0.55,
-            reflectance: 0.2,
+            perceptual_roughness: 0.39,
+            reflectance: 0.32,
             normal_map_texture: Some(normals),
             uv_transform: water_uv(0.0),
             ..default()
@@ -1016,15 +1019,81 @@ fn wave_normals(size: u32) -> Image {
     image
 }
 
+// Wave vector (radians per metre), amplitude (metres), angular speed and phase.
+const SWELL: [(Vec2, f32, f32, f32); 3] = [
+    (Vec2::new(0.60, 1.12), 0.036, 1.05, 0.4),
+    (Vec2::new(-1.28, 0.52), 0.022, 1.39, 2.3),
+    (Vec2::new(0.83, -2.10), 0.011, 1.85, 4.7),
+];
+
+/// Height above the mean level and slope at a world-space (x, z).
+pub(crate) fn swell(at: Vec2, t: f32) -> (f32, Vec2) {
+    let local = at - HARBOR.xz();
+    let mut height = 0.0;
+    let mut slope = Vec2::ZERO;
+    for (wave, amplitude, speed, phase) in SWELL {
+        let (s, c) = (wave.dot(local) - speed * t + phase).sin_cos();
+        height += amplitude * s;
+        slope += wave * (amplitude * c);
+    }
+    (height, slope)
+}
+
+fn surface_normal(slope: Vec2) -> Vec3 {
+    Vec3::new(-slope.x, 1.0, -slope.y).normalize()
+}
+
+/// A hull rests across several crests. Sample opposite sides in its own
+/// heading so a short wave cannot tip the whole ferry like a small raft.
+pub(crate) fn float_hull(at: Vec3, yaw: f32, half_span: Vec2, t: f32) -> Transform {
+    let heading = Quat::from_rotation_y(yaw);
+    let x = (heading * Vec3::X).xz() * half_span.x;
+    let z = (heading * Vec3::Z).xz() * half_span.y;
+    let [left, right, back, front] = [-x, x, -z, z].map(|offset| swell(at.xz() + offset, t).0);
+    let slope = Vec2::new(right - left, front - back) / (2.0 * half_span);
+    let heave = (left + right + back + front) * 0.25;
+    Transform::from_translation(at + Vec3::Y * heave)
+        .with_rotation(heading * Quat::from_rotation_arc(Vec3::Y, surface_normal(slope)))
+}
+
 fn move_waves(
     time: Res<Time>,
-    water: Query<&MeshMaterial3d<StandardMaterial>, With<Water>>,
+    water: Single<(&Mesh3d, &MeshMaterial3d<StandardMaterial>, &Transform), With<Water>>,
+    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for material in &water {
-        if let Some(mut m) = materials.get_mut(&material.0) {
-            m.uv_transform = water_uv(time.elapsed_secs());
-        }
+    if time.delta().is_zero() {
+        return;
+    }
+    let (mesh, material, transform) = *water;
+    let t = time.elapsed_secs();
+    if let Some(mut m) = materials.get_mut(&material.0) {
+        m.uv_transform = water_uv(t);
+    }
+    let Some(mut mesh) = meshes.get_mut(&mesh.0) else {
+        return;
+    };
+    use VertexAttributeValues::{Float32x3, Float32x4};
+    let Ok(
+        [
+            Some((_, Float32x3(positions))),
+            Some((_, Float32x3(normals))),
+            Some((_, Float32x4(tangents))),
+        ],
+    ) = mesh.try_disjoint_attributes_mut([
+        &Mesh::ATTRIBUTE_POSITION.id,
+        &Mesh::ATTRIBUTE_NORMAL.id,
+        &Mesh::ATTRIBUTE_TANGENT.id,
+    ])
+    else {
+        return;
+    };
+    for ((p, n), tangent) in positions.iter_mut().zip(normals).zip(tangents) {
+        let (height, slope) = swell(transform.translation.xz() + Vec2::new(p[0], p[2]), t);
+        p[1] = height;
+        *n = surface_normal(slope).to_array();
+        let along_u = Vec3::new(1.0, slope.x, 0.0).normalize();
+        *tangent = along_u.extend(tangent[3]).to_array();
     }
 }
 
@@ -1065,8 +1134,9 @@ fn drift_lanterns(time: Res<Time>, mut lanterns: Query<(&Lantern, &mut Transform
     let dt = time.delta_secs();
     for (lantern, mut transform) in &mut lanterns {
         transform.translation.x = wrap(transform.translation.x + lantern.speed * dt);
-        transform.translation.y = WATER_Y + 0.02 * (t * 1.4 + lantern.phase).sin();
-        transform.rotation = Quat::from_rotation_z(0.06 * (t * 1.1 + lantern.phase).sin())
+        let (height, slope) = swell(transform.translation.xz(), t);
+        transform.translation.y = WATER_Y + height;
+        transform.rotation = Quat::from_rotation_arc(Vec3::Y, surface_normal(slope))
             * Quat::from_rotation_y(t * 0.2 + lantern.phase);
     }
 }
@@ -1091,11 +1161,8 @@ fn drift_mist(
 fn bob_rowboats(time: Res<Time>, mut boats: Query<(&Rowboat, &mut Transform)>) {
     let t = time.elapsed_secs();
     for (boat, mut transform) in &mut boats {
-        let p = boat.phase;
-        transform.translation = boat.base + Vec3::Y * 0.03 * (t * 1.2 + p).sin();
-        transform.rotation = Quat::from_rotation_y(boat.turn + 0.05 * (t * 0.4 + p).sin())
-            * Quat::from_rotation_z(0.05 * (t * 1.0 + p).sin())
-            * Quat::from_rotation_x(0.03 * (t * 1.3 + p).sin());
+        let yaw = boat.turn + 0.05 * (t * 0.4 + boat.phase).sin();
+        *transform = float_hull(boat.base, yaw, Vec2::new(0.3, 0.8), t);
     }
 }
 
@@ -1183,6 +1250,10 @@ fn spread_ripples(
             continue;
         }
         transform.scale = Vec3::splat(0.1 + ripple.size * k);
+        let (height, slope) = swell(transform.translation.xz(), time.elapsed_secs());
+        transform.translation.y = WATER_Y + height + 0.012;
+        transform.rotation = Quat::from_rotation_arc(Vec3::Y, surface_normal(slope))
+            * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
         if let Some(mut m) = materials.get_mut(&material.0) {
             m.base_color.set_alpha(0.1 * (1.0 - k) * (k * 8.0).min(1.0));
         }
