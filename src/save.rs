@@ -173,6 +173,44 @@ pub fn save_dir() -> Option<PathBuf> {
     base
 }
 
+/// Reserves the opening for one process, across all profiles and both editions.
+/// Reserve it before playback so closing the window during the crossing also counts.
+pub fn claim_first_launch() -> bool {
+    save_dir().is_some_and(|dir| {
+        claim_first_launch_in(&dir).unwrap_or_else(|error| {
+            warn!(
+                "Cannot record the first launch in {}: {error}",
+                dir.display()
+            );
+            false
+        })
+    })
+}
+
+fn claim_first_launch_in(dir: &Path) -> std::io::Result<bool> {
+    // Check before the current session log is opened. Even an older installation
+    // that only reached the language picker has a session log.
+    if dir.join("settings.ron").is_file()
+        || dir.join("save.ron").is_file()
+        || (1..=PROFILES).any(|profile| Slot::all().any(|s| slot_path(dir, profile, s).is_file()))
+        || std::fs::read_dir(dir.join("logs")).is_ok_and(|entries| {
+            entries.flatten().any(|entry| {
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                name.starts_with("session-") && name.ends_with(".txt")
+            })
+        })
+    {
+        return Ok(false);
+    }
+    std::fs::create_dir_all(dir)?;
+    match std::fs::File::create_new(dir.join("intro_seen")) {
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
 /// Number of profiles (separate games).
 pub const PROFILES: u8 = 3;
 /// Manual save slots per profile.
@@ -526,6 +564,26 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("scfs-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir
+    }
+
+    #[test]
+    fn the_opening_is_once_per_installation_and_skips_existing_players() {
+        let fresh = temp_dir("first-launch");
+        assert!(claim_first_launch_in(&fresh).unwrap());
+        assert!(!claim_first_launch_in(&fresh).unwrap());
+        std::fs::remove_dir_all(fresh).unwrap();
+
+        let old = temp_dir("pre-opening");
+        write_ron(&old.join("settings.ron"), &Settings::default());
+        assert!(!claim_first_launch_in(&old).unwrap());
+        std::fs::remove_file(old.join("settings.ron")).unwrap();
+        write_ron(&slot_path(&old, 3, Slot::Manual(2)), &sample(4));
+        assert!(!claim_first_launch_in(&old).unwrap());
+        std::fs::remove_file(slot_path(&old, 3, Slot::Manual(2))).unwrap();
+        std::fs::create_dir(old.join("logs")).unwrap();
+        std::fs::write(old.join("logs/session-42.txt"), "").unwrap();
+        assert!(!claim_first_launch_in(&old).unwrap());
+        std::fs::remove_dir_all(old).unwrap();
     }
 
     #[test]
