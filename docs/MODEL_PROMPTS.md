@@ -14,6 +14,8 @@ herb sachets, ferry contract and wooden way board are in `assets/models/shop/`.
 The painted return post for the quay and market is in `assets/models/harbor/signpost.glb`.
 The seven market awnings carry embroidered trade emblems, and the quay has a storm lantern.
 The carpenter's rolled building plan is in `assets/models/market/plan.glb`.
+The four village façades, harbour hut, rowboat, ferry hull, shop panelling and counter are
+finished. The village pump and flower tubs are in `assets/models/props/`.
 
 To check a fresh checkout, pull `main` and run `python3 tools/check_models.py`. A `missing` line
 identifies an absent asset. The sections below retain the dimensions, pivots and prompts for
@@ -119,7 +121,7 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
-| `counter` | 4.5 × 1.0 × 0.8 | A long wooden shop counter (front = customer side facing −Y): panelled front with a carved ghost emblem in the middle, a polished top, a small brass bell and an old brass cash register near the right end. The game turns it so it runs along the right side of the shop. |
+| `counter` | 4.5 × 1.2 × 0.81 | A long walnut counter with the customer side facing −Y. Set its surface at 0.742 m. Inlay the panelled front with a ghost and brass corners. Give the teal counting mat three stitched coin circles. At the right end fit an antique register with an ivory roller, two rows of keys and a drawer pull. Keep space for the loose bell, ledger and coin jars. |
 | `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
 | `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
@@ -134,7 +136,8 @@ apply an offset): the floor is **not** part of the room model (the game draws th
   1.2 m wide, 2.4 m high opening centred at **Y = 0** for the door.
 - A tall window in the back wall centred at **X = −3.2**, bottom edge at 0.9 m, 1.6 × 1.8 m,
   with frame and emissive moonlit glass; dark wallpaper with a faded pattern, wooden wainscot up
-  to 0.9 m, a few cobwebs in the upper corners.
+  to 0.9 m, a few cobwebs in the upper corners. Run a teal frieze with gilt willow leaves
+  along both walls at 3.0 m. Hang the framed ferry and crescent to the right of the wall shelf.
 - Leave the right side and the front open (the camera looks in from the front).
 
 ## Shop improvements – `assets/models/shop/<id>.glb`
@@ -163,7 +166,7 @@ In the evening the player walks out to the harbour, where the ferryman sells cra
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
-| `ferry_boat` | 7.4 × 0.6 × 1.7 | A long, low, flat-bottomed wooden ferry boat, dark weathered planks, a raised curved bow and stern, a narrow rim along both sides, an empty flat deck (crates, the ferryman and his lantern are added by the game). Origin at the **centre of the deck surface**; the hull reaches about 0.4 m below it. |
+| `ferry_boat` | 7.4 × 0.66 × 1.85 | A low, flat-bottomed wooden ferry with a raised bow and stern. Run two faded coachlines along the boards, hang rope fenders outside, and set a small brass capstan at the bow. Keep the cargo deck clear for the ferryman, lamp and clickable crates. Origin at the centre of the deck surface, with the hull extending 0.4 m below it. |
 | `crate` | 0.5 × 0.3 × 0.42 | A small wooden crate **without a lid**, open at the top, filled with straw almost to the rim, rope handles on the sides. |
 | `crate_lid` | 0.52 × 0.05 × 0.44 | The matching flat lid of planks with two battens. Origin at the **middle of its back edge** (the hinge); the lid extends forwards (−Y in Blender), so the game can swing it open. |
 | `ferryman` | 0.7 × 1.45 × 0.6 | A tall, gaunt ferryman in a long hooded dark cloak, slightly stooped, the face hidden in shadow except for two pale, softly glowing eyes (emissive), hands folded in front. **No pole** (the game adds it). |
@@ -178,7 +181,7 @@ glowing glass and windows are just emissive materials.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
-| `harbour_hut` | 2.6 × 2.9 × 2.1 | The harbour master's small wooden hut: dark weathered planks, a steep shingled roof, a plank door on the left of the front, a window on the right glowing warm amber (emissive), a lantern on a hook beside the door at about 1.75 m (emissive glass), a coil of rope and a lifebuoy on the wall. |
+| `harbour_hut` | 2.6 × 2.9 × 2.1 | The harbour master's plank hut with a shingled roof, left-hand door, amber window and a lantern 1.75 m up. Hang a ship's wheel over the entrance, mount a striped tide staff by the door, and set a flower box below the window. Keep the wall rope and lifebuoy. |
 | `lighthouse` | 1.2 × 4.3 × 1.2 | A small, stout lighthouse on a round stone base: tapering tower with white and dusty-red bands, a little iron gallery, a glass lamp room **centred at 3.6 m height** glowing pale gold (emissive), a dark conical roof. |
 | `lamp_post` | 0.4 × 2.7 × 0.4 | An old cast-iron harbour lamp post with a square glass lantern on top, the glass **centred at 2.45 m** and glowing warm amber (emissive). |
 | `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
@@ -188,7 +191,7 @@ glowing glass and windows are just emissive materials.
 | `ferry_bell` | 0.25 × 0.22 × 0.25 | A small, slightly tarnished brass bell with a clapper and a ring at the top. Origin at the **top of the ring** (where it hangs), the bell below it, so the game can swing it. |
 | `hand_cart` | 2.0 × 0.75 × 1.0 | A wooden two-wheeled hand cart: a flat loading bed of planks **0.42 m high, 1.2 × 0.8 m**, with a low rim, two spoked wheels under the middle, two long handles reaching out to the left (−X). The origin is on the ground below the centre of the bed where the game stacks bought crates. |
 | `signpost` | 0.95 × 1.95 × 0.2 | A crooked wooden signpost with its origin at the foot and two arrow-shaped boards pointing to the right, with broad flat faces centred at 1.64 m and 1.22 m high. In glTF the upper face is at Z +0.098 m and the lower at +0.091 m. Carve a few long grain lines and a worn gilt chevron into the arrow tips. Leave the wood unlettered for the game’s painted lantern, shop crest and localised return directions. |
-| `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along the Y axis (front to back), two seats, a pair of oars resting inside. |
+| `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along Y, with two seats, crossed oars and a rolled canvas bundle lashed with rope. |
 | `jetty` | 1.1 × 0.7 × 3.8 | A narrow wooden jetty: a deck of planks running along the Y axis (3.8 m long, 1.0 m wide) on four posts. Origin at the **centre of the deck surface**; the posts reach about 0.6 m below it. |
 | `paper_lantern` | 0.26 × 0.34 × 0.26 | A small floating paper lantern on a tiny round wooden raft: a box of warm paper glowing amber (emissive). |
 
@@ -217,10 +220,10 @@ glowing amber (emissive) on the front.
 
 | id | Prompt |
 |---|---|
-| `village_house_1` | A crooked fisherman's cottage of grey stone with a steep slate roof, a crooked chimney and a round window. |
-| `village_house_2` | A tall, narrow timber-framed house leaning slightly, white plaster between dark beams, a small balcony. |
-| `village_house_3` | A little bakery with a striped awning over the door and a hanging sign without lettering, a big lit window. |
-| `village_house_4` | A small chapel-like house with a pointed bell tower and a tiny bell, a round stained-glass window glowing softly. |
+| `village_house_1` | A crooked grey fisherman's cottage with courses of slate, sea-green shutters, ivy and a window box of violets. |
+| `village_house_2` | A leaning plaster and timber house with slate courses, crossed braces, shutters and flowers on the balcony. |
+| `village_house_3` | A little bakery with a clay-tiled roof, a striped awning, three scored loaves in its window and a gilded ear of wheat on the gable. |
+| `village_house_4` | A small chapel with a pointed bell tower, a stained-glass rose window, dressed stone and aged brass around the opening. |
 
 ## Props in the shop – `assets/models/props/<id>.glb`
 
@@ -246,6 +249,13 @@ surface; items on the wall hang with their back against it (back at +Y in Blende
 | `potted_palm` | 0.6 × 1.0 × 0.6 | A slightly drooping parlour palm in a big brass pot. |
 | `coat_stand` | 0.5 × 1.8 × 0.5 | A bentwood coat stand with a long scarf and a bowler hat hanging on it. |
 | `broom` | 0.3 × 1.4 × 0.2 | An old straw broom leaning back a little. |
+
+## Village street furniture – `assets/models/props/<id>.glb`
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `town_pump` | 0.95 × 1.37 × 0.67 | A green cast-iron village pump with a curved handle and brass spout over a low stone trough. Centre the origin on the ground, face the trough towards −Y. |
+| `village_planter` | 0.54 × 0.54 × 0.48 | A small terracotta pot with a gold rim, filled with leaves and cottage flowers. Origin at the bottom centre. The same pot fits beside the market pump and outside the harbour hut. |
 
 ## Props at the harbour – `assets/models/props/<id>.glb`
 
