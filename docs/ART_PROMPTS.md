@@ -24,8 +24,8 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
-| Icons for 8 products and 5 pieces of furniture | [Icons](#icons--canvas-1024--1024) |
-| *(optional)* Animation sheets for the ghosts | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
+| *(optional)* Animation sheets for `cat`, `sailor`, `knight`, `bride` (the other six are done) | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
+| *(optional)* Models for the harbour (boat, crate, ferryman) and the wall clock | [MODEL_PROMPTS.md](MODEL_PROMPTS.md#the-harbour--assetsmodelsshopidglb-optional) |
 | *(optional)* A title screen background in full HD | [Title screen](#title-screen-optional--canvas-1920--1080) |
 | *(optional)* Painted coin icons | [Coins](#coins-optional--canvas-1024--1024) |
 
@@ -165,7 +165,10 @@ keep the silhouette simple and bold. Prepare with kind `product` or `decor` (bot
 `assets/sprites/products/<id>.png` and `assets/sprites/decor/<id>.png`. A button without an icon
 just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
 
-**Missing – products:**
+**All done.** Every product and piece of furniture has an icon; the furniture and keepsake icons
+`shelf`, `candle`, `mirror`, `incense`, `rug`, `grandfather_clock`, `umbrella`, `teacup`,
+`blanket`, `wedding_photo` and `pocket_lantern` come from the old 2D version. Prompts for redoing
+the later ones:
 
 | File id | Prompt |
 |---|---|
@@ -177,21 +180,11 @@ just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
 | `hair_ribbon` | A light blue silk ribbon tied in a bow. |
 | `wedding_veil` | A folded white lace veil with a small pearl comb on top. |
 | `pressed_flower` | An open old book with a pressed pink flower between the pages. |
-
-**Missing – furniture:**
-
-| File id | Prompt |
-|---|---|
 | `oil_lamp` | A slender standing oil lamp on a wooden post, glass chimney with a warm glowing flame. |
 | `fern` | A lush fern in a round terracotta pot, drooping fronds. |
 | `gramophone` | A small wooden cabinet with an old gramophone on top, big brass horn, a record on the turntable. |
 | `stove` | A little round cast-iron stove on four feet with a short chimney pipe, its small door glowing warm orange. |
 | `vanity` | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
-
-**Done:** products `rain_jar`, `letter_paper`, `music_box`, `pocket_watch`, `wool_scarf`,
-`marbles`, `tea_tin`, `faceless_photo`, `rusty_key`, `powder_compact`, `lavender`, `tin_soldier`;
-furniture and keepsakes `shelf`, `candle`, `mirror`, `incense`, `rug`, `grandfather_clock`,
-`umbrella`, `teacup`, `blanket`, `wedding_photo`, `pocket_lantern` (from the old 2D version).
 
 ## Coins (optional) – canvas 1024 × 1024
 
