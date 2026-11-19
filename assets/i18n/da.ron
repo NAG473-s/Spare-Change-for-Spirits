@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Jeg fiskede en knap op af åen.",
+    "intro.story.2": "Et spøgelse ventede i din butik.",
+    "intro.story.3": "»Den syede min mor i,« hviskede det.",
     "menu.version": "Demo · version {version}",
     "menu.version_full": "Version {version}",
     "menu.tagline": "En lille butik, der kun har åbent mellem midnat og daggry.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Slet og start et nyt spil",
     "menu.language": "Sprog: {language}",
     "menu.choose_language": "Vælg dit sprog",
+    "menu.language_auto": "Automatisk",
     "menu.back": "Tilbage",
     "menu.settings": "Indstillinger",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Indstillinger",
     "settings.music": "Musik: {percent} %",
     "settings.effects": "Lydeffekter: {percent} %",
+    "settings.narration": "Fortællerstemme: {percent} %",
     "settings.ui_size": "Brugerfladens størrelse: {percent} %",
     "settings.fullscreen_on": "Fuld skærm: til",
     "settings.fullscreen_off": "Fuld skærm: fra",
