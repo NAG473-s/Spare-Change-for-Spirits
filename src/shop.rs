@@ -519,8 +519,12 @@ fn sync_cell_visuals(
 
         commands.entity(entity).add_children(&children);
 
-        // Shelves say what they hold; placeholders say what they are.
+        // Shelves say how many they hold (and what, while the product has no
+        // model to show it); placeholders say what they are.
         let text = match content.product.as_deref() {
+            Some(p) if asset_exists(&format!("models/products/{p}.glb")) => {
+                Some(format!("×{}", stock.count(p)))
+            }
             Some(p) => Some(lang.f(
                 "evening.stock_button",
                 &[("item", &lang.product(p)), ("count", &stock.count(p))],

@@ -34,6 +34,7 @@
   soon as each is finished (`Add <id> model [skip ci]` / `Add <id> sprite [skip ci]`), see
   `docs/MODEL_PROMPTS.md` and `docs/ART_PROMPTS.md`.
 - The shop is a 3D diorama (`src/scene.rs`); ghosts are sprites. 3D models follow
-  `docs/MODEL_PROMPTS.md`; check them with `python3 tools/check_models.py`. Placeholder sizes in
+  `docs/MODEL_PROMPTS.md`; check them with `python3 tools/check_models.py` and repair files with
+  extra Blender scenes with `python3 tools/fix_models.py` (commit the repair). Placeholder sizes in
   `assets/data/decor.ron` must match the target sizes in that document.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.
