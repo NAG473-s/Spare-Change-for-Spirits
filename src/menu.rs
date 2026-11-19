@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::data::{GameData, asset_exists};
 use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::ghosts::{Ghost, GhostState, Queue};
-use crate::i18n::Lang;
+use crate::i18n::{AutomaticLanguage, Lang};
 use crate::inventory::CratesOrdered;
 use crate::register::Register;
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
@@ -212,9 +212,7 @@ fn build_main_menu(
     for e in &existing {
         commands.entity(e).despawn();
     }
-    // On the first launch, language selection follows the crossing.
-    let choose_language = language_menu.0 || settings.language.is_none();
-    let wide = choose_language || matches!(*save_menu, SaveMenu::Load | SaveMenu::NewGame);
+    let wide = language_menu.0 || matches!(*save_menu, SaveMenu::Load | SaveMenu::NewGame);
     let width = if wide { 560.0 } else { 386.0 };
     let (layer, panel, has_logo) = title_layout(&mut commands, &asset_server, &theme, width);
     commands
@@ -223,16 +221,25 @@ fn build_main_menu(
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     let root = ui.root();
 
-    if choose_language {
+    if language_menu.0 {
         ui.heading(&lang.t("menu.choose_language"));
+        ui.menu_option(
+            root,
+            &lang.t("menu.language_auto"),
+            Action::SetLanguage(None),
+            settings.language.is_none(),
+        );
         let row = ui.row();
         for l in &lang.languages {
-            let selected = l.code == lang.code;
-            ui.menu_option(row, &l.name, Action::SetLanguage(l.code.clone()), selected);
+            let selected = settings.language.as_ref() == Some(&l.code);
+            ui.menu_option(
+                row,
+                &l.name,
+                Action::SetLanguage(Some(l.code.clone())),
+                selected,
+            );
         }
-        if settings.language.is_some() {
-            ui.menu_option(root, &lang.t("menu.back"), Action::CloseLanguages, false);
-        }
+        ui.menu_option(root, &lang.t("menu.back"), Action::CloseLanguages, false);
         return;
     }
 
@@ -306,6 +313,7 @@ fn main_menu_actions(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
     mut lang: ResMut<Lang>,
+    automatic: Res<AutomaticLanguage>,
     mut settings: ResMut<Settings>,
     mut language_menu: ResMut<LanguageMenu>,
     mut save_menu: ResMut<SaveMenu>,
@@ -351,8 +359,8 @@ fn main_menu_actions(
             Action::OpenLanguages => language_menu.0 = true,
             Action::CloseLanguages => language_menu.0 = false,
             Action::SetLanguage(code) => {
-                *lang = Lang::load(code);
-                settings.language = Some(lang.code.clone());
+                *lang = Lang::from_preference(code.as_deref(), &automatic);
+                settings.language = code.clone();
                 settings.store();
                 language_menu.0 = false;
             }
@@ -539,6 +547,7 @@ fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
     for (knob, key, value) in [
         (Knob::Music, "settings.music", settings.music),
         (Knob::Effects, "settings.effects", settings.effects),
+        (Knob::Narration, "settings.narration", settings.narration),
         (Knob::UiSize, "settings.ui_size", settings.ui_size),
     ] {
         // Label on the left, small step buttons on the right.
