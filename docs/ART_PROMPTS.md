@@ -7,7 +7,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 - **Icons** – small pictures of the products, furniture and coins used in the interface. A product
   picture is also shown on the shelf while the product has no 3D model yet.
 - **The interface frame** – painted walnut and brass trim for menus, shop panels and crate tooltips.
-- **The floor texture.**
+- **Surface textures and light** – the shop floor, market cobblestones and the soft halo around harbour lamps.
 - **The title screen** – a dedicated Full HD background and the game logo.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
@@ -22,14 +22,12 @@ python3 tools/check_models.py
 
 ## To do
 
-| What | Prompts |
-|---|---|
-| Painted water and lamp glow for the harbour, cobblestones for the market | [Water and light](#water-and-light--canvas-1024--1024) |
-| Icons for the 5 new pieces of furniture | [Icons](#icons--canvas-1024--1024) |
-| 63 new 3D models (containers, houses, props, animals, new furniture, the market) | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
+There are no open image orders. The five furniture icons, the market cobblestones and the harbour
+lamp halo are included. The game generates the water surface and its ripple normals at runtime.
 
-Check what is really missing on the latest `main` (pull first) with
-`python3 tools/check_models.py`: every line marked `missing` or `no icon` is still open.
+To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
+It marks absent files with `missing` or `no icon`. The environment textures and their paths are
+listed under [Water and light](#water-and-light--canvas-1024--1024).
 
 ## Workflow
 
@@ -168,7 +166,7 @@ keep the silhouette simple and bold. Prepare with kind `product` or `decor` (bot
 `assets/sprites/products/<id>.png` and `assets/sprites/decor/<id>.png`. A button without an icon
 just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
 
-**Missing – new furniture:**
+**Delivered furniture icons:**
 
 | File id | Prompt |
 |---|---|
@@ -220,14 +218,14 @@ transparent. The game stretches the centre and edges around the corner paintings
 
 ## Water and light – canvas 1024 × 1024
 
-The harbour water, the halos around its lamps and the market's cobblestones. Without these images the game uses a plain
-dark surface with computed waves and a soft computed glow. No preparation needed: save each
-image as a 1024 × 1024 PNG (the glow 512 × 512) directly at its path and deliver one commit per
-image, `Add <id> texture [skip ci]`.
+The market cobblestones (1024 × 1024) and the lamp halo (512 × 512) are included. The harbour
+uses a moving wave mesh and a generated normal map. The two water PNGs below are optional art
+overrides. For future replacements, save the PNG directly at its path and deliver one file per
+commit with `Add <id> texture [skip ci]`.
 
 | File | Prompt |
 |---|---|
-| `assets/sprites/harbor/water.png` | Seamless tileable texture of calm dark water at night seen from above, deep indigo and teal with soft painted ripple strokes and a few tiny silver glints, painterly, no objects, no reflections of anything specific. Must tile without visible seams. Not transparent. |
+| `assets/sprites/harbor/water.png` | *(optional)* Seamless tileable texture of calm dark water at night seen from above, deep indigo and teal with soft painted ripple strokes and a few tiny silver glints, painterly, no objects, no reflections of anything specific. Must tile without visible seams. Not transparent. |
 | `assets/sprites/harbor/water_normal.png` | *(optional)* The matching tangent-space normal map of the same ripples (purple-blue normal map colours), seamless. |
 | `assets/sprites/market/cobbles.png` | Seamless tileable texture of old grey-brown cobblestones seen straight from above, soft moss in the gaps, painterly, no objects. Must tile without visible seams. Not transparent. |
 | `assets/sprites/fx/glow.png` | A soft round glow on a transparent background: white in the middle, fading smoothly to fully transparent at the edge, no rays, no hard ring. Used, tinted, as the halo around lamps. 512 × 512 is enough. |
