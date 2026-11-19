@@ -9,6 +9,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 - **The interface frame** – painted walnut and brass trim for menus, shop panels and crate tooltips.
 - **Surface textures and light** – the shop floor, market cobblestones and the soft halo around harbour lamps.
 - **The title screen** – a dedicated Full HD background and the game logo.
+- **The desktop icon** – the same ghost and brass button in the Linux, macOS and Windows launchers.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
 The furniture and keepsake pictures of the old 2D version are reused as icons; the originals and
@@ -22,8 +23,8 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open image orders. The five furniture icons, the market cobblestones and the harbour
-lamp halo are included. The game generates the water surface and its ripple normals at runtime.
+There are no open image orders. The desktop icon, five furniture icons, market cobblestones and
+harbour lamp halo are included. The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
 It marks absent files with `missing` or `no icon`. The environment textures and their paths are
@@ -157,6 +158,14 @@ reference, no text, not transparent.
 
 Prepare it with `python3 tools/prepare_sprite.py ~/Downloads/image.png background --out
 assets/sprites/title/background.png` and deliver it as `Add title background [skip ci]`.
+
+## Desktop application icon (done)
+
+A friendly ivory and seafoam ghost holds a single worn brass button with four dark holes.
+Keep the two eyes, the curved tail and the button readable at 16 px. Use a dark plum outline,
+warm highlights, a transparent margin and no lettering. The three exports are in `art/icons/`.
+Linux uses a 512 px PNG, the Windows ICO contains 16–256 px images, and the macOS ICNS includes
+standard and Retina representations through 1024 px.
 
 ## Icons – canvas 1024 × 1024
 
