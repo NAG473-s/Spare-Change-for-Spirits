@@ -22,7 +22,6 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
-| Sprites for the four new ghosts: `cat`, `sailor`, `knight`, `bride` | [Ghosts](#ghosts--canvas-1024--1536-portrait) |
 | *(optional)* Animation sheets for the ghosts | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
 
 ## Workflow
@@ -75,7 +74,9 @@ Ghosts are friendly, semi-transparent, softly glowing and float slightly; no leg
 Keep the same body shape and size as the existing ghosts; vary colour, face and one accessory.
 In the game they are about 1.35 m tall and face the camera.
 
-**Missing:**
+All ten sprites are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
+
+**Ghosts introduced in later nights:**
 
 | File id | Prompt |
 |---|---|
@@ -84,7 +85,7 @@ In the game they are about 1.35 m tall and face the camera.
 | `knight` | A friendly headless knight ghost, silver-blue glow, slightly rusty armour, carrying his smiling helmeted head under one arm. |
 | `bride` | A ghostly bride, pearly white glow, old-fashioned lace dress, no veil, a small bouquet held close, hopeful but sad eyes. |
 
-**Done** (prompts kept for redoing a sprite):
+**Original ghosts:**
 
 | File id | Prompt |
 |---|---|
