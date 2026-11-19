@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "ข้าตักกระดุมเม็ดหนึ่งขึ้นมาจากแม่น้ำ",
+    "intro.story.2": "มีวิญญาณตนหนึ่งรออยู่ในร้านของเจ้า",
+    "intro.story.3": "เขากระซิบว่า “แม่เย็บกระดุมเม็ดนี้ให้ข้า”",
     "menu.version": "เดโม · เวอร์ชัน {version}",
     "menu.version_full": "เวอร์ชัน {version}",
     "menu.tagline": "ร้านเล็กๆ ที่เปิดเฉพาะช่วงเที่ยงคืนถึงรุ่งสาง",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "ลบแล้วเริ่มเกมใหม่",
     "menu.language": "ภาษา: {language}",
     "menu.choose_language": "เลือกภาษา",
+    "menu.language_auto": "อัตโนมัติ",
     "menu.back": "กลับ",
     "menu.settings": "การตั้งค่า",
     "hud.menu": "เมนู",
@@ -31,6 +35,7 @@
     "settings.title": "การตั้งค่า",
     "settings.music": "เพลง: {percent}%",
     "settings.effects": "เอฟเฟกต์เสียง: {percent}%",
+    "settings.narration": "เสียงบรรยาย: {percent}%",
     "settings.ui_size": "ขนาดอินเทอร์เฟซ: {percent}%",
     "settings.fullscreen_on": "เต็มจอ: เปิด",
     "settings.fullscreen_off": "เต็มจอ: ปิด",
