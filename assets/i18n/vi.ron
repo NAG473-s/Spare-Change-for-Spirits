@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Tôi vớt được một chiếc cúc áo dưới sông.",
+    "intro.story.2": "Một hồn ma đang đợi trong tiệm của bạn.",
+    "intro.story.3": "“Mẹ khâu chiếc cúc ấy cho tôi,” hồn ma thì thầm.",
     "menu.version": "Bản demo · phiên bản {version}",
     "menu.version_full": "Phiên bản {version}",
     "menu.tagline": "Một cửa tiệm nhỏ chỉ mở cửa từ nửa đêm đến rạng sáng.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Xóa và bắt đầu trò chơi mới",
     "menu.language": "Ngôn ngữ: {language}",
     "menu.choose_language": "Chọn ngôn ngữ",
+    "menu.language_auto": "Tự động",
     "menu.back": "Quay lại",
     "menu.settings": "Cài đặt",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Cài đặt",
     "settings.music": "Nhạc: {percent}%",
     "settings.effects": "Hiệu ứng âm thanh: {percent}%",
+    "settings.narration": "Giọng kể: {percent}%",
     "settings.ui_size": "Cỡ giao diện: {percent}%",
     "settings.fullscreen_on": "Toàn màn hình: bật",
     "settings.fullscreen_off": "Toàn màn hình: tắt",
