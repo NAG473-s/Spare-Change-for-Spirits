@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Am pescuit un nasture din râu.",
+    "intro.story.2": "În prăvălia ta aștepta o fantomă.",
+    "intro.story.3": "„Mama mi l-a cusut”, a șoptit.",
     "menu.version": "Demo · versiunea {version}",
     "menu.version_full": "Versiunea {version}",
     "menu.tagline": "Un mic magazin, deschis doar între miezul nopții și zori.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Șterge și începe un joc nou",
     "menu.language": "Limbă: {language}",
     "menu.choose_language": "Alege limba",
+    "menu.language_auto": "Automat",
     "menu.back": "Înapoi",
     "menu.settings": "Setări",
     "hud.menu": "Meniu",
@@ -31,6 +35,7 @@
     "settings.title": "Setări",
     "settings.music": "Muzică: {percent}%",
     "settings.effects": "Efecte sonore: {percent}%",
+    "settings.narration": "Narațiune: {percent}%",
     "settings.ui_size": "Dimensiunea interfeței: {percent}%",
     "settings.fullscreen_on": "Ecran complet: pornit",
     "settings.fullscreen_off": "Ecran complet: oprit",
