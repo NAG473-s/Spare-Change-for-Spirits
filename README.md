@@ -59,8 +59,9 @@ uploads it as the artifact
 
 | Phase | What happens |
 |---|---|
-| **Evening** | Step out through the shop door to the harbour, where the ferryman's boat waits: click a crate to buy it (max. 4 per evening), right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. Turn the sign in the window (or press the button) to open: the clock runs on to midnight and strikes. |
-| **Night** | Ghosts come in, browse and queue at the counter. The ghost at the front whispers a hint – you hand over a product from the shelves. Guess right → it pays and you count out the change. |
+| **Market day** | From the second day on, the village market opens before the evening: seven traders sell furniture (shelves of every size, candles and lamps, plants and incense, mirrors, rugs and screens), the raven changes coins and the Reaper sells rare single pieces and an hourglass that makes the coming night longer. Bought furniture waits in the storeroom; it can be sold back the same day. |
+| **Evening** | Place furniture from the storeroom (removing it puts it back), step out through the shop door to the harbour, where the ferryman's boat waits: click a crate to buy it (max. 4 per evening), right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. Turn the sign in the window (or press the button) to open: the clock runs on to midnight and strikes. |
+| **Night** | Ghosts come in, browse and queue at the counter. The ghost at the front whispers a hint – you hand over a product from the shelves (click it on the shelf or in the panel; hovering a product on a shelf shows its price, stock and when it fades). Guess right → it pays and you count out the change. |
 | **Morning** | The accounts: a ledger of the cash drawer (dusk, ferryman, furniture, takings, counterfeits, profit or loss) and how the night went – visitors, sales, change, reputation, ghosts that passed into the light, faded items and what fades next. |
 
 If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost, it flees at the
@@ -106,6 +107,8 @@ src/
   props.rs       decoration from assets/data/props.ron (counter, walls, quay)
   critters.rs    animals: shop cat, harbour cat, gull, owl, bats, fish, moths
   sign.rs        the closed/open sign in the window and opening the shop at midnight
+  market.rs      the village market by day: stalls, traders, wares, coin changing
+  tooltip.rs     the tooltip that follows the pointer (market wares, shelf products)
   audio.rs       sound effects and music
   fx.rs          flickering lights, particles, the Cue message
   save.rs        saving, loading, new game
@@ -114,7 +117,7 @@ src/
   rng.rs         small random number generator
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
-                 props.ron
+                 props.ron, market.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md

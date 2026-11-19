@@ -21,6 +21,7 @@ mod ghosts;
 mod harbor;
 mod i18n;
 mod inventory;
+mod market;
 mod menu;
 mod props;
 mod register;
@@ -30,6 +31,7 @@ mod scene;
 mod shop;
 mod sign;
 mod title;
+mod tooltip;
 mod ui;
 
 use bevy::prelude::*;
@@ -88,6 +90,8 @@ fn main() {
             sign::SignPlugin,
             props::PropsPlugin,
             critters::CrittersPlugin,
+            tooltip::TooltipPlugin,
+            market::MarketPlugin,
         ))
         .run();
 }

@@ -11,23 +11,25 @@ use serde::{Deserialize, Serialize};
 
 use bevy::light::NotShadowCaster;
 
-use crate::accounts::Accounts;
+use bevy::picking::pointer::PointerButton;
+
 use crate::data::{Atmosphere, DecorDef, GameData, asset_exists, rgb};
-use crate::day_cycle::Phase;
-use crate::economy::Drawer;
+use crate::day_cycle::{Phase, Progress};
+use crate::ferry::sale_price;
 use crate::fx::Flicker;
+use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::harbor::{ShopDoor, on_shop_door_click};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
+use crate::register::Register;
 use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
-use crate::ui::{Action, GameLog, UiFont};
+use crate::tooltip::{HoverTip, TipKind};
+use crate::ui::{Action, GameLog, Icons, UiFont};
 
 /// One grid cell is one metre.
 pub const CELL: f32 = 1.0;
 /// Centre of the floor grid (x, z).
 const GRID_CENTER: Vec2 = Vec2::new(0.0, 0.2);
-/// Height of the shelf board where products stand.
-const SHELF_BOARD: f32 = 0.75;
 const COUNTER_SIZE: Vec3 = Vec3::new(4.5, 1.0, 0.8);
 const DOOR_SIZE: Vec3 = Vec3::new(1.1, 2.3, 0.2);
 
@@ -36,7 +38,8 @@ pub struct ShopPlugin;
 impl Plugin for ShopPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Tool>()
-            .init_resource::<Keepsakes>()
+            .init_resource::<Storeroom>()
+            .init_resource::<HoveredShelfItem>()
             .add_systems(Startup, spawn_shop)
             .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| {
                 *t = Tool::None
@@ -51,7 +54,18 @@ impl Plugin for ShopPlugin {
                             .or_else(resource_changed::<UiFont>),
                     ),
                     translate_counter.run_if(resource_changed::<UiFont>),
+                    shelf_tooltip,
                 ),
+            )
+            // A rebuilt shelf loses its hovered item.
+            .add_systems(
+                PostUpdate,
+                (|mut h: ResMut<HoveredShelfItem>, items: Query<(), With<ShelfItem>>| {
+                    if h.0.is_some_and(|e| items.get(e).is_err()) {
+                        h.0 = None;
+                    }
+                })
+                .run_if(resource_changed::<ShopLayout>),
             );
     }
 }
@@ -59,8 +73,9 @@ impl Plugin for ShopPlugin {
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CellContent {
     pub decor: Option<String>,
-    /// Shelves only: which product is displayed there.
-    pub product: Option<String>,
+    /// Shelves only: the products displayed there, one per slot.
+    #[serde(default)]
+    pub products: Vec<String>,
 }
 
 #[derive(Resource)]
@@ -132,7 +147,7 @@ impl ShopLayout {
                     .decor
                     .as_deref()
                     .and_then(|d| data.decor(d))
-                    .is_some_and(|d| d.is_shelf)
+                    .is_some_and(|d| d.is_shelf())
             })
             .collect()
     }
@@ -140,10 +155,8 @@ impl ShopLayout {
     /// All products currently on a shelf (without duplicates).
     pub fn displayed_products(&self) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
-        for c in &self.cells {
-            if let Some(p) = &c.product
-                && !out.contains(p)
-            {
+        for p in self.cells.iter().flat_map(|c| &c.products) {
+            if !out.contains(p) {
                 out.push(p.clone());
             }
         }
@@ -165,11 +178,12 @@ impl ShopLayout {
     }
 }
 
-/// Keepsakes the player owns but has not placed yet (decor id → count).
+/// Furniture the player owns but has not placed: bought at the market or
+/// left by Edwin as a keepsake (decor id → count).
 #[derive(Resource, Default)]
-pub struct Keepsakes(pub BTreeMap<String, u32>);
+pub struct Storeroom(pub BTreeMap<String, u32>);
 
-impl Keepsakes {
+impl Storeroom {
     pub fn count(&self, id: &str) -> u32 {
         self.0.get(id).copied().unwrap_or(0)
     }
@@ -190,15 +204,11 @@ impl Keepsakes {
     }
 }
 
-/// Clears a cell. A keepsake that stood there goes back into the box.
-fn clear_cell(layout: &mut ShopLayout, idx: usize, data: &GameData, keepsakes: &mut Keepsakes) {
-    if let Some(d) = layout.cells[idx]
-        .decor
-        .as_deref()
-        .and_then(|d| data.decor(d))
-        && d.keepsake
-    {
-        keepsakes.give(&d.id);
+/// Clears a cell. The furniture that stood there goes back into the
+/// storeroom; its products stay in stock.
+fn clear_cell(layout: &mut ShopLayout, idx: usize, storeroom: &mut Storeroom) {
+    if let Some(d) = &layout.cells[idx].decor {
+        storeroom.give(d);
     }
     layout.cells[idx] = CellContent::default();
 }
@@ -389,10 +399,8 @@ fn on_cell_click(
     data: Res<GameData>,
     stock: Res<Stock>,
     mut layout: ResMut<ShopLayout>,
-    mut drawer: ResMut<Drawer>,
-    mut keepsakes: ResMut<Keepsakes>,
+    mut storeroom: ResMut<Storeroom>,
     mut log: ResMut<GameLog>,
-    mut accounts: ResMut<Accounts>,
     lang: Res<Lang>,
 ) {
     if *phase.get() != Phase::Evening {
@@ -405,50 +413,176 @@ fn on_cell_click(
     match &*tool {
         Tool::None => {}
         Tool::Remove => {
-            clear_cell(&mut layout, idx, &data, &mut keepsakes);
+            clear_cell(&mut layout, idx, &mut storeroom);
         }
         Tool::Place(id) => {
-            let Some(def) = data.decor(id) else { return };
             if layout.cells[idx].decor.as_deref() == Some(id.as_str()) {
                 return;
             }
-            if def.keepsake {
-                if !keepsakes.take(id) {
-                    log.push(lang.f("log.keepsake_placed", &[("item", &lang.decor(id))]));
-                    return;
-                }
-            } else if drawer.pay(def.cost) {
-                accounts.furniture += def.cost;
-            } else {
-                log.push(lang.f(
-                    "log.decor_too_expensive",
-                    &[("item", &lang.decor(id)), ("cost", &def.cost)],
-                ));
+            if !storeroom.take(id) {
+                log.push(lang.f("log.none_in_storeroom", &[("item", &lang.decor(id))]));
                 return;
             }
-            clear_cell(&mut layout, idx, &data, &mut keepsakes);
+            clear_cell(&mut layout, idx, &mut storeroom);
             layout.cells[idx] = CellContent {
                 decor: Some(id.clone()),
-                product: None,
+                products: Vec::new(),
             };
         }
         Tool::Stock(product) => {
-            let is_shelf = layout.cells[idx]
+            let Some(def) = layout.cells[idx]
                 .decor
                 .as_deref()
                 .and_then(|d| data.decor(d))
-                .is_some_and(|d| d.is_shelf);
-            if !is_shelf {
+                .filter(|d| d.is_shelf())
+            else {
                 log.push(lang.t("log.products_on_shelf"));
                 return;
-            }
+            };
             if stock.count(product) == 0 {
                 log.push(lang.f("log.out_of_stock", &[("item", &lang.product(product))]));
                 return;
             }
-            layout.cells[idx].product = Some(product.clone());
+            let cell = &mut layout.cells[idx];
+            if cell.products.contains(product) {
+                return;
+            }
+            if cell.products.len() >= def.slots.len() {
+                log.push(lang.t("log.shelf_full"));
+                return;
+            }
+            cell.products.push(product.clone());
         }
     }
+}
+
+/// A product on a shelf: hover it for details, click it to take it off the
+/// shelf (evening) or to hand it to the ghost waiting at the counter (night).
+#[derive(Component)]
+pub struct ShelfItem {
+    cell: usize,
+    product: String,
+    #[allow(dead_code)]
+    slot: usize,
+}
+
+/// The shelf item under the mouse pointer.
+#[derive(Resource, Default)]
+struct HoveredShelfItem(Option<Entity>);
+
+fn on_shelf_item_over(over: On<PointerOver>, mut hovered: ResMut<HoveredShelfItem>) {
+    hovered.0 = Some(over.event_target());
+}
+
+fn on_shelf_item_out(out: On<PointerOut>, mut hovered: ResMut<HoveredShelfItem>) {
+    if hovered.0 == Some(out.event_target()) {
+        hovered.0 = None;
+    }
+}
+
+fn on_shelf_item_click(
+    mut click: On<PointerClick>,
+    phase: Res<State<Phase>>,
+    tool: Res<Tool>,
+    items: Query<&ShelfItem>,
+    mut layout: ResMut<ShopLayout>,
+    mut actions: MessageWriter<Action>,
+) {
+    if click.button != PointerButton::Primary {
+        return;
+    }
+    let Ok(item) = items.get(click.event_target()) else {
+        return;
+    };
+    match phase.get() {
+        // With the furnishing tools the click is meant for the cell.
+        Phase::Evening if matches!(*tool, Tool::None | Tool::Stock(_)) => {
+            click.propagate(false);
+            layout.cells[item.cell]
+                .products
+                .retain(|p| *p != item.product);
+        }
+        Phase::Night => {
+            click.propagate(false);
+            actions.write(Action::Offer(item.product.clone()));
+        }
+        _ => {}
+    }
+}
+
+/// Details of the hovered shelf item: price, stock, when it fades, and what
+/// a click does right now.
+fn shelf_tooltip(
+    hovered: Res<HoveredShelfItem>,
+    items: Query<&ShelfItem>,
+    phase: Res<State<Phase>>,
+    data: Res<GameData>,
+    lang: Res<Lang>,
+    stock: Res<Stock>,
+    icons: Res<Icons>,
+    progress: Res<Progress>,
+    register: Res<Register>,
+    ghosts: Query<&Ghost>,
+    queue: Res<Queue>,
+    mut tip: ResMut<HoverTip>,
+    mut shown: Local<bool>,
+) {
+    let Some(item) = hovered.0.and_then(|e| items.get(e).ok()) else {
+        if *shown {
+            HoverTip::hide(&mut tip);
+            *shown = false;
+        }
+        return;
+    };
+    let Some(p) = data.product(&item.product) else {
+        return;
+    };
+    let mut t = HoverTip {
+        icon: icons.product(&p.id),
+        title: lang.product(&p.id),
+        lines: Vec::new(),
+    };
+    t.line(
+        TipKind::Text,
+        lang.f(
+            "ferry.tip_price",
+            &[("price", &sale_price(&data, &p.id, progress.night))],
+        ),
+    );
+    t.line(
+        TipKind::Text,
+        lang.f("ferry.tip_stock", &[("count", &stock.count(&p.id))]),
+    );
+    // The oldest unit is the next to fade.
+    if let Some(oldest) = stock.units().get(&p.id).and_then(|ages| ages.iter().max()) {
+        let left = p.fade_after.saturating_sub(*oldest);
+        let kind = if left <= 1 {
+            TipKind::Bad
+        } else {
+            TipKind::Text
+        };
+        t.line(kind, lang.f("shelf.tip_fades", &[("nights", &left)]));
+    }
+    let hint = match phase.get() {
+        Phase::Evening => lang.t("shelf.tip_evening"),
+        Phase::Night => {
+            let waiting = queue
+                .front()
+                .and_then(|e| ghosts.get(e).ok())
+                .is_some_and(|g| g.state == GhostState::Waiting);
+            if waiting && register.sale.is_none() {
+                lang.t("shelf.tip_night")
+            } else {
+                lang.t("shelf.tip_no_ghost")
+            }
+        }
+        _ => String::new(),
+    };
+    if !hint.is_empty() {
+        t.line(TipKind::Hint, hint);
+    }
+    HoverTip::show(&mut tip, t);
+    *shown = true;
 }
 
 fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
@@ -516,30 +650,67 @@ fn sync_cell_visuals(
             ));
         }
 
-        if let Some(p) = content.product.as_deref() {
-            children.push(spawn_product(
+        for (slot, p) in content.products.iter().enumerate() {
+            let Some(&(x, y, z)) = def.slots.get(slot) else {
+                continue;
+            };
+            let item = product_model(
                 &mut commands,
                 &asset_server,
                 &mut meshes,
                 &mut materials,
                 p,
+                Vec3::new(x, y, z),
+            );
+            // An invisible box a little bigger than the product and towards
+            // the front, so the pointer finds it before the shelf boards.
+            commands.spawn((
+                Mesh3d(meshes.add(Cuboid::new(0.34, 0.32, 0.34))),
+                MeshMaterial3d(materials.add(StandardMaterial {
+                    base_color: Color::NONE,
+                    alpha_mode: AlphaMode::Blend,
+                    unlit: true,
+                    ..default()
+                })),
+                Transform::from_xyz(0.0, 0.16, 0.12),
+                NotShadowCaster,
+                ChildOf(item),
             ));
+            commands
+                .entity(item)
+                .insert(ShelfItem {
+                    cell: *idx,
+                    slot,
+                    product: p.clone(),
+                })
+                .observe(on_shelf_item_click)
+                .observe(on_shelf_item_over)
+                .observe(on_shelf_item_out);
+            children.push(item);
         }
 
         commands.entity(entity).add_children(&children);
 
         // Shelves say how many they hold (and what, while the product has no
         // model to show it); placeholders say what they are.
-        let text = match content.product.as_deref() {
-            Some(p) if asset_exists(&format!("models/products/{p}.glb")) => {
-                Some(format!("×{}", stock.count(p)))
-            }
-            Some(p) => Some(lang.f(
-                "evening.stock_button",
-                &[("item", &lang.product(p)), ("count", &stock.count(p))],
-            )),
-            None if !has_model => Some(lang.decor(&def.id)),
-            None => None,
+        let text = if content.products.is_empty() {
+            (!has_model).then(|| lang.decor(&def.id))
+        } else {
+            let counts: Vec<String> = content
+                .products
+                .iter()
+                .map(|p| {
+                    if asset_exists(&format!("models/products/{p}.glb")) {
+                        format!("×{}", stock.count(p))
+                    } else {
+                        lang.f(
+                            "evening.stock_button",
+                            &[("item", &lang.product(p)), ("count", &stock.count(p))],
+                        )
+                    }
+                })
+                .collect();
+            Some(counts.join(" · "))
         };
         if let Some(text) = text {
             commands.spawn((
@@ -607,18 +778,6 @@ fn spawn_light(
     light
 }
 
-/// The product on a shelf: its model, or its picture as a small billboard.
-fn spawn_product(
-    commands: &mut Commands,
-    asset_server: &AssetServer,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<StandardMaterial>,
-    id: &str,
-) -> Entity {
-    let spot = Vec3::new(0.0, SHELF_BOARD, 0.08);
-    product_model(commands, asset_server, meshes, materials, id, spot)
-}
-
 /// A product standing at `spot`: its model, or its picture as a small
 /// billboard (also used on the ferryman's crates).
 pub(crate) fn product_model(
@@ -650,7 +809,6 @@ pub(crate) fn product_model(
                 Transform::from_translation(spot + Vec3::new(0.0, 0.0, 0.2)),
                 Billboard,
                 NotShadowCaster,
-                Pickable::IGNORE,
             ))
             .id()
     }
@@ -661,19 +819,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn keepsakes_go_back_into_the_box_when_replaced() {
-        let data = GameData::load();
+    fn furniture_goes_back_into_the_storeroom_when_replaced() {
         let mut layout = ShopLayout::new(4, 4);
-        let mut keepsakes = Keepsakes::default();
-        keepsakes.give("umbrella");
-        assert!(keepsakes.take("umbrella"));
-        assert!(!keepsakes.take("umbrella"));
+        let mut storeroom = Storeroom::default();
+        storeroom.give("umbrella");
+        assert!(storeroom.take("umbrella"));
+        assert!(!storeroom.take("umbrella"));
         layout.cells[0].decor = Some("umbrella".into());
-        clear_cell(&mut layout, 0, &data, &mut keepsakes);
-        assert_eq!(keepsakes.count("umbrella"), 1);
-        // Bought decor is simply gone.
-        layout.cells[1].decor = Some("candle".into());
-        clear_cell(&mut layout, 1, &data, &mut keepsakes);
-        assert_eq!(keepsakes.count("candle"), 0);
+        clear_cell(&mut layout, 0, &mut storeroom);
+        assert_eq!(storeroom.count("umbrella"), 1);
+        // Bought furniture comes back too, and its products stay in stock.
+        layout.cells[1] = CellContent {
+            decor: Some("shelf".into()),
+            products: vec!["marbles".into()],
+        };
+        clear_cell(&mut layout, 1, &mut storeroom);
+        assert_eq!(storeroom.count("shelf"), 1);
+        assert!(layout.cells[1].products.is_empty());
     }
 }

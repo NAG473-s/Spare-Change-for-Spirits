@@ -18,6 +18,8 @@ as it is pushed.
 | [Village houses](#village-houses--assetsmodelsharboridglb) | `village_house_1`, `village_house_2`, `village_house_3`, `village_house_4` |
 | [Props in the shop](#props-in-the-shop--assetsmodelspropsidglb) | `counter_candle`, `ledger_book`, `button_jar`, `brass_scale`, `potted_succulent`, `wall_shelf`, `glass_jar`, `potion_bottles`, `picture_frame`, `picture_frame_small`, `herb_bundle`, `button_sack`, `stacked_boxes`, `potted_palm`, `coat_stand`, `broom` |
 | [Props at the harbour](#props-at-the-harbour--assetsmodelspropsidglb) | `crate_stack`, `fishing_net`, `lobster_trap`, `anchor`, `oars`, `fish_basket`, `rope_pile`, `bench` |
+| [New furniture](#furniture--assetsmodelsdecoridglb) | `small_shelf`, `display_table`, `tall_bookcase`, `glass_cabinet`, `folding_screen` |
+| [The village market](#the-village-market--assetsmodelsmarketidglb) | `stall_carpenter`, `stall_candlemaker`, `stall_herbalist`, `stall_glazier`, `stall_weaver`, `stall_raven`, `stall_reaper`, `vendor_carpenter`, `vendor_candlemaker`, `vendor_herbalist`, `vendor_glazier`, `vendor_weaver`, `vendor_raven`, `vendor_reaper`, `hourglass` |
 | [Animals](#animals--assetsmodelscrittersidglb) | `cat_sleeping`, `cat_sitting`, `cat_tail`, `seagull`, `owl_body`, `owl_head`, `bat_body`, `bat_wing`, `fish` |
 
 ## Technical rules (all models)
@@ -61,7 +63,12 @@ origin, front facing -Y, Z up, 1 unit = 1 metre.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
-| `shelf` | 0.9 × 1.5 × 0.45 | A small wooden shop shelf, old dark wood, open front, three boards at 0.35 m, 0.75 m and 1.15 m height (products are placed on the middle board), a little carved lace trim along the top. |
+| `shelf` | 0.9 × 1.5 × 0.45 | A small wooden shop shelf, old dark wood, open front, three boards at 0.35 m, 0.75 m and 1.15 m height (products are placed on the middle and the top board), a little carved lace trim along the top. |
+| `small_shelf` | 0.6 × 0.9 × 0.35 | A small, simple wooden shelf on short legs with **one board at 0.55 m** where a product stands, slightly crooked, a few nail heads. |
+| `display_table` | 0.9 × 0.8 × 0.6 | A low shop display table with turned legs and a dark green cloth on top (**top at 0.8 m**, two products stand on it side by side). |
+| `tall_bookcase` | 0.9 × 2.0 × 0.4 | A tall, narrow bookcase of dark wood with a carved crown, open front, **boards at 0.45, 0.95 and 1.45 m** (one product on each), a few old books lying at the sides. |
+| `glass_cabinet` | 0.8 × 1.7 × 0.45 | An elegant glass display cabinet with a brass frame and glass doors (the glass a pale, slightly transparent-looking material), **glass shelves at 0.5, 0.95 and 1.4 m**. |
+| `folding_screen` | 1.0 × 1.6 × 0.3 | A three-panel folding screen of dark wood with faded dusty-rose silk panels painted with moths and moons, standing slightly zig-zagged. |
 | `candle` | 0.4 × 1.1 × 0.4 | A standing iron candelabra on three curved feet with three melted candles on top (flames around 1.05 m height, emissive amber), wax drips. |
 | `mirror` | 0.8 × 1.7 × 0.3 | A standing oval mirror in an ornate silver frame on two small feet; the glass is a pale blue-grey reflective-looking material. |
 | `incense` | 0.4 × 0.8 × 0.4 | A small wooden pedestal with a round brass incense burner on top, a thin curl of purple smoke made of a few soft low-poly ribbons. |
@@ -252,6 +259,33 @@ Night colours, cute and simple, no rigs or animations.
 | `bat_body` | 0.07 × 0.06 × 0.12 | A tiny dark bat's body with ears, **without wings**, head towards −Y. Origin at the **centre**. |
 | `bat_wing` | 0.12 × 0.02 × 0.08 | One bat wing, spread flat out to the right (+X). Origin at the **shoulder (its left end)**; the game mirrors it for the other side. |
 | `fish` | 0.08 × 0.1 × 0.26 | A small silvery fish, length along the Y axis, head towards −Y. Origin at the **centre**. |
+
+## The village market – `assets/models/market/<id>.glb`
+
+By day the player visits a market of seven traders of the other side (`assets/data/market.ron`).
+Each has a **stall** and the **trader** standing beside it (the game moves them: breathing, a
+nod after a sale, the wisp floating, the raven hopping). The game puts small samples of the wares
+on the stall's table, so the table top stays **empty** at **0.85 m** height. Stalls: origin at the
+bottom centre, front (the customer side) towards −Y, table about 1.7 × 0.7 m, two posts at the
+back carrying an awning at about 2.2 m. Traders: origin at the feet, facing −Y.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `stall_carpenter` | 1.9 × 2.5 × 1.2 | A carpenter's market stall: a sturdy workbench table, a saw and planks leaning on the side, wood shavings, a sand-brown canvas awning. |
+| `stall_candlemaker` | 1.9 × 2.5 × 1.2 | A candle maker's stall: a table with a rack of hanging candles on the side, dripped wax, a honey-yellow awning. |
+| `stall_herbalist` | 1.9 × 2.5 × 1.2 | A witch's herb stall: bundles of herbs hanging from the awning frame, a small bubbling cauldron beside the table (not on it), a moss-green awning. |
+| `stall_glazier` | 1.9 × 2.5 × 1.2 | A vampire glazier's stall: a dark lacquered table, a tall covered mirror on a stand beside it, a deep red velvet awning with gold fringe. |
+| `stall_weaver` | 1.9 × 2.5 × 1.2 | A weaver's stall: rolled rugs and bolts of cloth leaning against the table, a small loom at the side, a dusty-rose awning. |
+| `stall_raven` | 1.9 × 2.5 × 1.2 | A money changer's stall: a narrow counter with a brass coin scale and stacked trays, a slate-blue awning. |
+| `stall_reaper` | 1.9 × 2.5 × 1.2 | The Reaper's stall: a black-draped table with a lace cloth edge, a few old clocks and a candelabra at the sides, a ragged black awning. |
+| `vendor_carpenter` | 0.7 × 1.7 × 0.6 | Bones the carpenter: a friendly skeleton in a leather apron with a pencil behind where his ear would be, a folding rule in his hand. |
+| `vendor_candlemaker` | 0.5 × 1.6 × 0.5 | Flicker, a will-o'-the-wisp candle maker: a softly glowing pale-blue flame-shaped spirit with a tiny face (emissive), floating at about 1.3 m above a small candle-wax base; origin at the bottom of the base. |
+| `vendor_herbalist` | 0.7 × 1.7 × 0.6 | Mother Moss, a kindly old witch with a mossy green shawl, a crooked pointed hat with a sprig on it, holding a bundle of lavender. |
+| `vendor_glazier` | 0.7 × 1.7 × 0.6 | Count Glass, a pale, elegant vampire in a black high-collared cape with red lining, polishing a small hand mirror (no reflection in it). |
+| `vendor_weaver` | 0.7 × 1.7 × 0.6 | Wolfgang the weaver, a shaggy, gentle werewolf in a knitted waistcoat with a measuring tape round his neck. |
+| `vendor_raven` | 0.4 × 1.4 × 0.4 | Corvus, a large black raven with a tiny monocle sitting on top of a wooden perch post (the post 1.0 m high); origin at the bottom of the post. |
+| `vendor_reaper` | 0.7 × 1.7 × 0.6 | The Reaper, tall and polite, in a long black hooded robe, two pale glowing eyes (emissive) in the dark hood, holding his scythe upright. |
+| `hourglass` | 0.2 × 0.3 × 0.2 | A brass-framed hourglass with pale sand, standing upright. |
 
 ## Delivery: push every model on its own
 

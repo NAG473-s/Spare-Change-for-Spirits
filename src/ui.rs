@@ -22,7 +22,7 @@ use crate::harbor::Location;
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
-use crate::shop::{Keepsakes, ShopLayout, Tool};
+use crate::shop::{ShopLayout, Storeroom, Tool};
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
 pub(crate) const BG_PANEL: Color = Color::srgb(0.11, 0.08, 0.12);
@@ -53,6 +53,7 @@ impl Plugin for UiPlugin {
                 scroll_panel_to_top.run_if(state_changed::<Phase>),
             )
             .add_systems(OnEnter(Phase::Morning), build_morning_panel)
+            .add_systems(OnEnter(Phase::Day), build_market_panel)
             .add_systems(OnEnter(Phase::Menu), clear_for_menu)
             .add_systems(OnEnter(Phase::DemoEnd), build_demo_end_panel)
             .add_systems(
@@ -68,6 +69,9 @@ impl Plugin for UiPlugin {
                     build_demo_end_panel
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
+                    build_market_panel.run_if(in_state(Phase::Day).and_then(
+                        resource_changed::<Storeroom>.or_else(resource_changed::<UiFont>),
+                    )),
                     build_evening_panel.run_if(
                         in_state(Phase::Evening).and_then(
                             state_changed::<Phase>
@@ -75,7 +79,7 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<Tool>)
                                 .or_else(resource_changed::<ShopLayout>)
                                 .or_else(resource_changed::<Drawer>)
-                                .or_else(resource_changed::<Keepsakes>)
+                                .or_else(resource_changed::<Storeroom>)
                                 .or_else(resource_changed::<Progress>)
                                 .or_else(resource_changed::<BoughtTonight>)
                                 .or_else(resource_changed::<Location>)
@@ -116,6 +120,8 @@ pub enum Action {
     /// Out through the shop door to the harbour, and back (evening).
     GoToHarbor,
     BackToShop,
+    /// Leave the village market for the evening in the shop.
+    EndDay,
     NewGame,
     Continue,
     Resume,
@@ -741,6 +747,49 @@ fn ghost_state_changed(ghosts: Query<&Ghost>, mut last: Local<Vec<GhostState>>) 
 // ---------------------------------------------------------------------------
 // Panels
 
+/// The side panel at the village market: who sells what, the storeroom,
+/// and the way back to the shop.
+fn build_market_panel(
+    mut commands: Commands,
+    parts: Res<SidePanelParts>,
+    font: Res<UiFont>,
+    lang: Res<Lang>,
+    data: Res<GameData>,
+    storeroom: Res<Storeroom>,
+) {
+    let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
+    ui.heading(&lang.t("market.title"));
+    ui.dim(&lang.t("market.intro"));
+    ui.section(&lang.t("market.vendors"));
+    for v in &data.vendors {
+        ui.text(&lang.t(&format!("vendor.{}.name", v.id)));
+        ui.dim(&lang.t(&format!("vendor.{}.text", v.id)));
+    }
+    ui.section(&lang.t("market.storeroom"));
+    let owned: Vec<String> = data
+        .decor
+        .iter()
+        .filter(|d| storeroom.count(&d.id) > 0)
+        .map(|d| {
+            lang.f(
+                "count.entry",
+                &[
+                    ("count", &storeroom.count(&d.id)),
+                    ("item", &lang.decor(&d.id)),
+                ],
+            )
+        })
+        .collect();
+    if owned.is_empty() {
+        ui.dim(&lang.t("market.storeroom_empty"));
+    } else {
+        ui.text(&lang.join(&owned));
+    }
+    ui.dim(&lang.t("market.hint"));
+    ui.spacer();
+    ui.primary(&lang.t("market.back"), Action::EndDay);
+}
+
 fn build_evening_panel(
     mut commands: Commands,
     parts: Res<SidePanelParts>,
@@ -751,7 +800,7 @@ fn build_evening_panel(
     crates: Res<CratesOrdered>,
     tool: Res<Tool>,
     layout: Res<ShopLayout>,
-    keepsakes: Res<Keepsakes>,
+    storeroom: Res<Storeroom>,
     progress: Res<Progress>,
     icons: Res<Icons>,
     bought: Res<BoughtTonight>,
@@ -834,17 +883,22 @@ fn build_evening_panel(
         ));
     }
 
+    // Furniture from the storeroom (bought at the market, or keepsakes).
     ui.section(&lang.t("evening.furnish"));
-    let row = ui.row();
-    for d in data
+    let owned: Vec<_> = data
         .decor
         .iter()
-        .filter(|d| !d.keepsake && d.unlock_night <= night)
-    {
+        .filter(|d| storeroom.count(&d.id) > 0)
+        .collect();
+    let row = ui.row();
+    for d in &owned {
         let selected = *tool == Tool::Place(d.id.clone());
         let label = lang.f(
-            "evening.decor_button",
-            &[("item", &lang.decor(&d.id)), ("cost", &d.cost)],
+            "evening.stock_button",
+            &[
+                ("item", &lang.decor(&d.id)),
+                ("count", &storeroom.count(&d.id)),
+            ],
         );
         ui.icon_button_in(
             row,
@@ -862,26 +916,8 @@ fn build_evening_panel(
         *tool == Tool::Remove,
         true,
     );
-
-    let owned: Vec<_> = data
-        .decor
-        .iter()
-        .filter(|d| d.keepsake && keepsakes.count(&d.id) > 0)
-        .collect();
-    if !owned.is_empty() {
-        ui.section(&lang.t("evening.keepsakes"));
-        let row = ui.row();
-        for d in owned {
-            let selected = *tool == Tool::Place(d.id.clone());
-            ui.icon_button_in(
-                row,
-                icons.decor(&d.id),
-                &lang.decor(&d.id),
-                Action::ToolPlace(d.id.clone()),
-                selected,
-                true,
-            );
-        }
+    if owned.is_empty() {
+        ui.dim(&lang.t("evening.no_furniture"));
     }
 
     ui.section(&lang.t("evening.shelve"));

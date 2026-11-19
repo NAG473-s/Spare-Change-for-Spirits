@@ -11,7 +11,7 @@ use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
-use crate::shop::Keepsakes;
+use crate::shop::Storeroom;
 use crate::ui::{Action, GameLog};
 
 pub struct RegisterPlugin;
@@ -206,7 +206,7 @@ fn make_change(
     mut queue: ResMut<Queue>,
     mut progress: ResMut<Progress>,
     mut report: ResMut<NightReport>,
-    mut keepsakes: ResMut<Keepsakes>,
+    mut storeroom: ResMut<Storeroom>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
@@ -309,7 +309,7 @@ fn make_change(
                     ));
                     report.story_line = Some(thanks);
                     if let Some(k) = &c.keepsake {
-                        keepsakes.give(k);
+                        storeroom.give(k);
                         report.keepsakes.push(k.clone());
                     }
                     progress.story_chapter = chapter + 1;

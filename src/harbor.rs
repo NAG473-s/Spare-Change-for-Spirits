@@ -58,6 +58,8 @@ pub enum Location {
     #[default]
     Shop,
     Harbor,
+    /// The village market (by day).
+    Market,
 }
 
 /// The harbour's origin in the world. Its local coordinates match the
@@ -915,6 +917,7 @@ fn move_camera(
     let offset = match *location {
         Location::Shop => Vec3::ZERO,
         Location::Harbor => HARBOR,
+        Location::Market => crate::market::MARKET,
     };
     **camera = Transform::from_translation(CAMERA_POS + offset)
         .looking_at(CAMERA_TARGET + offset, Vec3::Y);
@@ -931,7 +934,7 @@ const WATER_NORMALS: &str = "sprites/harbor/water_normal.png";
 const GLOW_TEXTURE: &str = "sprites/fx/glow.png";
 
 /// An image that tiles (repeats) across a surface.
-fn repeating(asset_server: &AssetServer, path: &str, srgb: bool) -> Handle<Image> {
+pub(crate) fn repeating(asset_server: &AssetServer, path: &str, srgb: bool) -> Handle<Image> {
     asset_server
         .load_builder()
         .with_settings(move |s: &mut bevy::image::ImageLoaderSettings| {

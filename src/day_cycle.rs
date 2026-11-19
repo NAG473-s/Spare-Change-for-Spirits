@@ -14,6 +14,8 @@ use crate::ui::{Action, GameLog};
 pub enum Phase {
     #[default]
     Menu,
+    /// The village market, before the evening (from the second day on).
+    Day,
     Evening,
     Night,
     Morning,
@@ -25,6 +27,7 @@ impl Phase {
     pub fn key(self) -> &'static str {
         match self {
             Phase::Menu => "phase.menu",
+            Phase::Day => "phase.day",
             Phase::Evening => "phase.evening",
             Phase::Night => "phase.night",
             Phase::Morning => "phase.morning",
@@ -40,6 +43,7 @@ impl Plugin for DayCyclePlugin {
         app.init_state::<Phase>()
             .init_resource::<NightClock>()
             .init_resource::<NightReport>()
+            .init_resource::<NightBonus>()
             .add_systems(OnEnter(Phase::Night), start_night)
             .add_systems(OnEnter(Phase::Morning), start_morning)
             .add_systems(
@@ -49,6 +53,7 @@ impl Plugin for DayCyclePlugin {
                         .chain()
                         .run_if(in_state(Phase::Night)),
                     next_evening.run_if(in_state(Phase::Morning)),
+                    end_day.run_if(in_state(Phase::Day)),
                 ),
             );
     }
@@ -122,9 +127,21 @@ pub struct NightReport {
     pub second_payments_kept: u32,
 }
 
+/// Makes the coming night longer (the Reaper's hourglass): a factor on its
+/// length, used up when the night begins.
+#[derive(Resource)]
+pub struct NightBonus(pub f32);
+
+impl Default for NightBonus {
+    fn default() -> Self {
+        Self(1.0)
+    }
+}
+
 fn start_night(
     data: Res<GameData>,
     progress: Res<Progress>,
+    mut bonus: ResMut<NightBonus>,
     mut clock: ResMut<NightClock>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
@@ -132,8 +149,9 @@ fn start_night(
 ) {
     *clock = NightClock {
         elapsed: 0.0,
-        length: data.config.night_length_secs,
+        length: data.config.night_length_secs * bonus.0,
     };
+    bonus.0 = 1.0;
     *report = NightReport {
         reputation_start: progress.reputation,
         ..default()
@@ -213,6 +231,13 @@ fn next_evening(
         next.set(Phase::DemoEnd);
     } else {
         progress.night += 1;
+        next.set(Phase::Day);
+    }
+}
+
+/// Leaving the market: back to the shop for the evening.
+fn end_day(mut actions: MessageReader<Action>, mut next: ResMut<NextState<Phase>>) {
+    if actions.read().any(|a| *a == Action::EndDay) {
         next.set(Phase::Evening);
     }
 }

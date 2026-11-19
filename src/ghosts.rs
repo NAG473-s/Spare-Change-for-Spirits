@@ -403,8 +403,10 @@ fn ghost_ai(
                     .is_some_and(|n| n.is_met(&layout.atmosphere(&data, progress.night)));
                 if !calm
                     && rng.chance(quirks.knock_chance)
-                    && let Some(product) =
-                        g.browse_cell.and_then(|c| layout.cells[c].product.clone())
+                    && let Some(product) = g.browse_cell.and_then(|c| {
+                        let on_shelf = &layout.cells[c].products;
+                        (!on_shelf.is_empty()).then(|| on_shelf[rng.index(on_shelf.len())].clone())
+                    })
                     && stock.take_one(&product)
                 {
                     log.push(lang.f(

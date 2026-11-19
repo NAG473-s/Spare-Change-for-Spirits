@@ -260,8 +260,14 @@ fn main_menu_actions(
                 if let Some(save) = read_save() {
                     state.apply(&save, &data);
                     log.clear();
-                    log.push(lang.f("menu.welcome_back", &[("night", &save.night)]));
-                    next.set(Phase::Evening);
+                    if !save.market_open {
+                        log.push(lang.f("menu.welcome_back", &[("night", &save.night)]));
+                    }
+                    next.set(if save.market_open {
+                        Phase::Day
+                    } else {
+                        Phase::Evening
+                    });
                 }
             }
             Action::QuitGame => {
@@ -317,8 +323,10 @@ fn pause_actions(
         };
         // The evening's purchases and furnishing are kept. A night in
         // progress is not: the game continues at its evening.
-        if *phase.get() == Phase::Evening {
-            write_save(&state.snapshot(state.progress.night, false));
+        match phase.get() {
+            Phase::Evening => write_save(&state.snapshot(state.progress.night, false, false)),
+            Phase::Day => write_save(&state.snapshot(state.progress.night, false, true)),
+            _ => {}
         }
         if quit_to_menu {
             paused.0 = false;
@@ -416,6 +424,7 @@ fn current_tip(
         Phase::Night if report.sales == 0 => "tip.browse",
         Phase::Night => "tip.first_sale",
         Phase::Morning => "tip.morning",
+        Phase::Day => "tip.market",
         Phase::Menu | Phase::DemoEnd => return None,
     })
 }

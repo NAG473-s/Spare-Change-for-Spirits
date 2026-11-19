@@ -1,13 +1,29 @@
 // Decor. Names: assets/i18n/<language>.ron (decor.<id>.name).
+// cost: price at the village market (who sells what: market.ron).
 // effect is added to the shop's atmosphere.
-// is_shelf: true -> products can be displayed here.
+// slots (shelves only): where products stand, (x, height, z) from the decor's origin;
+//   one product per slot, so the number of slots is how many it holds.
 // Model (optional): assets/models/decor/<id>.glb, see docs/MODEL_PROMPTS.md.
 // size: (width, height, depth) in metres – the placeholder box and the model's target size.
 // unlock_night (optional, default 1): first night this decor can be bought.
 // light_height: where the light source sits for decor with a light effect.
 [
-    (id: "shelf", cost: 8, is_shelf: true,
+    // Shelves, from small to grand.
+    (id: "small_shelf", cost: 4, slots: [(0.0, 0.55, 0.05)],
+     effect: (silence: 1), color: (0.5, 0.36, 0.24), size: (0.6, 0.9, 0.35)),
+    (id: "shelf", cost: 8, slots: [(0.0, 0.75, 0.08), (0.0, 1.15, 0.08)],
      effect: (silence: 1), color: (0.45, 0.32, 0.22), size: (0.9, 1.5, 0.45)),
+    (id: "display_table", cost: 10, slots: [(-0.22, 0.8, 0.0), (0.22, 0.8, 0.0)],
+     effect: (warmth: 1), color: (0.5, 0.3, 0.2), size: (0.9, 0.8, 0.6)),
+    (id: "tall_bookcase", cost: 14, unlock_night: 2,
+     slots: [(0.0, 0.45, 0.06), (0.0, 0.95, 0.06), (0.0, 1.45, 0.06)],
+     effect: (silence: 2), color: (0.38, 0.26, 0.17), size: (0.9, 2.0, 0.4)),
+    (id: "glass_cabinet", cost: 18, unlock_night: 3,
+     slots: [(0.0, 0.5, 0.04), (0.0, 0.95, 0.04), (0.0, 1.4, 0.04)],
+     effect: (reflection: 1, light: 1), color: (0.55, 0.62, 0.66), size: (0.8, 1.7, 0.45)),
+
+    (id: "folding_screen", cost: 9,
+     effect: (warmth: 1, silence: 2), color: (0.55, 0.3, 0.4), size: (1.0, 1.6, 0.3)),
     (id: "candle", cost: 2,
      effect: (light: 2, warmth: 1), color: (1.0, 0.85, 0.4), size: (0.4, 1.1, 0.4), light_height: 1.05),
     (id: "mirror", cost: 12,

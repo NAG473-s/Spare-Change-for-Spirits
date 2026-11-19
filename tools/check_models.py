@@ -29,6 +29,17 @@ TRIANGLE_BUDGET = {
     "harbor": 6000,
     "props": 3000,
     "critters": 2000,
+    "market": 6000,
+}
+# The village market (src/market.rs): a stall and a trader for each vendor in
+# assets/data/market.ron, and the Reaper's hourglass.
+MARKET_VENDORS = ["carpenter", "candlemaker", "herbalist", "glazier", "weaver", "raven", "reaper"]
+MARKET_SIZES = {
+    **{f"stall_{v}": (1.9, 2.5, 1.2) for v in MARKET_VENDORS},
+    **{f"vendor_{v}": (0.7, 1.7, 0.6) for v in MARKET_VENDORS if v not in ("raven", "candlemaker")},
+    "vendor_raven": (0.4, 1.4, 0.4),
+    "vendor_candlemaker": (0.5, 1.6, 0.5),
+    "hourglass": (0.2, 0.3, 0.2),
 }
 # Containers on the ferryman's boat besides the crate (src/ferry.rs, CONTAINER_SPECS).
 CONTAINER_SIZES = {
@@ -243,6 +254,7 @@ def main():
         "harbor": HARBOR_SIZES,
         "props": prop_sizes(),
         "critters": CRITTER_SIZES,
+        "market": MARKET_SIZES,
     }
     failures = 0
     for folder, targets in expected.items():

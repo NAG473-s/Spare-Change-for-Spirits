@@ -24,7 +24,7 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
-| Painted water and lamp glow for the harbour | [Water and light](#water-and-light--canvas-1024--1024) |
+| Painted water and lamp glow for the harbour, cobblestones for the market | [Water and light](#water-and-light--canvas-1024--1024) |
 | 43 new 3D models (containers, houses, props, animals) | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
 
 ## Workflow
@@ -206,7 +206,7 @@ transparent. The game stretches the centre and edges around the corner paintings
 
 ## Water and light – canvas 1024 × 1024
 
-The harbour water and the halos around its lamps. Without these images the game uses a plain
+The harbour water, the halos around its lamps and the market's cobblestones. Without these images the game uses a plain
 dark surface with computed waves and a soft computed glow. No preparation needed: save each
 image as a 1024 × 1024 PNG (the glow 512 × 512) directly at its path and deliver one commit per
 image, `Add <id> texture [skip ci]`.
@@ -215,6 +215,7 @@ image, `Add <id> texture [skip ci]`.
 |---|---|
 | `assets/sprites/harbor/water.png` | Seamless tileable texture of calm dark water at night seen from above, deep indigo and teal with soft painted ripple strokes and a few tiny silver glints, painterly, no objects, no reflections of anything specific. Must tile without visible seams. Not transparent. |
 | `assets/sprites/harbor/water_normal.png` | *(optional)* The matching tangent-space normal map of the same ripples (purple-blue normal map colours), seamless. |
+| `assets/sprites/market/cobbles.png` | Seamless tileable texture of old grey-brown cobblestones seen straight from above, soft moss in the gaps, painterly, no objects. Must tile without visible seams. Not transparent. |
 | `assets/sprites/fx/glow.png` | A soft round glow on a transparent background: white in the middle, fading smoothly to fully transparent at the edge, no rays, no hard ring. Used, tinted, as the halo around lamps. 512 × 512 is enough. |
 
 ## Floor – canvas 1024 × 1024 (done)

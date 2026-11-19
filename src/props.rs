@@ -29,6 +29,7 @@ fn world_pos(prop: &PropDef) -> Vec3 {
     match prop.scene {
         Scene::Shop => pos,
         Scene::Harbor => HARBOR + pos,
+        Scene::Market => crate::market::MARKET + pos,
     }
 }
 

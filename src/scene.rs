@@ -201,6 +201,13 @@ fn lighting_for(phase: Phase) -> (f32, Color, f32, Color) {
             600.0,
             Color::srgb(0.6, 0.7, 1.0),
         ),
+        // A misty, pale day at the village market.
+        Phase::Day => (
+            900.0,
+            Color::srgb(0.85, 0.9, 1.0),
+            7000.0,
+            Color::srgb(1.0, 0.95, 0.85),
+        ),
         Phase::Morning => (
             650.0,
             Color::srgb(0.9, 0.9, 1.0),
@@ -427,7 +434,7 @@ pub fn shop_minutes(phase: Phase, clock: &NightClock) -> f32 {
     match phase {
         Phase::Night => clock.elapsed / clock.length.max(1.0) * 300.0,
         Phase::Morning | Phase::DemoEnd => 300.0,
-        Phase::Evening | Phase::Menu => -25.0,
+        Phase::Day | Phase::Evening | Phase::Menu => -25.0,
     }
     .min(300.0)
 }

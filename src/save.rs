@@ -15,10 +15,10 @@ use crate::data::GameData;
 use crate::day_cycle::{Phase, Progress, start_morning};
 use crate::economy::{Drawer, Purse};
 use crate::inventory::{CratesOrdered, Stock};
-use crate::shop::{CellContent, Keepsakes, ShopLayout};
+use crate::shop::{CellContent, ShopLayout, Storeroom};
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 1;
+pub const SAVE_VERSION: u32 = 2;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -43,8 +43,12 @@ pub struct SaveGame {
     pub drawer: Purse,
     pub stock: BTreeMap<String, Vec<u32>>,
     pub cells: Vec<CellContent>,
-    pub keepsakes: BTreeMap<String, u32>,
+    /// Furniture bought or given but not placed (decor id → count).
+    pub storeroom: BTreeMap<String, u32>,
     pub crates_ordered: u32,
+    /// Saved at dawn: the game continues at the village market.
+    #[serde(default)]
+    pub market_open: bool,
     /// The last night of the build that wrote it has been played. A save
     /// from the end of the demo can still continue in the full game.
     pub finished: bool,
@@ -155,12 +159,12 @@ pub struct GameState<'w> {
     pub drawer: ResMut<'w, Drawer>,
     pub stock: ResMut<'w, Stock>,
     pub layout: ResMut<'w, ShopLayout>,
-    pub keepsakes: ResMut<'w, Keepsakes>,
+    pub storeroom: ResMut<'w, Storeroom>,
     pub crates: ResMut<'w, CratesOrdered>,
 }
 
 impl GameState<'_> {
-    pub fn snapshot(&self, night: u32, finished: bool) -> SaveGame {
+    pub fn snapshot(&self, night: u32, finished: bool, market_open: bool) -> SaveGame {
         SaveGame {
             version: SAVE_VERSION,
             night,
@@ -169,8 +173,9 @@ impl GameState<'_> {
             drawer: self.drawer.0,
             stock: self.stock.units().clone(),
             cells: self.layout.cells.clone(),
-            keepsakes: self.keepsakes.0.clone(),
+            storeroom: self.storeroom.0.clone(),
             crates_ordered: self.crates.0,
+            market_open,
             finished,
         }
     }
@@ -189,7 +194,7 @@ impl GameState<'_> {
             layout.cells = save.cells.clone();
         }
         *self.layout = layout;
-        self.keepsakes.0 = save.keepsakes.clone();
+        self.storeroom.0 = save.storeroom.clone();
         self.crates.0 = save.crates_ordered;
     }
 
@@ -202,7 +207,7 @@ impl GameState<'_> {
         self.drawer.0 = data.config.start_coins;
         *self.stock = Stock::default();
         *self.layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
-        self.keepsakes.0.clear();
+        self.storeroom.0.clear();
         self.crates.0 = 0;
     }
 }
@@ -217,14 +222,14 @@ pub fn can_continue(save: &SaveGame, final_night: u32) -> bool {
 
 /// Evening and the start of the night: continue at this evening.
 fn autosave_evening(state: GameState) {
-    write_save(&state.snapshot(state.progress.night, false));
+    write_save(&state.snapshot(state.progress.night, false, false));
 }
 
-/// Dawn: the night is done, continue at the next evening.
+/// Dawn: the night is done; continue with the market of the next day.
 fn autosave_dawn(state: GameState, data: Res<GameData>) {
     let night = state.progress.night;
     let finished = night >= data.config.final_night();
-    write_save(&state.snapshot(night + 1, finished));
+    write_save(&state.snapshot(night + 1, finished, !finished));
 }
 
 #[cfg(test)]
@@ -242,8 +247,9 @@ mod tests {
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),
-            keepsakes: BTreeMap::new(),
+            storeroom: BTreeMap::new(),
             crates_ordered: 0,
+            market_open: false,
             finished: true,
         };
         assert!(!can_continue(&save, 5), "nothing left in the demo");
@@ -268,12 +274,13 @@ mod tests {
             cells: vec![
                 CellContent {
                     decor: Some("shelf".into()),
-                    product: Some("marbles".into()),
+                    products: vec!["marbles".into()],
                 },
                 CellContent::default(),
             ],
-            keepsakes: BTreeMap::from([("umbrella".to_string(), 1)]),
+            storeroom: BTreeMap::from([("umbrella".to_string(), 1)]),
             crates_ordered: 2,
+            market_open: true,
             finished: false,
         };
         let text = ron::ser::to_string_pretty(&save, ron::ser::PrettyConfig::default()).unwrap();

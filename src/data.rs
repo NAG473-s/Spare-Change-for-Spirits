@@ -43,6 +43,7 @@ fn default_container() -> String {
 pub enum Scene {
     Shop,
     Harbor,
+    Market,
 }
 
 /// Placeholder shape of a prop until its model exists.
@@ -209,9 +210,12 @@ impl GhostDef {
 #[derive(Deserialize, Clone, Debug)]
 pub struct DecorDef {
     pub id: String,
+    /// Price at the market.
     pub cost: u32,
+    /// Shelves only: where each product stands, relative to the decor's
+    /// origin (x, height, z). One product per slot.
     #[serde(default)]
-    pub is_shelf: bool,
+    pub slots: Vec<(f32, f32, f32)>,
     #[serde(default)]
     pub effect: Atmosphere,
     pub color: (f32, f32, f32),
@@ -227,6 +231,13 @@ pub struct DecorDef {
     /// First night it can be bought.
     #[serde(default = "one")]
     pub unlock_night: u32,
+}
+
+impl DecorDef {
+    /// Products can be displayed on it.
+    pub fn is_shelf(&self) -> bool {
+        !self.slots.is_empty()
+    }
 }
 
 /// Something special about one night (fog, storm, …).
@@ -318,6 +329,46 @@ pub struct GameData {
     pub story: StoryDef,
     pub events: Vec<NightEvent>,
     pub props: Vec<PropDef>,
+    pub vendors: Vec<VendorDef>,
+}
+
+/// A trader at the village market (`market.ron`).
+#[derive(Deserialize, Clone, Debug)]
+pub struct VendorDef {
+    /// Names and texts: `vendor.<id>.name`, `vendor.<id>.text`. Models:
+    /// `assets/models/market/stall_<id>.glb` and `vendor_<id>.glb`.
+    pub id: String,
+    /// Where the stall stands (x, z) in the market's metres.
+    pub pos: (f32, f32),
+    /// Turn of the stall about the vertical axis, in degrees.
+    #[serde(default)]
+    pub turn: f32,
+    /// Awning and placeholder colour.
+    pub color: (f32, f32, f32),
+    pub wares: Vec<Ware>,
+}
+
+/// What a trader offers.
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+pub enum Ware {
+    /// Furniture from `decor.ron` (at its cost, once it is unlocked).
+    Decor(String),
+    /// The raven changes coins.
+    Exchange(Exchange),
+    /// Makes the coming night last longer; one a day.
+    Hourglass,
+    /// This many single pieces of different products, a new choice every day.
+    RarePieces(u32),
+}
+
+#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Exchange {
+    /// A silver spoon for 4 candle stubs and 4 buttons (fee: 1 button).
+    SpoonToCandles,
+    /// A candle stub for 4 buttons (fee: 1 button).
+    CandleToButtons,
+    /// 5 candle stubs for a silver spoon (no fee).
+    CandlesToSpoon,
 }
 
 impl GameData {
@@ -331,12 +382,34 @@ impl GameData {
             story: load_ron("data/story.ron"),
             events: load_ron("data/events.ron"),
             props: load_ron("data/props.ron"),
+            vendors: load_ron("data/market.ron"),
         };
         data.validate();
         data
     }
 
     fn validate(&self) {
+        for v in &self.vendors {
+            for w in &v.wares {
+                if let Ware::Decor(d) = w {
+                    assert!(
+                        self.decor(d).is_some_and(|d| !d.keepsake),
+                        "vendor '{}' sells '{}', which is not buyable decor",
+                        v.id,
+                        d
+                    );
+                }
+            }
+        }
+        for d in self.decor.iter().filter(|d| !d.keepsake) {
+            assert!(
+                self.vendors
+                    .iter()
+                    .any(|v| v.wares.contains(&Ware::Decor(d.id.clone()))),
+                "nobody at the market sells '{}'",
+                d.id
+            );
+        }
         for p in &self.products {
             assert!(
                 CONTAINERS.contains(&p.container.as_str()),

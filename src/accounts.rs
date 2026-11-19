@@ -18,6 +18,7 @@ pub struct AccountsPlugin;
 impl Plugin for AccountsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Accounts>()
+            .add_systems(OnEnter(Phase::Day), open_books)
             .add_systems(OnEnter(Phase::Evening), open_books)
             .add_systems(
                 OnEnter(Phase::Night),
@@ -43,12 +44,18 @@ impl Plugin for AccountsPlugin {
 /// Money in and out of the drawer for the current day (dusk to dawn).
 #[derive(Resource, Default, Debug, Clone, PartialEq)]
 pub struct Accounts {
-    /// In the drawer when the evening began.
+    /// The night these books are for (they open at the market, or in the
+    /// evening when there is no market that day).
+    pub night: u32,
+    /// In the drawer when the day began.
     pub opening: u32,
     /// Paid to the ferryman (crates given back are subtracted again).
     pub ferryman: u32,
-    /// Paid for furniture.
+    /// Paid for furniture at the market (minus what was sold back).
     pub furniture: u32,
+    /// Other market spending: the Reaper's pieces, the hourglass, the
+    /// raven's change fees.
+    pub market: u32,
     /// In the drawer when the shop opened.
     pub night_start: u32,
     /// What the night brought in: the drawer at dawn (before counterfeits
@@ -77,8 +84,14 @@ impl Accounts {
 #[derive(Component)]
 struct Ledger;
 
-fn open_books(drawer: Res<Drawer>, mut accounts: ResMut<Accounts>) {
+/// Opens the day's books once: at the market, or in the evening when the
+/// day had no market (the first one, or a game continued in the evening).
+fn open_books(drawer: Res<Drawer>, progress: Res<Progress>, mut accounts: ResMut<Accounts>) {
+    if accounts.night == progress.night && accounts.opening > 0 {
+        return;
+    }
     *accounts = Accounts {
+        night: progress.night,
         opening: drawer.total(),
         night_start: drawer.total(),
         ..default()
@@ -220,6 +233,15 @@ fn build_ledger(
         money(-(a.furniture as i64)),
         false,
     );
+    if a.market > 0 {
+        line(
+            &mut ui,
+            &lang.t("accounts.market"),
+            signed(-(a.market as i64)),
+            money(-(a.market as i64)),
+            false,
+        );
+    }
     line(
         &mut ui,
         &lang.t("accounts.takings"),
@@ -510,11 +532,13 @@ mod tests {
 
     #[test]
     fn the_books_balance() {
-        // 100 at dusk, 20 to the ferryman, 8 for a candle: 72 when opening.
+        // 100 in the morning, 6 for a rug, 2 in change fees, 20 to the
+        // ferryman: 72 when the shop opens.
         let mut a = Accounts {
             opening: 100,
             ferryman: 20,
-            furniture: 8,
+            furniture: 6,
+            market: 2,
             night_start: 72,
             ..default()
         };
@@ -522,7 +546,8 @@ mod tests {
         a.close(95, 5);
         assert_eq!(a.takings, 28);
         assert_eq!(
-            a.opening as i64 - a.ferryman as i64 - a.furniture as i64 + a.takings - a.dust as i64,
+            a.opening as i64 - a.ferryman as i64 - a.furniture as i64 - a.market as i64 + a.takings
+                - a.dust as i64,
             a.closing as i64
         );
         assert_eq!(a.profit(), -5);
