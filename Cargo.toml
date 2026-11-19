@@ -17,6 +17,15 @@ bevy = "0.20.1"
 ron = "0.12.3"
 serde = { version = "1.0.229", features = ["derive"] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
+winit = { version = "0.30", default-features = false }
+
+[build-dependencies]
+embed-resource = "3.0.12"
+
 # Fast debug builds: our own code lightly optimised, dependencies fully.
 [profile.dev]
 opt-level = 1
