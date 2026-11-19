@@ -13,8 +13,14 @@ use crate::harbor::Location;
 use crate::ui::{TEXT, UiFont};
 
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
+/// Camera at the harbour and the market (relative to their origin).
 pub const CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
 pub const CAMERA_POS: Vec3 = Vec3::new(2.9, 11.4, 14.8);
+/// Camera in the shop. Kept apart from the harbour and market camera so
+/// the shop can be framed on its own (a closer, slightly turned view is
+/// being considered); for now it is the same view.
+pub const SHOP_CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
+pub const SHOP_CAMERA_POS: Vec3 = Vec3::new(2.9, 11.4, 14.8);
 
 /// Room bounds (metres).
 pub const ROOM_MIN_X: f32 = -7.0;
@@ -65,7 +71,7 @@ fn spawn_camera(mut commands: Commands) {
             fov: 0.62,
             ..default()
         }),
-        Transform::from_translation(CAMERA_POS).looking_at(CAMERA_TARGET, Vec3::Y),
+        Transform::from_translation(SHOP_CAMERA_POS).looking_at(SHOP_CAMERA_TARGET, Vec3::Y),
     ));
 }
 

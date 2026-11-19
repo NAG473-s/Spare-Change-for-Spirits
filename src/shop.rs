@@ -791,6 +791,10 @@ fn spawn_light(
 
 /// A product standing at `spot`: its model, or its picture as a small
 /// billboard (also used on the ferryman's crates).
+/// Products are shown a little larger than life, so they read well on the
+/// shelves from the camera (the models keep their real size).
+pub const PRODUCT_DISPLAY_SCALE: f32 = 1.35;
+
 pub(crate) fn product_model(
     commands: &mut Commands,
     asset_server: &AssetServer,
@@ -804,13 +808,16 @@ pub(crate) fn product_model(
         commands
             .spawn((
                 WorldAssetRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(model))),
-                Transform::from_translation(spot),
+                Transform::from_translation(spot).with_scale(Vec3::splat(PRODUCT_DISPLAY_SCALE)),
             ))
             .id()
     } else {
         commands
             .spawn((
-                Mesh3d(billboard_mesh(meshes, Vec2::splat(0.38))),
+                Mesh3d(billboard_mesh(
+                    meshes,
+                    Vec2::splat(0.38 * PRODUCT_DISPLAY_SCALE),
+                )),
                 MeshMaterial3d(billboard_material(
                     materials,
                     asset_server,

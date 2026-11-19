@@ -27,7 +27,7 @@ const SPEED: f32 = 1.7;
 /// Ghosts float this high above the floor.
 const HOVER: f32 = 0.25;
 /// Drawn size of a ghost (2:3, like the generated portrait images).
-const GHOST_SIZE: Vec2 = Vec2::new(0.9, 1.35);
+const GHOST_SIZE: Vec2 = Vec2::new(1.1, 1.65);
 
 pub struct GhostPlugin;
 

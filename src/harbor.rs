@@ -24,7 +24,10 @@ use crate::day_cycle::Progress;
 use crate::fx::Flicker;
 use crate::i18n::Lang;
 use crate::rng::Rng;
-use crate::scene::{Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, world_label};
+use crate::scene::{
+    Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, SHOP_CAMERA_POS, SHOP_CAMERA_TARGET,
+    world_label,
+};
 use crate::title::spawn_fade;
 use crate::ui::{Action, ActionButton, ButtonTone, GameLog, TEXT, TEXT_DIM, UiFont, text_font};
 use bevy::picking::hover::Hovered;
@@ -1069,14 +1072,16 @@ fn move_camera(
     mut camera: Single<(&mut Transform, &mut Camera), With<MainCamera>>,
     mut first: Local<bool>,
 ) {
-    let offset = match *location {
-        Location::Shop => Vec3::ZERO,
-        Location::Harbor => HARBOR,
-        Location::Market => crate::market::MARKET,
+    let (pos, target) = match *location {
+        Location::Shop => (SHOP_CAMERA_POS, SHOP_CAMERA_TARGET),
+        Location::Harbor => (CAMERA_POS + HARBOR, CAMERA_TARGET + HARBOR),
+        Location::Market => (
+            CAMERA_POS + crate::market::MARKET,
+            CAMERA_TARGET + crate::market::MARKET,
+        ),
     };
     let (transform, camera) = &mut *camera;
-    **transform = Transform::from_translation(CAMERA_POS + offset)
-        .looking_at(CAMERA_TARGET + offset, Vec3::Y);
+    **transform = Transform::from_translation(pos).looking_at(target, Vec3::Y);
     camera.clear_color = if *location == Location::Harbor {
         ClearColorConfig::Custom(Color::srgb(0.075, 0.105, 0.17))
     } else {
