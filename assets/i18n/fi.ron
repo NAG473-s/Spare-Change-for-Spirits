@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Ongin joesta napin.",
+    "intro.story.2": "Kaupassasi odotti aave.",
+    "intro.story.3": "”Äiti ompeli sen kiinni”, se kuiskasi.",
     "menu.version": "Demo · versio {version}",
     "menu.version_full": "Versio {version}",
     "menu.tagline": "Pieni puoti, joka on auki vain keskiyön ja aamunkoiton välillä.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Poista ja aloita uusi peli",
     "menu.language": "Kieli: {language}",
     "menu.choose_language": "Valitse kieli",
+    "menu.language_auto": "Automaattinen",
     "menu.back": "Takaisin",
     "menu.settings": "Asetukset",
     "hud.menu": "Valikko",
@@ -31,6 +35,7 @@
     "settings.title": "Asetukset",
     "settings.music": "Musiikki: {percent} %",
     "settings.effects": "Ääniefektit: {percent} %",
+    "settings.narration": "Kertojan ääni: {percent} %",
     "settings.ui_size": "Käyttöliittymän koko: {percent} %",
     "settings.fullscreen_on": "Koko näyttö: päällä",
     "settings.fullscreen_off": "Koko näyttö: pois",
