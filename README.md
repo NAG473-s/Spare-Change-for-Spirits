@@ -45,7 +45,7 @@ python3 tools/playtest_report.py
 The game starts on the title screen: its own painted background with flickering lamp light,
 drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit; the *Menu* button in the top bar does the same). Settings (main menu and pause menu): tips,
-sound, music and effect volume, interface size (on top of the automatic scaling with the window
+sound, music, effects and narration volume, interface size (on top of the automatic scaling with the window
 height), fullscreen, and the assists *Patient ghosts* and *Show change due*. 
 
 Saves: three profiles, each a game of its own with an autosave (start of every evening and night,
@@ -176,8 +176,16 @@ the actions it cares about. New button = new variant in `ui::Action` + handling 
 
 All player-facing text lives in `assets/i18n/<code>.ron`, one catalog per language; `en.ron` is the
 source and defines the keys. 31 languages are listed in `assets/i18n/languages.ron` (the Steam
-languages), each with its name in its own language for the language menu. The game picks the saved
-language, else the system language, else shows the language menu on first start.
+languages), each with its name in its own language for the language menu. On each launch the
+game uses the first supported desktop language, with English as the fallback. A supported
+per-game language from Steam takes precedence when launched through Steam. The opening and
+menus use the same language. Choosing a language in the main menu saves an override.
+Choose *Automatic* to follow Steam or the desktop again.
+
+On Steam launches the game reads the per-title language from the Steamworks API when its
+redistributable is installed beside the executable or in the macOS bundle’s Frameworks folder.
+In a standard Steam library installation it can also read the game’s own app manifest, including
+offline. It checks the user’s selection before the installed depot language.
 
 - Data files (`assets/data/*.ron`) hold only ids and numbers. Texts for an id use keys like
   `product.<id>.name`, `product.<id>.hint.1`, `ghost.<id>.name`, `ghost.<id>.the` (the subject at
@@ -243,10 +251,13 @@ shown on the shelf while the product has no model. The floor texture is
 
 ## Sound and effects
 
-All sounds are synthesised by `tools/make_sounds.py` (numpy + ffmpeg) into `assets/sounds/*.ogg`:
-shop bell, coins, chime, the clock striking midnight, crash, click, sigh, a music-box waltz for the evening and a night
-ambience loop. They are generated from scratch, so there are no licence questions. To use your own
-recording, replace the file of the same name. Sound can be switched off in the menus.
+`tools/make_sounds.py` synthesises the sound effects and instrumental music into
+`assets/sounds/*.ogg`, including the evening music box, night ambience and four-bar ferry score.
+On the first launch the ferryman tells a short story in the active language.
+Each of the 31 game languages has a recorded reading and timed captions. The game plays the local
+`intro_voice_<language>.ogg` alongside `intro_music.ogg`. Skipping ends both tracks. Music,
+narration and effects have independent volume controls. Audio production credits are in
+[`assets/sounds/CREDITS.txt`](assets/sounds/CREDITS.txt).
 
 Visual atmosphere: candles, lamps and other light-giving decor are flickering point lights
 (`src/fx.rs`), ambient and moon light follow the time of day (`src/scene.rs`), dust drifts through
