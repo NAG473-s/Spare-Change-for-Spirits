@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "J’ai repêché un bouton dans la rivière.",
+    "intro.story.2": "Un fantôme attendait dans ta boutique.",
+    "intro.story.3": "« C’est ma mère qui l’avait cousu », a-t-il murmuré.",
     "menu.version": "Démo · version {version}",
     "menu.version_full": "Version {version}",
     "menu.tagline": "Une petite boutique qui n'ouvre qu'entre minuit et l'aube.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Supprimer et commencer une nouvelle partie",
     "menu.language": "Langue : {language}",
     "menu.choose_language": "Choisis ta langue",
+    "menu.language_auto": "Automatique",
     "menu.back": "Retour",
     "menu.settings": "Paramètres",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Paramètres",
     "settings.music": "Musique : {percent} %",
     "settings.effects": "Effets sonores : {percent} %",
+    "settings.narration": "Narration : {percent} %",
     "settings.ui_size": "Taille de l’interface : {percent} %",
     "settings.fullscreen_on": "Plein écran : activé",
     "settings.fullscreen_off": "Plein écran : désactivé",
