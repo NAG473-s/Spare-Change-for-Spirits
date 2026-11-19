@@ -32,7 +32,8 @@ Checkboxes are ticked in the commit that finishes them.
 ### Week 1 · Nov 19 – Nov 29: ready for players
 
 - [x] UI scales with the window; fullscreen/windowed; music and effect volume; saved in settings
-- [ ] Bankruptcy rule: what happens when the drawer cannot pay for a single crate
+- [x] Bankruptcy rule: what happens when the drawer cannot pay for a single crate (the ferryman
+      lends `ferryman_loan` in `config.ron` and takes it back with a surcharge at dawn)
 - [ ] Simulation that plays all nights with simple strategies and prints money, reputation and
       sales per night – the basis for balancing
 - [ ] First balancing pass in `assets/data/*.ron`

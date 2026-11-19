@@ -12,9 +12,10 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::data::GameData;
-use crate::day_cycle::{Phase, Progress, start_morning};
+use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Drawer, Purse};
 use crate::inventory::{CratesOrdered, Stock};
+use crate::loan::{Loan, lend, repay};
 use crate::shop::{CellContent, ShopLayout, Storeroom};
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
@@ -27,9 +28,9 @@ pub struct SavePlugin;
 impl Plugin for SavePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Settings::load())
-            .add_systems(OnEnter(Phase::Evening), autosave_evening)
+            .add_systems(OnEnter(Phase::Evening), autosave_evening.after(lend))
             .add_systems(OnEnter(Phase::Night), autosave_evening)
-            .add_systems(OnEnter(Phase::Morning), autosave_dawn.after(start_morning));
+            .add_systems(OnEnter(Phase::Morning), autosave_dawn.after(repay));
     }
 }
 
@@ -46,6 +47,9 @@ pub struct SaveGame {
     /// Furniture bought or given but not placed (decor id → count).
     pub storeroom: BTreeMap<String, u32>,
     pub crates_ordered: u32,
+    /// Still owed to the ferryman (the bankruptcy rule).
+    #[serde(default)]
+    pub loan: u32,
     /// Saved at dawn: the game continues at the village market.
     #[serde(default)]
     pub market_open: bool,
@@ -204,6 +208,7 @@ pub struct GameState<'w> {
     pub layout: ResMut<'w, ShopLayout>,
     pub storeroom: ResMut<'w, Storeroom>,
     pub crates: ResMut<'w, CratesOrdered>,
+    pub loan: ResMut<'w, Loan>,
 }
 
 impl GameState<'_> {
@@ -218,6 +223,7 @@ impl GameState<'_> {
             cells: self.layout.cells.clone(),
             storeroom: self.storeroom.0.clone(),
             crates_ordered: self.crates.0,
+            loan: self.loan.owed,
             market_open,
             finished,
         }
@@ -239,6 +245,7 @@ impl GameState<'_> {
         *self.layout = layout;
         self.storeroom.0 = save.storeroom.clone();
         self.crates.0 = save.crates_ordered;
+        self.loan.owed = save.loan;
     }
 
     pub fn reset(&mut self, data: &GameData) {
@@ -252,6 +259,7 @@ impl GameState<'_> {
         *self.layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
         self.storeroom.0.clear();
         self.crates.0 = 0;
+        self.loan.owed = 0;
     }
 }
 
@@ -292,6 +300,7 @@ mod tests {
             cells: Vec::new(),
             storeroom: BTreeMap::new(),
             crates_ordered: 0,
+            loan: 0,
             market_open: false,
             finished: true,
         };
@@ -323,6 +332,7 @@ mod tests {
             ],
             storeroom: BTreeMap::from([("umbrella".to_string(), 1)]),
             crates_ordered: 2,
+            loan: 7,
             market_open: true,
             finished: false,
         };

@@ -5,12 +5,13 @@
 use bevy::prelude::*;
 
 use crate::data::{GameData, asset_exists};
-use crate::day_cycle::{NightReport, Phase, Progress, start_morning};
+use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::economy::Drawer;
 use crate::ferry::signed;
 use crate::ghosts::Ghost;
 use crate::i18n::Lang;
 use crate::inventory::Stock;
+use crate::loan::{Loan, repay};
 use crate::ui::{Action, Icons, PanelBuilder, UiFont, UiTheme, overlay};
 
 pub struct AccountsPlugin;
@@ -28,7 +29,7 @@ impl Plugin for AccountsPlugin {
             )
             .add_systems(
                 OnEnter(Phase::Morning),
-                (close_books, build_ledger).chain().after(start_morning),
+                (close_books, build_ledger).chain().after(repay),
             )
             .add_systems(
                 Update,
@@ -49,6 +50,10 @@ pub struct Accounts {
     pub night: u32,
     /// In the drawer when the day began.
     pub opening: u32,
+    /// Lent by the ferryman this evening (the bankruptcy rule).
+    pub borrowed: u32,
+    /// Paid back to the ferryman at dawn.
+    pub repaid: u32,
     /// Paid to the ferryman (crates given back are subtracted again).
     pub ferryman: u32,
     /// Paid for furniture at the market (minus what was sold back).
@@ -73,11 +78,12 @@ impl Accounts {
         self.closing as i64 - self.opening as i64
     }
 
-    /// Fills in the night's figures from the drawer at dawn.
+    /// Fills in the night's figures from the drawer at dawn (after the
+    /// counterfeits turned to dust and the ferryman was paid back).
     pub fn close(&mut self, closing: u32, dust: u32) {
         self.closing = closing;
         self.dust = dust;
-        self.takings = (closing + dust) as i64 - self.night_start as i64;
+        self.takings = (closing + dust + self.repaid) as i64 - self.night_start as i64;
     }
 }
 
@@ -86,7 +92,11 @@ struct Ledger;
 
 /// Opens the day's books once: at the market, or in the evening when the
 /// day had no market (the first one, or a game continued in the evening).
-fn open_books(drawer: Res<Drawer>, progress: Res<Progress>, mut accounts: ResMut<Accounts>) {
+pub(crate) fn open_books(
+    drawer: Res<Drawer>,
+    progress: Res<Progress>,
+    mut accounts: ResMut<Accounts>,
+) {
     if accounts.night == progress.night && accounts.opening > 0 {
         return;
     }
@@ -98,7 +108,8 @@ fn open_books(drawer: Res<Drawer>, progress: Res<Progress>, mut accounts: ResMut
     };
 }
 
-/// Runs after `start_morning` has removed the counterfeits from the drawer.
+/// Runs after `start_morning` has removed the counterfeits from the drawer
+/// and the ferryman has taken back what was owed.
 fn close_books(drawer: Res<Drawer>, report: Res<NightReport>, mut accounts: ResMut<Accounts>) {
     accounts.close(drawer.total(), report.counterfeits_found.total());
 }
@@ -146,6 +157,7 @@ fn build_ledger(
     report: Res<NightReport>,
     progress: Res<Progress>,
     stock: Res<Stock>,
+    loan: Res<Loan>,
     asset_server: Res<AssetServer>,
     existing: Query<Entity, With<Ledger>>,
 ) {
@@ -219,6 +231,15 @@ fn build_ledger(
         TEXT,
         false,
     );
+    if a.borrowed > 0 {
+        line(
+            &mut ui,
+            &lang.t("accounts.borrowed"),
+            signed(a.borrowed as i64),
+            money(a.borrowed as i64),
+            false,
+        );
+    }
     line(
         &mut ui,
         &lang.t("accounts.ferryman"),
@@ -283,6 +304,15 @@ fn build_ledger(
             false,
         );
     }
+    if a.repaid > 0 {
+        line(
+            &mut ui,
+            &lang.t("accounts.repaid"),
+            signed(-(a.repaid as i64)),
+            money(-(a.repaid as i64)),
+            false,
+        );
+    }
     let rule = ui.node(
         left,
         Node {
@@ -307,6 +337,10 @@ fn build_ledger(
         "accounts.profit"
     };
     line(&mut ui, &lang.t(key), signed(profit), money(profit), false);
+    if loan.owed > 0 {
+        let owed = lang.f("accounts.owed", &[("owed", &loan.owed)]);
+        ui.add_text(left, &owed, false, 12.0, RED);
+    }
 
     // Right: how the night went.
     let right = ui.node(

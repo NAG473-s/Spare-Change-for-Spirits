@@ -307,6 +307,8 @@ pub struct Config {
     pub base_atmosphere: Atmosphere,
     /// Assist mode: shows the change due at the register.
     pub show_change_due: bool,
+    /// What the ferryman lends a shop that cannot afford a single crate.
+    pub ferryman_loan: crate::loan::LoanTerms,
 }
 
 impl Config {

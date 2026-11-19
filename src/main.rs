@@ -21,6 +21,7 @@ mod ghosts;
 mod harbor;
 mod i18n;
 mod inventory;
+mod loan;
 mod market;
 mod menu;
 mod props;
@@ -92,6 +93,7 @@ fn main() {
             critters::CrittersPlugin,
             tooltip::TooltipPlugin,
             market::MarketPlugin,
+            loan::LoanPlugin,
         ))
         .run();
 }
