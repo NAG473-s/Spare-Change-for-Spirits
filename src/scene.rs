@@ -9,6 +9,7 @@ use bevy::prelude::*;
 
 use crate::data::asset_exists;
 use crate::day_cycle::{NightClock, Phase};
+use crate::harbor::Location;
 use crate::ui::{TEXT, UiFont};
 
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
@@ -158,84 +159,128 @@ fn spawn_room(
 }
 
 #[derive(Component)]
-struct Moon;
+struct Daylight;
+
+#[derive(Component)]
+struct WindowLight;
 
 fn spawn_lights(mut commands: Commands) {
     commands.spawn((
-        Moon,
+        Daylight,
         DirectionalLight {
-            illuminance: 2000.0,
-            color: Color::srgb(0.7, 0.75, 1.0),
+            illuminance: 720.0,
+            color: Color::srgb(0.69, 0.80, 1.0),
             shadow_maps_enabled: true,
             ..default()
         },
-        // From the window, upper left behind the room.
-        Transform::from_xyz(-4.0, 6.0, -6.0).looking_at(Vec3::new(1.0, 0.0, 1.0), Vec3::Y),
+        Transform::default().looking_to(Vec3::new(4.0, -6.0, -3.0), Vec3::Y),
         CascadeShadowConfigBuilder {
             first_cascade_far_bound: 8.0,
-            maximum_distance: 25.0,
+            maximum_distance: 38.0,
             ..default()
         }
         .build(),
     ));
+    // Start on the room side of the glazing, so the panes and their frame
+    // cannot block the light. The broad cone grazes the floor and shelves.
+    commands.spawn((
+        WindowLight,
+        SpotLight {
+            intensity: 0.0,
+            range: 9.0,
+            radius: 0.38,
+            inner_angle: 0.38,
+            outer_angle: 0.91,
+            shadow_maps_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(-3.2, 2.32, ROOM_BACK_Z + 0.32)
+            .looking_at(Vec3::new(-1.05, 0.0, 0.7), Vec3::Y),
+    ));
 }
 
-/// (ambient brightness, ambient colour, moon illuminance, moon colour)
-fn lighting_for(phase: Phase) -> (f32, Color, f32, Color) {
+struct DaylightSettings {
+    /// Diffuse skylight, including the shadowed side of stalls and furniture.
+    sky: (f32, Color),
+    /// Direct illuminance, colour and direction towards the source.
+    sun: (f32, Color, Vec3),
+    /// Light transmitted by the shop window, in lumens.
+    window: (f32, Color),
+}
+
+fn lighting_for(phase: Phase, location: Location) -> DaylightSettings {
+    let cool_glass = Color::srgb(0.66, 0.79, 1.0);
     match phase {
-        Phase::Menu => (
-            220.0,
-            Color::srgb(0.7, 0.7, 1.0),
-            900.0,
-            Color::srgb(0.7, 0.75, 1.0),
-        ),
-        Phase::Evening => (
-            420.0,
-            Color::srgb(1.0, 0.82, 0.7),
-            2600.0,
-            Color::srgb(1.0, 0.7, 0.5),
-        ),
-        Phase::Night => (
-            70.0,
-            Color::srgb(0.55, 0.6, 1.0),
-            600.0,
-            Color::srgb(0.6, 0.7, 1.0),
-        ),
-        // A misty, pale day at the village market.
-        Phase::Day => (
-            900.0,
-            Color::srgb(0.85, 0.9, 1.0),
-            7000.0,
-            Color::srgb(1.0, 0.95, 0.85),
-        ),
-        Phase::Morning => (
-            650.0,
-            Color::srgb(0.9, 0.9, 1.0),
-            4000.0,
-            Color::srgb(1.0, 0.9, 0.8),
-        ),
-        Phase::DemoEnd => (
-            350.0,
-            Color::srgb(1.0, 0.9, 0.8),
-            2000.0,
-            Color::srgb(1.0, 0.85, 0.7),
-        ),
+        Phase::Evening if location == Location::Harbor => DaylightSettings {
+            sky: (710.0, Color::srgb(0.71, 0.81, 1.0)),
+            sun: (
+                1750.0,
+                Color::srgb(0.72, 0.84, 1.0),
+                Vec3::new(-5.0, 6.0, -3.0),
+            ),
+            window: (0.0, cool_glass),
+        },
+        Phase::Evening => DaylightSettings {
+            sky: (600.0, Color::srgb(0.82, 0.84, 0.98)),
+            sun: (
+                2300.0,
+                Color::srgb(1.0, 0.79, 0.60),
+                Vec3::new(-2.0, 5.5, 4.5),
+            ),
+            window: (70_000.0, cool_glass),
+        },
+        Phase::Menu | Phase::Night => DaylightSettings {
+            sky: (350.0, Color::srgb(0.72, 0.80, 0.99)),
+            sun: (
+                720.0,
+                Color::srgb(0.69, 0.80, 1.0),
+                Vec3::new(-3.0, 7.0, -2.0),
+            ),
+            window: (110_000.0, cool_glass),
+        },
+        Phase::Day => DaylightSettings {
+            sky: (1080.0, Color::srgb(0.86, 0.93, 1.0)),
+            sun: (
+                5700.0,
+                Color::srgb(1.0, 0.94, 0.83),
+                Vec3::new(-5.0, 9.0, 5.0),
+            ),
+            window: (0.0, cool_glass),
+        },
+        Phase::Morning | Phase::DemoEnd => DaylightSettings {
+            sky: (750.0, Color::srgb(0.89, 0.92, 1.0)),
+            sun: (
+                3400.0,
+                Color::srgb(1.0, 0.85, 0.70),
+                Vec3::new(5.0, 5.0, 4.0),
+            ),
+            window: (95_000.0, Color::srgb(1.0, 0.86, 0.74)),
+        },
     }
 }
 
-/// Fades ambient and moon light towards the current time of day.
+/// Fade both the light and the cast shadows as the scene or time of day changes.
 fn time_of_day_light(
     time: Res<Time<Real>>,
     phase: Res<State<Phase>>,
+    location: Res<Location>,
     mut ambient: ResMut<GlobalAmbientLight>,
-    mut moon: Single<&mut DirectionalLight, With<Moon>>,
+    daylight: Single<(&mut DirectionalLight, &mut Transform), With<Daylight>>,
+    mut window: Single<&mut SpotLight, With<WindowLight>>,
 ) {
-    let (brightness, color, lux, moon_color) = lighting_for(*phase.get());
-    let k = (time.delta_secs() * 0.8).min(1.0);
-    ambient.brightness += (brightness - ambient.brightness) * k;
-    ambient.color = ambient.color.mix(&color, k);
-    moon.illuminance += (lux - moon.illuminance) * k;
-    moon.color = moon.color.mix(&moon_color, k);
+    let target = lighting_for(*phase.get(), *location);
+    let k = 1.0 - (-1.8 * time.delta_secs()).exp();
+    let (mut sun, mut transform) = daylight.into_inner();
+    let rotation = Transform::default()
+        .looking_to(-target.sun.2, Vec3::Y)
+        .rotation;
+    ambient.brightness = ambient.brightness.lerp(target.sky.0, k);
+    ambient.color = ambient.color.mix(&target.sky.1, k);
+    sun.illuminance = sun.illuminance.lerp(target.sun.0, k);
+    sun.color = sun.color.mix(&target.sun.1, k);
+    transform.rotation = transform.rotation.slerp(rotation, k);
+    window.intensity = window.intensity.lerp(target.window.0, k);
+    window.color = window.color.mix(&target.window.1, k);
 }
 
 /// A flat sprite that turns around the Y axis to face the camera.
