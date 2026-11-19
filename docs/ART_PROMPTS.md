@@ -3,6 +3,18 @@
 Prompts for generating every image the game uses (e.g. with ChatGPT), plus the Steam store art.
 Until an image exists the game shows a coloured placeholder, so images can be added one by one.
 
+## Prepared assets
+
+The complete set is included under `assets/sprites/`: 6 ghosts, 11 decor/keepsake
+images, 12 products and 4 shop images. Sprites and the floor texture were prepared
+with `tools/prepare_sprite.py --colors 48`; the background keeps its full colour
+range. PNG dimensions match the script's output sizes, with transparency on all
+isolated objects and opaque floor/background images.
+
+The seven Steam exports, text-free artwork and editable vector logo are in
+[`art/steam/`](../art/steam/README.md). They are kept outside the game's packaged
+assets. The logo lettering was composed separately from the generated scenes.
+
 ## Workflow
 
 1. Start a new ChatGPT conversation and paste the **style block** below once, with
