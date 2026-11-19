@@ -395,6 +395,8 @@ fn refresh_static_fonts(font: Res<UiFont>, mut texts: Query<(&StaticText, &mut T
 #[derive(Resource, Default)]
 pub struct GameLog {
     lines: VecDeque<String>,
+    /// Every line since the playtest log last took them.
+    new: Vec<String>,
 }
 
 impl GameLog {
@@ -402,9 +404,15 @@ impl GameLog {
         self.lines.clear();
     }
 
+    /// The lines pushed since the last call (for the playtest log).
+    pub fn take_new(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.new)
+    }
+
     pub fn push(&mut self, line: impl Into<String>) {
         let line = line.into();
         info!("{line}");
+        self.new.push(line.clone());
         self.lines.push_back(line);
         while self.lines.len() > 4 {
             self.lines.pop_front();

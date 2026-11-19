@@ -17,6 +17,14 @@ player gives the right change and is honest. Strategies:
 - **eager** – like demand, but always fills every crate.
 - **cheapest** – always the cheapest crates, whatever the ghosts want. The careless player.
 
+## Comparing with real games
+
+The game writes a playtest log next to the saves (`logs/nights.csv`, one row per night, and
+`logs/session-<time>.txt` with every message). `python3 tools/playtest_report.py [nights.csv]`
+prints it in the simulation's columns, plus the real time per ghost at the counter – the
+simulation assumes 9 s per sale and 3 s to turn a ghost away. The summary says how many nights
+were played with an assist on, as those are not directly comparable.
+
 ## Goals
 
 - A sensible player is back above the start money by night 3 and ends the demo clearly richer.

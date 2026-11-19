@@ -33,6 +33,15 @@ BEVY_ASSET_ROOT=. cargo run --release -- --simulate 500
 
 Goals, results and open points of the balancing passes: [`docs/BALANCING.md`](docs/BALANCING.md).
 
+Playtest logs: the game writes `logs/nights.csv` (one row per night with the simulation's figures,
+the time each ghost spent at the counter and how long each phase took) and
+`logs/session-<time>.txt` (every game message with night and clock) into the save folder. They
+stay on the computer. Sum them up like the simulation with:
+
+```bash
+python3 tools/playtest_report.py
+```
+
 The game starts on the title screen: its own painted background with flickering lamp light,
 drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit; the *Menu* button in the top bar does the same). Settings (main menu and pause menu): tips,

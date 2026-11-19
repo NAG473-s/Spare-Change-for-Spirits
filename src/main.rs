@@ -24,6 +24,7 @@ mod inventory;
 mod loan;
 mod market;
 mod menu;
+mod playtest;
 mod props;
 mod register;
 mod rng;
@@ -102,6 +103,7 @@ fn main() {
             tooltip::TooltipPlugin,
             market::MarketPlugin,
             loan::LoanPlugin,
+            playtest::PlaytestPlugin,
         ))
         .run();
 }

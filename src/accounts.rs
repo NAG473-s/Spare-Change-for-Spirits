@@ -110,7 +110,11 @@ pub(crate) fn open_books(
 
 /// Runs after `start_morning` has removed the counterfeits from the drawer
 /// and the ferryman has taken back what was owed.
-fn close_books(drawer: Res<Drawer>, report: Res<NightReport>, mut accounts: ResMut<Accounts>) {
+pub(crate) fn close_books(
+    drawer: Res<Drawer>,
+    report: Res<NightReport>,
+    mut accounts: ResMut<Accounts>,
+) {
     accounts.close(drawer.total(), report.counterfeits_found.total());
 }
 

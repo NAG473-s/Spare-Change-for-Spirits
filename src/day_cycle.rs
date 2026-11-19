@@ -125,6 +125,10 @@ pub struct NightReport {
     pub change_kept: i64,
     /// Value of second payments that were kept.
     pub second_payments_kept: u32,
+    /// Ghosts turned away because their wish was not in stock.
+    pub declined: u32,
+    /// Ghosts offered the wrong item.
+    pub wrong_item: u32,
 }
 
 /// Makes the coming night longer (the Reaper's hourglass): a factor on its

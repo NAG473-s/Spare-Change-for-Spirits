@@ -153,6 +153,7 @@ fn serve_front_ghost(
                 }
                 if *product != ghost.wish {
                     log.push(lang.f("log.wrong_item", &[("who", &lang.ghost_the(&def.id))]));
+                    report.wrong_item += 1;
                     ghost.state = GhostState::Leaving;
                     queue.remove(front);
                     progress.reputation -= 1;
@@ -187,6 +188,7 @@ fn serve_front_ghost(
                 });
             }
             Action::Decline => {
+                report.declined += 1;
                 log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
                 ghost.state = GhostState::Leaving;
                 queue.remove(front);
