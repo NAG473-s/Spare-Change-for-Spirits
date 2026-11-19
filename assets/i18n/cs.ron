@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "Demo · verze {version}",
+    "menu.version_full": "Verze {version}",
     "menu.tagline": "Malý obchůdek, který má otevřeno jen mezi půlnocí a úsvitem.",
     "menu.continue": "Pokračovat – noc {night}",
     "menu.new_game": "Nová hra",

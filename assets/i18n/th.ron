@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "เดโม · เวอร์ชัน {version}",
+    "menu.version_full": "เวอร์ชัน {version}",
     "menu.tagline": "ร้านเล็กๆ ที่เปิดเฉพาะช่วงเที่ยงคืนถึงรุ่งสาง",
     "menu.continue": "เล่นต่อ – คืนที่ {night}",
     "menu.new_game": "เกมใหม่",

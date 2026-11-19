@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "Demo · version {version}",
+    "menu.version_full": "Version {version}",
     "menu.tagline": "En liten butik som bara har öppet mellan midnatt och gryning.",
     "menu.continue": "Fortsätt – natt {night}",
     "menu.new_game": "Nytt spel",

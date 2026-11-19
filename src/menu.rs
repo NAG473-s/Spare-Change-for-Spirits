@@ -285,7 +285,16 @@ fn build_main_menu(
     );
     ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("menu.quit"), Action::QuitGame, false);
-    ui.dim(&lang.f("menu.version", &[("version", &env!("CARGO_PKG_VERSION"))]));
+    ui.dim(&lang.f(version_key(), &[("version", &env!("CARGO_PKG_VERSION"))]));
+}
+
+/// The version line names the demo only in the demo build (`--features demo`).
+fn version_key() -> &'static str {
+    if cfg!(feature = "demo") {
+        "menu.version"
+    } else {
+        "menu.version_full"
+    }
 }
 
 fn leave_pause(mut paused: ResMut<Paused>, mut time: ResMut<Time<Virtual>>) {
@@ -846,4 +855,17 @@ fn update_tips(
     ui.text(&text);
     let root = ui.root();
     ui.button_in(root, &lang.t("tips.hide"), Action::ToggleTips, false, true);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The main menu calls the build a demo only when it is one.
+    #[test]
+    fn version_line_names_the_demo_only_in_the_demo() {
+        let line = Lang::load("en").f(version_key(), &[("version", &"1.2.3")]);
+        assert!(line.contains("1.2.3"), "{line}");
+        assert_eq!(cfg!(feature = "demo"), line.contains("Demo"), "{line}");
+    }
 }

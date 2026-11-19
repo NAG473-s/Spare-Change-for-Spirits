@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "نسخة تجريبية · الإصدار {version}",
+    "menu.version_full": "الإصدار {version}",
     "menu.tagline": "متجر صغير لا يفتح أبوابه إلا بين منتصف الليل والفجر.",
     "menu.continue": "متابعة – الليلة {night}",
     "menu.new_game": "لعبة جديدة",

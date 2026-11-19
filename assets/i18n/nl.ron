@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "Demo · versie {version}",
+    "menu.version_full": "Versie {version}",
     "menu.tagline": "Een winkeltje dat alleen open is tussen middernacht en zonsopgang.",
     "menu.continue": "Verder – nacht {night}",
     "menu.new_game": "Nieuw spel",

@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "Demó · verzió: {version}",
+    "menu.version_full": "Verzió: {version}",
     "menu.tagline": "Egy kis bolt, amely csak éjféltől hajnalig tart nyitva.",
     "menu.continue": "Folytatás – {night}. éjszaka",
     "menu.new_game": "Új játék",

@@ -4,6 +4,7 @@
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
     "menu.version": "Demo · versio {version}",
+    "menu.version_full": "Versio {version}",
     "menu.tagline": "Pieni puoti, joka on auki vain keskiyön ja aamunkoiton välillä.",
     "menu.continue": "Jatka – yö {night}",
     "menu.new_game": "Uusi peli",
