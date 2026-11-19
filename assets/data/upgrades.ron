@@ -24,11 +24,11 @@
     (id: "waiting_bench", cost: 25, unlock_night: 2, effect: (patience_factor: 1.3),
      model: Some((pos: (3.6, 0.0, -2.65), size: (1.4, 0.55, 0.45), color: (0.42, 0.28, 0.18)))),
     (id: "door_lantern", cost: 20, unlock_night: 2, effect: (spawn_factor: 0.9),
-     model: Some((pos: (-6.75, 1.55, -0.75), turn: 90.0, size: (0.3, 0.45, 0.3),
+     model: Some((pos: (-6.86, 2.41, 0.2), turn: 90.0, size: (0.3, 0.45, 0.3),
                   color: (0.9, 0.7, 0.35), light_height: 0.2))),
     (id: "herb_sachets", cost: 30, unlock_night: 3, effect: (fade_bonus: 1),
      model: Some((pos: (2.4, 1.9, -2.85), size: (1.0, 0.5, 0.15), color: (0.45, 0.55, 0.38)))),
     (id: "ferry_contract", cost: 80, unlock_night: 4, effect: (extra_crates: 2),
-     model: Some((pos: (-6.85, 1.4, -1.7), turn: 90.0, size: (0.5, 0.65, 0.05),
+     model: Some((pos: (-6.91, 2.28, -1.32), turn: 90.0, size: (0.5, 0.65, 0.05),
                   color: (0.85, 0.78, 0.6)))),
 ]
