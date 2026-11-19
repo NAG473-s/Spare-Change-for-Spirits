@@ -26,6 +26,8 @@ python3 tools/check_models.py
 
 There are no open image orders. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
+The opening harbour painting and ferry cutout, the oak shop floor, the market street map
+and the quay paving are delivered. All ten ghost portraits have gestures for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -108,10 +110,11 @@ All ten sprites are included in `assets/sprites/ghosts/`. The prompts below can 
 
 ## Ghost animation sheets – canvas 1024 × 1536
 
-The game already animates every ghost (bobbing, breathing, swaying, leaning into its movement,
-trembling when worried, stretching as it passes into the light). A sheet adds a hand-drawn idle
-loop on top: if `assets/sprites/ghosts/<id>_sheet.png` exists, it replaces `<id>.png` and plays
-at 8 frames per second.
+The ten portraits move differently as a ghost peeks in, reaches towards a shelf, glides to the
+counter, waits, grows impatient, pays, waves goodbye, flees or rises into the light. The game
+places the head, hand and hem movements on each portrait separately, including the cat's paw
+and the knight's carried helmet. The four drawn frames in `<id>_sheet.png` add an idle loop at
+8 frames per second. A single `<id>.png` can perform all nine gestures on its own.
 
 All ten ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
 1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
@@ -136,6 +139,16 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
+
+## First launch at the harbour (done)
+
+The opening plays for 4.8 seconds on a new installation. Keep the frame fixed. The ferry and
+its reflection travel together, the bow lantern glows, and the existing logo fades into the sky.
+
+| File in `assets/sprites/title/` | Replacement artwork |
+|---|---|
+| `intro_harbor.png` | Opaque 1280 × 720 storybook painting at water level. Crooked amber-lit cottages and a pier on the left, a slim lighthouse and crescent moon on the right. Keep the upper centre dark for the logo and the lower two fifths clear for the moving boat. Use deep plum, slate and teal gouache with small gold reflections. |
+| `intro_ferry.png` | Transparent 768 × 256 side view. The full wooden punt faces right, with a hooded ferryman at the stern, two rope-bound crates and a bent brass lantern hook at the bow. Centre the lamp flame near 90.6% of the width and 28% of the height. The hull meets the water at about 92% of the height. The game adds its reflection. |
 
 ## Title screen – canvas 1920 × 1080 (done)
 
@@ -256,12 +269,15 @@ commit with `Add <id> texture [skip ci]`.
 | `assets/sprites/harbor/water.png` | *(optional)* Seamless tileable texture of calm dark water at night seen from above, deep indigo and teal with soft painted ripple strokes and a few tiny silver glints, painterly, no objects, no reflections of anything specific. Must tile without visible seams. Not transparent. |
 | `assets/sprites/harbor/water_normal.png` | *(optional)* The matching tangent-space normal map of the same ripples (purple-blue normal map colours), seamless. |
 | `assets/sprites/market/cobbles.png` | Seamless tileable texture of old grey-brown cobblestones seen straight from above, soft moss in the gaps, painterly, no objects. Must tile without visible seams. Not transparent. |
+| `assets/sprites/market/square.png` | Opaque 1536 × 960 overhead map across the whole 32 × 20 m square. Set a curved cart road at the front, a narrower lane between Mother Moss and the glazier and a footway along the houses. Use worn wheel tracks, edge stones, rust-coloured repairs, iron grates and a round four-hole button drain at the junction. North is at the top. |
+| `assets/sprites/harbor/quay_stone.png` | Opaque 1440 × 398 overhead map of the 30 × 8.3 m stone apron. Lay salt-grey setts along the water, with two worn lanes and iron drains. The waterfront is at the bottom. |
 | `assets/sprites/fx/glow.png` | A soft round glow on a transparent background: white in the middle, fading smoothly to fully transparent at the edge, no rays, no hard ring. Used, tinted, as the halo around lamps. 512 × 512 is enough. |
 
-## Floor – canvas 1024 × 1024 (done)
+## Floor – 512 × 512 tile (done)
 
-`floor`: Seamless tileable texture of old dark wooden floorboards seen straight from above,
-subtle wear, no objects. Not transparent. (Prepared with kind `floor`; used on every grid tile.)
+`assets/sprites/shop/floor.png` is a 512 × 512 seamless oak tile. Paint four broad worn boards
+seen from above, with staggered end joints, inset pegs, a few knots and warm walnut grain.
+Keep edge wear subtle enough for furniture and dropped coins to read against it.
 
 ## Steam store art (done)
 
