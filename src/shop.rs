@@ -736,7 +736,10 @@ fn spawn_light(
     has_model: bool,
     idx: usize,
 ) -> Entity {
-    let intensity = 180_000.0 * def.effect.light as f32;
+    // Several lamps can stand side by side. Give each a local pool and
+    // reserve the wider reach for brighter furniture such as the oil lamp.
+    let strength = def.effect.light as f32;
+    let intensity = 54_000.0 * strength.sqrt();
     // Models put the flame at light_height; on a placeholder box it sits on top.
     let height = if has_model {
         def.light_height
@@ -748,8 +751,8 @@ fn spawn_light(
             PointLight {
                 color: Color::srgb(1.0, 0.72, 0.42),
                 intensity,
-                range: 5.0 + 1.5 * def.effect.light as f32,
-                radius: 0.05,
+                range: 2.8 + 0.85 * strength,
+                radius: 0.10,
                 shadow_maps_enabled: false,
                 ..default()
             },
