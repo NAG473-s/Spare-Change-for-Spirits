@@ -12,6 +12,7 @@
 use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
+use bevy::text::LineBreak;
 
 use crate::accounts::Accounts;
 use crate::data::{Exchange, GameData, Ware, asset_exists, rgb};
@@ -23,10 +24,10 @@ use crate::harbor::{Location, repeating};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
-use crate::scene::{billboard_material, billboard_mesh, world_label};
+use crate::scene::{LABEL_WIDTH, WorldLabel, billboard_material, billboard_mesh};
 use crate::shop::{Storeroom, model_or_box, product_model};
 use crate::tooltip::{HoverTip, TipKind};
-use crate::ui::{Action, GameLog, Icons, UiFont};
+use crate::ui::{Action, BG_PANEL, GameLog, Icons, PANEL_EDGE, TEXT, UiFont, UiTheme, text_font};
 use crate::upgrades::Upgrades;
 
 pub struct MarketPlugin;
@@ -36,7 +37,7 @@ impl Plugin for MarketPlugin {
         app.init_resource::<MarketDay>()
             .init_resource::<HoveredWare>()
             .add_systems(Startup, spawn_market)
-            .add_systems(OnEnter(Phase::Day), open_market)
+            .add_systems(OnEnter(Phase::Day), (open_market, spawn_vendor_plaques))
             .add_systems(OnExit(Phase::Day), close_market)
             .add_systems(
                 Update,
@@ -54,6 +55,8 @@ impl Plugin for MarketPlugin {
 pub const MARKET: Vec3 = Vec3::new(-160.0, 0.0, 0.0);
 /// The stall's table (w, h, d); wares stand on it.
 const TABLE: Vec3 = Vec3::new(1.7, 0.85, 0.7);
+/// At the front rail, towards the trader's end of the stall.
+const PLAQUE_OFFSET: Vec3 = Vec3::new(-0.65, 0.51, 0.48);
 /// Furniture is shown as a small sample: its largest side, in metres.
 const SAMPLE_SIZE: f32 = 0.5;
 /// A rolled-up plan stands for improvements without a model of their own
@@ -393,14 +396,44 @@ fn spawn_market(
                 Transform::from_xyz(0.0, 1.3, 0.0),
             ));
         }
-        // The name in front of the table, where the awning cannot cover it.
-        k.commands.spawn(world_label(
-            &font,
-            lang.t(&format!("vendor.{}.name", v.id)),
-            13.0,
-            stall,
-            Vec3::new(0.0, 0.0, 0.55),
+    }
+}
+
+fn spawn_vendor_plaques(
+    mut commands: Commands,
+    stalls: Query<(Entity, &Stall)>,
+    data: Res<GameData>,
+    lang: Res<Lang>,
+    font: Res<UiFont>,
+    theme: Res<UiTheme>,
+) {
+    for (stall, Stall(index)) in &stalls {
+        let key = format!("vendor.{}.name", data.vendors[*index].id);
+        let mut plaque = commands.spawn((
+            WorldLabel {
+                target: stall,
+                offset: PLAQUE_OFFSET,
+            },
+            Text::new(lang.t(&key)),
+            text_font(&font.display, 13.0),
+            TextColor(TEXT),
+            TextLayout::new(Justify::Center, LineBreak::WordOrCharacter),
+            Node {
+                position_type: PositionType::Absolute,
+                width: px(LABEL_WIDTH),
+                padding: UiRect::axes(px(5), px(3)),
+                border: UiRect::all(px(1)),
+                ..default()
+            },
+            BackgroundColor(BG_PANEL),
+            BorderColor::all(PANEL_EDGE),
+            GlobalZIndex(-1),
+            DespawnOnExit(Phase::Day),
+            Pickable::IGNORE,
         ));
+        if let Some(frame) = theme.frame(0.09) {
+            plaque.insert(frame.with_visual_box(VisualBox::PaddingBox));
+        }
     }
 }
 
