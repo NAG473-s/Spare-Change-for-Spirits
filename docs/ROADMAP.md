@@ -38,7 +38,7 @@ Checkboxes are ticked in the commit that finishes them.
       sales per night – the basis for balancing (`cargo run --release -- --simulate [runs]`)
 - [x] First balancing pass in `assets/data/*.ron` (see `docs/BALANCING.md`)
 - [ ] Windows build run and the `.exe` played on a real Windows PC (assets, fonts, saves, sound)
-- [ ] Ledger frame (`assets/sprites/ui/ledger_frame.png`) used for the morning accounts
+- [x] Ledger frame (`assets/sprites/ui/ledger_frame.png`) used for the morning accounts
 - [ ] Repository private
 
 ### Week 2 · Nov 30 – Dec 6: first playtests
@@ -46,7 +46,7 @@ Checkboxes are ticked in the commit that finishes them.
 - [ ] 3–5 people play the demo nights without help; notes on where they get stuck
 - [ ] Fix what they stumbled over (tips, clarity, bugs)
 - [ ] Models from ChatGPT arriving one by one; each checked with `tools/check_models.py`
-- [ ] Ghost tooltips (name, mood, wish hint when waiting)
+- [x] Ghost tooltips (name, mood, wish hint when waiting)
 
 ### Week 3 · Dec 7 – Dec 13: content for Early Access
 

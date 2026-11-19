@@ -96,6 +96,18 @@ pub enum Stat {
     Reflection,
 }
 
+impl Stat {
+    /// Catalog key of the name inside a sentence ("light").
+    pub fn key(self) -> &'static str {
+        match self {
+            Stat::Light => "stat.light",
+            Stat::Warmth => "stat.warmth",
+            Stat::Silence => "stat.silence",
+            Stat::Reflection => "stat.reflection",
+        }
+    }
+}
+
 #[derive(Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[serde(default)]
 pub struct Atmosphere {
@@ -151,6 +163,15 @@ impl Need {
     }
 
     /// What the ghost complains about when the condition is not met.
+    /// "Stays only with light 3 or more", for the ghost tooltip.
+    pub fn describe(&self, lang: &Lang) -> String {
+        let (stat, value, key) = match *self {
+            Need::AtLeast(s, v) => (s, v, "ghost_tip.needs_at_least"),
+            Need::AtMost(s, v) => (s, v, "ghost_tip.needs_at_most"),
+        };
+        lang.f(key, &[("stat", &lang.t(stat.key())), ("value", &value)])
+    }
+
     pub fn complaint(&self, lang: &Lang) -> String {
         let (stat, bound) = match *self {
             Need::AtLeast(s, _) => (s, "at_least"),

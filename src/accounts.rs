@@ -70,12 +70,22 @@ pub struct Accounts {
     pub dust: u32,
     /// In the drawer now, at dawn.
     pub closing: u32,
+    /// Wares in stock, valued at what they cost, when the day began and at
+    /// dawn (after fading): crates bought turn coins into wares, so the
+    /// first night's purchases show as an investment, not only a loss.
+    pub wares_opening: u32,
+    pub wares_closing: u32,
 }
 
 impl Accounts {
     /// Profit (or loss, if negative) of the whole day.
     pub fn profit(&self) -> i64 {
         self.closing as i64 - self.opening as i64
+    }
+
+    /// The profit plus what the wares in stock gained (or lost) in value.
+    pub fn result_with_wares(&self) -> i64 {
+        self.profit() + self.wares_closing as i64 - self.wares_opening as i64
     }
 
     /// Fills in the night's figures from the drawer at dawn (after the
@@ -95,6 +105,8 @@ struct Ledger;
 pub(crate) fn open_books(
     drawer: Res<Drawer>,
     progress: Res<Progress>,
+    stock: Res<Stock>,
+    data: Res<GameData>,
     mut accounts: ResMut<Accounts>,
 ) {
     if accounts.night == progress.night && accounts.opening > 0 {
@@ -104,8 +116,23 @@ pub(crate) fn open_books(
         night: progress.night,
         opening: drawer.total(),
         night_start: drawer.total(),
+        wares_opening: wares_value(&stock, &data),
         ..default()
     };
+}
+
+/// What the wares in stock cost: each unit at its crate's price divided by
+/// the units in the crate.
+pub fn wares_value(stock: &Stock, data: &GameData) -> u32 {
+    let value: f32 = stock
+        .units()
+        .iter()
+        .filter_map(|(id, ages)| {
+            let p = data.product(id)?;
+            Some(p.crate_cost as f32 / p.crate_size.max(1) as f32 * ages.len() as f32)
+        })
+        .sum();
+    value.round() as u32
 }
 
 /// Runs after `start_morning` has removed the counterfeits from the drawer
@@ -113,9 +140,12 @@ pub(crate) fn open_books(
 pub(crate) fn close_books(
     drawer: Res<Drawer>,
     report: Res<NightReport>,
+    stock: Res<Stock>,
+    data: Res<GameData>,
     mut accounts: ResMut<Accounts>,
 ) {
     accounts.close(drawer.total(), report.counterfeits_found.total());
+    accounts.wares_closing = wares_value(&stock, &data);
 }
 
 fn count_visitors(added: Query<(), Added<Ghost>>, mut report: ResMut<NightReport>) {
@@ -341,6 +371,21 @@ fn build_ledger(
         "accounts.profit"
     };
     line(&mut ui, &lang.t(key), signed(profit), money(profit), false);
+    line(
+        &mut ui,
+        &lang.t("accounts.wares"),
+        a.wares_closing.to_string(),
+        TEXT_DIM,
+        true,
+    );
+    let result = a.result_with_wares();
+    line(
+        &mut ui,
+        &lang.t("accounts.result_with_wares"),
+        signed(result),
+        money(result),
+        false,
+    );
     if loan.owed > 0 {
         let owed = lang.f("accounts.owed", &[("owed", &loan.owed)]);
         ui.add_text(left, &owed, false, 12.0, RED);
@@ -566,6 +611,24 @@ pub fn fading_next_dawn(stock: &Stock, data: &GameData) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wares_bought_count_as_an_investment() {
+        let data = GameData::load();
+        let p = &data.products[0];
+        let mut stock = Stock::default();
+        stock.add(&p.id, p.crate_size);
+        // One crate bought with the drawer, nothing sold yet.
+        let accounts = Accounts {
+            opening: 100,
+            closing: 100 - p.crate_cost,
+            wares_opening: 0,
+            wares_closing: wares_value(&stock, &data),
+            ..default()
+        };
+        assert_eq!(accounts.profit(), -(p.crate_cost as i64));
+        assert_eq!(accounts.result_with_wares(), 0);
+    }
     use std::collections::BTreeMap;
 
     #[test]

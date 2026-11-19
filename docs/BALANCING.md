@@ -61,8 +61,9 @@ The careless strategy needs the ferryman's loan in night 5 in 28 % of the runs.
 ## Open points for the next pass
 
 - **Night 1 is an investment:** a sensible player buys wares for several nights and ends the first
-  night below the start money, so the ledger says "Loss today". Ideas: show the value of the wares
-  in stock in the ledger, or make the first night a little more generous.
+  night below the start money. The ledger now also shows the wares in stock at cost and the
+  result including them, so the purchase reads as an investment. Check in playtests whether that
+  is enough or the first night should be a little more generous.
 - **Wishes fulfilled are still below 40 %:** the wishes spread over 11 products on the first night.
   More products per crate for cheap wares, or fewer wishes per ghost, would help.
 - **Reputation keeps growing** (about 70 by night 5) although its effect stops at 35. It could

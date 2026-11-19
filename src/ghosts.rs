@@ -7,12 +7,14 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
-use crate::data::{GameData, GhostDef, rgb};
+use crate::data::{GameData, GhostDef, asset_exists, rgb};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
 use crate::fx::{Cue, Voice};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
+use crate::save::Settings;
+use crate::tooltip::{HoverTip, TipKind};
 use bevy::light::NotShadowCaster;
 
 use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
@@ -31,14 +33,20 @@ pub struct GhostPlugin;
 impl Plugin for GhostPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Queue>()
+            .init_resource::<HoveredGhost>()
             .insert_resource(SpawnTimer(2.0))
             .add_systems(
                 OnEnter(Phase::Night),
-                |mut q: ResMut<Queue>, mut t: ResMut<SpawnTimer>| {
+                |mut q: ResMut<Queue>, mut t: ResMut<SpawnTimer>, mut h: ResMut<HoveredGhost>| {
+                    h.0 = None;
                     q.0.clear();
                     t.0 = 2.0;
                 },
             )
+            // The ghosts are gone: so is a ghost tooltip.
+            .add_systems(OnExit(Phase::Night), |mut tip: ResMut<HoverTip>| {
+                HoverTip::hide(&mut tip)
+            })
             .add_systems(
                 Update,
                 (
@@ -46,6 +54,7 @@ impl Plugin for GhostPlugin {
                     spawn_story_ghost,
                     ghost_ai,
                     ghost_murmurs,
+                    ghost_tooltip,
                     move_ghosts,
                     fade_ghosts,
                     animate_ghosts,
@@ -256,6 +265,130 @@ fn ghost_murmurs(
     cues.write(Cue::GhostVoice(kind, data.ghosts[ghost.def].voice));
 }
 
+/// The ghost under the mouse pointer.
+#[derive(Resource, Default)]
+struct HoveredGhost(Option<Entity>);
+
+fn on_ghost_over(over: On<PointerOver>, mut hovered: ResMut<HoveredGhost>) {
+    hovered.0 = Some(over.event_target());
+}
+
+fn on_ghost_out(out: On<PointerOut>, mut hovered: ResMut<HoveredGhost>) {
+    if hovered.0 == Some(out.event_target()) {
+        hovered.0 = None;
+    }
+}
+
+/// How a ghost's patience reads in its tooltip.
+const PATIENCE_CALM: f32 = 0.6;
+const PATIENCE_IMPATIENT: f32 = 0.3;
+
+/// Hovering a ghost tells who it is, how it feels, what it needs and – at
+/// the front of the counter – what it whispers. Products on the shelves
+/// have their own tooltip, which wins.
+#[allow(clippy::too_many_arguments)]
+fn ghost_tooltip(
+    hovered: Res<HoveredGhost>,
+    ghosts: Query<&Ghost>,
+    queue: Res<Queue>,
+    data: Res<GameData>,
+    lang: Res<Lang>,
+    settings: Res<Settings>,
+    asset_server: Res<AssetServer>,
+    mut tip: ResMut<HoverTip>,
+    mut shown: Local<Option<String>>,
+) {
+    // Another tooltip (a product on a shelf) took over: leave it alone.
+    if shown.as_ref().is_some_and(|title| *title != tip.title) {
+        *shown = None;
+    }
+    let ghost = hovered.0.and_then(|e| ghosts.get(e).ok().map(|g| (e, g)));
+    let Some((entity, g)) = ghost.filter(|_| shown.is_some() || tip.is_empty()) else {
+        if shown.take().is_some() {
+            HoverTip::hide(&mut tip);
+        }
+        return;
+    };
+    let def = &data.ghosts[g.def];
+    let portrait = format!("sprites/ghosts/{}.png", def.id);
+    let mut t = HoverTip {
+        icon: asset_exists(&portrait).then(|| asset_server.load(portrait)),
+        title: lang.ghost(&def.id),
+        lines: Vec::new(),
+    };
+    let patience = (g.patience / g.max_patience.max(0.01)).clamp(0.0, 1.0);
+    let (kind, mood) = match g.state {
+        GhostState::Entering | GhostState::Browsing => {
+            (TipKind::Text, lang.t("ghost_tip.browsing"))
+        }
+        GhostState::ToCounter => (TipKind::Text, lang.t("ghost_tip.coming")),
+        GhostState::Waiting if settings.patient_ghosts => {
+            (TipKind::Good, lang.t("ghost_tip.patient"))
+        }
+        GhostState::Waiting if patience > PATIENCE_CALM => {
+            (TipKind::Good, lang.t("ghost_tip.calm"))
+        }
+        GhostState::Waiting if patience > PATIENCE_IMPATIENT => {
+            (TipKind::Text, lang.t("ghost_tip.impatient"))
+        }
+        GhostState::Waiting => (TipKind::Bad, lang.t("ghost_tip.leaving_soon")),
+        GhostState::AtRegister => (TipKind::Text, lang.t("ghost_tip.paying")),
+        GhostState::Fleeing => (TipKind::Bad, lang.t("ghost_tip.flees")),
+        GhostState::Leaving => (TipKind::Text, lang.t("ghost_tip.leaving")),
+        GhostState::Ascending => (TipKind::Good, lang.t("ghost_tip.ascending")),
+    };
+    t.line(kind, mood);
+    let at_counter = matches!(g.state, GhostState::Waiting | GhostState::AtRegister);
+    if at_counter && queue.front() == Some(entity) {
+        t.line(
+            TipKind::Text,
+            lang.f(
+                "ghost_tip.whispers",
+                &[("quote", &lang.f("quote", &[("text", &lang.t(&g.hint))]))],
+            ),
+        );
+    } else if !matches!(
+        g.state,
+        GhostState::Fleeing | GhostState::Leaving | GhostState::Ascending
+    ) {
+        t.line(TipKind::Hint, lang.t("ghost_tip.wish_later"));
+    }
+    for need in &def.needs {
+        t.line(TipKind::Text, need.describe(&lang));
+    }
+    if !def.pays_with.is_empty() {
+        let coins: Vec<String> = def.pays_with.iter().map(|c| c.name(&lang)).collect();
+        t.line(
+            TipKind::Text,
+            lang.f("ghost_tip.pays_with", &[("coins", &lang.join(&coins))]),
+        );
+    }
+    let percent = ((def.pay_multiplier - 1.0) * 100.0).round() as i32;
+    if percent > 0 {
+        t.line(
+            TipKind::Good,
+            lang.f("ghost_tip.pays_more", &[("percent", &percent)]),
+        );
+    } else if percent < 0 {
+        t.line(
+            TipKind::Bad,
+            lang.f("ghost_tip.pays_less", &[("percent", &-percent)]),
+        );
+    }
+    let quirks = &def.quirks;
+    for (chance, key) in [
+        (quirks.knock_chance, "ghost_tip.knocks"),
+        (quirks.counterfeit_chance, "ghost_tip.counterfeit"),
+        (quirks.double_pay_chance, "ghost_tip.double_pay"),
+    ] {
+        if chance > 0.0 {
+            t.line(TipKind::Hint, lang.t(key));
+        }
+    }
+    *shown = Some(t.title.clone());
+    HoverTip::show(&mut tip, t);
+}
+
 /// Everything needed to draw a new ghost.
 #[derive(SystemParam)]
 struct GhostArt<'w> {
@@ -361,6 +494,28 @@ fn spawn_ghost(
         });
     }
     commands.entity(ghost).add_child(body);
+    // An invisible box over the body for the tooltip. It does not block the
+    // pointer, so the shelf items behind a ghost stay clickable.
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(GHOST_SIZE.x * 0.7, GHOST_SIZE.y * 0.9, 0.05))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::NONE,
+            alpha_mode: AlphaMode::Blend,
+            unlit: true,
+            ..default()
+        })),
+        Transform::from_xyz(0.0, GHOST_SIZE.y * 0.45, 0.0),
+        NotShadowCaster,
+        Pickable {
+            should_block_lower: false,
+            is_hoverable: true,
+        },
+        ChildOf(ghost),
+    ));
+    commands
+        .entity(ghost)
+        .observe(on_ghost_over)
+        .observe(on_ghost_out);
     commands.spawn(world_label(
         font,
         lang.ghost(&def.id),
