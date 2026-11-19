@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Kihalásztam egy gombot a folyóból.",
+    "intro.story.2": "A boltodban egy szellem várt.",
+    "intro.story.3": "„Anyám varrta fel” – suttogta.",
     "menu.version": "Demó · verzió: {version}",
     "menu.version_full": "Verzió: {version}",
     "menu.tagline": "Egy kis bolt, amely csak éjféltől hajnalig tart nyitva.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Törlés és új játék indítása",
     "menu.language": "Nyelv: {language}",
     "menu.choose_language": "Válassz nyelvet",
+    "menu.language_auto": "Automatikus",
     "menu.back": "Vissza",
     "menu.settings": "Beállítások",
     "hud.menu": "Menü",
@@ -31,6 +35,7 @@
     "settings.title": "Beállítások",
     "settings.music": "Zene: {percent}%",
     "settings.effects": "Hangeffektek: {percent}%",
+    "settings.narration": "Elbeszélő hangja: {percent}%",
     "settings.ui_size": "Felület mérete: {percent}%",
     "settings.fullscreen_on": "Teljes képernyő: be",
     "settings.fullscreen_off": "Teljes képernyő: ki",
