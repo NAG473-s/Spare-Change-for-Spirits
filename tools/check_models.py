@@ -295,7 +295,7 @@ def main():
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
-    for name in ("shop/floor.png", "ui/ledger_frame.png", "coins/button.png", "coins/candle.png", "coins/spoon.png"):
+    for name in ("shop/floor.png", "shop/sign_paint.png", "ui/ledger_frame.png", "coins/button.png", "coins/candle.png", "coins/spoon.png"):
         path = ROOT / "assets" / "sprites" / name
         print(("  ok       " if path.is_file() else "  missing  ") + f"sprites/{name}")
     # Button icons (optional: a button without one shows only its text).
