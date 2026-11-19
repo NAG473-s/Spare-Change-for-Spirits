@@ -20,7 +20,7 @@ use crate::tooltip::{HoverTip, TipKind};
 use crate::upgrades::Upgrades;
 use bevy::light::NotShadowCaster;
 
-use crate::scene::{Billboard, billboard_material, floor, world_label};
+use crate::scene::{Billboard, LabelMuted, billboard_material, floor, world_label};
 use crate::shop::ShopLayout;
 use crate::ui::{GameLog, UiFont};
 
@@ -58,6 +58,7 @@ impl Plugin for GhostPlugin {
                     ghost_ai,
                     ghost_murmurs,
                     ghost_tooltip,
+                    mute_browsing_names,
                     move_ghosts,
                     fade_ghosts,
                     animate_ghosts,
@@ -526,13 +527,39 @@ fn spawn_ghost(
         .entity(ghost)
         .observe(on_ghost_over)
         .observe(on_ghost_out);
-    commands.spawn(world_label(
-        font,
-        lang.ghost(&def.id),
-        10.0,
-        ghost,
-        Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
-    ));
+    let label = commands
+        .spawn(world_label(
+            font,
+            lang.ghost(&def.id),
+            10.0,
+            ghost,
+            Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
+        ))
+        .id();
+    commands.entity(ghost).insert(GhostLabel(label));
+}
+
+/// The name label of a ghost.
+#[derive(Component)]
+struct GhostLabel(Entity);
+
+/// Names show on the way to the counter and in the line; while a ghost
+/// browses it stands right in front of a shelf, and its name would cover
+/// the shelf's own label (hovering it still shows the name).
+fn mute_browsing_names(
+    mut commands: Commands,
+    ghosts: Query<(&Ghost, &GhostLabel), Changed<Ghost>>,
+    muted: Query<(), With<LabelMuted>>,
+) {
+    for (ghost, GhostLabel(label)) in &ghosts {
+        let quiet = matches!(ghost.state, GhostState::Entering | GhostState::Browsing);
+        let is_muted = muted.get(*label).is_ok();
+        if quiet && !is_muted {
+            commands.entity(*label).try_insert(LabelMuted);
+        } else if !quiet && is_muted {
+            commands.entity(*label).try_remove::<LabelMuted>();
+        }
+    }
 }
 
 /// The story ghost arrives once per night until his story is finished.

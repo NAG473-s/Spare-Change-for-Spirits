@@ -607,6 +607,10 @@ pub struct WorldLabel {
     pub offset: Vec3,
 }
 
+/// A world label that is not shown for now (it keeps following its target).
+#[derive(Component)]
+pub struct LabelMuted;
+
 pub(crate) const LABEL_WIDTH: f32 = 120.0;
 
 pub fn world_label(
@@ -629,6 +633,9 @@ pub fn world_label(
             ..default()
         },
         Pickable::IGNORE,
+        // Hidden until `follow_labels` has put it in place – otherwise a new
+        // label shows for a frame in the top left corner.
+        Visibility::Hidden,
     )
 }
 
@@ -637,21 +644,36 @@ fn follow_labels(
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
     targets: Query<&GlobalTransform>,
     ui_scale: Res<UiScale>,
-    mut labels: Query<(Entity, &WorldLabel, &mut Node, &mut Visibility)>,
+    mut labels: Query<(
+        Entity,
+        &WorldLabel,
+        &mut Node,
+        &mut Visibility,
+        Has<LabelMuted>,
+    )>,
 ) {
     let (camera, cam_transform) = *camera;
-    for (entity, label, mut node, mut visibility) in &mut labels {
+    for (entity, label, mut node, mut visibility, muted) in &mut labels {
         let Ok(target) = targets.get(label.target) else {
             commands.entity(entity).despawn();
             continue;
         };
+        // A target spawned this frame has no place in the world yet.
+        if *target == GlobalTransform::IDENTITY {
+            *visibility = Visibility::Hidden;
+            continue;
+        }
         match camera.world_to_viewport(cam_transform, target.translation() + label.offset) {
             Ok(pos) => {
                 // Window pixels to interface units.
                 let pos = pos / ui_scale.0;
                 node.left = px(pos.x - LABEL_WIDTH / 2.0);
                 node.top = px(pos.y);
-                *visibility = Visibility::Inherited;
+                *visibility = if muted {
+                    Visibility::Hidden
+                } else {
+                    Visibility::Inherited
+                };
             }
             Err(_) => *visibility = Visibility::Hidden,
         }

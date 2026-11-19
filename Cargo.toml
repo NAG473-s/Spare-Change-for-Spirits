@@ -13,7 +13,9 @@ publish = false
 demo = []
 
 [dependencies]
-bevy = "0.20.1"
+# complex_script_segmentation: line breaking data for Chinese, Japanese and
+# Thai, which have no spaces between words.
+bevy = { version = "0.20.1", features = ["complex_script_segmentation"] }
 keyvalues-parser = { version = "0.2.4", default-features = false }
 libloading = "0.8.9"
 ron = "0.12.3"

@@ -52,6 +52,7 @@ impl Plugin for ShopPlugin {
                 (
                     select_tool.run_if(in_state(Phase::Evening)),
                     follow_drag,
+                    clear_sold_out.run_if(resource_changed::<Stock>),
                     sync_cell_visuals.run_if(
                         resource_changed::<ShopLayout>
                             .or_else(resource_changed::<Stock>)
@@ -776,6 +777,18 @@ fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
 #[derive(Component)]
 struct CellLabel;
 
+/// Wares that are sold out (or have faded) leave the shelves, so no empty
+/// "×0" slot stays behind; the slot is free for something else.
+fn clear_sold_out(stock: Res<Stock>, mut layout: ResMut<ShopLayout>) {
+    let sold_out = |p: &String| stock.count(p) == 0;
+    if !layout.cells.iter().any(|c| c.products.iter().any(sold_out)) {
+        return;
+    }
+    for cell in &mut layout.cells {
+        cell.products.retain(|p| !sold_out(p));
+    }
+}
+
 /// Redraws decor, products, lights and labels whenever the layout changes.
 fn sync_cell_visuals(
     mut commands: Commands,
@@ -1019,6 +1032,21 @@ pub(crate) fn product_model(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sold_out_wares_leave_the_shelves() {
+        let mut app = App::new();
+        let mut layout = ShopLayout::new(4, 4);
+        layout.cells[0].decor = Some("shelf".into());
+        layout.cells[0].products = vec!["tea_tin".into(), "marbles".into()];
+        let mut stock = Stock::default();
+        stock.add("marbles", 2);
+        app.insert_resource(layout).insert_resource(stock);
+        app.add_systems(Update, clear_sold_out);
+        app.update();
+        let layout = app.world().resource::<ShopLayout>();
+        assert_eq!(layout.cells[0].products, vec!["marbles".to_string()]);
+    }
 
     #[test]
     fn furniture_goes_back_into_the_storeroom_when_replaced() {

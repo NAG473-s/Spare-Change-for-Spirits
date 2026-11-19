@@ -63,6 +63,7 @@ impl Plugin for UiPlugin {
             .add_systems(
                 Update,
                 (
+                    show_more_below,
                     update_hud,
                     update_coin_bar,
                     send_scroll_events,
@@ -447,6 +448,44 @@ pub(crate) struct SidePanelParts {
 }
 
 const SCROLL_LINE: f32 = 24.0;
+/// How far a click on the "more below" arrow scrolls the side panel.
+const MORE_SCROLL: f32 = 140.0;
+
+/// The arrow under the side panel's body that says more is hidden below.
+#[derive(Component)]
+struct MoreBelow;
+
+fn show_more_below(
+    parts: Option<Res<SidePanelParts>>,
+    bodies: Query<(&ComputedNode, &ScrollPosition)>,
+    mut more: Single<&mut Node, With<MoreBelow>>,
+) {
+    let Some(parts) = parts else { return };
+    let Ok((computed, scroll)) = bodies.get(parts.body) else {
+        return;
+    };
+    let hidden = (computed.content_size().y - computed.size().y) * computed.inverse_scale_factor()
+        - scroll.y;
+    let display = if hidden > 4.0 {
+        Display::Flex
+    } else {
+        Display::None
+    };
+    if more.display != display {
+        more.display = display;
+    }
+}
+
+fn scroll_panel_on(
+    _click: On<PointerClick>,
+    parts: Res<SidePanelParts>,
+    mut bodies: Query<(&mut ScrollPosition, &ComputedNode)>,
+) {
+    if let Ok((mut scroll, computed)) = bodies.get_mut(parts.body) {
+        let max = (computed.content_size().y - computed.size().y) * computed.inverse_scale_factor();
+        scroll.y = (scroll.y + MORE_SCROLL).min(max.max(0.0));
+    }
+}
 
 /// Mouse wheel scrolls whatever scrollable UI node is under the pointer.
 fn send_scroll_events(
@@ -601,8 +640,28 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
             BackgroundColor(BG_PANEL),
         ))
         .id();
+    // "There is more below": shown while the body hides content under its
+    // lower edge; a click scrolls on.
+    let more = commands
+        .spawn((
+            MoreBelow,
+            Node {
+                justify_content: JustifyContent::Center,
+                padding: UiRect::vertical(px(1)),
+                display: Display::None,
+                ..default()
+            },
+            children![(
+                Text::new("↓"),
+                text_font(&font.bold, 15.0),
+                TextColor(TEXT_DIM),
+                Pickable::IGNORE,
+            )],
+        ))
+        .observe(scroll_panel_on)
+        .id();
     let content = theme.panel_body(&mut commands, frame, 0.27, 16.0, 0.0);
-    commands.entity(content).add_children(&[body, footer]);
+    commands.entity(content).add_children(&[body, more, footer]);
     commands.insert_resource(SidePanelParts { body, footer });
 
     // Message log: in the right column below the side panel, so it never
@@ -1067,6 +1126,15 @@ fn build_evening_panel(
     ui.primary(&lang.t("evening.open"), Action::StartNight);
 }
 
+/// What the night panel shows besides the register: the ghost at the
+/// front and its state, and the length of the line while nobody waits.
+#[derive(PartialEq)]
+struct NightPanelShows {
+    front: Option<(Entity, GhostState)>,
+    line: usize,
+}
+
+#[allow(clippy::too_many_arguments)]
 fn build_night_panel(
     mut commands: Commands,
     parts: Res<SidePanelParts>,
@@ -1081,7 +1149,30 @@ fn build_night_panel(
     icons: Res<Icons>,
     settings: Res<crate::save::Settings>,
     ghosts: Query<&Ghost>,
+    phase: Res<State<Phase>>,
+    mut shown: Local<Option<NightPanelShows>>,
 ) {
+    // Rebuild only when something this panel shows has changed. Rebuilding
+    // recreates the buttons, and a click whose press and release land on
+    // different button entities is lost – often at a low frame rate, when
+    // other ghosts keep changing state.
+    let front = queue
+        .front()
+        .and_then(|e| ghosts.get(e).ok().map(|g| (e, g.state)));
+    let waiting = front.is_some_and(|(_, state)| state == GhostState::Waiting);
+    let shows = NightPanelShows {
+        front,
+        line: if waiting { 0 } else { queue.0.len() },
+    };
+    let forced = register.is_changed()
+        || stock.is_changed()
+        || font.is_changed()
+        || settings.is_changed()
+        || phase.is_changed();
+    if !forced && shown.as_ref() == Some(&shows) {
+        return;
+    }
+    *shown = Some(shows);
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("night.title"));
 
