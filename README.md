@@ -43,7 +43,8 @@ shows the time of night.
 ## Windows build
 
 The GitHub Actions workflow [`build-windows.yml`](.github/workflows/build-windows.yml) builds a
-release `.exe`, packages it together with `assets/` and uploads it as the artifact
+release `.exe`, packages it together with `assets/`, `LICENSE` and `THIRD_PARTY_LICENSES.txt` and
+uploads it as the artifact
 `SpareChangeForSpirits-windows`.
 
 - Runs on pushes to `main`, on tags `v*`, and manually via
@@ -207,3 +208,14 @@ Gameplay triggers sounds and effects through the `Cue` message.
 - [x] Particles when passing into the light, candle glow, night shade
 - [x] Ghost animations (procedural, plus optional hand-drawn sprite sheets)
 - [x] Localisation into the 31 Steam languages
+
+## License
+
+Copyright © 2026 Sebastian Rode. **All rights reserved** – see [LICENSE](LICENSE). The code and all
+content may not be copied, changed or redistributed without written permission.
+
+Third-party parts keep their own licences: the Inter and Noto fonts (SIL Open Font License, see
+`assets/fonts/`) and the Rust libraries the game is built with (listed with their licence texts in
+[THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt); regenerate it with
+`python3 tools/third_party_licenses.py` after changing dependencies). The Windows build ships both
+files next to the game.

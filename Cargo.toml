@@ -2,13 +2,18 @@
 name = "spare_change_for_spirits"
 version = "0.1.0"
 edition = "2024"
+authors = ["Sebastian Rode"]
+description = "A shop management game for ghosts"
+# All rights reserved, see LICENSE. Not for crates.io.
+license-file = "LICENSE"
+publish = false
 
 [dependencies]
 bevy = "0.20.1"
 ron = "0.12.3"
 serde = { version = "1.0.229", features = ["derive"] }
 
-# Schnelle Debug-Builds: eigener Code leicht optimiert, Abhängigkeiten voll.
+# Fast debug builds: our own code lightly optimised, dependencies fully.
 [profile.dev]
 opt-level = 1
 

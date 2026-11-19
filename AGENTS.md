@@ -44,3 +44,5 @@
   extra Blender scenes with `python3 tools/fix_models.py` (commit the repair). Placeholder sizes in
   `assets/data/decor.ron` must match the target sizes in that document.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.
+- The project is proprietary (`LICENSE`, all rights reserved). After adding or updating a
+  dependency, run `python3 tools/third_party_licenses.py` and commit `THIRD_PARTY_LICENSES.txt`.

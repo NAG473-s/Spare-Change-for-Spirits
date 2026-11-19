@@ -1,0 +1,65 @@
+Spare Change for Spirits
+Copyright (c) 2026 Sebastian Rode. All rights reserved.
+
+This repository and the game "Spare Change for Spirits" - including the
+source code, game data, texts and translations, images, 3D models, sounds,
+music and all other content - are the property of Sebastian Rode and are
+protected by copyright law.
+
+
+NO LICENCE IS GRANTED
+
+Without prior written permission from the copyright holder you may not
+copy, modify, merge, publish, distribute, sublicense, sell, rent, lend or
+otherwise use this software or any part of it, nor create derivative works
+based on it. This applies in particular to the artwork, models, sounds and
+texts, and to using any of them to train machine-learning models.
+
+The source code being publicly visible does not grant any rights beyond
+those required by the terms of service of the platform hosting it (viewing
+and forking on that platform).
+
+Copies of the game obtained through an authorised channel (for example
+Steam) may be used under the terms of that channel's end-user licence
+agreement.
+
+Requests for permission can be sent to the copyright holder through the
+repository: https://github.com/NAG473-s/Spare-Change-for-Spirits
+
+
+THIRD-PARTY COMPONENTS
+
+Some parts are not owned by the copyright holder. They remain under their
+own licences, which apply only to those parts:
+
+- Inter typeface (assets/fonts/Inter-*.otf)
+  SIL Open Font License 1.1 - see assets/fonts/Inter-LICENSE.txt
+
+- Noto Sans typefaces (assets/fonts/NotoSans*-subset.*), and Noto Serif,
+  on which the lettering of the logo is based
+  SIL Open Font License 1.1 - see assets/fonts/Noto-LICENSE.txt and
+  art/steam/Noto-LICENSE.txt
+
+- The Bevy game engine and the other Rust libraries compiled into the game
+  (listed in Cargo.lock) - their own licences, mostly MIT and/or
+  Apache-2.0
+
+All sounds and music are synthesised by tools/make_sounds.py and belong to
+this project.
+
+
+TRADEMARKS
+
+"Spare Change for Spirits", its logo and its characters may not be used
+without permission, including in a way that suggests endorsement.
+
+
+DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW.

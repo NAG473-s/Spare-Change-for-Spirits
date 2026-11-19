@@ -68,6 +68,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           Copy-Item target/release/spare_change_for_spirits.exe "$out/SpareChangeForSpirits.exe"
           Copy-Item -Recurse assets "$out/assets"
+          Copy-Item LICENSE "$out/LICENSE.txt"
+          Copy-Item THIRD_PARTY_LICENSES.txt "$out/THIRD_PARTY_LICENSES.txt"
           Get-ChildItem -Recurse -Filter .gitkeep $out | Remove-Item
 
       - uses: actions/upload-artifact@v7
