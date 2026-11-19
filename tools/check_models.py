@@ -129,6 +129,12 @@ def check(path, target, budget):
         problems.append(f"{tris} triangles (budget {budget})")
     if not gltf.get("materials"):
         problems.append("no materials")
+    scenes = gltf.get("scenes", [])
+    if len(scenes) != 1 or gltf.get("scene", 0) != 0 or not scenes[0].get("nodes"):
+        problems.append(
+            f"{len(scenes)} scenes (default {gltf.get('scene', 0)}); the game needs exactly one "
+            "– run tools/fix_models.py"
+        )
     return line, problems
 
 

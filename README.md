@@ -156,11 +156,14 @@ exists, the game shows a coloured box of the size given in `assets/data/decor.ro
 | Products (stand on shelves) | `assets/models/products/<id>.glb` |
 | Counter, door, walls | `assets/models/shop/counter.glb`, `door.glb`, `room.glb` (optional) |
 
-Check models (size, origin, triangles, missing files) with:
+Check models (size, origin, triangles, scenes, missing files) with:
 
 ```bash
 python3 tools/check_models.py
 ```
+
+A model exported from a Blender file with several scenes contains extra empty scenes that Bevy
+cannot load; `python3 tools/fix_models.py` removes them in place.
 
 Tested with Blender 5.3 (any recent version with the bundled glTF exporter works).
 

@@ -12,6 +12,10 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 - **Format:** glTF binary, one `.glb` file per model, file name = the id in the tables below.
   Export with *+Y Up* (Blender's default glTF export), materials included, no cameras, no lights,
   no animations.
+- **Exactly one scene per file.** If several models live in one Blender file, export each with
+  *Include → Limit to → Selected Objects* **and** *Active Scene* (or keep one Blender file per
+  model). Files with extra, empty scenes do not load in the game; `python3 tools/fix_models.py`
+  repairs them.
 - **Scale:** 1 Blender unit = 1 metre. Keep each model inside the size given in its table row
   (width × height × depth). The game does not rescale models.
 - **Origin:** at the **bottom centre** of the model (the point that stands on the floor).
