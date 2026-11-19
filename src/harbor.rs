@@ -81,6 +81,7 @@ pub const HARBOR: Vec3 = Vec3::new(-80.0, 0.0, 0.0);
 pub const WATER_Y: f32 = -0.12;
 /// Front edge of the quay (local z): water from here towards the camera.
 const QUAY_EDGE: f32 = -0.7;
+const QUAY_PAVING: &str = "sprites/harbor/quay_stone.png";
 /// The hand cart on the quay, where bought crates are stacked (local).
 pub const CART: Vec3 = Vec3::new(-2.3, 0.0, -2.3);
 pub const CART_BED_HEIGHT: f32 = 0.42;
@@ -294,6 +295,24 @@ fn spawn_harbor(
         Color::srgb(0.2, 0.2, 0.23),
         Transform::from_xyz(1.0, -0.35, QUAY_EDGE - quay_depth / 2.0),
     );
+    if asset_exists(QUAY_PAVING) {
+        let top = kit
+            .meshes
+            .add(Plane3d::default().mesh().size(30.0, quay_depth));
+        let stone = kit.materials.add(StandardMaterial {
+            base_color_texture: Some(kit.asset_server.load(QUAY_PAVING)),
+            perceptual_roughness: 0.76,
+            ..default()
+        });
+        kit.commands.spawn((
+            Mesh3d(top),
+            MeshMaterial3d(stone),
+            Transform::from_translation(
+                HARBOR + Vec3::new(1.0, 0.002, QUAY_EDGE - quay_depth / 2.0),
+            ),
+            Pickable::IGNORE,
+        ));
+    }
     for i in 0..36 {
         let x = -7.2 + i as f32 * 0.42;
         let tilt = rng.range(-0.03, 0.03);
