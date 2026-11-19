@@ -13,7 +13,7 @@ use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
 
 use crate::data::asset_exists;
-use crate::harbor::{HARBOR, RippleMesh, WATER_Y, spawn_ripple};
+use crate::harbor::{HARBOR, RippleMesh, WATER_Y, spawn_ripple, swell};
 use crate::rng::Rng;
 
 pub struct CrittersPlugin;
@@ -497,7 +497,9 @@ fn jump_fish(
         f.age += dt / 0.8;
         let k = f.age.min(1.0);
         let arc = 4.0 * k * (1.0 - k) * 0.45;
-        transform.translation = f.from.lerp(f.to, k) + Vec3::Y * arc;
+        let surface = f.from.lerp(f.to, k);
+        transform.translation =
+            surface + Vec3::Y * (arc + swell(surface.xz(), time.elapsed_secs()).0);
         let dir = (f.to - f.from).normalize_or_zero();
         // Nose up on the way out, down on the way back in.
         let pitch = (1.0 - 2.0 * k) * 0.9;
