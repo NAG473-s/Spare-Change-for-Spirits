@@ -34,8 +34,8 @@ Checkboxes are ticked in the commit that finishes them.
 - [x] UI scales with the window; fullscreen/windowed; music and effect volume; saved in settings
 - [x] Bankruptcy rule: what happens when the drawer cannot pay for a single crate (the ferryman
       lends `ferryman_loan` in `config.ron` and takes it back with a surcharge at dawn)
-- [ ] Simulation that plays all nights with simple strategies and prints money, reputation and
-      sales per night – the basis for balancing
+- [x] Simulation that plays all nights with simple strategies and prints money, reputation and
+      sales per night – the basis for balancing (`cargo run --release -- --simulate [runs]`)
 - [ ] First balancing pass in `assets/data/*.ron`
 - [ ] Windows build run and the `.exe` played on a real Windows PC (assets, fonts, saves, sound)
 - [ ] Ledger frame (`assets/sprites/ui/ledger_frame.png`) used for the morning accounts

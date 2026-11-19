@@ -31,6 +31,7 @@ mod save;
 mod scene;
 mod shop;
 mod sign;
+mod sim;
 mod title;
 mod tooltip;
 mod ui;
@@ -43,6 +44,13 @@ use economy::Drawer;
 
 fn main() {
     let data = GameData::load();
+    // `--simulate [runs]`: the balancing simulation, without a window.
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(i) = args.iter().position(|a| a == "--simulate") {
+        let runs = args.get(i + 1).and_then(|r| r.parse().ok()).unwrap_or(500);
+        sim::run(&data, runs);
+        return;
+    }
     // The saved language, else the system's, else English.
     let code = save::Settings::load()
         .language

@@ -24,6 +24,13 @@ cargo test
 
 tests the game logic and loads every data file.
 
+Balancing simulation (no window; plays every night many times with simple strategies and prints
+money, reputation, sales, missed wishes, fled and unhappy ghosts per night):
+
+```bash
+BEVY_ASSET_ROOT=. cargo run --release -- --simulate 500
+```
+
 The game starts on the title screen: its own painted background with flickering lamp light,
 drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit). Settings (main menu and pause menu): tips, sound, music and effect volume, interface size
