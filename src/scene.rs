@@ -33,7 +33,7 @@ pub const WALL_HEIGHT: f32 = 3.4;
 const FLOOR_MAX: Vec2 = Vec2::new(14.0, 12.0);
 const FLOOR_TEXTURE: &str = "sprites/shop/floor.png";
 /// The floor outside the grid is a little darker than the grid tiles.
-const FLOOR_TINT: f32 = 0.62;
+const FLOOR_TINT: f32 = 0.76;
 /// The walls continue above the room model up to here, and the left wall
 /// towards the camera to `FLOOR_MAX.y`, so the walls fill the top and the
 /// left edge of the picture.
