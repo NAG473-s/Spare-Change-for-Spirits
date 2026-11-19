@@ -78,6 +78,7 @@ const PERCH_SPOT: Vec3 = Vec3::new(1.1, 0.0, -0.05);
 /// The misty sky of a market day, and the night sky it replaces.
 const DAY_SKY: Color = Color::srgb(0.5, 0.56, 0.64);
 const NIGHT_SKY: Color = Color::srgb(0.04, 0.04, 0.07);
+const SQUARE_PAVING: &str = "sprites/market/square.png";
 const COBBLES: &str = "sprites/market/cobbles.png";
 
 /// What happened at the market today.
@@ -241,7 +242,14 @@ fn spawn_market(
     let root = k.node(None, Transform::from_translation(MARKET));
 
     // Cobbled square: a painted texture or plain grey stone.
-    let cobbles = asset_exists(COBBLES).then(|| repeating(k.asset_server, COBBLES, true));
+    let (cobbles, repeat) = if asset_exists(SQUARE_PAVING) {
+        (Some(k.asset_server.load(SQUARE_PAVING)), Vec2::ONE)
+    } else {
+        (
+            asset_exists(COBBLES).then(|| repeating(k.asset_server, COBBLES, true)),
+            Vec2::new(8.0, 5.0),
+        )
+    };
     let ground = k.meshes.add(Plane3d::default().mesh().size(32.0, 20.0));
     let ground_mat = k.materials.add(StandardMaterial {
         base_color: if cobbles.is_some() {
@@ -250,7 +258,7 @@ fn spawn_market(
             Color::srgb(0.36, 0.34, 0.33)
         },
         base_color_texture: cobbles,
-        uv_transform: bevy::math::Affine2::from_scale(Vec2::new(8.0, 5.0)),
+        uv_transform: bevy::math::Affine2::from_scale(repeat),
         perceptual_roughness: 0.9,
         ..default()
     });
