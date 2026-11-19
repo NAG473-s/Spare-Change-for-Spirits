@@ -8,6 +8,7 @@ use crate::day_cycle::Phase;
 use crate::fx::{Cue, Voice};
 use crate::rng::Rng;
 use crate::save::Settings;
+use crate::title::Opening;
 
 const MUSIC_FADE_SECS: f32 = 2.0;
 /// Seconds between two ghost "wooos" or hums, so several ghosts never
@@ -142,10 +143,11 @@ fn choose_music(
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
     sounds: Res<Sounds>,
+    opening: Option<Res<Opening>>,
     mut current: ResMut<CurrentMusic>,
     mut playing: Query<&mut Music>,
 ) {
-    let wanted = settings.sound.then(|| match phase.get() {
+    let wanted = (settings.sound && opening.is_none()).then(|| match phase.get() {
         Phase::Night => Track::Night,
         _ => Track::Evening,
     });
