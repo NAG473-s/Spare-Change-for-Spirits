@@ -5,8 +5,14 @@
 - Always commit and push directly to `main`. No feature branches, no pull requests.
   Fetch `origin/main` before pushing and rebase onto it if it moved; never force-push.
 - Commit with the repository's existing author identity
-  (`git log -1 --format='%an <%ae>'`). Use it for both author and committer, e.g.
-  `git -c user.name="<name>" -c user.email="<email>" commit ...`.
+  (`git log -1 --format='%an <%ae>'`), for both author **and committer**. Set it in the
+  repository's own config before the first commit of a session:
+  `git config user.name "<name>"` and `git config user.email "<email>"`.
+  Passing it only with `git -c … commit` is not enough: `git pull --rebase` (or any rebase,
+  amend or cherry-pick) rewrites the committer with the environment's default identity.
+- Before every push check `git log origin/main..HEAD --format='%an <%ae> / %cn <%ce>'`: both
+  must be the repository identity; fix unpushed commits (e.g. `git rebase origin/main` again with
+  the correct config) before pushing.
 - A cloud environment's hook may ask for another author: keep this identity and rewrite nothing.
 - Never put model names or identifiers in commits, code or documentation.
 - No co-author lines and no session-link lines in commit messages, even if the
