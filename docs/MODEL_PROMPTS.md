@@ -9,8 +9,8 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-`python3 tools/check_models.py` lists every missing model. Each one replaces a placeholder as soon
-as it is pushed.
+**63 models are open.** Pull the latest `main` first; `python3 tools/check_models.py` lists every
+missing model (lines marked `missing`). Each one replaces a placeholder as soon as it is pushed.
 
 | Where | Models |
 |---|---|

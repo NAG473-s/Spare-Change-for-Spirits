@@ -25,7 +25,11 @@ python3 tools/check_models.py
 | What | Prompts |
 |---|---|
 | Painted water and lamp glow for the harbour, cobblestones for the market | [Water and light](#water-and-light--canvas-1024--1024) |
-| 43 new 3D models (containers, houses, props, animals) | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
+| Icons for the 5 new pieces of furniture | [Icons](#icons--canvas-1024--1024) |
+| 63 new 3D models (containers, houses, props, animals, new furniture, the market) | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
+
+Check what is really missing on the latest `main` (pull first) with
+`python3 tools/check_models.py`: every line marked `missing` or `no icon` is still open.
 
 ## Workflow
 
@@ -164,7 +168,17 @@ keep the silhouette simple and bold. Prepare with kind `product` or `decor` (bot
 `assets/sprites/products/<id>.png` and `assets/sprites/decor/<id>.png`. A button without an icon
 just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
 
-**All done.** Every product and piece of furniture has an icon; the furniture and keepsake icons
+**Missing – new furniture:**
+
+| File id | Prompt |
+|---|---|
+| `small_shelf` | A small, simple wooden shelf on short legs with one board, slightly crooked. |
+| `display_table` | A low shop display table with turned legs and a dark green cloth on top. |
+| `tall_bookcase` | A tall, narrow dark wooden bookcase with a carved crown and three boards. |
+| `glass_cabinet` | An elegant glass display cabinet with a brass frame and glass doors. |
+| `folding_screen` | A three-panel folding screen with dusty-rose silk panels painted with moths and moons. |
+
+**Done:** every product and the other furniture have icons; the furniture and keepsake icons
 `shelf`, `candle`, `mirror`, `incense`, `rug`, `grandfather_clock`, `umbrella`, `teacup`,
 `blanket`, `wedding_photo` and `pocket_lantern` come from the old 2D version. Prompts for redoing
 the later ones:
