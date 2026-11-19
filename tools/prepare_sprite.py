@@ -7,8 +7,14 @@ and writes it to the right file under assets/sprites/.
 
     python3 tools/prepare_sprite.py INPUT KIND [ID] [--remove-bg] [--colors N]
 
-KIND is one of: ghost, decor, product, door, counter, floor, background.
-ID is the id from the RON data files (needed for ghost, decor, product).
+KIND is one of: ghost, ghost_sheet, decor, product, door, counter, floor,
+background. ID is the id from the RON data files (needed for ghost,
+ghost_sheet, decor, product).
+
+ghost_sheet turns an animation drawn as a grid (default 2×2 on a 1024 × 1536
+canvas, frames read row by row) into assets/sprites/ghosts/<id>_sheet.png:
+all frames are trimmed with the same box, so the ghost does not jitter, and
+placed side by side.
 """
 
 import argparse
@@ -25,6 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # frame (floor, background); all others are padded and keep their shape.
 KINDS = {
     "ghost": (176, 264, "ghosts", False),
+    "ghost_sheet": (176, 264, "ghosts", False),  # size of one frame
     "decor": (208, 208, "decor", False),
     "product": (96, 96, "products", False),
     "door": (256, 384, "shop", False),
@@ -71,6 +78,26 @@ def cover(img: Image.Image, width: int, height: int) -> Image.Image:
     return img.crop((left, top, left + width, top + height))
 
 
+def split_grid(img: Image.Image, cols: int, rows: int) -> list:
+    w, h = img.width // cols, img.height // rows
+    return [img.crop((c * w, r * h, (c + 1) * w, (r + 1) * h)) for r in range(rows) for c in range(cols)]
+
+
+def sheet(frames: list, width: int, height: int, remove_bg: bool, threshold: int) -> Image.Image:
+    if remove_bg:
+        frames = [remove_background(f, threshold) for f in frames]
+    # One common box for all frames keeps the ghost in place between frames.
+    boxes = [f.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox() for f in frames]
+    boxes = [b for b in boxes if b]
+    if boxes:
+        box = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
+        frames = [f.crop(box) for f in frames]
+    out = Image.new("RGBA", (width * len(frames), height), (0, 0, 0, 0))
+    for i, f in enumerate(frames):
+        out.paste(fit(f, width, height), (i * width, 0))
+    return out
+
+
 def reduce_colors(img: Image.Image, colors: int) -> Image.Image:
     alpha = img.getchannel("A")
     rgb = img.convert("RGB").quantize(colors=colors, method=Image.Quantize.MEDIANCUT)
@@ -88,6 +115,7 @@ def main() -> int:
     parser.add_argument("--threshold", type=int, default=40, help="colour tolerance for --remove-bg")
     parser.add_argument("--colors", type=int, help="reduce to this many colours")
     parser.add_argument("--out", type=Path, help="write here instead of assets/sprites/...")
+    parser.add_argument("--grid", default="2x2", help="ghost_sheet: COLSxROWS of the frame grid (default 2x2)")
     args = parser.parse_args()
 
     width, height, folder, is_cover = KINDS[args.kind]
@@ -99,7 +127,11 @@ def main() -> int:
         parser.error(f"{args.kind} needs an id, e.g. 'shy' or 'candle'")
 
     img = Image.open(args.input).convert("RGBA")
-    if is_cover:
+    if args.kind == "ghost_sheet":
+        cols, rows = (int(v) for v in args.grid.lower().split("x"))
+        img = sheet(split_grid(img, cols, rows), width, height, args.remove_bg, args.threshold)
+        width *= cols * rows
+    elif is_cover:
         img = cover(img, width, height)
     else:
         if args.remove_bg:
@@ -108,7 +140,8 @@ def main() -> int:
     if args.colors:
         img = reduce_colors(img, args.colors)
 
-    out = args.out or ROOT / "assets" / "sprites" / folder / f"{name}.png"
+    suffix = "_sheet" if args.kind == "ghost_sheet" else ""
+    out = args.out or ROOT / "assets" / "sprites" / folder / f"{name}{suffix}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     img.save(out, optimize=True)
     print(f"wrote {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} ({width}x{height})")

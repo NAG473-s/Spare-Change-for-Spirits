@@ -23,6 +23,7 @@ python3 tools/check_models.py
 | What | Prompts |
 |---|---|
 | Sprites for the four new ghosts: `cat`, `sailor`, `knight`, `bride` | [Ghosts](#ghosts--canvas-1024--1536-portrait) |
+| *(optional)* Animation sheets for the ghosts | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
 
 ## Workflow
 
@@ -93,6 +94,36 @@ In the game they are about 1.35 m tall and face the camera.
 | `forgetful` | A forgetful old ghost, faded beige glow, puzzled expression, a knot tied in a wispy finger, spectacles pushed up on its forehead. |
 | `child` | A small child ghost, mint green glow, round and bouncy, missing front tooth grin, holding a paper pinwheel. |
 | `edwin` | Edwin, an elderly gentleman ghost, warm pale-yellow glow, kind tired eyes, neat moustache, flat cap and a long coat, holding his hat to his chest. |
+
+## Ghost animation sheets (optional) – canvas 1024 × 1536
+
+The game already animates every ghost (bobbing, breathing, swaying, leaning into its movement,
+trembling when worried, stretching as it passes into the light). A sheet adds a hand-drawn idle
+loop on top: if `assets/sprites/ghosts/<id>_sheet.png` exists, it replaces `<id>.png` and plays
+at 8 frames per second.
+
+Ask for a **2 × 2 grid** on one 1024 × 1536 canvas – four frames, read left to right, top to
+bottom – with the existing sprite attached as reference:
+
+```
+Four frames of a looping idle animation of this ghost, arranged as a 2 x 2
+grid on one 1024 x 1536 canvas, frames read left to right, top to bottom.
+The ghost is exactly the same size, shape, colours and position in every
+frame; only small changes: frame 1 neutral, frame 2 the wispy tail curls to
+the left and the eyes half close (blink), frame 3 neutral with the tail
+straight, frame 4 the tail curls to the right. Same style as the reference,
+no grid lines, no text, transparent background, PNG.
+```
+
+Prepare it (trims all frames with the same box so the ghost does not jitter, writes
+`assets/sprites/ghosts/<id>_sheet.png`):
+
+```bash
+python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 48
+```
+
+`--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
+`Add <id> sheet [skip ci]`.
 
 ## Products (done)
 

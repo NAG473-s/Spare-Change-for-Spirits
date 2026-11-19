@@ -47,6 +47,8 @@ impl Plugin for GhostPlugin {
                     ghost_ai,
                     move_ghosts,
                     fade_ghosts,
+                    animate_ghosts,
+                    play_sheets,
                 )
                     .chain()
                     .run_if(in_state(Phase::Night)),
@@ -83,6 +85,12 @@ pub struct Ghost {
     pub max_patience: f32,
     /// Height gained while passing into the light.
     lift: f32,
+    /// Current floating velocity (x, z), for leaning and facing.
+    vel: Vec2,
+    /// Smoothed facing: 1 = as drawn, -1 = mirrored.
+    facing: f32,
+    /// Seconds since the ghost appeared.
+    age: f32,
     /// Story chapter this visit belongs to (story ghost only).
     pub chapter: Option<usize>,
     /// Shelf cell the ghost browses, if any.
@@ -249,10 +257,18 @@ fn spawn_ghost(
     };
 
     let start = layout.door_pos();
+    // An animated sprite sheet wins over the single picture.
+    let sheet_path = format!("sprites/ghosts/{}_sheet.png", def.id);
+    let sheet = sheet_frames(&sheet_path);
+    let image = if sheet.is_some() {
+        sheet_path
+    } else {
+        format!("sprites/ghosts/{}.png", def.id)
+    };
     let material = billboard_material(
         materials,
         asset_server,
-        &format!("sprites/ghosts/{}.png", def.id),
+        &image,
         rgb(def.color).with_alpha(0.75),
     );
     let ghost = commands
@@ -268,19 +284,39 @@ fn spawn_ghost(
                 patience: def.patience_secs,
                 max_patience: def.patience_secs,
                 lift: 0.0,
+                vel: Vec2::ZERO,
+                facing: 1.0,
+                age: 0.0,
                 chapter: visit.chapter,
                 browse_cell,
                 bob_offset: rng.range(0.0, std::f32::consts::TAU),
             },
-            Mesh3d(billboard_mesh(meshes, GHOST_SIZE)),
-            MeshMaterial3d(material),
             Billboard,
-            NotShadowCaster,
-            Pickable::IGNORE,
             Transform::from_translation(floor(start, HOVER)),
+            Visibility::default(),
             DespawnOnExit(Phase::Night),
         ))
         .id();
+    // The visible body is a child, so it can sway and squash while the
+    // parent keeps facing the camera.
+    let body = commands
+        .spawn((
+            GhostBody,
+            Mesh3d(billboard_mesh(meshes, GHOST_SIZE)),
+            MeshMaterial3d(material),
+            NotShadowCaster,
+            Pickable::IGNORE,
+            Transform::default(),
+        ))
+        .id();
+    if let Some(frames) = sheet {
+        commands.entity(body).insert(SheetAnim {
+            frames,
+            fps: SHEET_FPS,
+            shown: u32::MAX,
+        });
+    }
+    commands.entity(ghost).add_child(body);
     commands.spawn(world_label(
         font,
         lang.ghost(&def.id),
@@ -445,24 +481,146 @@ fn ghost_ai(
     }
 }
 
+/// The visible part of a ghost (child of the entity with [`Ghost`]).
+#[derive(Component)]
+pub struct GhostBody;
+
+/// A ghost sprite sheet: frames side by side, played as a loop.
+#[derive(Component)]
+struct SheetAnim {
+    frames: u32,
+    fps: f32,
+    /// Frame currently set on the material.
+    shown: u32,
+}
+
+const SHEET_FPS: f32 = 8.0;
+
+/// Number of frames in a sheet: frames are 2:3 like the single sprites and
+/// placed side by side, so the count follows from the image size.
+fn sheet_frames(path: &str) -> Option<u32> {
+    let file = crate::data::assets_dir().join(path);
+    let (w, h) = png_size(&std::fs::read(file).ok()?)?;
+    let frames = (w as f32 / (h as f32 * GHOST_SIZE.x / GHOST_SIZE.y)).round() as u32;
+    (frames >= 2).then_some(frames)
+}
+
+/// Width and height from a PNG header.
+fn png_size(bytes: &[u8]) -> Option<(u32, u32)> {
+    if bytes.len() < 24 || &bytes[..8] != b"\x89PNG\r\n\x1a\n" {
+        return None;
+    }
+    let w = u32::from_be_bytes(bytes[16..20].try_into().ok()?);
+    let h = u32::from_be_bytes(bytes[20..24].try_into().ok()?);
+    Some((w, h))
+}
+
 fn move_ghosts(time: Res<Time>, mut ghosts: Query<(&mut Ghost, &mut Transform)>) {
     let dt = time.delta_secs();
     let t = time.elapsed_secs();
     for (mut g, mut transform) in &mut ghosts {
         let pos = g.pos;
         g.pos = pos.move_towards(g.target, SPEED * dt);
+        g.vel = if dt > 0.0 {
+            (g.pos - pos) / dt
+        } else {
+            Vec2::ZERO
+        };
+        g.age += dt;
         let bob = (t * 2.2 + g.bob_offset).sin() * 0.06;
         transform.translation = floor(g.pos, HOVER + g.lift + bob);
+    }
+}
+
+/// Makes the body alive: breathing, swaying, leaning into the movement,
+/// turning towards where it floats, trembling when impatient, popping in
+/// on arrival and stretching while passing into the light.
+fn animate_ghosts(
+    time: Res<Time>,
+    mut ghosts: Query<&mut Ghost>,
+    mut bodies: Query<(&ChildOf, &mut Transform), With<GhostBody>>,
+) {
+    let dt = time.delta_secs();
+    let t = time.elapsed_secs();
+    for (child_of, mut body) in &mut bodies {
+        let Ok(mut g) = ghosts.get_mut(child_of.parent()) else {
+            continue;
+        };
+        // Turn towards the direction of travel; the smoothed flip reads as a squash.
+        let wanted = if g.vel.x < -0.05 {
+            -1.0
+        } else if g.vel.x > 0.05 {
+            1.0
+        } else {
+            g.facing
+        };
+        let turn = (wanted - g.facing).clamp(-dt * 6.0, dt * 6.0);
+        g.facing += turn;
+
+        let phase = g.bob_offset;
+        let breathe = (t * 1.6 + phase).sin() * 0.04;
+        let mut roll = (t * 1.1 + phase).sin() * 0.05 - (g.vel.x * 0.12).clamp(-0.2, 0.2);
+        if g.state == GhostState::Waiting {
+            let worry = 1.0 - (g.patience / g.max_patience).clamp(0.0, 1.0);
+            if worry > 0.65 {
+                roll += (t * 25.0).sin() * 0.06 * (worry - 0.65) / 0.35;
+            }
+        }
+        // Pop in when appearing (ease-out from 60 % size).
+        let appear = (g.age / 0.4).clamp(0.0, 1.0);
+        let pop = 0.6 + 0.4 * (1.0 - (1.0 - appear).powi(3));
+        let (stretch, spin) = if g.state == GhostState::Ascending {
+            (1.0 + g.timer * 0.35, g.timer * 5.0)
+        } else {
+            (1.0, 0.0)
+        };
+        let flip = g.facing.signum() * g.facing.abs().max(0.15);
+        body.rotation = Quat::from_rotation_y(spin) * Quat::from_rotation_z(roll);
+        body.scale = Vec3::new(
+            pop * (1.0 - breathe * 0.75) / stretch.sqrt() * flip,
+            pop * (1.0 + breathe) * stretch,
+            1.0,
+        );
+    }
+}
+
+/// Steps through the frames of animated sprite sheets.
+fn play_sheets(
+    time: Res<Time>,
+    mut sheets: Query<(&mut SheetAnim, &MeshMaterial3d<StandardMaterial>, &ChildOf)>,
+    ghosts: Query<&Ghost>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let t = time.elapsed_secs();
+    for (mut anim, handle, child_of) in &mut sheets {
+        let offset = ghosts.get(child_of.parent()).map_or(0.0, |g| g.bob_offset);
+        let frame = ((t + offset) * anim.fps) as u32 % anim.frames;
+        if frame == anim.shown {
+            continue;
+        }
+        anim.shown = frame;
+        if let Some(mut material) = materials.get_mut(&handle.0) {
+            let n = anim.frames as f32;
+            material.uv_transform = bevy::math::Affine2::from_scale_angle_translation(
+                Vec2::new(1.0 / n, 1.0),
+                0.0,
+                Vec2::new(frame as f32 / n, 0.0),
+            );
+        }
     }
 }
 
 /// Impatient ghosts grow paler; ascending ones glow and dissolve.
 fn fade_ghosts(
     data: Res<GameData>,
-    ghosts: Query<(&Ghost, &MeshMaterial3d<StandardMaterial>)>,
+    bodies: Query<(&ChildOf, &MeshMaterial3d<StandardMaterial>), With<GhostBody>>,
+    ghosts: Query<&Ghost>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (g, handle) in &ghosts {
+    for (child_of, handle) in &bodies {
+        let Ok(g) = ghosts.get(child_of.parent()) else {
+            continue;
+        };
         let Some(mut material) = materials.get_mut(&handle.0) else {
             continue;
         };
@@ -485,5 +643,19 @@ fn fade_ghosts(
         if material.base_color != new {
             material.base_color = new;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reads_png_size() {
+        let mut header = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
+        header.extend_from_slice(&704u32.to_be_bytes());
+        header.extend_from_slice(&264u32.to_be_bytes());
+        assert_eq!(png_size(&header), Some((704, 264)));
+        assert_eq!(png_size(b"not a png at all, sorry"), None);
     }
 }

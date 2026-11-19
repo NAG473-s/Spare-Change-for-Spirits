@@ -168,7 +168,8 @@ cannot load; `python3 tools/fix_models.py` removes them in place.
 Tested with Blender 5.3 (any recent version with the bundled glTF exporter works).
 
 **Images** ([docs/ART_PROMPTS.md](docs/ART_PROMPTS.md), prepared with `tools/prepare_sprite.py`):
-ghosts (`assets/sprites/ghosts/<id>.png`) are always sprites; product pictures
+ghosts (`assets/sprites/ghosts/<id>.png`) are always sprites, animated by the game; an optional
+sheet `<id>_sheet.png` (frames side by side) replaces the single image and plays as a loop; product pictures
 (`assets/sprites/products/<id>.png`) are shown on shelves while a product has no model; the floor
 texture is `assets/sprites/shop/floor.png`.
 
@@ -194,5 +195,5 @@ Gameplay triggers sounds and effects through the `Cue` message.
 - [x] Main menu, pause, save games, first-night tips
 - [x] Sound: shop bell, coins, chime, music box, night ambience
 - [x] Particles when passing into the light, candle glow, night shade
-- [ ] Ghost animations (sprite sheets)
+- [x] Ghost animations (procedural, plus optional hand-drawn sprite sheets)
 - [x] Localisation into the 31 Steam languages
