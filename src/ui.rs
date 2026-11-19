@@ -161,7 +161,7 @@ pub enum Action {
     ToggleChangeHint,
     OpenLanguages,
     CloseLanguages,
-    SetLanguage(String),
+    SetLanguage(Option<String>),
 }
 
 #[derive(Component, Clone)]
