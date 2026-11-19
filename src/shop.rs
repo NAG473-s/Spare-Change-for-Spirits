@@ -41,6 +41,7 @@ impl Plugin for ShopPlugin {
         app.init_resource::<Tool>()
             .init_resource::<Storeroom>()
             .init_resource::<HoveredShelfItem>()
+            .init_resource::<Dragging>()
             .add_systems(Startup, spawn_shop)
             .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| {
                 *t = Tool::None
@@ -49,6 +50,7 @@ impl Plugin for ShopPlugin {
                 Update,
                 (
                     select_tool.run_if(in_state(Phase::Evening)),
+                    follow_drag,
                     sync_cell_visuals.run_if(
                         resource_changed::<ShopLayout>
                             .or_else(resource_changed::<Stock>)
@@ -227,6 +229,166 @@ pub enum Tool {
 #[derive(Component)]
 pub struct GridCell(pub usize);
 
+/// A piece of furniture being dragged to another cell (evening, no tool
+/// picked): where it comes from and the cell under the pointer.
+#[derive(Resource, Default)]
+struct Dragging {
+    from: Option<usize>,
+    over: Option<usize>,
+}
+
+/// Marks the target cell while dragging.
+#[derive(Component)]
+struct DragMarker;
+
+/// Where a dragged piece's parts sat before the drag.
+#[derive(Component)]
+struct DragBase(Vec3);
+
+/// How high a dragged piece floats above the floor.
+const DRAG_LIFT: f32 = 0.15;
+const DRAG_OK: Color = Color::srgba(0.45, 0.85, 0.5, 0.35);
+const DRAG_BLOCKED: Color = Color::srgba(0.95, 0.4, 0.35, 0.35);
+
+/// Grab a piece of furniture: it lifts and follows the pointer cell by cell.
+#[allow(clippy::too_many_arguments)]
+fn on_drag_start(
+    drag: On<PointerDragStart>,
+    mut commands: Commands,
+    phase: Res<State<Phase>>,
+    tool: Res<Tool>,
+    layout: Res<ShopLayout>,
+    cells: Query<&GridCell>,
+    children: Query<&Children>,
+    transforms: Query<&Transform>,
+    mut dragging: ResMut<Dragging>,
+) {
+    if *phase.get() != Phase::Evening
+        || *tool != Tool::None
+        || drag.button != PointerButton::Primary
+    {
+        return;
+    }
+    let Ok(GridCell(idx)) = cells.get(drag.event_target()) else {
+        return;
+    };
+    if layout.cells[*idx].decor.is_none() {
+        return;
+    }
+    dragging.from = Some(*idx);
+    dragging.over = Some(*idx);
+    // The dragged parts must not catch the pointer, or the cell under them
+    // would never be found.
+    if let Ok(parts) = children.get(drag.event_target()) {
+        for part in parts.iter() {
+            if let Ok(t) = transforms.get(part) {
+                commands.entity(part).insert(DragBase(t.translation));
+            }
+        }
+    }
+    for part in children.iter_descendants(drag.event_target()) {
+        commands.entity(part).insert(Pickable::IGNORE);
+    }
+}
+
+fn on_drag_over(
+    over: On<PointerDragOver>,
+    cells: Query<&GridCell>,
+    mut dragging: ResMut<Dragging>,
+) {
+    if dragging.from.is_some()
+        && let Ok(GridCell(idx)) = cells.get(over.event_target())
+    {
+        dragging.over = Some(*idx);
+    }
+}
+
+/// Let go: move the piece (with its wares) to the cell, or swap it with the
+/// piece standing there. Old junk blocks the cell.
+#[allow(clippy::too_many_arguments)]
+fn on_drag_end(
+    _end: On<PointerDragEnd>,
+    mut commands: Commands,
+    data: Res<GameData>,
+    upgrades: Res<Upgrades>,
+    lang: Res<Lang>,
+    markers: Query<Entity, With<DragMarker>>,
+    mut layout: ResMut<ShopLayout>,
+    mut dragging: ResMut<Dragging>,
+    mut log: ResMut<GameLog>,
+) {
+    let Some(from) = dragging.from.take() else {
+        return;
+    };
+    let over = dragging.over.take();
+    for marker in &markers {
+        commands.entity(marker).despawn();
+    }
+    match over {
+        Some(to) if to != from && upgrades.usable(&data, &layout, to) => {
+            layout.cells.swap(from, to);
+        }
+        Some(to) if to != from => {
+            log.push(lang.t("log.cell_blocked"));
+            layout.set_changed();
+        }
+        // Back where it was: rebuild, so it sits down again.
+        _ => layout.set_changed(),
+    }
+}
+
+/// The dragged piece hovers over the cell under the pointer, which is
+/// marked green (free or swappable) or red (old junk).
+#[allow(clippy::too_many_arguments)]
+fn follow_drag(
+    mut commands: Commands,
+    dragging: Res<Dragging>,
+    layout: Res<ShopLayout>,
+    data: Res<GameData>,
+    upgrades: Res<Upgrades>,
+    mut parts: Query<(&DragBase, &mut Transform), Without<DragMarker>>,
+    mut markers: Query<(&mut Transform, &MeshMaterial3d<StandardMaterial>), With<DragMarker>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let (Some(from), Some(over)) = (dragging.from, dragging.over) else {
+        return;
+    };
+    let shift = layout.cell_pos(over) - layout.cell_pos(from);
+    for (base, mut transform) in &mut parts {
+        transform.translation = base.0 + Vec3::new(shift.x, DRAG_LIFT, shift.y);
+    }
+    let color = if upgrades.usable(&data, &layout, over) {
+        DRAG_OK
+    } else {
+        DRAG_BLOCKED
+    };
+    let at = floor(layout.cell_pos(over), 0.02);
+    match markers.single_mut() {
+        Ok((mut transform, material)) => {
+            transform.translation = at;
+            if let Some(mut m) = materials.get_mut(&material.0) {
+                m.base_color = color;
+            }
+        }
+        Err(_) => {
+            commands.spawn((
+                DragMarker,
+                Mesh3d(meshes.add(Plane3d::default().mesh().size(CELL * 0.95, CELL * 0.95))),
+                MeshMaterial3d(materials.add(StandardMaterial {
+                    base_color: color,
+                    alpha_mode: AlphaMode::Blend,
+                    unlit: true,
+                    ..default()
+                })),
+                Transform::from_translation(at),
+                Pickable::IGNORE,
+                NotShadowCaster,
+            ));
+        }
+    }
+}
+
 /// Model if `assets/<path>` exists, otherwise a placeholder box; either way
 /// standing on its origin.
 pub(crate) fn model_or_box(
@@ -305,7 +467,10 @@ fn spawn_shop(
                 Transform::from_translation(floor(layout.cell_pos(idx), 0.0)),
                 Pickable::default(),
             ))
-            .observe(on_cell_click);
+            .observe(on_cell_click)
+            .observe(on_drag_start)
+            .observe(on_drag_over)
+            .observe(on_drag_end);
     }
 
     // The door stands in the left wall, its front facing into the shop (+x).
@@ -646,6 +811,24 @@ fn sync_cell_visuals(
             rgb(def.color),
         );
         let mut children = vec![visual];
+        // Models from files cannot be hit by the pointer (their meshes live
+        // on the graphics card only), so an invisible box of the furniture's
+        // size catches it – for grabbing and moving it.
+        children.push(
+            commands
+                .spawn((
+                    Mesh3d(meshes.add(Cuboid::from_size(size))),
+                    MeshMaterial3d(materials.add(StandardMaterial {
+                        base_color: Color::NONE,
+                        alpha_mode: AlphaMode::Blend,
+                        unlit: true,
+                        ..default()
+                    })),
+                    Transform::from_xyz(0.0, size.y / 2.0, 0.0),
+                    NotShadowCaster,
+                ))
+                .id(),
+        );
 
         if def.effect.light > 0 {
             children.push(spawn_light(

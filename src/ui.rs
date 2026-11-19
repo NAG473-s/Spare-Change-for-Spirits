@@ -1020,6 +1020,7 @@ fn build_evening_panel(
     if owned.is_empty() {
         ui.dim(&lang.t("evening.no_furniture"));
     }
+    ui.dim(&lang.t("evening.drag_hint"));
     // Part of the floor is still blocked by old junk.
     if upgrades.area(&data) != (data.config.grid_cols, data.config.grid_rows) {
         ui.dim(&lang.t("evening.junk"));
