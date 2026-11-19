@@ -59,15 +59,17 @@ fn main() {
         .or_else(|| i18n::detect(&i18n::languages()))
         .unwrap_or_else(|| i18n::SOURCE.to_string());
 
-    App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Spare Change for Spirits".into(),
-                resolution: (1280, 720).into(),
-                ..default()
-            }),
+    let plugins = DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Spare Change for Spirits".into(),
+            name: Some("spare-change-for-spirits".into()),
+            resolution: (1280, 720).into(),
             ..default()
-        }))
+        }),
+        ..default()
+    });
+    let mut app = App::new();
+    app.add_plugins(plugins)
         // Clicking on 3D objects (floor tiles, furniture).
         .add_plugins(MeshPickingPlugin)
         .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.07)))
@@ -106,6 +108,43 @@ fn main() {
             loan::LoanPlugin,
             playtest::PlaytestPlugin,
             upgrades::UpgradesPlugin,
-        ))
-        .run();
+        ));
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    app.add_systems(Update, set_window_icon);
+    app.run();
+}
+
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+fn set_window_icon(
+    mut created: MessageReader<bevy::window::WindowCreated>,
+    _main_thread: bevy::ecs::system::NonSendMarker,
+) {
+    use bevy::winit::WINIT_WINDOWS;
+    use winit::window::Icon;
+
+    for event in created.read() {
+        WINIT_WINDOWS.with_borrow(|windows| {
+            let Some(window) = windows.get_window(event.window) else {
+                return;
+            };
+            #[cfg(target_os = "linux")]
+            {
+                let png = include_bytes!("../art/icons/spare-change-for-spirits.png");
+                let pixels = image::load_from_memory_with_format(png, image::ImageFormat::Png)
+                    .expect("bundled application icon is a PNG")
+                    .resize_exact(128, 128, image::imageops::FilterType::Lanczos3)
+                    .into_rgba8();
+                let icon = Icon::from_rgba(pixels.into_raw(), 128, 128)
+                    .expect("128 by 128 RGBA application icon");
+                window.set_window_icon(Some(icon));
+            }
+            #[cfg(target_os = "windows")]
+            {
+                use winit::platform::windows::{IconExtWindows, WindowExtWindows};
+                // Use the matching small and large images from the executable's icon group.
+                window.set_window_icon(Icon::from_resource(1, Some((32, 32).into())).ok());
+                window.set_taskbar_icon(Icon::from_resource(1, Some((64, 64).into())).ok());
+            }
+        });
+    }
 }
