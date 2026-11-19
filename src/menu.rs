@@ -15,7 +15,7 @@ use crate::save::{
     can_continue, clear_profile, latest_save, newest_save, read_slot, save_now, write_slot,
 };
 use crate::shop::ShopLayout;
-use crate::title::{LOGO, TitleLogo};
+use crate::title::{LOGO, Opening, TitleLogo};
 use crate::ui::{
     Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, TEXT, UiFont, UiTheme, overlay,
 };
@@ -36,7 +36,8 @@ impl Plugin for MenuPlugin {
                 (
                     build_main_menu.run_if(
                         in_state(Phase::Menu).and_then(
-                            resource_changed::<Settings>
+                            resource_removed::<Opening>
+                                .or_else(resource_changed::<Settings>)
                                 .or_else(resource_changed::<UiFont>)
                                 .or_else(resource_changed::<LanguageMenu>)
                                 .or_else(resource_changed::<SettingsMenu>)
@@ -193,6 +194,7 @@ fn tips_label(settings: &Settings, lang: &Lang) -> String {
 
 fn build_main_menu(
     mut commands: Commands,
+    opening: Option<Res<Opening>>,
     asset_server: Res<AssetServer>,
     font: Res<UiFont>,
     theme: Res<UiTheme>,
@@ -204,10 +206,13 @@ fn build_main_menu(
     data: Res<GameData>,
     existing: Query<Entity, With<MenuRoot>>,
 ) {
+    if opening.is_some() {
+        return;
+    }
     for e in &existing {
         commands.entity(e).despawn();
     }
-    // First start: let the player pick a language before anything else.
+    // On the first launch, language selection follows the crossing.
     let choose_language = language_menu.0 || settings.language.is_none();
     let wide = choose_language || matches!(*save_menu, SaveMenu::Load | SaveMenu::NewGame);
     let width = if wide { 560.0 } else { 386.0 };
