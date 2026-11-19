@@ -24,7 +24,7 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open image orders. The painted sign emblems are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
+There are no open image orders. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The game generates the water surface and its ripple normals at runtime.
 
@@ -234,6 +234,15 @@ an anchor, market awning, hanging lantern, shop doorway, crescent moon and risin
 The last strip centres the shop crest between two flourishes for destinations that fit on a single plank. Use worn gilt pinstripes and cream highlights over muted teal and rose enamel.
 Keep the right three quarters of the first six strips clear for localised signwriting. The game lays both the motif
 and the wording onto the wood, including the two sides of the turning window sign.
+
+The seven market awnings carry their stitched trade emblems in the stall models. The motifs
+follow the cloth folds and use a cream and old-gold thread against each trader’s colours.
+
+## Door glass – 160 × 160 (done)
+
+`assets/sprites/shop/porthole_light.png` is a transparent, soft-edged pool of daylight from
+four panes of round glass. Keep the crossbars and outer edge soft and the floorboards visible.
+The game stretches the pool along the floor and colours it with the time of day.
 
 ## Water and light – canvas 1024 × 1024
 
