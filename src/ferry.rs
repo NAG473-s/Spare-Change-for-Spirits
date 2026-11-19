@@ -16,7 +16,7 @@ use crate::data::{GameData, asset_exists};
 use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Drawer, Purse};
 use crate::fx::Cue;
-use crate::harbor::{CART, CART_BED_HEIGHT, HARBOR, RippleMesh, spawn_ripple};
+use crate::harbor::{CART, CART_BED_HEIGHT, HARBOR, RippleMesh, float_hull, spawn_ripple};
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::rng::Rng;
@@ -668,9 +668,7 @@ fn sail_boat(
             commands.entity(entity).despawn();
             continue;
         }
-        transform.translation = MOORING + Vec3::new(x, 0.03 * (t * 1.3).sin(), 0.0);
-        transform.rotation = Quat::from_rotation_z(0.012 * (t * 0.9).sin())
-            * Quat::from_rotation_x(0.01 * (t * 1.1).sin());
+        *transform = float_hull(MOORING + Vec3::X * x, 0.0, BOAT_SIZE.xz() * 0.42, t);
     }
 }
 
