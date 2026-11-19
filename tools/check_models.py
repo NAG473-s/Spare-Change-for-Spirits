@@ -314,6 +314,14 @@ def main():
         present = icon.is_file()
         print(("  ok       " if present else "  no icon  ") + str(icon.relative_to(ROOT)))
         failures += not present
+    # The crossing has an instrumental track and a separate reading per menu language.
+    print()
+    languages = ids("assets/i18n/languages.ron", r'code: "([^"]+)"')
+    for name in ["intro_music", *(f"intro_voice_{code}" for code in languages)]:
+        clip = ROOT / "assets" / "sounds" / f"{name}.ogg"
+        present = clip.is_file()
+        print(("  ok       " if present else "  missing  ") + f"sounds/{clip.name}")
+        failures += not present
     return 1 if failures else 0
 
 
