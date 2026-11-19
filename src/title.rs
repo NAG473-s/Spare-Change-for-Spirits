@@ -23,11 +23,7 @@ pub(crate) struct Opening {
 impl Plugin for TitlePlugin {
     fn build(&self, app: &mut App) {
         if crate::save::claim_first_launch() {
-            app.init_resource::<Opening>()
-                .add_systems(Startup, intro::spawn)
-                .add_systems(Update, intro::animate.run_if(in_state(Phase::Menu)));
-            app.sub_app_mut(bevy::render::RenderApp)
-                .add_systems(bevy::render::ExtractSchedule, intro::check_uploads);
+            intro::install(app);
         }
         app.add_systems(OnEnter(Phase::Menu), spawn_title)
             .add_systems(OnExit(Phase::Menu), |mut commands: Commands| {
