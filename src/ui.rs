@@ -27,6 +27,8 @@ use crate::shop::{ShopLayout, Storeroom, Tool};
 use crate::upgrades::Upgrades;
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
+/// Height of the message log below the side panel.
+pub(crate) const LOG_HEIGHT: f32 = 118.0;
 pub(crate) const BG_PANEL: Color = Color::srgb(0.11, 0.08, 0.12);
 pub(crate) const PANEL_EDGE: Color = Color::srgb(0.39, 0.27, 0.19);
 pub(crate) const TEXT: Color = Color::srgb(0.95, 0.89, 0.79);
@@ -591,7 +593,7 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
                 position_type: PositionType::Absolute,
                 right: px(0),
                 top: px(40),
-                bottom: px(0),
+                bottom: px(LOG_HEIGHT),
                 width: px(PANEL_WIDTH),
                 flex_direction: FlexDirection::Column,
                 ..default()
@@ -603,21 +605,41 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
     commands.entity(content).add_children(&[body, footer]);
     commands.insert_resource(SidePanelParts { body, footer });
 
-    // Message log
+    // Message log: in the right column below the side panel, so it never
+    // covers the shop. The newest line is at the bottom; older ones are cut
+    // off at the top when they do not fit.
+    let log_frame = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                right: px(0),
+                bottom: px(0),
+                width: px(PANEL_WIDTH),
+                height: px(LOG_HEIGHT),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::End,
+                padding: UiRect::axes(px(14), px(8)),
+                border: UiRect::top(px(1)),
+                overflow: Overflow::clip(),
+                ..default()
+            },
+            finish(Color::srgb_u8(51, 36, 42), Color::srgb_u8(28, 21, 29)),
+            BorderColor::all(PANEL_EDGE),
+            Pickable::IGNORE,
+        ))
+        .id();
     commands.spawn((
         LogText,
         StaticText { bold: false },
         Text::new(""),
-        text_font(&font.regular, 14.0),
+        text_font(&font.regular, 12.0),
         TextColor(TEXT_DIM),
         Node {
-            position_type: PositionType::Absolute,
-            left: px(16),
-            bottom: px(12),
-            right: px(PANEL_WIDTH + 16.0),
+            flex_shrink: 0.0,
             ..default()
         },
         Pickable::IGNORE,
+        ChildOf(log_frame),
     ));
 }
 

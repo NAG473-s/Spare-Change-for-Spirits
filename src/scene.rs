@@ -29,6 +29,24 @@ pub const ROOM_BACK_Z: f32 = -3.0;
 pub const ROOM_FRONT_Z: f32 = 3.5;
 pub const WALL_HEIGHT: f32 = 3.4;
 
+/// The floor reaches to here (x, z): past the open front and the right side
+/// of the room, so no black shows around the shop.
+const FLOOR_MAX: Vec2 = Vec2::new(14.0, 12.0);
+const FLOOR_TEXTURE: &str = "sprites/shop/floor.png";
+/// The floor outside the grid is a little darker than the grid tiles.
+const FLOOR_TINT: f32 = 0.62;
+/// The walls continue above the room model up to here, and the left wall
+/// towards the camera to `FLOOR_MAX.y`, so the walls fill the top and the
+/// left edge of the picture.
+const WALL_TOP: f32 = 6.5;
+const WALL_THICKNESS: f32 = 0.22;
+/// The wallpaper's diamonds, as in the room model: columns and rows (m),
+/// the first one, its size, and the wainscot along the bottom.
+const DIAMOND_STEP: Vec2 = Vec2::new(0.958, 0.57);
+const DIAMOND_FIRST: Vec2 = Vec2::new(-6.46, 1.21);
+const DIAMOND_SIZE: Vec2 = Vec2::new(0.2, 0.34);
+const WAINSCOT_HEIGHT: f32 = 0.9;
+
 pub struct ScenePlugin;
 
 impl Plugin for ScenePlugin {
@@ -86,6 +104,156 @@ fn color_material(
     })
 }
 
+/// Taller walls (above the room) and the left wall carried on towards the
+/// camera, in the room model's colours and with its diamond wallpaper.
+fn spawn_wall_extension(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
+) {
+    let mut paint = |r: f32, g: f32, b: f32, roughness: f32| {
+        materials.add(StandardMaterial {
+            base_color: Color::linear_rgb(r, g, b),
+            perceptual_roughness: roughness,
+            ..default()
+        })
+    };
+    // The room model's materials (linear colours).
+    let wall = paint(0.034, 0.036, 0.067, 0.92);
+    let pattern = paint(0.06, 0.056, 0.095, 0.94);
+    let wood = paint(0.125, 0.056, 0.056, 0.73);
+    let trim = paint(0.19, 0.089, 0.074, 0.7);
+    let mut slab = |size: Vec3, at: Vec3, material: &Handle<StandardMaterial>| {
+        commands.spawn((
+            Mesh3d(meshes.add(Cuboid::from_size(size))),
+            MeshMaterial3d(material.clone()),
+            Transform::from_translation(at),
+            Pickable::IGNORE,
+        ));
+    };
+    let above = WALL_TOP - WALL_HEIGHT;
+    let back_width = FLOOR_MAX.x - ROOM_MIN_X;
+    let back_z = ROOM_BACK_Z - WALL_THICKNESS / 2.0;
+    let left_x = ROOM_MIN_X - WALL_THICKNESS / 2.0;
+    // Above the back wall, all the way to the right edge of the floor.
+    slab(
+        Vec3::new(back_width, above, WALL_THICKNESS),
+        Vec3::new(
+            ROOM_MIN_X + back_width / 2.0,
+            WALL_HEIGHT + above / 2.0,
+            back_z,
+        ),
+        &wall,
+    );
+    // The back wall goes on to the right of the room, full height.
+    let right_width = FLOOR_MAX.x - ROOM_MAX_X;
+    slab(
+        Vec3::new(right_width, WALL_HEIGHT, WALL_THICKNESS),
+        Vec3::new(ROOM_MAX_X + right_width / 2.0, WALL_HEIGHT / 2.0, back_z),
+        &wall,
+    );
+    // Above the left wall, and the left wall on towards the camera.
+    let depth = ROOM_FRONT_Z - ROOM_BACK_Z;
+    slab(
+        Vec3::new(WALL_THICKNESS, above, depth),
+        Vec3::new(left_x, WALL_HEIGHT + above / 2.0, ROOM_BACK_Z + depth / 2.0),
+        &wall,
+    );
+    let front = FLOOR_MAX.y - ROOM_FRONT_Z;
+    slab(
+        Vec3::new(WALL_THICKNESS, WALL_TOP, front),
+        Vec3::new(left_x, WALL_TOP / 2.0, ROOM_FRONT_Z + front / 2.0),
+        &wall,
+    );
+    // Wainscot on the new pieces of wall.
+    slab(
+        Vec3::new(0.05, WAINSCOT_HEIGHT, front),
+        Vec3::new(
+            ROOM_MIN_X + 0.02,
+            WAINSCOT_HEIGHT / 2.0,
+            ROOM_FRONT_Z + front / 2.0,
+        ),
+        &wood,
+    );
+    slab(
+        Vec3::new(right_width, WAINSCOT_HEIGHT, 0.05),
+        Vec3::new(
+            ROOM_MAX_X + right_width / 2.0,
+            WAINSCOT_HEIGHT / 2.0,
+            ROOM_BACK_Z + 0.02,
+        ),
+        &wood,
+    );
+    // A moulding where the room model's walls end.
+    slab(
+        Vec3::new(back_width, 0.1, 0.08),
+        Vec3::new(
+            ROOM_MIN_X + back_width / 2.0,
+            WALL_HEIGHT + 0.05,
+            ROOM_BACK_Z + 0.03,
+        ),
+        &trim,
+    );
+    slab(
+        Vec3::new(0.08, 0.1, FLOOR_MAX.y - ROOM_BACK_Z),
+        Vec3::new(
+            ROOM_MIN_X + 0.03,
+            WALL_HEIGHT + 0.05,
+            (ROOM_BACK_Z + FLOOR_MAX.y) / 2.0,
+        ),
+        &trim,
+    );
+
+    // The diamonds, wherever the room model has none.
+    let diamond = meshes.add(Rhombus::new(DIAMOND_SIZE.x, DIAMOND_SIZE.y));
+    let mut place = |at: Vec3, facing: Quat| {
+        commands.spawn((
+            Mesh3d(diamond.clone()),
+            MeshMaterial3d(pattern.clone()),
+            Transform::from_translation(at).with_rotation(facing),
+            Pickable::IGNORE,
+        ));
+    };
+    let rows = |from: f32| {
+        (0..)
+            .map(move |k| DIAMOND_FIRST.y + k as f32 * DIAMOND_STEP.y)
+            .skip_while(move |y| *y < from)
+            .take_while(|y| *y < WALL_TOP - DIAMOND_SIZE.y)
+    };
+    let model_top = WALL_HEIGHT - 0.2;
+    // Back wall: above the model everywhere, full height right of the room.
+    for col in 0.. {
+        let x = DIAMOND_FIRST.x + col as f32 * DIAMOND_STEP.x;
+        if x > FLOOR_MAX.x {
+            break;
+        }
+        let from = if x > ROOM_MAX_X {
+            WAINSCOT_HEIGHT + 0.2
+        } else {
+            model_top
+        };
+        for y in rows(from) {
+            place(Vec3::new(x, y, ROOM_BACK_Z + 0.005), Quat::IDENTITY);
+        }
+    }
+    // Left wall (facing the room, +x): above the model, and in front of it.
+    let facing = Quat::from_rotation_y(std::f32::consts::FRAC_PI_2);
+    for col in 0.. {
+        let z = ROOM_BACK_Z + 0.55 + col as f32 * DIAMOND_STEP.x;
+        if z > FLOOR_MAX.y {
+            break;
+        }
+        let from = if z > ROOM_FRONT_Z {
+            WAINSCOT_HEIGHT + 0.2
+        } else {
+            model_top
+        };
+        for y in rows(from) {
+            place(Vec3::new(ROOM_MIN_X + 0.005, y, z), facing);
+        }
+    }
+}
+
 /// Floor, back and left wall and a moonlit window. A model at
 /// `assets/models/shop/room.glb` replaces the walls.
 fn spawn_room(
@@ -99,15 +267,36 @@ fn spawn_room(
     let center_x = (ROOM_MIN_X + ROOM_MAX_X) / 2.0;
     let center_z = (ROOM_BACK_Z + ROOM_FRONT_Z) / 2.0;
 
-    // The floor below the grid; the grid tiles lie slightly above it.
+    // The floor below the grid (the grid tiles lie slightly above it). It
+    // reaches past the open front and the right side, so the camera sees
+    // floorboards instead of black, with the planks of the grid tiles.
+    let floor_size = Vec2::new(FLOOR_MAX.x - ROOM_MIN_X, FLOOR_MAX.y - ROOM_BACK_Z);
+    let floor_material = if asset_exists(FLOOR_TEXTURE) {
+        StandardMaterial {
+            base_color: Color::srgb(FLOOR_TINT, FLOOR_TINT, FLOOR_TINT),
+            base_color_texture: Some(crate::harbor::repeating(&asset_server, FLOOR_TEXTURE, true)),
+            uv_transform: bevy::math::Affine2::from_scale(floor_size),
+            perceptual_roughness: 0.85,
+            ..default()
+        }
+    } else {
+        StandardMaterial {
+            base_color: Color::srgb(0.16, 0.11, 0.09),
+            perceptual_roughness: 0.9,
+            ..default()
+        }
+    };
     commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(width, depth))),
-        MeshMaterial3d(color_material(
-            &mut materials,
-            Color::srgb(0.16, 0.11, 0.09),
-        )),
-        Transform::from_xyz(center_x, -0.01, center_z),
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(floor_size.x, floor_size.y))),
+        MeshMaterial3d(materials.add(floor_material)),
+        Transform::from_xyz(
+            ROOM_MIN_X + floor_size.x / 2.0,
+            -0.01,
+            ROOM_BACK_Z + floor_size.y / 2.0,
+        ),
+        Pickable::IGNORE,
     ));
+    spawn_wall_extension(&mut commands, &mut meshes, &mut materials);
 
     if asset_exists("models/shop/room.glb") {
         commands.spawn((
