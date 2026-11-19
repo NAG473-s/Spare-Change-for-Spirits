@@ -9,18 +9,12 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-**63 models are open.** Pull the latest `main` first; `python3 tools/check_models.py` lists every
-missing model (lines marked `missing`). Each one replaces a placeholder as soon as it is pushed.
+There are no open model orders. The ferry containers and lids, village houses, shop and harbour
+props, furniture, animals, market stalls, traders and hourglass are all in `assets/models/`.
 
-| Where | Models |
-|---|---|
-| [Containers](#containers-on-the-boat--assetsmodelsshopidglb) | `chest`, `chest_lid`, `basket`, `basket_lid`, `keg`, `keg_lid` |
-| [Village houses](#village-houses--assetsmodelsharboridglb) | `village_house_1`, `village_house_2`, `village_house_3`, `village_house_4` |
-| [Props in the shop](#props-in-the-shop--assetsmodelspropsidglb) | `counter_candle`, `ledger_book`, `button_jar`, `brass_scale`, `potted_succulent`, `wall_shelf`, `glass_jar`, `potion_bottles`, `picture_frame`, `picture_frame_small`, `herb_bundle`, `button_sack`, `stacked_boxes`, `potted_palm`, `coat_stand`, `broom` |
-| [Props at the harbour](#props-at-the-harbour--assetsmodelspropsidglb) | `crate_stack`, `fishing_net`, `lobster_trap`, `anchor`, `oars`, `fish_basket`, `rope_pile`, `bench` |
-| [New furniture](#furniture--assetsmodelsdecoridglb) | `small_shelf`, `display_table`, `tall_bookcase`, `glass_cabinet`, `folding_screen` |
-| [The village market](#the-village-market--assetsmodelsmarketidglb) | `stall_carpenter`, `stall_candlemaker`, `stall_herbalist`, `stall_glazier`, `stall_weaver`, `stall_raven`, `stall_reaper`, `vendor_carpenter`, `vendor_candlemaker`, `vendor_herbalist`, `vendor_glazier`, `vendor_weaver`, `vendor_raven`, `vendor_reaper`, `hourglass` |
-| [Animals](#animals--assetsmodelscrittersidglb) | `cat_sleeping`, `cat_sitting`, `cat_tail`, `seagull`, `owl_body`, `owl_head`, `bat_body`, `bat_wing`, `fish` |
+To check a fresh checkout, pull `main` and run `python3 tools/check_models.py`. A `missing` line
+identifies an absent asset. The sections below retain the dimensions, pivots and prompts for
+replacements.
 
 ## Technical rules (all models)
 
