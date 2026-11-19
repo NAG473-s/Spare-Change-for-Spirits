@@ -147,6 +147,10 @@
     "ferry.tip_full": "Han har ikke flere kasser til deg i natt.",
     "ferry.tip_poor": "Ikke nok i pengeskuffen til denne kassen.",
 
+    // The sign in the shop window
+    "sign.closed": "Stengt",
+    "sign.open": "Åpent",
+
     // The harbour behind the shop
     "harbor.title": "Havna",
     "harbor.intro": "Tåka driver over det svarte vannet. Fergemannen venter ved båten sin, og lykta hans svaier.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Hver kveld kommer fergemannen med opptil fire kasser. Gå ut gjennom døra til havna og klikk på en kasse i båten hans for å kjøpe den – du betaler fra pengeskuffen.",
     "tip.shelve": "Spøkelser kan bare kjøpe det som står på en hylle. Velg en vare under «Sett varer på hyllene», og klikk så på en hylle i butikken.",
-    "tip.open": "Hyllene er fylt! Pass på stemningen: sjenerte spøkelser flykter fra lyse butikker, forfengelige vil ha et speil. Når du er klar, åpner du butikken.",
+    "tip.open": "Hyllene er fylt! Pass på stemningen: sjenerte spøkelser flykter fra lyse butikker, forfengelige vil ha et speil. Når du er klar, snur du skiltet i vinduet for å åpne butikken.",
     "tip.browse": "Spøkelser driver inn, ser på hyllene og stiller seg i kø ved disken. De blir blekere mens de venter – ikke la dem vente for lenge.",
     "tip.whisper": "Spøkelset fremst i køen hvisker et hint. Gi det varen som passer – eller be om unnskyldning hvis du ikke har den.",
     "tip.change": "Sammenlign det som ble betalt med prisen, tell opp vekslepengene ved å klikke på myntene og trykk Overrekk. Nøyaktige vekslepenger sender et spøkelse inn i lyset.",

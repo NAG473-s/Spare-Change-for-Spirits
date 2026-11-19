@@ -147,6 +147,10 @@
     "ferry.tip_full": "He has no more crates for you tonight.",
     "ferry.tip_poor": "Not enough in the drawer for this crate.",
 
+    // The sign in the shop window
+    "sign.closed": "Closed",
+    "sign.open": "Open",
+
     // The harbour behind the shop
     "harbor.title": "The Harbour",
     "harbor.intro": "Mist drifts over the black water. The ferryman waits by his boat, his lantern swinging.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Every evening the ferryman brings up to four crates. Go out through the door to the harbour and click a crate on his boat to buy it – you pay from the cash drawer.",
     "tip.shelve": "Ghosts can only buy what is on a shelf. Pick a product under \"Put products on shelves\", then click a shelf in the shop.",
-    "tip.open": "Shelves stocked! Mind the atmosphere: shy ghosts flee bright shops, vain ones want a mirror. When you are ready, open the shop.",
+    "tip.open": "Shelves stocked! Mind the atmosphere: shy ghosts flee bright shops, vain ones want a mirror. When you are ready, turn the sign in the window to open the shop.",
     "tip.browse": "Ghosts drift in, browse your shelves and queue at the counter. They grow paler while they wait – don't keep them too long.",
     "tip.whisper": "The ghost at the front whispers a hint. Hand over the matching product – or apologise if you don't have it.",
     "tip.change": "Compare what was paid with the price, count out the change with the coin buttons and press Hand over. Exact change sends a ghost into the light.",

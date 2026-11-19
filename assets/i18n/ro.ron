@@ -147,6 +147,10 @@
     "ferry.tip_full": "În seara asta nu mai are lăzi pentru tine.",
     "ferry.tip_poor": "Nu sunt destui bani în sertar pentru lada asta.",
 
+    // The sign in the shop window
+    "sign.closed": "Închis",
+    "sign.open": "Deschis",
+
     // The harbour behind the shop
     "harbor.title": "Portul",
     "harbor.intro": "Ceața plutește peste apa neagră. Luntrașul așteaptă lângă barca lui, cu felinarul legănându-se.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "În fiecare seară, luntrașul aduce până la patru lăzi. Ieși pe ușă în port și apasă pe o ladă din barca lui ca s-o cumperi – plătești din sertarul casei.",
     "tip.shelve": "Fantomele pot cumpăra doar ce e pe raft. Alege un produs de la „Pune produsele pe rafturi”, apoi apasă pe un raft din magazin.",
-    "tip.open": "Rafturile sunt pline! Ai grijă la atmosferă: fantomele timide fug de magazinele luminoase, iar cele vanitoase vor o oglindă. Când ești gata, deschide magazinul.",
+    "tip.open": "Rafturile sunt pline! Ai grijă la atmosferă: fantomele timide fug de magazinele luminoase, iar cele vanitoase vor o oglindă. Când ești gata, întoarce plăcuța din fereastră ca să deschizi magazinul.",
     "tip.browse": "Fantomele intră plutind, se uită prin rafturi și stau la coadă la tejghea. Cât așteaptă, pălesc – nu le lăsa să aștepte prea mult.",
     "tip.whisper": "Fantoma din fața cozii șoptește un indiciu. Dă-i produsul potrivit – sau cere-ți scuze dacă nu-l ai.",
     "tip.change": "Compară suma plătită cu prețul, numără restul cu butoanele pentru monede și apasă „Înmânează”. Restul exact trimite fantoma în lumină.",

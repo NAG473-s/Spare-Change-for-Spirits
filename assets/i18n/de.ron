@@ -147,6 +147,10 @@
     "ferry.tip_full": "Heute Nacht hat er keine Kisten mehr für dich.",
     "ferry.tip_poor": "Nicht genug Geld in der Kasse für diese Kiste.",
 
+    // The sign in the shop window
+    "sign.closed": "Geschlossen",
+    "sign.open": "Geöffnet",
+
     // The harbour behind the shop
     "harbor.title": "Der Hafen",
     "harbor.intro": "Nebel treibt über das schwarze Wasser. Der Fährmann wartet an seinem Boot, seine Laterne schaukelt.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Jeden Abend bringt der Fährmann bis zu vier Kisten. Geh durch die Tür hinaus zum Hafen und klick auf eine Kiste in seinem Boot, um sie zu kaufen – bezahlt wird aus der Kasse.",
     "tip.shelve": "Geister können nur kaufen, was im Regal steht. Wähle unter „Waren einräumen“ eine Ware und klick dann im Laden auf ein Regal.",
-    "tip.open": "Die Regale sind gefüllt! Achte auf die Atmosphäre: Scheue Geister meiden helle Läden, eitle wollen einen Spiegel. Wenn du bereit bist, öffne den Laden.",
+    "tip.open": "Die Regale sind gefüllt! Achte auf die Atmosphäre: Scheue Geister meiden helle Läden, eitle wollen einen Spiegel. Wenn du bereit bist, dreh das Schild im Fenster um und öffne so den Laden.",
     "tip.browse": "Geister schweben herein, stöbern in deinen Regalen und stellen sich an der Theke an. Beim Warten verblassen sie – lass sie nicht zu lange stehen.",
     "tip.whisper": "Der vorderste Geist flüstert dir einen Hinweis zu. Gib ihm die passende Ware – oder entschuldige dich, wenn du sie nicht hast.",
     "tip.change": "Vergleiche das Bezahlte mit dem Preis, zähl das Wechselgeld mit den Münztasten ab und drück „Übergeben“. Bei genau passendem Wechselgeld geht ein Geist ins Licht.",

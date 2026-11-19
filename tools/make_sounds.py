@@ -84,6 +84,16 @@ def bell():
     return normalise(reverb(out, 0.25), 0.55)
 
 
+def midnight():
+    """The shop clock strikes midnight: three deep, slow strikes."""
+    out = np.zeros(int(4.6 * SR))
+    f = midi_hz(48)  # C3
+    partials = [(1.0, 1.0, 2.2), (2.0, 0.5, 1.5), (2.4, 0.35, 1.1), (3.0, 0.3, 0.9), (4.2, 0.15, 0.5), (5.4, 0.1, 0.3)]
+    for i in range(3):
+        place(out, tone(f, 2.6, partials, attack=0.003), i * 0.95)
+    return normalise(reverb(out, 0.35), 0.6)
+
+
 def coins():
     out = np.zeros(int(0.7 * SR))
     for at in (0.0, 0.06, 0.13, 0.19):
@@ -194,6 +204,7 @@ SOUNDS = {
     "bell": bell,
     "coins": coins,
     "chime": chime,
+    "midnight": midnight,
     "crash": crash,
     "click": click,
     "sigh": sigh,

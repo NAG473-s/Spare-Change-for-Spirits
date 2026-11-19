@@ -45,7 +45,6 @@ impl Plugin for DayCyclePlugin {
             .add_systems(
                 Update,
                 (
-                    open_shop.run_if(in_state(Phase::Evening)),
                     (tick_clock, close_at_dawn)
                         .chain()
                         .run_if(in_state(Phase::Night)),
@@ -121,12 +120,6 @@ pub struct NightReport {
     pub change_kept: i64,
     /// Value of second payments that were kept.
     pub second_payments_kept: u32,
-}
-
-fn open_shop(mut actions: MessageReader<Action>, mut next: ResMut<NextState<Phase>>) {
-    if actions.read().any(|a| *a == Action::StartNight) {
-        next.set(Phase::Night);
-    }
 }
 
 fn start_night(

@@ -31,6 +31,7 @@ impl Plugin for ScenePlugin {
             brightness: 300.0,
             ..default()
         })
+        .init_resource::<ClockOverride>()
         .add_systems(
             Startup,
             (spawn_camera, spawn_room, spawn_lights, spawn_wall_clock),
@@ -431,12 +432,21 @@ pub fn shop_minutes(phase: Phase, clock: &NightClock) -> f32 {
     .min(300.0)
 }
 
+/// Minutes shown instead of the time of night, while the clock runs on to
+/// midnight as the shop opens (`sign.rs`).
+#[derive(Resource, Default)]
+pub struct ClockOverride(pub Option<f32>);
+
 fn turn_clock_hands(
     phase: Res<State<Phase>>,
     clock: Res<NightClock>,
+    clock_override: Res<ClockOverride>,
     mut hands: Query<(&ClockHand, &mut Transform)>,
 ) {
-    let minutes = shop_minutes(*phase.get(), &clock).rem_euclid(720.0);
+    let minutes = clock_override
+        .0
+        .unwrap_or_else(|| shop_minutes(*phase.get(), &clock))
+        .rem_euclid(720.0);
     let tau = std::f32::consts::TAU;
     for (hand, mut transform) in &mut hands {
         // Clockwise as seen from the front means negative about +z.

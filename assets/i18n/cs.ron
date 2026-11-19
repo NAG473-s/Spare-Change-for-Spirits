@@ -147,6 +147,10 @@
     "ferry.tip_full": "Dnes už pro tebe žádné další bedny nemá.",
     "ferry.tip_poor": "Na tuhle bednu nemáš v pokladně dost.",
 
+    // The sign in the shop window
+    "sign.closed": "Zavřeno",
+    "sign.open": "Otevřeno",
+
     // The harbour behind the shop
     "harbor.title": "Přístav",
     "harbor.intro": "Nad černou vodou se valí mlha. Převozník čeká u své loďky a lucerna se mu pohupuje v ruce.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Každý večer ti převozník přiveze až čtyři bedny. Vyjdi dveřmi ven do přístavu a kliknutím na bednu v jeho loďce ji koupíš – platíš z pokladny.",
     "tip.shelve": "Duchové si můžou koupit jen to, co je na polici. Vyber zboží v části „Rozlož zboží na police“ a pak klikni na polici v obchodě.",
-    "tip.open": "Police jsou plné! Hlídej atmosféru: plaší duchové prchají z jasně osvětlených obchodů, ješitní chtějí zrcadlo. Až bude všechno připravené, otevři obchod.",
+    "tip.open": "Police jsou plné! Hlídej atmosféru: plaší duchové prchají z jasně osvětlených obchodů, ješitní chtějí zrcadlo. Až bude všechno připravené, otoč cedulku v okně a otevři obchod.",
     "tip.browse": "Duchové se vznášejí dovnitř, prohlížejí si police a řadí se u pultu. Během čekání blednou – nenech je čekat moc dlouho.",
     "tip.whisper": "Duch na začátku fronty zašeptá nápovědu. Podej mu odpovídající zboží – nebo se omluv, pokud ho nemáš.",
     "tip.change": "Porovnej zaplacenou částku s cenou, odpočítej drobné tlačítky mincí a stiskni Předat. Přesně vrácené drobné pošlou ducha do světla.",

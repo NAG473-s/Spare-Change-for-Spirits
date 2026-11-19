@@ -147,6 +147,10 @@
     "ferry.tip_full": "Malam ini dia tiada peti lagi untuk anda.",
     "ferry.tip_poor": "Wang dalam laci tidak cukup untuk peti ini.",
 
+    // The sign in the shop window
+    "sign.closed": "Tutup",
+    "sign.open": "Buka",
+
     // The harbour behind the shop
     "harbor.title": "Jeti",
     "harbor.intro": "Kabus berarak di atas air yang hitam. Penambang menunggu di sisi perahunya, pelitanya berayun.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Setiap senja, penambang membawa sehingga empat peti. Keluar melalui pintu ke jeti dan klik sebuah peti di perahunya untuk membelinya – anda membayar dari laci wang.",
     "tip.shelve": "Hantu hanya boleh membeli barang yang ada di rak. Pilih barangan di bawah “Susun barangan di rak”, kemudian klik rak di dalam kedai.",
-    "tip.open": "Rak sudah berisi! Jaga suasana: hantu pemalu lari dari kedai yang terang, hantu pesolek mahukan cermin. Apabila sudah sedia, buka kedai.",
+    "tip.open": "Rak sudah berisi! Jaga suasana: hantu pemalu lari dari kedai yang terang, hantu pesolek mahukan cermin. Apabila sudah sedia, terbalikkan papan tanda di tingkap untuk membuka kedai.",
     "tip.browse": "Hantu-hantu melayang masuk, melihat-lihat rak dan beratur di kaunter. Mereka semakin pudar semasa menunggu – jangan biarkan mereka menunggu terlalu lama.",
     "tip.whisper": "Hantu di barisan paling hadapan membisikkan petunjuk. Serahkan barang yang sepadan – atau mohon maaf jika anda tiada barang itu.",
     "tip.change": "Bandingkan bayaran dengan harga, kira baki dengan butang duit dan tekan Serahkan. Baki yang tepat menghantar hantu ke dalam cahaya.",

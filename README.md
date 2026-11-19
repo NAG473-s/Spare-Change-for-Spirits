@@ -58,7 +58,7 @@ release `.exe`, packages it together with `assets/` and uploads it as the artifa
 
 | Phase | What happens |
 |---|---|
-| **Evening** | Step out through the shop door to the harbour, where the ferryman's boat waits: click a crate to buy it (max. 4 per evening), right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. |
+| **Evening** | Step out through the shop door to the harbour, where the ferryman's boat waits: click a crate to buy it (max. 4 per evening), right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. Turn the sign in the window (or press the button) to open: the clock runs on to midnight and strikes. |
 | **Night** | Ghosts come in, browse and queue at the counter. The ghost at the front whispers a hint – you hand over a product from the shelves. Guess right → it pays and you count out the change. |
 | **Morning** | The accounts: a ledger of the cash drawer (dusk, ferryman, furniture, takings, counterfeits, profit or loss) and how the night went – visitors, sales, change, reputation, ghosts that passed into the light, faded items and what fades next. |
 
@@ -101,6 +101,7 @@ src/
   harbor.rs      the harbour behind the shop (quay, lighthouse, boats, mist) and walking there
   ferry.rs       the ferryman's boat: crates to buy, tooltip, his arrival and departure
   accounts.rs    the day's cash ledger and the morning accounts screen
+  sign.rs        the closed/open sign in the window and opening the shop at midnight
   audio.rs       sound effects and music
   fx.rs          flickering lights, particles, the Cue message
   save.rs        saving, loading, new game
@@ -187,7 +188,7 @@ shown on the shelf while the product has no model. The floor texture is
 ## Sound and effects
 
 All sounds are synthesised by `tools/make_sounds.py` (numpy + ffmpeg) into `assets/sounds/*.ogg`:
-shop bell, coins, chime, crash, click, sigh, a music-box waltz for the evening and a night
+shop bell, coins, chime, the clock striking midnight, crash, click, sigh, a music-box waltz for the evening and a night
 ambience loop. They are generated from scratch, so there are no licence questions. To use your own
 recording, replace the file of the same name. Sound can be switched off in the menus.
 

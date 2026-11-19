@@ -147,6 +147,10 @@
     "ferry.tip_full": "Malam ini ia tidak punya peti lagi untukmu.",
     "ferry.tip_poor": "Uang di laci tidak cukup untuk peti ini.",
 
+    // The sign in the shop window
+    "sign.closed": "Tutup",
+    "sign.open": "Buka",
+
     // The harbour behind the shop
     "harbor.title": "Dermaga",
     "harbor.intro": "Kabut melayang di atas air yang hitam. Tukang perahu menunggu di samping perahunya, lenteranya berayun-ayun.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Setiap petang, tukang perahu membawa paling banyak empat peti. Keluar lewat pintu ke dermaga dan klik sebuah peti di perahunya untuk membelinya – kamu membayarnya dari laci kasir.",
     "tip.shelve": "Hantu hanya bisa membeli barang yang ada di rak. Pilih barang di bawah “Taruh barang di rak”, lalu klik sebuah rak di toko.",
-    "tip.open": "Rak sudah terisi! Perhatikan suasananya: hantu pemalu kabur dari toko yang terang, hantu pesolek ingin ada cermin. Kalau sudah siap, buka tokonya.",
+    "tip.open": "Rak sudah terisi! Perhatikan suasananya: hantu pemalu kabur dari toko yang terang, hantu pesolek ingin ada cermin. Kalau sudah siap, balik papan tanda di jendela untuk membuka tokonya.",
     "tip.browse": "Para hantu melayang masuk, melihat-lihat rak, lalu mengantre di meja kasir. Mereka makin pucat selama menunggu – jangan biarkan mereka menunggu terlalu lama.",
     "tip.whisper": "Hantu paling depan membisikkan petunjuk. Serahkan barang yang cocok – atau minta maaf kalau kamu tidak punya.",
     "tip.change": "Bandingkan uang yang dibayar dengan harganya, hitung kembalian dengan tombol koin, lalu tekan “Serahkan”. Kembalian yang pas mengantar hantu menuju cahaya.",

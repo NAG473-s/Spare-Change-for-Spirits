@@ -147,6 +147,10 @@
     "ferry.tip_full": "Đêm nay ông không còn thùng nào cho bạn nữa.",
     "ferry.tip_poor": "Ngăn kéo không đủ tiền để mua thùng này.",
 
+    // The sign in the shop window
+    "sign.closed": "Đóng cửa",
+    "sign.open": "Mở cửa",
+
     // The harbour behind the shop
     "harbor.title": "Bến thuyền",
     "harbor.intro": "Sương mù trôi trên mặt nước đen. Người lái đò đứng đợi bên thuyền, ngọn đèn lồng đung đưa.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Mỗi tối, người lái đò mang đến tối đa bốn thùng hàng. Đi ra cửa xuống bến và nhấp vào một thùng trên thuyền của ông để mua – tiền lấy từ ngăn kéo thu ngân.",
     "tip.shelve": "Hồn ma chỉ mua được những gì có trên kệ. Chọn một món trong mục “Bày hàng lên kệ”, rồi nhấp vào một cái kệ trong tiệm.",
-    "tip.open": "Kệ đã đầy hàng! Hãy để ý không khí: ma nhút nhát sẽ bỏ chạy khỏi tiệm quá sáng, ma điệu đà thì muốn có gương. Khi đã sẵn sàng, hãy mở cửa tiệm.",
+    "tip.open": "Kệ đã đầy hàng! Hãy để ý không khí: ma nhút nhát sẽ bỏ chạy khỏi tiệm quá sáng, ma điệu đà thì muốn có gương. Khi đã sẵn sàng, hãy lật tấm biển ở cửa sổ để mở cửa tiệm.",
     "tip.browse": "Hồn ma lướt vào, ngắm nghía kệ hàng rồi xếp hàng ở quầy. Càng chờ chúng càng nhạt dần – đừng để chúng đợi lâu.",
     "tip.whisper": "Hồn ma đứng đầu hàng sẽ thì thầm một gợi ý. Hãy đưa món hàng phù hợp – hoặc xin lỗi nếu bạn không có.",
     "tip.change": "So số tiền đã trả với giá, đếm tiền thối bằng các nút đồng tiền rồi nhấn “Đưa khách”. Thối đúng từng đồng sẽ đưa hồn ma vào ánh sáng.",

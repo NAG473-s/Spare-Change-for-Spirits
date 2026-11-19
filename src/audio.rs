@@ -26,6 +26,7 @@ pub struct Sounds {
     bell: Handle<AudioSource>,
     coins: Handle<AudioSource>,
     chime: Handle<AudioSource>,
+    midnight: Handle<AudioSource>,
     crash: Handle<AudioSource>,
     click: Handle<AudioSource>,
     sigh: Handle<AudioSource>,
@@ -40,6 +41,7 @@ impl FromWorld for Sounds {
             bell: assets.load("sounds/bell.ogg"),
             coins: assets.load("sounds/coins.ogg"),
             chime: assets.load("sounds/chime.ogg"),
+            midnight: assets.load("sounds/midnight.ogg"),
             crash: assets.load("sounds/crash.ogg"),
             click: assets.load("sounds/click.ogg"),
             sigh: assets.load("sounds/sigh.ogg"),
@@ -67,6 +69,7 @@ fn play_cues(
             Cue::Knock(_) => (&sounds.crash, 0.6, true),
             Cue::Disappointed => (&sounds.sigh, 0.6, false),
             Cue::Click => (&sounds.click, 0.5, true),
+            Cue::Midnight => (&sounds.midnight, 0.8, false),
         };
         // A little pitch variation keeps repeated sounds from feeling canned.
         let speed = if vary { rng.range(0.93, 1.07) } else { 1.0 };

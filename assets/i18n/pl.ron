@@ -147,6 +147,10 @@
     "ferry.tip_full": "Dziś nie ma już dla ciebie więcej skrzyń.",
     "ferry.tip_poor": "Za mało w kasie na tę skrzynię.",
 
+    // The sign in the shop window
+    "sign.closed": "Zamknięte",
+    "sign.open": "Otwarte",
+
     // The harbour behind the shop
     "harbor.title": "Przystań",
     "harbor.intro": "Nad czarną wodą snuje się mgła. Przewoźnik czeka przy swojej łodzi, a jego latarnia kołysze się na wietrze.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Co wieczór przewoźnik przywozi do czterech skrzyń. Wyjdź przez drzwi do przystani i kliknij skrzynię na jego łodzi, aby ją kupić – płacisz z kasy.",
     "tip.shelve": "Duchy mogą kupić tylko to, co leży na półce. Wybierz towar w sekcji „Rozłóż towary na półkach”, a potem kliknij półkę w sklepie.",
-    "tip.open": "Półki pełne! Zwróć uwagę na atmosferę: nieśmiałe duchy uciekają z jasnych sklepów, próżne chcą lustra. Kiedy wszystko będzie gotowe, otwórz sklep.",
+    "tip.open": "Półki pełne! Zwróć uwagę na atmosferę: nieśmiałe duchy uciekają z jasnych sklepów, próżne chcą lustra. Kiedy wszystko będzie gotowe, odwróć tabliczkę w oknie, aby otworzyć sklep.",
     "tip.browse": "Duchy wpływają do środka, oglądają półki i ustawiają się w kolejce do lady. Czekając, coraz bardziej bledną – nie każ im czekać zbyt długo.",
     "tip.whisper": "Duch na początku kolejki szepcze wskazówkę. Podaj mu pasujący towar – albo przeproś, jeśli go nie masz.",
     "tip.change": "Porównaj zapłatę z ceną, odlicz resztę przyciskami monet i naciśnij Wydaj. Dokładna reszta posyła ducha w światło.",

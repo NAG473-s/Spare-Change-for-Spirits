@@ -147,6 +147,10 @@
     "ferry.tip_full": "Hij heeft vannacht geen kratten meer voor je.",
     "ferry.tip_poor": "Te weinig in de kassa voor deze krat.",
 
+    // The sign in the shop window
+    "sign.closed": "Gesloten",
+    "sign.open": "Open",
+
     // The harbour behind the shop
     "harbor.title": "De haven",
     "harbor.intro": "Mist drijft over het zwarte water. De veerman wacht bij zijn boot, zijn lantaarn zwaait heen en weer.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Elke avond brengt de veerman maximaal vier kratten. Ga door de deur naar buiten, naar de haven, en klik op een krat in zijn boot om hem te kopen – je betaalt uit de kassa.",
     "tip.shelve": "Geesten kunnen alleen kopen wat op een plank ligt. Kies een product onder ‘Producten op planken zetten’ en klik dan op een plank in de winkel.",
-    "tip.open": "De planken zijn gevuld! Let op de sfeer: verlegen geesten vluchten voor fel verlichte winkels, ijdele willen een spiegel. Open de winkel zodra je klaar bent.",
+    "tip.open": "De planken zijn gevuld! Let op de sfeer: verlegen geesten vluchten voor fel verlichte winkels, ijdele willen een spiegel. Zodra je klaar bent, draai je het bordje in het raam om en open je de winkel.",
     "tip.browse": "Geesten zweven binnen, bekijken je planken en sluiten aan bij de toonbank. Terwijl ze wachten, worden ze bleker – laat ze niet te lang wachten.",
     "tip.whisper": "De voorste geest fluistert een hint. Geef het juiste product – of bied je excuses aan als je het niet hebt.",
     "tip.change": "Vergelijk wat er betaald is met de prijs, tel het wisselgeld uit met de muntknoppen en druk op Overhandigen. Met precies het juiste wisselgeld gaat een geest naar het licht.",

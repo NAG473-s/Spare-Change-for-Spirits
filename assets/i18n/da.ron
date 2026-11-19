@@ -147,6 +147,10 @@
     "ferry.tip_full": "Han har ikke flere kasser til dig i nat.",
     "ferry.tip_poor": "Der er ikke penge nok i kassen til at købe den.",
 
+    // The sign in the shop window
+    "sign.closed": "Lukket",
+    "sign.open": "Åben",
+
     // The harbour behind the shop
     "harbor.title": "Havnen",
     "harbor.intro": "Tågen driver hen over det sorte vand. Færgemanden venter ved sin båd, og hans lygte svajer.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Hver aften kommer færgemanden med op til fire kasser. Gå ud ad døren til havnen, og klik på en kasse i hans båd for at købe den – du betaler fra kassen.",
     "tip.shelve": "Spøgelser kan kun købe det, der står på en hylde. Vælg en vare under »Sæt varer på hylderne«, og klik så på en hylde i butikken.",
-    "tip.open": "Hylderne er fyldt! Hold øje med stemningen: generte spøgelser flygter fra lyse butikker, forfængelige vil have et spejl. Åbn butikken, når du er klar.",
+    "tip.open": "Hylderne er fyldt! Hold øje med stemningen: generte spøgelser flygter fra lyse butikker, forfængelige vil have et spejl. Vend skiltet i vinduet for at åbne butikken, når du er klar.",
     "tip.browse": "Spøgelser svæver ind, kigger på hylderne og stiller sig i kø ved disken. De bliver blegere, mens de venter – lad dem ikke vente for længe.",
     "tip.whisper": "Spøgelset forrest hvisker et hint. Giv det den rigtige vare – eller undskyld, hvis du ikke har den.",
     "tip.change": "Sammenlign det betalte beløb med prisen, tæl byttepengene op ved at klikke på mønterne, og tryk på Overræk. Præcise byttepenge sender spøgelset ind i lyset.",

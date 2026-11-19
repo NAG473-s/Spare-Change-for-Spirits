@@ -22,6 +22,8 @@ pub enum Cue {
     Knock(Vec2),
     Disappointed,
     Click,
+    /// The shop clock strikes midnight.
+    Midnight,
 }
 
 pub struct FxPlugin;

@@ -147,6 +147,10 @@
     "ferry.tip_full": "Han har inga fler lådor åt dig i natt.",
     "ferry.tip_poor": "Det finns inte nog i kassan för den här lådan.",
 
+    // The sign in the shop window
+    "sign.closed": "Stängt",
+    "sign.open": "Öppet",
+
     // The harbour behind the shop
     "harbor.title": "Hamnen",
     "harbor.intro": "Dimman driver över det svarta vattnet. Färjkarlen väntar vid sin båt, och hans lykta gungar.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Varje kväll kommer färjkarlen med upp till fyra lådor. Gå ut genom dörren till hamnen och klicka på en låda i hans båt för att köpa den – du betalar ur kassan.",
     "tip.shelve": "Spöken kan bara köpa det som står på en hylla. Välj en vara under ”Ställ varor på hyllorna” och klicka sedan på en hylla i butiken.",
-    "tip.open": "Hyllorna är fyllda! Tänk på stämningen: blyga spöken flyr ljusa butiker, fåfänga vill ha en spegel. Öppna butiken när du är redo.",
+    "tip.open": "Hyllorna är fyllda! Tänk på stämningen: blyga spöken flyr ljusa butiker, fåfänga vill ha en spegel. Vänd på skylten i fönstret för att öppna butiken när du är redo.",
     "tip.browse": "Spöken svävar in, tittar på hyllorna och ställer sig i kö vid disken. De bleknar medan de väntar – låt dem inte vänta för länge.",
     "tip.whisper": "Spöket längst fram viskar en ledtråd. Lämna över rätt vara – eller be om ursäkt om du inte har den.",
     "tip.change": "Jämför det som betalats med priset, räkna upp växeln genom att klicka på mynten och tryck på Lämna över. Exakt växel skickar spöket in i ljuset.",

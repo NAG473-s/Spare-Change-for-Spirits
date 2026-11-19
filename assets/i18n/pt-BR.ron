@@ -147,6 +147,10 @@
     "ferry.tip_full": "Ele não tem mais caixas para você hoje.",
     "ferry.tip_poor": "Não tem dinheiro suficiente na gaveta para esta caixa.",
 
+    // The sign in the shop window
+    "sign.closed": "Fechado",
+    "sign.open": "Aberto",
+
     // The harbour behind the shop
     "harbor.title": "O porto",
     "harbor.intro": "A neblina desliza sobre a água negra. O barqueiro espera junto ao barco, com a lanterna balançando.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Todo anoitecer, o barqueiro traz até quatro caixas. Saia pela porta até o porto e clique numa caixa no barco dele para comprá-la – você paga com o dinheiro da gaveta.",
     "tip.shelve": "Fantasmas só compram o que está na prateleira. Escolha um produto em “Colocar produtos nas prateleiras” e clique numa prateleira da loja.",
-    "tip.open": "Prateleiras abastecidas! Fique de olho na atmosfera: fantasmas tímidos fogem de lojas claras, os vaidosos querem um espelho. Quando quiser, abra a loja.",
+    "tip.open": "Prateleiras abastecidas! Fique de olho na atmosfera: fantasmas tímidos fogem de lojas claras, os vaidosos querem um espelho. Quando quiser, vire a placa na janela para abrir a loja.",
     "tip.browse": "Os fantasmas entram flutuando, olham as prateleiras e fazem fila no balcão. Eles vão ficando pálidos enquanto esperam – não deixe ninguém esperando muito.",
     "tip.whisper": "O primeiro fantasma da fila sussurra uma pista. Entregue o produto certo – ou peça desculpas se não tiver.",
     "tip.change": "Compare o valor pago com o preço, separe o troco clicando nas moedas e aperte Entregar. Com o troco exato, o fantasma parte para a luz.",

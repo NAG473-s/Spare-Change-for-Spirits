@@ -26,6 +26,7 @@ mod rng;
 mod save;
 mod scene;
 mod shop;
+mod sign;
 mod title;
 mod ui;
 
@@ -81,5 +82,6 @@ fn main() {
             harbor::HarborPlugin,
             accounts::AccountsPlugin,
         ))
+        .add_plugins(sign::SignPlugin)
         .run();
 }

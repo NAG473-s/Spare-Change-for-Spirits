@@ -147,6 +147,10 @@
     "ferry.tip_full": "Il n'a plus de caisses pour toi ce soir.",
     "ferry.tip_poor": "Pas assez dans le tiroir-caisse pour cette caisse.",
 
+    // The sign in the shop window
+    "sign.closed": "Fermé",
+    "sign.open": "Ouvert",
+
     // The harbour behind the shop
     "harbor.title": "Le port",
     "harbor.intro": "La brume glisse sur l'eau noire. Le passeur attend près de sa barque, sa lanterne se balançant doucement.",
@@ -310,7 +314,7 @@
     // Tips during the first night.
     "tip.order": "Chaque soir, le passeur apporte jusqu'à quatre caisses. Sors par la porte jusqu'au port et clique sur une caisse dans sa barque pour l'acheter – tu paies avec le tiroir-caisse.",
     "tip.shelve": "Les fantômes n'achètent que ce qui est sur une étagère. Choisis un produit sous « Garnir les étagères », puis clique sur une étagère de la boutique.",
-    "tip.open": "Étagères garnies ! Attention à l'ambiance : les fantômes timides fuient les boutiques trop éclairées, les coquets veulent un miroir. Quand tout est prêt, ouvre la boutique.",
+    "tip.open": "Étagères garnies ! Attention à l'ambiance : les fantômes timides fuient les boutiques trop éclairées, les coquets veulent un miroir. Quand tout est prêt, retourne la pancarte dans la vitrine pour ouvrir la boutique.",
     "tip.browse": "Les fantômes entrent, flânent devant tes étagères et font la queue au comptoir. Ils pâlissent en attendant – ne les fais pas trop patienter.",
     "tip.whisper": "Le premier fantôme de la file murmure un indice. Donne-lui le produit qui correspond – ou excuse-toi si tu ne l'as pas.",
     "tip.change": "Compare la somme payée au prix, compte la monnaie en cliquant sur les pièces et appuie sur « Donner ». Avec la monnaie exacte, un fantôme part vers la lumière.",
