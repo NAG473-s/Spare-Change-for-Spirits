@@ -123,8 +123,10 @@ def check(path, target, budget):
     if abs((lo[0] + hi[0]) / 2) > 0.15 or abs((lo[2] + hi[2]) / 2) > 0.15:
         problems.append("origin is not centred")
     if target:
+        # Products only need to fit (some lie flat); furniture should match its size.
+        lower = 0.0 if target == PRODUCT_SIZE else 0.5
         for axis, (have, want) in zip("whd", zip(size, target)):
-            if want > 0.05 and not (0.5 * want <= have <= 1.3 * want):
+            if want > 0.05 and not (lower * want <= have <= 1.3 * want):
                 problems.append(f"{axis} is {have:.2f} m, target {want:.2f} m")
     if tris > budget:
         problems.append(f"{tris} triangles (budget {budget})")
