@@ -297,7 +297,7 @@ def main():
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
     for name in (
         "shop/floor.png", "market/square.png", "harbor/quay_stone.png",
-        "title/intro_harbor.png", "title/intro_ferry.png", "title/logo.png",
+        "title/intro_harbor.png", "title/intro_ferry.png", "title/intro_crew.png", "title/logo.png",
         "shop/sign_paint.png", "shop/porthole_light.png", "ui/ledger_frame.png",
         "coins/button.png", "coins/candle.png", "coins/spoon.png",
     ):
