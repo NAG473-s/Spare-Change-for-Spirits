@@ -18,13 +18,13 @@ update this file in the same change.
 | **Camera Comfort** | Fixed camera: no screen shake, camera bob or motion blur. Moving between the shop, the harbour and the market is a fade. |
 | **Mouse Only Option** | Everything is done with the mouse; the *Menu* button in the top bar pauses (Esc does the same). |
 | **Playable without Quick Time Events** | There are no timed button presses. |
+| **Save Anytime** | Pause menu → *Save game*, in every phase, into three manual slots per profile; the autosave (start of every evening and night, dawn) has its own slot and never overwrites them. Three profiles keep separate games. A save made during a night continues at the start of that night (the night itself is a few minutes long). |
 | **Playable at Your Own Pace** | With *Patient ghosts* on, no input has a time limit: ghosts wait at the counter as long as needed, and at dawn waiting ghosts simply leave without hurting the reputation. The game can be paused at any time. |
 
 ## Not (yet) declared
 
 | Steam feature | Why not / what it would take |
 |---|---|
-| Save Anytime | The game autosaves at every evening, night start and dawn; there are no manual save slots. Would need manual saves in separate slots that autosaves never overwrite. |
 | Contrast Controls | No high-contrast mode. Would need e.g. a setting for solid, higher-contrast panels and text. |
 | Keyboard Only Option | The shop, the harbour and the market are used by pointing at things in the 3D scene. Would need keyboard focus and selection for every clickable thing. |
 | Narrated Game Menus / Playable without Vision | No screen reader support or narration. |

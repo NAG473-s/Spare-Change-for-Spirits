@@ -35,8 +35,14 @@ The game starts on the title screen: its own painted background with flickering 
 drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit; the *Menu* button in the top bar does the same). Settings (main menu and pause menu): tips,
 sound, music and effect volume, interface size (on top of the automatic scaling with the window
-height), fullscreen, and the assists *Patient ghosts* and *Show change due*. The game autosaves at the start of every evening and night and at dawn; a save always
-continues at an evening (a night in progress restarts). Saves and settings live in
+height), fullscreen, and the assists *Patient ghosts* and *Show change due*. 
+
+Saves: three profiles, each a game of its own with an autosave (start of every evening and night,
+and dawn) and three manual slots (pause menu → *Save game*, at any time; autosaves never overwrite
+them). *Continue* loads the newest save of all profiles, *Load game* lists them all, *New game*
+asks for the profile. A save continues at the market or at an evening; one made during a night
+continues at the start of that night. Files: `profile<N>/auto.ron` and `profile<N>/slot<M>.ron`
+(an old `save.ron` is moved to `profile1/auto.ron`). Saves and settings live in
 `%APPDATA%\SpareChangeForSpirits` (Windows), `~/Library/Application Support/SpareChangeForSpirits`
 (macOS) or `~/.local/share/spare-change-for-spirits` (Linux). Set `SCFS_SAVE_DIR` to use another
 folder, e.g. for test runs:

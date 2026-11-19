@@ -1,8 +1,11 @@
 //! Saving, loading and starting a new game.
 //!
-//! The game autosaves at the start of every evening and night and at dawn.
-//! A save always continues at an evening. Settings (tips on/off) live in a
-//! separate file so they survive a new game.
+//! There are [`PROFILES`] profiles, each a game of its own. A profile has an
+//! autosave, written at the start of every evening and night and at dawn,
+//! and [`MANUAL_SLOTS`] slots the player saves to from the pause menu at any
+//! time; autosaves never overwrite them. A save continues at the market or
+//! at an evening: one made during a night continues at the start of that
+//! night. Settings live in a separate file so they survive a new game.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -27,9 +30,12 @@ pub struct SavePlugin;
 
 impl Plugin for SavePlugin {
     fn build(&self, app: &mut App) {
+        migrate_old_save();
         app.insert_resource(Settings::load())
+            .init_resource::<ActiveProfile>()
+            .init_resource::<NightStart>()
             .add_systems(OnEnter(Phase::Evening), autosave_evening.after(lend))
-            .add_systems(OnEnter(Phase::Night), autosave_evening)
+            .add_systems(OnEnter(Phase::Night), autosave_night)
             .add_systems(OnEnter(Phase::Morning), autosave_dawn.after(repay));
     }
 }
@@ -163,10 +169,49 @@ pub fn save_dir() -> Option<PathBuf> {
     base
 }
 
-/// The save to continue, if there is a readable one of this version.
-pub fn read_save() -> Option<SaveGame> {
-    let path = save_dir()?.join("save.ron");
-    let text = std::fs::read_to_string(&path).ok()?;
+/// Number of profiles (separate games).
+pub const PROFILES: u8 = 3;
+/// Manual save slots per profile.
+pub const MANUAL_SLOTS: u8 = 3;
+
+/// Where in a profile a save lives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Slot {
+    Auto,
+    /// 1 to [`MANUAL_SLOTS`].
+    Manual(u8),
+}
+
+impl Slot {
+    /// The autosave first, then the manual slots.
+    pub fn all() -> impl Iterator<Item = Slot> {
+        std::iter::once(Slot::Auto).chain((1..=MANUAL_SLOTS).map(Slot::Manual))
+    }
+
+    fn file(self) -> String {
+        match self {
+            Slot::Auto => "auto.ron".into(),
+            Slot::Manual(n) => format!("slot{n}.ron"),
+        }
+    }
+}
+
+/// The profile (1 to [`PROFILES`]) the running game saves to.
+#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ActiveProfile(pub u8);
+
+impl Default for ActiveProfile {
+    fn default() -> Self {
+        Self(1)
+    }
+}
+
+fn slot_path(dir: &Path, profile: u8, slot: Slot) -> PathBuf {
+    dir.join(format!("profile{profile}")).join(slot.file())
+}
+
+fn read_save_at(path: &Path) -> Option<SaveGame> {
+    let text = std::fs::read_to_string(path).ok()?;
     match ron::from_str::<SaveGame>(&text) {
         Ok(save) if save.version == SAVE_VERSION => Some(save),
         Ok(save) => {
@@ -184,9 +229,71 @@ pub fn read_save() -> Option<SaveGame> {
     }
 }
 
-pub fn write_save(save: &SaveGame) {
+/// A readable save in this profile and slot.
+pub fn read_slot(profile: u8, slot: Slot) -> Option<SaveGame> {
+    read_save_at(&slot_path(&save_dir()?, profile, slot))
+}
+
+pub fn write_slot(profile: u8, slot: Slot, save: &SaveGame) {
     if let Some(dir) = save_dir() {
-        write_ron(&dir.join("save.ron"), save);
+        write_ron(&slot_path(&dir, profile, slot), save);
+    }
+}
+
+/// The newest save of a profile (autosave or manual).
+fn latest_in(dir: &Path, profile: u8) -> Option<(Slot, SaveGame, std::time::SystemTime)> {
+    Slot::all()
+        .filter_map(|slot| {
+            let path = slot_path(dir, profile, slot);
+            let time = std::fs::metadata(&path).and_then(|m| m.modified()).ok()?;
+            Some((slot, read_save_at(&path)?, time))
+        })
+        .max_by_key(|(_, _, time)| *time)
+}
+
+/// The newest save of one profile.
+pub fn latest_save(profile: u8) -> Option<(Slot, SaveGame)> {
+    latest_in(&save_dir()?, profile).map(|(slot, save, _)| (slot, save))
+}
+
+/// The newest save over all profiles: what "Continue" loads.
+pub fn newest_save() -> Option<(u8, Slot, SaveGame)> {
+    let dir = save_dir()?;
+    newest_in(&dir)
+}
+
+fn newest_in(dir: &Path) -> Option<(u8, Slot, SaveGame)> {
+    (1..=PROFILES)
+        .filter_map(|p| latest_in(dir, p).map(|(slot, save, time)| (p, slot, save, time)))
+        .max_by_key(|(.., time)| *time)
+        .map(|(p, slot, save, _)| (p, slot, save))
+}
+
+/// Removes every save of a profile (before a new game starts in it).
+pub fn clear_profile(profile: u8) {
+    if let Some(dir) = save_dir() {
+        let _ = std::fs::remove_dir_all(dir.join(format!("profile{profile}")));
+    }
+}
+
+/// Saves from before there were profiles become the autosave of profile 1.
+fn migrate_old_save() {
+    if let Some(dir) = save_dir() {
+        migrate_in(&dir);
+    }
+}
+
+fn migrate_in(dir: &Path) {
+    let old = dir.join("save.ron");
+    let new = slot_path(dir, 1, Slot::Auto);
+    if old.exists() && !new.exists() {
+        let moved = new
+            .parent()
+            .map_or(Ok(()), std::fs::create_dir_all)
+            .and_then(|_| std::fs::rename(&old, &new));
+        if let Err(e) = moved {
+            warn!("cannot move {} to a profile: {e}", old.display());
+        }
     }
 }
 
@@ -279,16 +386,54 @@ pub fn can_continue(save: &SaveGame, final_night: u32) -> bool {
     save.night <= final_night
 }
 
-/// Evening and the start of the night: continue at this evening.
-fn autosave_evening(state: GameState) {
-    write_save(&state.snapshot(state.progress.night, false, false));
+/// The state at the start of the current night: what a save made during
+/// the night stores (the night itself continues from its start).
+#[derive(Resource, Default)]
+pub struct NightStart(pub Option<SaveGame>);
+
+/// Evening: continue at this evening.
+fn autosave_evening(state: GameState, profile: Res<ActiveProfile>) {
+    write_slot(
+        profile.0,
+        Slot::Auto,
+        &state.snapshot(state.progress.night, false, false),
+    );
+}
+
+/// The start of the night: continue at its evening.
+fn autosave_night(state: GameState, profile: Res<ActiveProfile>, mut start: ResMut<NightStart>) {
+    let save = state.snapshot(state.progress.night, false, false);
+    write_slot(profile.0, Slot::Auto, &save);
+    start.0 = Some(save);
 }
 
 /// Dawn: the night is done; continue with the market of the next day.
-fn autosave_dawn(state: GameState, data: Res<GameData>) {
+fn autosave_dawn(state: GameState, data: Res<GameData>, profile: Res<ActiveProfile>) {
+    write_slot(profile.0, Slot::Auto, &dawn_snapshot(&state, &data));
+}
+
+fn dawn_snapshot(state: &GameState, data: &GameData) -> SaveGame {
     let night = state.progress.night;
     let finished = night >= data.config.final_night();
-    write_save(&state.snapshot(night + 1, finished, !finished));
+    state.snapshot(night + 1, finished, !finished)
+}
+
+/// What a save made right now contains, in any phase of the game: the
+/// market, the evening, the start of a running night, or the next day at
+/// dawn. `None` where there is nothing to save (menu, end of the demo).
+pub fn save_now(
+    phase: Phase,
+    state: &GameState,
+    data: &GameData,
+    night_start: &NightStart,
+) -> Option<SaveGame> {
+    match phase {
+        Phase::Day => Some(state.snapshot(state.progress.night, false, true)),
+        Phase::Evening => Some(state.snapshot(state.progress.night, false, false)),
+        Phase::Night => night_start.0.clone(),
+        Phase::Morning => Some(dawn_snapshot(state, data)),
+        Phase::Menu | Phase::DemoEnd => None,
+    }
 }
 
 #[cfg(test)]
@@ -347,6 +492,66 @@ mod tests {
         let text = ron::ser::to_string_pretty(&save, ron::ser::PrettyConfig::default()).unwrap();
         let back: SaveGame = ron::from_str(&text).unwrap();
         assert_eq!(back, save);
+    }
+
+    fn sample(night: u32) -> SaveGame {
+        SaveGame {
+            version: SAVE_VERSION,
+            night,
+            reputation: 0,
+            story_chapter: 0,
+            drawer: Purse::default(),
+            stock: BTreeMap::new(),
+            cells: Vec::new(),
+            storeroom: BTreeMap::new(),
+            crates_ordered: 0,
+            loan: 0,
+            market_open: false,
+            finished: false,
+        }
+    }
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("scfs-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        dir
+    }
+
+    #[test]
+    fn the_newest_save_wins_across_profiles_and_slots() {
+        let dir = temp_dir("profiles");
+        assert!(newest_in(&dir).is_none());
+        write_ron(&slot_path(&dir, 1, Slot::Auto), &sample(2));
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        write_ron(&slot_path(&dir, 2, Slot::Manual(3)), &sample(4));
+        let (profile, slot, save) = newest_in(&dir).unwrap();
+        assert_eq!((profile, slot, save.night), (2, Slot::Manual(3), 4));
+        let (slot, save, _) = latest_in(&dir, 1).unwrap();
+        assert_eq!((slot, save.night), (Slot::Auto, 2));
+        assert!(latest_in(&dir, 3).is_none());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn an_old_save_moves_into_profile_one() {
+        let dir = temp_dir("migrate");
+        write_ron(&dir.join("save.ron"), &sample(3));
+        migrate_in(&dir);
+        assert!(!dir.join("save.ron").exists());
+        let moved = read_save_at(&slot_path(&dir, 1, Slot::Auto)).unwrap();
+        assert_eq!(moved.night, 3);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn slots_are_the_autosave_then_the_manual_ones() {
+        let slots: Vec<Slot> = Slot::all().collect();
+        assert_eq!(slots.len(), 1 + MANUAL_SLOTS as usize);
+        assert_eq!(slots[0], Slot::Auto);
+        assert_eq!(
+            slot_path(Path::new("x"), 2, Slot::Manual(1)),
+            Path::new("x/profile2/slot1.ron")
+        );
     }
 
     #[test]

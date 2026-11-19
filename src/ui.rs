@@ -22,7 +22,7 @@ use crate::harbor::Location;
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
-use crate::save::Knob;
+use crate::save::{Knob, Slot};
 use crate::shop::{ShopLayout, Storeroom, Tool};
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
@@ -124,8 +124,20 @@ pub enum Action {
     BackToShop,
     /// Leave the village market for the evening in the shop.
     EndDay,
-    NewGame,
+    /// Main menu: newest save over all profiles.
     Continue,
+    /// Main menu pages: the list of saves, and the profile for a new game.
+    OpenLoad,
+    OpenNewGame,
+    CloseSaveMenu,
+    /// Start a new game in this profile (asks first if it has saves).
+    NewGameIn(u8),
+    /// Confirmed: delete the profile's saves and start a new game in it.
+    ConfirmNewGame(u8),
+    LoadSlot(u8, Slot),
+    /// Pause menu: the manual save slots of the running profile.
+    OpenSave,
+    SaveToSlot(u8),
     /// The menu button in the top bar: pause without the keyboard.
     Pause,
     Resume,

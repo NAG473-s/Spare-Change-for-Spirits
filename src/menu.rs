@@ -10,7 +10,10 @@ use crate::inventory::CratesOrdered;
 use crate::register::Register;
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 
-use crate::save::{GameState, Knob, Settings, can_continue, read_save, write_save};
+use crate::save::{
+    ActiveProfile, GameState, Knob, MANUAL_SLOTS, NightStart, PROFILES, SaveGame, Settings, Slot,
+    can_continue, clear_profile, latest_save, newest_save, read_slot, save_now, write_slot,
+};
 use crate::shop::ShopLayout;
 use crate::title::{LOGO, TitleLogo};
 use crate::ui::{
@@ -24,6 +27,7 @@ impl Plugin for MenuPlugin {
         app.init_resource::<Paused>()
             .init_resource::<LanguageMenu>()
             .init_resource::<SettingsMenu>()
+            .init_resource::<SaveMenu>()
             .add_systems(PreUpdate, apply_display)
             .add_systems(Startup, spawn_tip_box)
             .add_systems(OnEnter(Phase::Menu), (leave_pause, build_main_menu).chain())
@@ -35,7 +39,8 @@ impl Plugin for MenuPlugin {
                             resource_changed::<Settings>
                                 .or_else(resource_changed::<UiFont>)
                                 .or_else(resource_changed::<LanguageMenu>)
-                                .or_else(resource_changed::<SettingsMenu>),
+                                .or_else(resource_changed::<SettingsMenu>)
+                                .or_else(resource_changed::<SaveMenu>),
                         ),
                     ),
                     main_menu_actions.run_if(in_state(Phase::Menu)),
@@ -44,6 +49,7 @@ impl Plugin for MenuPlugin {
                     sync_pause.run_if(
                         resource_changed::<Paused>
                             .or_else(resource_changed::<SettingsMenu>)
+                            .or_else(resource_changed::<SaveMenu>)
                             .or_else(resource_changed::<Settings>)
                             .or_else(resource_changed::<UiFont>),
                     ),
@@ -60,6 +66,19 @@ pub struct LanguageMenu(pub bool);
 /// The settings page is open (in the main or the pause menu).
 #[derive(Resource, Default)]
 pub struct SettingsMenu(pub bool);
+
+/// A page about saves is open: the list of saves and the profile choice in
+/// the main menu, the save slots in the pause menu.
+#[derive(Resource, Default, Clone, Copy, PartialEq, Eq)]
+pub enum SaveMenu {
+    #[default]
+    Closed,
+    Load,
+    NewGame,
+    /// Asks before a new game replaces the saves of this profile.
+    Confirm(u8),
+    Save,
+}
 
 /// The game is paused and the pause menu is open.
 #[derive(Resource, Default)]
@@ -181,6 +200,7 @@ fn build_main_menu(
     settings: Res<Settings>,
     language_menu: Res<LanguageMenu>,
     settings_menu: Res<SettingsMenu>,
+    save_menu: Res<SaveMenu>,
     data: Res<GameData>,
     existing: Query<Entity, With<MenuRoot>>,
 ) {
@@ -189,7 +209,8 @@ fn build_main_menu(
     }
     // First start: let the player pick a language before anything else.
     let choose_language = language_menu.0 || settings.language.is_none();
-    let width = if choose_language { 560.0 } else { 386.0 };
+    let wide = choose_language || matches!(*save_menu, SaveMenu::Load | SaveMenu::NewGame);
+    let width = if wide { 560.0 } else { 386.0 };
     let (layer, panel, has_logo) = title_layout(&mut commands, &asset_server, &theme, width);
     commands
         .entity(layer)
@@ -217,16 +238,38 @@ fn build_main_menu(
     if !has_logo {
         ui.heading(&lang.t("game.title"));
     }
+    let final_night = data.config.final_night();
+    match *save_menu {
+        SaveMenu::Load => return load_page(&mut ui, &lang, final_night),
+        SaveMenu::NewGame => return new_game_page(&mut ui, &lang, final_night),
+        SaveMenu::Confirm(profile) => {
+            ui.heading(&lang.f("menu.overwrite_title", &[("profile", &profile)]));
+            ui.text(&lang.t("menu.overwrite_text"));
+            ui.primary(
+                &lang.t("menu.overwrite_confirm"),
+                Action::ConfirmNewGame(profile),
+            );
+            ui.menu_option(root, &lang.t("menu.back"), Action::OpenNewGame, false);
+            return;
+        }
+        SaveMenu::Closed | SaveMenu::Save => {}
+    }
     ui.text(&lang.t("menu.tagline"));
     ui.rule();
-    if let Some(save) = read_save().filter(|s| can_continue(s, data.config.final_night())) {
+    let any_saves = (1..=PROFILES).any(|p| latest_save(p).is_some());
+    if let Some((_, _, save)) = newest_save().filter(|(_, _, s)| can_continue(s, final_night)) {
         ui.primary(
             &lang.f("menu.continue", &[("night", &save.night)]),
             Action::Continue,
         );
-        ui.menu_option(root, &lang.t("menu.new_game"), Action::NewGame, false);
+        ui.menu_option(root, &lang.t("menu.load_game"), Action::OpenLoad, false);
+        ui.menu_option(root, &lang.t("menu.new_game"), Action::OpenNewGame, false);
+    } else if any_saves {
+        ui.primary(&lang.t("menu.new_game"), Action::OpenNewGame);
+        ui.menu_option(root, &lang.t("menu.load_game"), Action::OpenLoad, false);
     } else {
-        ui.primary(&lang.t("menu.new_game"), Action::NewGame);
+        // The very first game goes straight into profile 1.
+        ui.primary(&lang.t("menu.new_game"), Action::NewGameIn(1));
     }
     let language = lang.def().map(|l| l.name.clone()).unwrap_or_default();
     ui.menu_option(
@@ -251,6 +294,8 @@ fn main_menu_actions(
     mut lang: ResMut<Lang>,
     mut settings: ResMut<Settings>,
     mut language_menu: ResMut<LanguageMenu>,
+    mut save_menu: ResMut<SaveMenu>,
+    mut profile: ResMut<ActiveProfile>,
     mut state: GameState,
     mut log: ResMut<GameLog>,
     mut next: ResMut<NextState<Phase>>,
@@ -258,23 +303,32 @@ fn main_menu_actions(
 ) {
     for action in actions.read() {
         match action {
-            Action::NewGame => {
+            Action::OpenLoad => *save_menu = SaveMenu::Load,
+            Action::OpenNewGame => *save_menu = SaveMenu::NewGame,
+            Action::CloseSaveMenu => *save_menu = SaveMenu::Closed,
+            Action::NewGameIn(p) if latest_save(*p).is_some() => {
+                *save_menu = SaveMenu::Confirm(*p);
+            }
+            Action::NewGameIn(p) | Action::ConfirmNewGame(p) => {
+                clear_profile(*p);
                 state.reset(&data);
+                profile.0 = *p;
                 log.clear();
+                *save_menu = SaveMenu::Closed;
                 next.set(Phase::Evening);
             }
             Action::Continue => {
-                if let Some(save) = read_save() {
-                    state.apply(&save, &data);
-                    log.clear();
-                    if !save.market_open {
-                        log.push(lang.f("menu.welcome_back", &[("night", &save.night)]));
-                    }
-                    next.set(if save.market_open {
-                        Phase::Day
-                    } else {
-                        Phase::Evening
-                    });
+                if let Some((p, _, save)) = newest_save() {
+                    load(&save, p, &data, &lang, &mut state, &mut profile, &mut log);
+                    *save_menu = SaveMenu::Closed;
+                    next.set(continue_phase(&save));
+                }
+            }
+            Action::LoadSlot(p, slot) => {
+                if let Some(save) = read_slot(*p, *slot) {
+                    load(&save, *p, &data, &lang, &mut state, &mut profile, &mut log);
+                    *save_menu = SaveMenu::Closed;
+                    next.set(continue_phase(&save));
                 }
             }
             Action::QuitGame => {
@@ -291,6 +345,135 @@ fn main_menu_actions(
             _ => {}
         }
     }
+}
+
+/// Puts a save into the running game.
+fn load(
+    save: &SaveGame,
+    p: u8,
+    data: &GameData,
+    lang: &Lang,
+    state: &mut GameState,
+    profile: &mut ActiveProfile,
+    log: &mut GameLog,
+) {
+    state.apply(save, data);
+    profile.0 = p;
+    log.clear();
+    if !save.market_open {
+        log.push(lang.f("menu.welcome_back", &[("night", &save.night)]));
+    }
+}
+
+/// A save continues at the market or at an evening.
+fn continue_phase(save: &SaveGame) -> Phase {
+    if save.market_open {
+        Phase::Day
+    } else {
+        Phase::Evening
+    }
+}
+
+fn slot_name(slot: Slot, lang: &Lang) -> String {
+    match slot {
+        Slot::Auto => lang.t("save.auto"),
+        Slot::Manual(n) => lang.f("save.slot", &[("slot", &n)]),
+    }
+}
+
+/// "Evening of night 3 · money 145 · reputation 12".
+fn describe_save(save: &SaveGame, lang: &Lang, final_night: u32) -> String {
+    let state = if save.night > final_night {
+        lang.t("save.state_finished")
+    } else if save.market_open {
+        lang.f("save.state_market", &[("night", &save.night)])
+    } else {
+        lang.f("save.state_evening", &[("night", &save.night)])
+    };
+    lang.f(
+        "save.summary",
+        &[
+            ("state", &state),
+            ("money", &save.drawer.total()),
+            ("reputation", &save.reputation),
+        ],
+    )
+}
+
+/// Main menu: every profile with its saves; a click loads one.
+fn load_page(ui: &mut PanelBuilder, lang: &Lang, final_night: u32) {
+    ui.heading(&lang.t("menu.load_title"));
+    let root = ui.root();
+    for p in 1..=PROFILES {
+        ui.section(&lang.f("menu.profile", &[("profile", &p)]));
+        let mut empty = true;
+        for slot in Slot::all() {
+            let Some(save) = read_slot(p, slot) else {
+                continue;
+            };
+            empty = false;
+            let label = lang.f(
+                "save.entry",
+                &[
+                    ("slot", &slot_name(slot, lang)),
+                    ("summary", &describe_save(&save, lang, final_night)),
+                ],
+            );
+            if can_continue(&save, final_night) {
+                ui.menu_option(root, &label, Action::LoadSlot(p, slot), false);
+            } else {
+                ui.dim(&label);
+            }
+        }
+        if empty {
+            ui.dim(&lang.t("save.none"));
+        }
+    }
+    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
+}
+
+/// Main menu: the profile a new game is played in.
+fn new_game_page(ui: &mut PanelBuilder, lang: &Lang, final_night: u32) {
+    ui.heading(&lang.t("menu.choose_profile"));
+    let root = ui.root();
+    for p in 1..=PROFILES {
+        let label = match latest_save(p) {
+            Some((_, save)) => lang.f(
+                "menu.profile_used",
+                &[
+                    ("profile", &p),
+                    ("summary", &describe_save(&save, lang, final_night)),
+                ],
+            ),
+            None => lang.f("menu.profile_empty", &[("profile", &p)]),
+        };
+        ui.menu_option(root, &label, Action::NewGameIn(p), false);
+    }
+    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
+}
+
+/// Pause menu: the manual slots of the running profile; a click saves.
+fn save_page(ui: &mut PanelBuilder, lang: &Lang, profile: u8, phase: Phase, final_night: u32) {
+    ui.heading(&lang.f("pause.save_title", &[("profile", &profile)]));
+    let root = ui.root();
+    for n in 1..=MANUAL_SLOTS {
+        let slot = Slot::Manual(n);
+        let label = match read_slot(profile, slot) {
+            Some(save) => lang.f(
+                "save.entry",
+                &[
+                    ("slot", &slot_name(slot, lang)),
+                    ("summary", &describe_save(&save, lang, final_night)),
+                ],
+            ),
+            None => lang.f("save.slot_empty", &[("slot", &n)]),
+        };
+        ui.menu_option(root, &label, Action::SaveToSlot(n), false);
+    }
+    if phase == Phase::Night {
+        ui.dim(&lang.t("pause.save_hint_night"));
+    }
+    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
 }
 
 fn toggle_tips(
@@ -429,9 +612,14 @@ fn apply_display(
     }
 }
 
-fn toggle_pause(keys: Res<ButtonInput<KeyCode>>, mut paused: ResMut<Paused>) {
+fn toggle_pause(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut paused: ResMut<Paused>,
+    mut save_menu: ResMut<SaveMenu>,
+) {
     if keys.just_pressed(KeyCode::Escape) {
         paused.0 = !paused.0;
+        *save_menu = SaveMenu::Closed;
     }
 }
 
@@ -439,6 +627,12 @@ fn pause_actions(
     mut actions: MessageReader<Action>,
     phase: Res<State<Phase>>,
     state: GameState,
+    data: Res<GameData>,
+    lang: Res<Lang>,
+    profile: Res<ActiveProfile>,
+    night_start: Res<NightStart>,
+    mut save_menu: ResMut<SaveMenu>,
+    mut log: ResMut<GameLog>,
     mut paused: ResMut<Paused>,
     mut next: ResMut<NextState<Phase>>,
     mut exit: MessageWriter<AppExit>,
@@ -447,10 +641,30 @@ fn pause_actions(
         let quit_to_menu = match action {
             Action::Resume => {
                 paused.0 = false;
+                *save_menu = SaveMenu::Closed;
                 continue;
             }
             Action::Pause => {
                 paused.0 = true;
+                *save_menu = SaveMenu::Closed;
+                continue;
+            }
+            Action::OpenSave => {
+                *save_menu = SaveMenu::Save;
+                continue;
+            }
+            Action::CloseSaveMenu => {
+                *save_menu = SaveMenu::Closed;
+                continue;
+            }
+            Action::SaveToSlot(n) => {
+                if let Some(save) = save_now(*phase.get(), &state, &data, &night_start) {
+                    let slot = Slot::Manual(*n);
+                    write_slot(profile.0, slot, &save);
+                    log.push(lang.f("log.saved", &[("slot", &slot_name(slot, &lang))]));
+                    // Show the slot with its new content.
+                    save_menu.set_changed();
+                }
                 continue;
             }
             Action::QuitToMenu => true,
@@ -459,10 +673,10 @@ fn pause_actions(
         };
         // The evening's purchases and furnishing are kept. A night in
         // progress is not: the game continues at its evening.
-        match phase.get() {
-            Phase::Evening => write_save(&state.snapshot(state.progress.night, false, false)),
-            Phase::Day => write_save(&state.snapshot(state.progress.night, false, true)),
-            _ => {}
+        if matches!(phase.get(), Phase::Evening | Phase::Day)
+            && let Some(save) = save_now(*phase.get(), &state, &data, &night_start)
+        {
+            write_slot(profile.0, Slot::Auto, &save);
         }
         if quit_to_menu {
             paused.0 = false;
@@ -479,6 +693,9 @@ fn sync_pause(
     settings_menu: Res<SettingsMenu>,
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
+    save_menu: Res<SaveMenu>,
+    profile: Res<ActiveProfile>,
+    data: Res<GameData>,
     font: Res<UiFont>,
     theme: Res<UiTheme>,
     lang: Res<Lang>,
@@ -500,9 +717,22 @@ fn sync_pause(
         settings_page(&mut ui, &settings, &lang);
         return;
     }
+    if *save_menu == SaveMenu::Save {
+        save_page(
+            &mut ui,
+            &lang,
+            profile.0,
+            *phase.get(),
+            data.config.final_night(),
+        );
+        return;
+    }
     ui.heading(&lang.t("pause.title"));
     ui.primary(&lang.t("pause.resume"), Action::Resume);
     let root = ui.root();
+    if *phase.get() != Phase::DemoEnd {
+        ui.menu_option(root, &lang.t("pause.save"), Action::OpenSave, false);
+    }
     let quit_label = match phase.get() {
         Phase::Night => "pause.quit_night",
         _ => "pause.save_quit",
