@@ -3,7 +3,7 @@
 //! Buttons carry an `ActionButton` component. A global observer turns clicks
 //! into `Action` messages that the individual plugins read.
 
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::picking::hover::{HoverMap, Hovered};
@@ -31,6 +31,8 @@ const BTN_HOVER: Color = Color::srgb(0.26, 0.24, 0.36);
 const BTN_SELECTED: Color = Color::srgb(0.45, 0.36, 0.18);
 const BTN_PRIMARY: Color = Color::srgb(0.22, 0.38, 0.3);
 const BTN_DISABLED: Color = Color::srgb(0.1, 0.1, 0.12);
+/// Size of the pictures on product and decor buttons.
+const ICON_SIZE: f32 = 24.0;
 
 pub struct UiPlugin;
 
@@ -39,6 +41,7 @@ impl Plugin for UiPlugin {
         app.add_message::<Action>()
             .init_resource::<UiFont>()
             .init_resource::<GameLog>()
+            .init_resource::<Icons>()
             .add_systems(Startup, spawn_ui)
             // Before Update, so every rebuild this frame already uses the new font.
             .add_systems(PreUpdate, apply_language.run_if(resource_changed::<Lang>))
@@ -128,6 +131,45 @@ struct ButtonColor(Color);
 /// Fonts for the current language: Inter first, then the language's own
 /// script font (CJK, Thai, Arabic), then every other script font, so that
 /// any character – e.g. language names in the language menu – can be drawn.
+/// Small pictures for product and decor buttons: `sprites/products/<id>.png`
+/// and `sprites/decor/<id>.png`, where they exist.
+#[derive(Resource)]
+pub struct Icons {
+    products: HashMap<String, Handle<Image>>,
+    decor: HashMap<String, Handle<Image>>,
+}
+
+impl Icons {
+    pub fn product(&self, id: &str) -> Option<Handle<Image>> {
+        self.products.get(id).cloned()
+    }
+
+    pub fn decor(&self, id: &str) -> Option<Handle<Image>> {
+        self.decor.get(id).cloned()
+    }
+}
+
+impl FromWorld for Icons {
+    fn from_world(world: &mut World) -> Self {
+        let data = world.resource::<GameData>();
+        let product_ids: Vec<String> = data.products.iter().map(|p| p.id.clone()).collect();
+        let decor_ids: Vec<String> = data.decor.iter().map(|d| d.id.clone()).collect();
+        let assets = world.resource::<AssetServer>();
+        let load = |folder: &str, ids: Vec<String>| {
+            ids.into_iter()
+                .filter_map(|id| {
+                    let path = format!("sprites/{folder}/{id}.png");
+                    asset_exists(&path).then(|| (id, assets.load(path)))
+                })
+                .collect()
+        };
+        Self {
+            products: load("products", product_ids),
+            decor: load("decor", decor_ids),
+        }
+    }
+}
+
 #[derive(Resource)]
 pub struct UiFont {
     pub regular: FontSource,
@@ -477,6 +519,7 @@ fn build_evening_panel(
     layout: Res<ShopLayout>,
     keepsakes: Res<Keepsakes>,
     progress: Res<Progress>,
+    icons: Res<Icons>,
 ) {
     let night = progress.night;
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
@@ -518,7 +561,14 @@ fn build_evening_panel(
                 ("cost", &p.crate_cost),
             ],
         );
-        ui.button_in(row, &label, Action::Order(p.id.clone()), false, !boat_full);
+        ui.icon_button_in(
+            row,
+            icons.product(&p.id),
+            &label,
+            Action::Order(p.id.clone()),
+            false,
+            !boat_full,
+        );
     }
 
     ui.section(&lang.t("evening.furnish"));
@@ -533,7 +583,14 @@ fn build_evening_panel(
             "evening.decor_button",
             &[("item", &lang.decor(&d.id)), ("cost", &d.cost)],
         );
-        ui.button_in(row, &label, Action::ToolPlace(d.id.clone()), selected, true);
+        ui.icon_button_in(
+            row,
+            icons.decor(&d.id),
+            &label,
+            Action::ToolPlace(d.id.clone()),
+            selected,
+            true,
+        );
     }
     ui.button_in(
         row,
@@ -553,8 +610,9 @@ fn build_evening_panel(
         let row = ui.row();
         for d in owned {
             let selected = *tool == Tool::Place(d.id.clone());
-            ui.button_in(
+            ui.icon_button_in(
                 row,
+                icons.decor(&d.id),
                 &lang.decor(&d.id),
                 Action::ToolPlace(d.id.clone()),
                 selected,
@@ -577,7 +635,14 @@ fn build_evening_panel(
             "evening.stock_button",
             &[("item", &lang.product(&p.id)), ("count", &n)],
         );
-        ui.button_in(row, &label, Action::ToolStock(p.id.clone()), selected, true);
+        ui.icon_button_in(
+            row,
+            icons.product(&p.id),
+            &label,
+            Action::ToolStock(p.id.clone()),
+            selected,
+            true,
+        );
     }
     if !any {
         ui.dim(&lang.t("evening.storeroom_empty"));
@@ -608,6 +673,7 @@ fn build_night_panel(
     queue: Res<Queue>,
     layout: Res<ShopLayout>,
     drawer: Res<Drawer>,
+    icons: Res<Icons>,
     ghosts: Query<&Ghost>,
 ) {
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
@@ -710,7 +776,14 @@ fn build_night_panel(
                     "evening.stock_button",
                     &[("item", &lang.product(&id)), ("count", &n)],
                 );
-                ui.button_in(row, &label, Action::Offer(id.clone()), false, true);
+                ui.icon_button_in(
+                    row,
+                    icons.product(&id),
+                    &label,
+                    Action::Offer(id.clone()),
+                    false,
+                    true,
+                );
             }
             if !any {
                 ui.dim(&lang.t("night.nothing_on_shelves"));
@@ -998,16 +1071,35 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             (true, true) => BTN_SELECTED,
             (true, false) => BTN,
         };
-        self.spawn_button(parent, label, action, color, enabled, 12.0);
+        self.spawn_button(parent, None, label, action, color, enabled, 12.0);
+    }
+
+    /// Like `button_in`, with a small picture in front of the label.
+    pub(crate) fn icon_button_in(
+        &mut self,
+        parent: Entity,
+        icon: Option<Handle<Image>>,
+        label: &str,
+        action: Action,
+        selected: bool,
+        enabled: bool,
+    ) {
+        let color = match (enabled, selected) {
+            (false, _) => BTN_DISABLED,
+            (true, true) => BTN_SELECTED,
+            (true, false) => BTN,
+        };
+        self.spawn_button(parent, icon, label, action, color, enabled, 12.0);
     }
 
     pub(crate) fn primary(&mut self, label: &str, action: Action) {
-        self.spawn_button(self.footer, label, action, BTN_PRIMARY, true, 16.0);
+        self.spawn_button(self.footer, None, label, action, BTN_PRIMARY, true, 16.0);
     }
 
     pub(crate) fn spawn_button(
         &mut self,
         parent: Entity,
+        icon: Option<Handle<Image>>,
         label: &str,
         action: Action,
         color: Color,
@@ -1015,27 +1107,49 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         size: f32,
     ) {
         let text_color = if enabled { TEXT } else { TEXT_DIM };
+        let padding = if icon.is_some() {
+            UiRect::new(px(4), px(8), px(2), px(2))
+        } else {
+            UiRect::axes(px(8), px(5))
+        };
         let mut button = self.commands.spawn((
             Button,
             Hovered::default(),
             ActionButton(action),
             ButtonColor(color),
             Node {
-                padding: UiRect::axes(px(8), px(5)),
+                padding,
                 border: UiRect::all(px(1)),
                 border_radius: BorderRadius::all(px(4)),
                 justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                column_gap: px(5),
                 ..default()
             },
             BackgroundColor(color),
             BorderColor::all(Color::srgba(1.0, 1.0, 1.0, 0.08)),
             ChildOf(parent),
-            children![(
-                Text::new(label),
-                text_font(&self.font.regular, size),
-                TextColor(text_color),
+        ));
+        let id = button.id();
+        if let Some(image) = icon {
+            let tint = Color::srgba(1.0, 1.0, 1.0, if enabled { 1.0 } else { 0.4 });
+            button.commands().spawn((
+                ImageNode::new(image).with_color(tint),
+                Node {
+                    width: px(ICON_SIZE),
+                    height: px(ICON_SIZE),
+                    ..default()
+                },
                 Pickable::IGNORE,
-            )],
+                ChildOf(id),
+            ));
+        }
+        button.commands().spawn((
+            Text::new(label),
+            text_font(&self.font.regular, size),
+            TextColor(text_color),
+            Pickable::IGNORE,
+            ChildOf(id),
         ));
         if !enabled {
             button.insert(InteractionDisabled);

@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 KINDS = {
     "ghost": (176, 264, "ghosts", False),
     "ghost_sheet": (176, 264, "ghosts", False),  # size of one frame
-    "decor": (208, 208, "decor", False),
+    "decor": (96, 96, "decor", False),  # UI icon
     "product": (96, 96, "products", False),
     "door": (256, 384, "shop", False),
     "counter": (192, 1088, "shop", False),

@@ -4,16 +4,17 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Images are only needed for:
 
 - **Ghosts** – hand-drawn sprites that float in the room and always face the camera.
-- **Product pictures** – the existing ones are shown on the shelves while a product has no 3D
-  model yet. New products get 3D models only, no pictures.
+- **Icons** – small pictures of every product and piece of furniture on the buttons of the side
+  panel (ordering, furnishing, stocking shelves, handing over). A product picture is also shown
+  on the shelf while the product has no 3D model yet.
 - **The floor texture.**
 - **The title screen** – background picture and logo (for now taken from the Steam art).
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
-Images from the old 2D version (furniture, keepsakes, door, counter, back wall) are no longer used
-by the game and live in [`art/legacy-2d/`](../art/legacy-2d/README.md).
+The furniture and keepsake pictures of the old 2D version are reused as icons; the originals and
+the unused door, counter and back wall images live in [`art/legacy-2d/`](../art/legacy-2d/README.md).
 
-See what is still missing (models and ghost sprites):
+See what is still missing (models, ghost sprites, icons):
 
 ```bash
 python3 tools/check_models.py
@@ -23,6 +24,7 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
+| Icons for 8 products and 5 pieces of furniture | [Icons](#icons--canvas-1024--1024) |
 | *(optional)* Animation sheets for the ghosts | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
 | *(optional)* A title screen background in full HD | [Title screen](#title-screen-optional--canvas-1920--1080) |
 
@@ -38,6 +40,8 @@ python3 tools/check_models.py
 
    ```bash
    python3 tools/prepare_sprite.py ~/Downloads/image.png ghost cat --colors 48
+   python3 tools/prepare_sprite.py ~/Downloads/image.png product fish_bone --colors 48
+   python3 tools/prepare_sprite.py ~/Downloads/image.png decor fern --colors 48
    python3 tools/prepare_sprite.py ~/Downloads/image.png floor
    ```
 
@@ -152,12 +156,41 @@ reference, no text, not transparent.
 Prepare it with `python3 tools/prepare_sprite.py ~/Downloads/image.png background --out
 assets/sprites/title/background.png` and deliver it as `Add title background [skip ci]`.
 
-## Products (done)
+## Icons – canvas 1024 × 1024
 
-Product pictures are only a fallback until a product has its 3D model; new products get models
-only (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Existing pictures: `rain_jar`, `letter_paper`,
-`music_box`, `pocket_watch`, `wool_scarf`, `marbles`, `tea_tin`, `faceless_photo`, `rusty_key`,
-`powder_compact`, `lavender`, `tin_soldier`.
+One object per image, centred, seen from the front and slightly above, filling most of the canvas;
+the game shows it at 24 px on a button (and products at shelf size while they have no model), so
+keep the silhouette simple and bold. Prepare with kind `product` or `decor` (both 96 × 96):
+`assets/sprites/products/<id>.png` and `assets/sprites/decor/<id>.png`. A button without an icon
+just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
+
+**Missing – products:**
+
+| File id | Prompt |
+|---|---|
+| `ship_in_bottle` | A tiny sailing ship inside a corked glass bottle lying on a small wooden stand. |
+| `brass_compass` | An open round brass compass, lid up, needle pointing north. |
+| `fish_bone` | A cartoonish fish skeleton (head, spine, tail) on a small plate. |
+| `ball_of_yarn` | A loose ball of soft blue yarn with a strand hanging out. |
+| `polishing_cloth` | A folded soft cloth with a small round tin of metal polish on top. |
+| `hair_ribbon` | A light blue silk ribbon tied in a bow. |
+| `wedding_veil` | A folded white lace veil with a small pearl comb on top. |
+| `pressed_flower` | An open old book with a pressed pink flower between the pages. |
+
+**Missing – furniture:**
+
+| File id | Prompt |
+|---|---|
+| `oil_lamp` | A slender standing oil lamp on a wooden post, glass chimney with a warm glowing flame. |
+| `fern` | A lush fern in a round terracotta pot, drooping fronds. |
+| `gramophone` | A small wooden cabinet with an old gramophone on top, big brass horn, a record on the turntable. |
+| `stove` | A little round cast-iron stove on four feet with a short chimney pipe, its small door glowing warm orange. |
+| `vanity` | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
+
+**Done:** products `rain_jar`, `letter_paper`, `music_box`, `pocket_watch`, `wool_scarf`,
+`marbles`, `tea_tin`, `faceless_photo`, `rusty_key`, `powder_compact`, `lavender`, `tin_soldier`;
+furniture and keepsakes `shelf`, `candle`, `mirror`, `incense`, `rug`, `grandfather_clock`,
+`umbrella`, `teacup`, `blanket`, `wedding_photo`, `pocket_lantern` (from the old 2D version).
 
 ## Floor – canvas 1024 × 1024 (done)
 

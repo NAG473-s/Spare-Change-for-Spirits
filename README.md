@@ -107,7 +107,7 @@ assets/
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md
-  sprites/       ghost, product, floor and title screen images
+  sprites/       ghost sprites, product and furniture icons, floor and title screen images
 ```
 
 Buttons carry an `Action`. A global observer forwards it as a message, and every plugin reads
@@ -171,9 +171,11 @@ Tested with Blender 5.3 (any recent version with the bundled glTF exporter works
 
 **Images** ([docs/ART_PROMPTS.md](docs/ART_PROMPTS.md), prepared with `tools/prepare_sprite.py`):
 ghosts (`assets/sprites/ghosts/<id>.png`) are always sprites, animated by the game; an optional
-sheet `<id>_sheet.png` (frames side by side) replaces the single image and plays as a loop; product pictures
-(`assets/sprites/products/<id>.png`) are shown on shelves while a product has no model; the floor
-texture is `assets/sprites/shop/floor.png`.
+sheet `<id>_sheet.png` (frames side by side) replaces the single image and plays as a loop.
+Icons of products (`assets/sprites/products/<id>.png`) and furniture
+(`assets/sprites/decor/<id>.png`) appear on the side panel's buttons; a product picture is also
+shown on the shelf while the product has no model. The floor texture is
+`assets/sprites/shop/floor.png`, the title screen uses `assets/sprites/title/`.
 
 **Steam:** AI-generated content must be disclosed in the Steamworks content survey.
 

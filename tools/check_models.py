@@ -162,13 +162,19 @@ def main():
         for extra in sorted((MODELS / folder).glob("*.glb")) if (MODELS / folder).is_dir() else []:
             if extra.stem not in targets:
                 print(f"  unknown  {extra.relative_to(ROOT)} (no id with this name)")
-    # Images the 3D game still uses: one sprite per ghost and the floor texture.
+    # Images the 3D game uses: one sprite per ghost and the floor texture.
     print()
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
     floor = ROOT / "assets" / "sprites" / "shop" / "floor.png"
     print(("  ok       " if floor.is_file() else "  missing  ") + "sprites/shop/floor.png")
+    # Button icons (optional: a button without one shows only its text).
+    print()
+    for folder in ("products", "decor"):
+        for item in expected[folder]:
+            icon = ROOT / "assets" / "sprites" / folder / f"{item}.png"
+            print(("  ok       " if icon.is_file() else "  no icon  ") + f"sprites/{folder}/{item}.png")
     return 1 if failures else 0
 
 
