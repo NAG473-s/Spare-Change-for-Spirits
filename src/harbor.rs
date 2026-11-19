@@ -26,19 +26,22 @@ use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::scene::{
     Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, SHOP_CAMERA_POS, SHOP_CAMERA_TARGET,
-    world_label,
+};
+use crate::sign::{
+    SignReading,
+    paint::{Motif, on_board},
+    return_post,
 };
 use crate::title::spawn_fade;
-use crate::ui::{Action, ActionButton, ButtonTone, GameLog, TEXT, TEXT_DIM, UiFont, text_font};
-use bevy::picking::hover::Hovered;
-use bevy::ui_widgets::Button;
+use crate::ui::{Action, GameLog};
 
 pub struct HarborPlugin;
 
 impl Plugin for HarborPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Location>()
-            .add_systems(Startup, (spawn_harbor, spawn_door_boards))
+            .add_systems(Startup, spawn_harbor)
+            .add_systems(PostStartup, spawn_door_boards)
             .add_systems(OnExit(Phase::Evening), |mut location: ResMut<Location>| {
                 *location = Location::Shop;
             })
@@ -48,7 +51,6 @@ impl Plugin for HarborPlugin {
                     walk.run_if(in_state(Phase::Evening)),
                     update_door_boards,
                     way_hints,
-                    translate_wayfinders.run_if(resource_changed::<UiFont>),
                     move_camera.run_if(resource_changed::<Location>),
                     drift_lanterns,
                     drift_mist,
@@ -90,13 +92,6 @@ const WRAP: (f32, f32) = (-11.0, 13.0);
 /// The shop door: in the evening, clicking it leads out to the harbour.
 #[derive(Component)]
 pub struct ShopDoor;
-
-/// The signpost on the quay: clicking it leads back into the shop.
-#[derive(Component)]
-struct Signpost;
-
-#[derive(Component)]
-struct Wayfinder(&'static str);
 
 #[derive(Component)]
 struct Rowboat {
@@ -233,8 +228,6 @@ impl Kit<'_, '_, '_> {
 fn spawn_harbor(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    font: Res<UiFont>,
-    lang: Res<Lang>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
@@ -657,43 +650,15 @@ fn spawn_harbor(
     }
 
     // The signpost back to the shop: click it to go back.
-    let sign = kit
-        .commands
-        .spawn((
-            Signpost,
-            Transform::from_translation(HARBOR + SIGNPOST),
-            Visibility::default(),
-        ))
-        .observe(on_signpost_click)
-        .id();
-    if !kit.model_in(sign, "signpost", Transform::default()) {
-        let post = kit.meshes.add(Cylinder::new(0.06, 1.9));
-        let board = kit.meshes.add(Cuboid::new(0.8, 0.22, 0.05));
-        let sign_mat = kit.materials.add(Color::srgb(0.4, 0.28, 0.18));
-        kit.commands.spawn((
-            Mesh3d(post),
-            MeshMaterial3d(sign_mat.clone()),
-            Transform::from_xyz(0.0, 0.95, 0.0),
-            ChildOf(sign),
-        ));
-        for (y, turn) in [(1.6, 0.15), (1.3, -0.1)] {
-            kit.commands.spawn((
-                Mesh3d(board.clone()),
-                MeshMaterial3d(sign_mat.clone()),
-                Transform::from_xyz(0.25, y, 0.05).with_rotation(Quat::from_rotation_y(turn)),
-                ChildOf(sign),
-            ));
-        }
-    }
-    spawn_wayfinder(
+    let sign = return_post(
         kit.commands,
-        &font,
-        &lang,
+        kit.asset_server,
+        kit.meshes,
+        kit.materials,
+        HARBOR + SIGNPOST,
         "harbor.back",
-        Action::BackToShop,
-        sign,
-        Vec3::new(0.22, 2.35, 0.0),
     );
+    kit.commands.entity(sign).observe(on_signpost_click);
 
     // Paper lanterns drifting slowly across the water.
     let lantern_model = asset_exists("models/harbor/paper_lantern.glb");
@@ -860,19 +825,14 @@ struct DoorBoard(Way);
 /// game writes on them. `assets/models/shop/way_board.glb`, otherwise a
 /// plain plank. Origin: the centre of the board's back.
 const WAY_BOARD_MODEL: &str = "models/shop/way_board.glb";
-const WAY_BOARD_SIZE: Vec3 = Vec3::new(0.8, 0.24, 0.05);
-/// On the back wall in the corner by the door, above the coat stand.
-const WAY_BOARDS: [(Way, &str, Vec3); 2] = [
-    (
-        Way::Harbor,
-        "harbor.door",
-        Vec3::new(-6.4, 2.62, crate::scene::ROOM_BACK_Z + 0.02),
-    ),
-    (
-        Way::Market,
-        "shop.to_market",
-        Vec3::new(-6.4, 2.2, crate::scene::ROOM_BACK_Z + 0.02),
-    ),
+const WAY_BOARD_SIZE: Vec3 = Vec3::new(0.8, 0.24, 0.039);
+const WALL_BOARD_SCALE: Vec3 = Vec3::new(2.17, 1.85, 1.0);
+/// From the door's centre towards the back of its wall. The nearest tip is
+/// 10 cm from its jamb. The backs sit flush against the plaster.
+const WALL_BOARD_OFFSET: Vec3 = Vec3::new(1.52, 0.0, -0.084);
+const WAY_BOARDS: [(Way, &str, f32); 2] = [
+    (Way::Harbor, "harbor.door", 1.96),
+    (Way::Market, "shop.to_market", 1.40),
 ];
 
 /// What a board does right now: go there, or explain when it can be used.
@@ -886,18 +846,20 @@ fn way_action(way: Way, phase: Phase, night: u32, final_night: u32) -> Action {
 
 fn spawn_door_boards(
     mut commands: Commands,
-    font: Res<UiFont>,
-    lang: Res<Lang>,
+    door: Single<&Transform, With<ShopDoor>>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (way, key, pos) in WAY_BOARDS {
-        // Front towards the room (+z, the camera).
+    let mounting = door.translation + door.rotation * WALL_BOARD_OFFSET;
+    for (way, key, height) in WAY_BOARDS {
         let board = commands
             .spawn((
                 DoorBoard(way),
-                Transform::from_translation(pos),
+                SignReading(key),
+                Transform::from_translation(mounting.with_y(height))
+                    .with_rotation(door.rotation)
+                    .with_scale(WALL_BOARD_SCALE),
                 Visibility::default(),
             ))
             .observe(on_door_board_click)
@@ -907,7 +869,9 @@ fn spawn_door_boards(
                 WorldAssetRoot(
                     asset_server.load(GltfAssetLabel::Scene(0).from_asset(WAY_BOARD_MODEL)),
                 ),
-                Transform::default(),
+                // Both arrowheads point towards the exit. The lettering keeps
+                // its own orientation on the face.
+                Transform::from_scale(Vec3::new(-1.0, 1.0, 1.0)),
                 ChildOf(board),
             ));
         } else {
@@ -922,16 +886,19 @@ fn spawn_door_boards(
                 ChildOf(board),
             ));
         }
-        let label = spawn_wayfinder(
+        let motif = match way {
+            Way::Harbor => Motif::Anchor,
+            Way::Market => Motif::Awning,
+        };
+        let ink = on_board(
             &mut commands,
-            &font,
-            &lang,
-            key,
-            Action::WayHint(way),
             board,
-            Vec3::ZERO,
+            key,
+            motif,
+            Transform::from_xyz(0.026, 0.0, 0.041),
+            Vec2::new(0.66, 0.205),
         );
-        commands.entity(label).insert(DoorBoard(way));
+        commands.entity(ink).insert(DoorBoard(way));
     }
 }
 
@@ -952,24 +919,33 @@ fn on_door_board_click(
     }
 }
 
-/// The lettering does what the board does, and greys out when the way is
-/// closed.
+/// Weathered paint is quieter while a route is closed. Clicking explains the hours.
 fn update_door_boards(
     phase: Res<State<Phase>>,
     progress: Res<Progress>,
     data: Res<GameData>,
-    mut labels: Query<(&DoorBoard, &mut ActionButton, &mut TextColor)>,
+    boards: Query<(&DoorBoard, &MeshMaterial3d<StandardMaterial>)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let final_night = data.config.final_night();
-    for (DoorBoard(way), mut button, mut color) in &mut labels {
-        let action = way_action(*way, *phase.get(), progress.night, final_night);
-        let open = !matches!(action, Action::WayHint(_));
-        if button.0 != action {
-            button.0 = action;
-        }
-        let wanted = if open { TEXT } else { TEXT_DIM };
-        if color.0 != wanted {
-            color.0 = wanted;
+    for (DoorBoard(way), paint) in &boards {
+        let open = !matches!(
+            way_action(
+                *way,
+                *phase.get(),
+                progress.night,
+                data.config.final_night()
+            ),
+            Action::WayHint(_)
+        );
+        let wanted = if open {
+            Color::WHITE
+        } else {
+            Color::srgb(0.78, 0.74, 0.73)
+        };
+        if materials.get(paint).is_some_and(|m| m.base_color != wanted)
+            && let Some(mut material) = materials.get_mut(paint)
+        {
+            material.base_color = wanted;
         }
     }
 }
@@ -983,58 +959,6 @@ fn way_hints(mut actions: MessageReader<Action>, lang: Res<Lang>, mut log: ResMu
                 Way::Market => "log.market_morning",
             }));
         }
-    }
-}
-
-/// A sign above a way out (the shop door, the signposts at the harbour and
-/// the market). It is a button: clicking it goes where it says, like
-/// clicking the door or signpost itself.
-pub(crate) fn spawn_wayfinder(
-    commands: &mut Commands,
-    font: &UiFont,
-    lang: &Lang,
-    key: &'static str,
-    action: Action,
-    target: Entity,
-    offset: Vec3,
-) -> Entity {
-    let (surface, trim) = ButtonTone::Walnut.paint(false);
-    commands
-        .spawn(world_label(font, lang.t(key), 13.0, target, offset))
-        .insert((
-            Wayfinder(key),
-            text_font(&font.display, 13.0),
-            TextShadow {
-                offset: Vec2::splat(1.0),
-                ..default()
-            },
-            Node {
-                position_type: PositionType::Absolute,
-                width: px(crate::scene::LABEL_WIDTH),
-                padding: UiRect::axes(px(5), px(3)),
-                border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(4)),
-                ..default()
-            },
-            surface,
-            trim,
-            Button,
-            Hovered::default(),
-            ActionButton(action),
-            ButtonTone::Walnut,
-            Pickable::default(),
-        ))
-        .id()
-}
-
-fn translate_wayfinders(
-    lang: Res<Lang>,
-    font: Res<UiFont>,
-    mut labels: Query<(&Wayfinder, &mut Text, &mut TextFont)>,
-) {
-    for (wayfinder, mut text, mut face) in &mut labels {
-        text.0 = lang.t(wayfinder.0);
-        face.font = font.display.clone();
     }
 }
 
