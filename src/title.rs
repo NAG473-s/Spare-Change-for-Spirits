@@ -37,16 +37,16 @@ const BACKGROUND: &str = "sprites/title/background.png";
 /// The game logo shown above the main menu (text heading if it is missing).
 pub const LOGO: &str = "sprites/title/logo.png";
 /// Width / height of the background until its image has loaded.
-const DEFAULT_ASPECT: f32 = 1232.0 / 706.0;
+const DEFAULT_ASPECT: f32 = 16.0 / 9.0;
 /// Light sources in the background art: centre (fraction of the image's
 /// width and height), radius (fraction of the image's width), strength.
 const GLOWS: [(Vec2, f32, f32); 3] = [
     // Candle on the counter.
-    (Vec2::new(0.478, 0.665), 0.10, 0.34),
+    (Vec2::new(0.527, 0.652), 0.09, 0.34),
     // Hanging lamp.
-    (Vec2::new(0.674, 0.15), 0.12, 0.28),
+    (Vec2::new(0.648, 0.176), 0.11, 0.28),
     // Moonlit window.
-    (Vec2::new(0.79, 0.17), 0.09, 0.10),
+    (Vec2::new(0.844, 0.167), 0.08, 0.10),
 ];
 const MOTES: usize = 28;
 const GHOST_SIZE: Vec2 = Vec2::new(84.0, 126.0);

@@ -24,9 +24,8 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
-| *(optional)* Animation sheets for `cat`, `sailor`, `knight`, `bride` (the other six are done) | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
+| *(optional)* Animation sheets for `cat` and `sailor` (the other eight are done) | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
 | *(optional)* Models for the harbour (boat, crate, ferryman) and the wall clock | [MODEL_PROMPTS.md](MODEL_PROMPTS.md#the-harbour--assetsmodelsshopidglb-optional) |
-| *(optional)* A title screen background in full HD | [Title screen](#title-screen-optional--canvas-1920--1080) |
 | *(optional)* Painted coin icons | [Coins](#coins-optional--canvas-1024--1024) |
 
 ## Workflow
@@ -133,16 +132,16 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
 
-## Title screen (optional) – canvas 1920 × 1080
+## Title screen – canvas 1920 × 1080 (done)
 
 The title screen shows `assets/sprites/title/background.png` scaled to cover the window, the logo
 `assets/sprites/title/logo.png` and the main menu on the **left third**, which the game darkens.
-Both files currently come from the Steam art (`art/steam/artwork/main_capsule.png` and
-`art/steam/library_logo.png`, trimmed). The game adds flickering light on the candle, the hanging
+The background is a full-HD painting; the logo comes from the Steam art
+(`art/steam/library_logo.png`, trimmed). The game adds flickering light on the candle, the hanging
 lamp and the window (`GLOWS` in `src/title.rs` – adjust the positions for a new picture), drifting
 dust and a ghost floating past.
 
-A sharper full-HD picture can replace the background:
+Prompt (kept for redoing it):
 
 ```
 The inside of the ghost shop at night, wide 16:9 scene, 1920 x 1080. Edwin,
