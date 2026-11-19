@@ -1,7 +1,7 @@
-//! The first crossing, shown once before the language picker.
+//! The first crossing, shown once before the main menu.
 
 use super::{LOGO, Opening, TitleBackground, spawn_fade};
-use crate::{data::asset_exists, day_cycle::Phase, i18n::Lang, ui::UiFont};
+use crate::{data::asset_exists, day_cycle::Phase, i18n::Lang, save::Settings, ui::UiFont};
 use bevy::prelude::*;
 use bevy::render::{
     ExtractSchedule, MainWorld, RenderApp, render_asset::RenderAssets,
@@ -9,6 +9,7 @@ use bevy::render::{
 };
 
 mod ferry;
+mod story;
 mod stroke;
 
 const HARBOR: &str = "sprites/title/intro_harbor.png";
@@ -16,10 +17,13 @@ const TITLE_AT: f32 = 2.8;
 const TITLE_FADE: f32 = 1.7;
 const END_FADE: f32 = 0.75;
 const READY_FRAMES: u8 = 2;
+const STALL_SECS: f32 = 1.0;
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub(super) struct Crossing {
     elapsed: f32,
+    started: bool,
+    soundtrack: story::Soundtrack,
 }
 
 #[derive(Component)]
@@ -43,7 +47,7 @@ pub(super) fn install(app: &mut App) {
         .add_systems(Startup, spawn)
         .add_systems(
             Update,
-            (animate, ferry::animate)
+            (animate, (ferry::animate, story::update))
                 .chain()
                 .run_if(in_state(Phase::Menu)),
         );
@@ -56,6 +60,7 @@ pub(super) fn spawn(
     assets: Res<AssetServer>,
     lang: Res<Lang>,
     font: Res<UiFont>,
+    settings: Res<Settings>,
     mut opening: ResMut<Opening>,
 ) {
     let mut picture = |path: &'static str| {
@@ -139,7 +144,8 @@ pub(super) fn spawn(
             TextColor(Color::srgb(1., 0.86, 0.57).with_alpha(0.)),
         ));
     }
-    // The familiar double chevron is visible even before choosing a language.
+    story::spawn(&mut commands, root, &font);
+    // The double chevron marks the skip action in every language.
     for inset in [24., 32.] {
         commands.spawn((
             Node {
@@ -168,7 +174,11 @@ pub(super) fn spawn(
         Pickable::IGNORE,
         ChildOf(root),
     ));
-    commands.entity(root).insert(Crossing::default());
+    commands.entity(root).insert(Crossing {
+        elapsed: 0.,
+        started: false,
+        soundtrack: story::Soundtrack::load(&assets, &lang.code, &settings),
+    });
 }
 
 /// Start counting once the harbour can be drawn, including on a cold shader cache.
@@ -208,6 +218,8 @@ fn ease(t: f32) -> f32 {
 pub(super) fn animate(
     mut commands: Commands,
     time: Res<Time<Real>>,
+    assets: Res<AssetServer>,
+    settings: Res<Settings>,
     opening: Option<Res<Opening>>,
     mouse: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
@@ -238,9 +250,27 @@ pub(super) fn animate(
     if opening.is_none_or(|loading| loading.rendered_frames < READY_FRAMES) {
         return;
     }
-    // Shader compilation or resuming a suspended window must not consume the
-    // crossing before the player has seen it. At normal frame rates this is real time.
-    crossing.elapsed += time.delta_secs().min(0.25);
+    if !crossing.started {
+        if crossing.soundtrack.ready(&assets) {
+            crossing
+                .soundtrack
+                .play_from(&mut commands, root, &assets, &settings, 0.);
+            crossing.started = true;
+        }
+        return;
+    }
+    // The audio device can keep running while the window is suspended. Resume
+    // both stems at the visible playhead so a stall never swallows a sentence.
+    let dt = time.delta_secs();
+    if dt > STALL_SECS {
+        crossing.elapsed += 0.25;
+        let elapsed = crossing.elapsed.min(stroke::DURATION);
+        crossing
+            .soundtrack
+            .play_from(&mut commands, root, &assets, &settings, elapsed);
+    } else {
+        crossing.elapsed += dt;
+    }
     let t = crossing.elapsed;
     for (image, text) in &mut titles {
         let alpha = ease((t - TITLE_AT) / TITLE_FADE);
