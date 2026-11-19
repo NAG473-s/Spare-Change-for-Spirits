@@ -202,6 +202,8 @@ Gameplay triggers sounds and effects through the `Cue` message.
 
 ## Next steps (ideas)
 
+The plan up to the festival and the Early Access launch is in [docs/ROADMAP.md](docs/ROADMAP.md).
+
 - [x] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
 - [x] Forgetful ghost: wants to pay twice – accept or be honest?
 - [x] Edwin: a story across five nights, keepsakes as decor
