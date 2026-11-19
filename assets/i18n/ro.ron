@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Nu sunt destui bani în sertar: {item} ({cost}).",
     "log.ferry_brings": "Luntrașul aduce: {count}× {item}.",
     "log.ferry_takes_back": "Luntrașul ia înapoi o ladă ({item}) și îți înapoiază monedele.",
+    "log.harbor_evening": "Luntrașul vine doar seara, înainte să se deschidă magazinul.",
+    "log.market_morning": "Târgul din sat e deschis ziua – după socotelile de dimineață.",
     "log.cell_blocked": "Locul acesta e încă plin de vechituri. Tâmplarul de la târgul din sat îl poate elibera.",
     "log.saved": "Joc salvat: {slot}.",
     "log.ferryman_loan": "Luntrașul vede cât de puțin a rămas în sertarul tău și îți împrumută monede în valoare de {amount}. În zori ia înapoi {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ieși în port  →",
     "harbor.back": "Înapoi în magazin",
     "harbor.door": "Spre port",
+    "shop.to_market": "Spre târg",
 
     // Accounts at dawn
     "accounts.title": "Zori – socotelile nopții {night}",

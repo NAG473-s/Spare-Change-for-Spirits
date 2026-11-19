@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "돈통의 돈이 모자란다: {item} ({cost})",
     "log.ferry_brings": "뱃사공이 가져온 물건: {item} ×{count}",
     "log.ferry_takes_back": "뱃사공이 상자 하나를 도로 가져가고 돈을 돌려준다: {item}",
+    "log.harbor_evening": "뱃사공은 저녁에, 가게를 열기 전에만 와요.",
+    "log.market_morning": "마을 장터는 낮에 열려요 – 아침 정산을 마친 뒤에요.",
     "log.cell_blocked": "이 자리는 아직 낡은 잡동사니로 가득하다. 마을 장터의 목수가 치워 줄 수 있다.",
     "log.saved": "게임을 저장했다: {slot}",
     "log.ferryman_loan": "돈통에 남은 돈이 얼마 없는 걸 본 뱃사공이 {amount}어치 동전을 빌려준다. 새벽에는 {due}만큼 돌려받는다.",
@@ -272,6 +274,7 @@
     "harbor.go": "선착장으로 나가기  →",
     "harbor.back": "가게로 돌아가기",
     "harbor.door": "선착장으로",
+    "shop.to_market": "장터로",
 
     // Accounts at dawn
     "accounts.title": "새벽 – {night}번째 밤 정산",

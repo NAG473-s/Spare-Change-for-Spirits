@@ -105,6 +105,7 @@ BOTTOM_CENTRE = ("centre", "minimum", "centre")
 ORIGIN_AXES = {
     "room": (None, None, None),
     "wall_clock": ("centre", "centre", "minimum"),
+    "way_board": ("centre", "centre", "minimum"),
     "shop_sign": ("centre", None, "centre"),
     "ferry_boat": ("centre", None, "centre"),
     "crate_lid": ("centre", None, "minimum"),
@@ -264,6 +265,7 @@ def main():
             crate_lid=(0.52, 0.05, 0.44),
             wall_clock=(0.78, 0.78, 0.08),
             shop_sign=(1.0, 0.75, 0.05),
+            way_board=(0.8, 0.24, 0.05),
             **CONTAINER_SIZES,
             **JUNK_SIZES,
             **upgrade_sizes(),

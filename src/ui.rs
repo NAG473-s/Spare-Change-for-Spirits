@@ -125,6 +125,9 @@ pub enum Action {
     BackToShop,
     /// Leave the village market for the evening in the shop.
     EndDay,
+    /// A board beside the shop door whose way is closed now: say when it
+    /// opens.
+    WayHint(crate::harbor::Way),
     /// Main menu: newest save over all profiles.
     Continue,
     /// Main menu pages: the list of saves, and the profile for a new game.

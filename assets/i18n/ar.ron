@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "ما في الدرج لا يكفي لشراء {item} ({cost}).",
     "log.ferry_brings": "يُحضر الملّاح {count}× {item}.",
     "log.ferry_takes_back": "يستعيد الملّاح صندوق {item} ويردّ إليك عملاتك.",
+    "log.harbor_evening": "لا يأتي الملّاح إلا في المساء، قبل أن يُفتح المتجر.",
+    "log.market_morning": "سوق القرية مفتوح في النهار – بعد الحسابات في الصباح.",
     "log.cell_blocked": "ما زال هذا الموضع مليئًا بالخردة القديمة. يستطيع النجّار في سوق القرية إخلاءه.",
     "log.saved": "حُفظت اللعبة: {slot}.",
     "log.ferryman_loan": "يرى الملّاح كم بقي قليلًا في درجك، فيُقرضك عملات بقيمة {amount}. وعند الفجر يستعيد {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "اخرج إلى المرسى  →",
     "harbor.back": "عُد إلى المتجر",
     "harbor.door": "إلى المرسى",
+    "shop.to_market": "إلى السوق",
 
     // Accounts at dawn
     "accounts.title": "الفجر – حسابات الليلة {night}",

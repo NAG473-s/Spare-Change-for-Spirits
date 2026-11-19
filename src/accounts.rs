@@ -205,7 +205,7 @@ fn build_ledger(
     let (layer, panel) = overlay(&mut commands, &theme, 0.55, 860.0);
     commands
         .entity(layer)
-        .insert((Ledger, DespawnOnExit(Phase::Morning)));
+        .insert((Ledger, DespawnOnExit(Phase::Morning), Pickable::IGNORE));
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     let root = ui.root();
     ui.heading(&lang.f("accounts.title", &[("night", &progress.night)]));

@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Çekmecede yeterli para yok: {item} ({cost}).",
     "log.ferry_brings": "Kayıkçı getirdi: {count}× {item}.",
     "log.ferry_takes_back": "Kayıkçı bir sandığı geri alıyor ({item}) ve paranı iade ediyor.",
+    "log.harbor_evening": "Kayıkçı yalnızca akşamları, dükkân açılmadan önce gelir.",
+    "log.market_morning": "Köy pazarı gündüzleri açık – sabahki hesaplardan sonra.",
     "log.cell_blocked": "Burası hâlâ eski ıvır zıvırla dolu. Köy pazarındaki marangoz burayı boşaltabilir.",
     "log.saved": "Oyun kaydedildi: {slot}.",
     "log.ferryman_loan": "Kayıkçı çekmecende ne kadar az para kaldığını görüp sana {amount} değerinde sikke borç veriyor. Şafakta {due} geri alacak.",
@@ -272,6 +274,7 @@
     "harbor.go": "İskeleye çık  →",
     "harbor.back": "Dükkâna dön",
     "harbor.door": "İskeleye",
+    "shop.to_market": "Pazara",
 
     // Accounts at dawn
     "accounts.title": "Şafak – {night}. gecenin hesapları",

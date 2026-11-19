@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Nincs elég a kasszában: {item} ({cost}).",
     "log.ferry_brings": "A révész szállítmánya: {count}× {item}.",
     "log.ferry_takes_back": "A révész visszaviszi a ládát ({item}), és visszaadja az érméidet.",
+    "log.harbor_evening": "A révész csak este jön, mielőtt kinyit a bolt.",
+    "log.market_morning": "A falusi piac napközben van nyitva – a reggeli elszámolás után.",
     "log.cell_blocked": "Ez a hely még tele van régi lomokkal. A falusi piacon az asztalos kitakaríthatja.",
     "log.saved": "Játék elmentve: {slot}.",
     "log.ferryman_loan": "A révész látja, milyen kevés maradt a kasszádban, és kölcsönad {amount} értékű érmét. Hajnalban visszaveszi: {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ki a kikötőbe  →",
     "harbor.back": "Vissza a boltba",
     "harbor.door": "A kikötőbe",
+    "shop.to_market": "A piacra",
 
     // Accounts at dawn
     "accounts.title": "Hajnal – elszámolás, {night}. éjszaka",

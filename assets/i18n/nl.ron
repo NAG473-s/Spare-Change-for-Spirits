@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "{item} ({cost}): daarvoor zit er te weinig in de kassa.",
     "log.ferry_brings": "De veerman brengt {count}× {item}.",
     "log.ferry_takes_back": "De veerman neemt een krat terug ({item}) en geeft je je munten terug.",
+    "log.harbor_evening": "De veerman komt alleen 's avonds, voordat de winkel opengaat.",
+    "log.market_morning": "De dorpsmarkt is overdag open – na het kasboek in de ochtend.",
     "log.cell_blocked": "Deze plek ligt nog vol oude rommel. De timmerman op de dorpsmarkt kan hem vrijmaken.",
     "log.saved": "Spel opgeslagen: {slot}.",
     "log.ferryman_loan": "De veerman ziet hoe weinig er nog in je kassa zit en leent je munten ter waarde van {amount}. Bij dageraad neemt hij {due} terug.",
@@ -272,6 +274,7 @@
     "harbor.go": "Naar buiten, naar de haven  →",
     "harbor.back": "Terug de winkel in",
     "harbor.door": "Naar de haven",
+    "shop.to_market": "Naar de markt",
 
     // Accounts at dawn
     "accounts.title": "Dageraad – Kasboek van nacht {night}",

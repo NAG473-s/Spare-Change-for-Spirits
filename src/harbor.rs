@@ -17,14 +17,16 @@ use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 
+use crate::data::GameData;
 use crate::data::asset_exists;
 use crate::day_cycle::Phase;
+use crate::day_cycle::Progress;
 use crate::fx::Flicker;
 use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::scene::{Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, world_label};
 use crate::title::spawn_fade;
-use crate::ui::{Action, ActionButton, ButtonTone, UiFont, text_font};
+use crate::ui::{Action, ActionButton, ButtonTone, GameLog, TEXT, TEXT_DIM, UiFont, text_font};
 use bevy::picking::hover::Hovered;
 use bevy::ui_widgets::Button;
 
@@ -33,8 +35,7 @@ pub struct HarborPlugin;
 impl Plugin for HarborPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Location>()
-            .add_systems(Startup, spawn_harbor)
-            .add_systems(OnEnter(Phase::Evening), label_shop_door)
+            .add_systems(Startup, (spawn_harbor, spawn_door_boards))
             .add_systems(OnExit(Phase::Evening), |mut location: ResMut<Location>| {
                 *location = Location::Shop;
             })
@@ -42,6 +43,8 @@ impl Plugin for HarborPlugin {
                 Update,
                 (
                     walk.run_if(in_state(Phase::Evening)),
+                    update_door_boards,
+                    way_hints,
                     translate_wayfinders.run_if(resource_changed::<UiFont>),
                     move_camera.run_if(resource_changed::<Location>),
                     drift_lanterns,
@@ -836,24 +839,148 @@ fn spawn_harbor(
     commands.insert_resource(RippleMesh(meshes.add(Annulus::new(0.92, 1.0))));
 }
 
-/// "Harbour" above the shop door in the evening.
-fn label_shop_door(
+/// Where a board beside the shop door leads.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Way {
+    /// Out to the ferryman, in the evening.
+    Harbor,
+    /// To the village market, in the morning after the accounts.
+    Market,
+}
+
+/// One of the two boards beside the shop door (the board itself and its
+/// lettering both carry it).
+#[derive(Component)]
+struct DoorBoard(Way);
+
+/// The boards hang on the wall beside the door, one above the other; the
+/// game writes on them. `assets/models/shop/way_board.glb`, otherwise a
+/// plain plank. Origin: the centre of the board's back.
+const WAY_BOARD_MODEL: &str = "models/shop/way_board.glb";
+const WAY_BOARD_SIZE: Vec3 = Vec3::new(0.8, 0.24, 0.05);
+/// On the back wall in the corner by the door, above the coat stand.
+const WAY_BOARDS: [(Way, &str, Vec3); 2] = [
+    (
+        Way::Harbor,
+        "harbor.door",
+        Vec3::new(-6.4, 2.62, crate::scene::ROOM_BACK_Z + 0.02),
+    ),
+    (
+        Way::Market,
+        "shop.to_market",
+        Vec3::new(-6.4, 2.2, crate::scene::ROOM_BACK_Z + 0.02),
+    ),
+];
+
+/// What a board does right now: go there, or explain when it can be used.
+fn way_action(way: Way, phase: Phase, night: u32, final_night: u32) -> Action {
+    match way {
+        Way::Harbor if phase == Phase::Evening => Action::GoToHarbor,
+        Way::Market if phase == Phase::Morning && night < final_night => Action::NextEvening,
+        _ => Action::WayHint(way),
+    }
+}
+
+fn spawn_door_boards(
     mut commands: Commands,
     font: Res<UiFont>,
     lang: Res<Lang>,
-    door: Option<Single<Entity, With<ShopDoor>>>,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let Some(door) = door else { return };
-    let label = spawn_wayfinder(
-        &mut commands,
-        &font,
-        &lang,
-        "harbor.door",
-        Action::GoToHarbor,
-        *door,
-        Vec3::new(1.1, 2.5, 0.0),
-    );
-    commands.entity(label).insert(DespawnOnExit(Phase::Evening));
+    for (way, key, pos) in WAY_BOARDS {
+        // Front towards the room (+z, the camera).
+        let board = commands
+            .spawn((
+                DoorBoard(way),
+                Transform::from_translation(pos),
+                Visibility::default(),
+            ))
+            .observe(on_door_board_click)
+            .id();
+        if asset_exists(WAY_BOARD_MODEL) {
+            commands.spawn((
+                WorldAssetRoot(
+                    asset_server.load(GltfAssetLabel::Scene(0).from_asset(WAY_BOARD_MODEL)),
+                ),
+                Transform::default(),
+                ChildOf(board),
+            ));
+        } else {
+            commands.spawn((
+                Mesh3d(meshes.add(Cuboid::from_size(WAY_BOARD_SIZE))),
+                MeshMaterial3d(materials.add(StandardMaterial {
+                    base_color: Color::srgb(0.42, 0.29, 0.19),
+                    perceptual_roughness: 0.85,
+                    ..default()
+                })),
+                Transform::from_xyz(0.0, 0.0, WAY_BOARD_SIZE.z / 2.0),
+                ChildOf(board),
+            ));
+        }
+        let label = spawn_wayfinder(
+            &mut commands,
+            &font,
+            &lang,
+            key,
+            Action::WayHint(way),
+            board,
+            Vec3::ZERO,
+        );
+        commands.entity(label).insert(DoorBoard(way));
+    }
+}
+
+fn on_door_board_click(
+    click: On<PointerClick>,
+    boards: Query<&DoorBoard>,
+    phase: Res<State<Phase>>,
+    progress: Res<Progress>,
+    data: Res<GameData>,
+    mut actions: MessageWriter<Action>,
+) {
+    if click.button != PointerButton::Primary {
+        return;
+    }
+    if let Ok(DoorBoard(way)) = boards.get(click.event_target()) {
+        let final_night = data.config.final_night();
+        actions.write(way_action(*way, *phase.get(), progress.night, final_night));
+    }
+}
+
+/// The lettering does what the board does, and greys out when the way is
+/// closed.
+fn update_door_boards(
+    phase: Res<State<Phase>>,
+    progress: Res<Progress>,
+    data: Res<GameData>,
+    mut labels: Query<(&DoorBoard, &mut ActionButton, &mut TextColor)>,
+) {
+    let final_night = data.config.final_night();
+    for (DoorBoard(way), mut button, mut color) in &mut labels {
+        let action = way_action(*way, *phase.get(), progress.night, final_night);
+        let open = !matches!(action, Action::WayHint(_));
+        if button.0 != action {
+            button.0 = action;
+        }
+        let wanted = if open { TEXT } else { TEXT_DIM };
+        if color.0 != wanted {
+            color.0 = wanted;
+        }
+    }
+}
+
+/// A closed way says when it opens.
+fn way_hints(mut actions: MessageReader<Action>, lang: Res<Lang>, mut log: ResMut<GameLog>) {
+    for action in actions.read() {
+        if let Action::WayHint(way) = action {
+            log.push(lang.t(match way {
+                Way::Harbor => "log.harbor_evening",
+                Way::Market => "log.market_morning",
+            }));
+        }
+    }
 }
 
 /// A sign above a way out (the shop door, the signposts at the harbour and

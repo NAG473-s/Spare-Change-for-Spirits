@@ -29,6 +29,6 @@
     (id: "herb_sachets", cost: 30, unlock_night: 3, effect: (fade_bonus: 1),
      model: Some((pos: (2.4, 1.9, -2.85), size: (1.0, 0.5, 0.15), color: (0.45, 0.55, 0.38)))),
     (id: "ferry_contract", cost: 80, unlock_night: 4, effect: (extra_crates: 2),
-     model: Some((pos: (-6.85, 1.4, 1.2), turn: 90.0, size: (0.5, 0.65, 0.05),
+     model: Some((pos: (-6.85, 1.4, -1.7), turn: 90.0, size: (0.5, 0.65, 0.05),
                   color: (0.85, 0.78, 0.6)))),
 ]

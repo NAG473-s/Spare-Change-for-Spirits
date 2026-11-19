@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Commande impossible – {item} ({cost}) : pas assez dans le tiroir-caisse.",
     "log.ferry_brings": "Le passeur apporte : {count}× {item}.",
     "log.ferry_takes_back": "Le passeur reprend une caisse ({item}) et te rend tes pièces.",
+    "log.harbor_evening": "Le passeur ne vient que le soir, avant l'ouverture de la boutique.",
+    "log.market_morning": "Le marché du village est ouvert pendant la journée – après les comptes du matin.",
     "log.cell_blocked": "Cet endroit est encore encombré de vieux bric-à-brac. Le menuisier du marché du village peut le dégager.",
     "log.saved": "Partie sauvegardée : {slot}.",
     "log.ferryman_loan": "Le passeur voit qu'il ne reste presque rien dans ton tiroir-caisse et te prête des pièces pour {amount}. À l'aube, il reprendra {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Sortir vers le port  →",
     "harbor.back": "Retour à la boutique",
     "harbor.door": "Vers le port",
+    "shop.to_market": "Vers le marché",
 
     // Accounts at dawn
     "accounts.title": "Aube – Comptes de la nuit {night}",

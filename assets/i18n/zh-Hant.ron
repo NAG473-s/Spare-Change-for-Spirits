@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "錢箱裡的錢不夠訂{item}（{cost}）。",
     "log.ferry_brings": "擺渡人送來了{item}×{count}。",
     "log.ferry_takes_back": "擺渡人收回一箱{item}，把錢退還給你。",
+    "log.harbor_evening": "擺渡人只在傍晚開店前來。",
+    "log.market_morning": "村裡的市集白天開放，要先看完早上的帳目。",
     "log.cell_blocked": "這裡還堆滿了舊雜物。村裡市集的木匠可以幫你清理。",
     "log.saved": "遊戲已儲存：{slot}。",
     "log.ferryman_loan": "擺渡人見你的錢箱裡所剩無幾，借給你價值{amount}的錢幣。破曉時他會收回{due}。",
@@ -272,6 +274,7 @@
     "harbor.go": "出門去碼頭  →",
     "harbor.back": "回到店裡",
     "harbor.door": "通往碼頭",
+    "shop.to_market": "通往市集",
 
     // Accounts at dawn
     "accounts.title": "破曉 – 第{night}夜帳目",

@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "V pokladně nemáš dost: {item} ({cost}).",
     "log.ferry_brings": "Převozník přiváží: {count}× {item}.",
     "log.ferry_takes_back": "Převozník si bere bednu zpět ({item}) a vrací ti mince.",
+    "log.harbor_evening": "Převozník připlouvá jen večer, než se otevře obchod.",
+    "log.market_morning": "Vesnický trh je otevřený ve dne – po ranních účtech.",
     "log.cell_blocked": "Tohle místo je pořád plné starého harampádí. Truhlář na vesnickém trhu ho může vyklidit.",
     "log.saved": "Hra uložena: {slot}.",
     "log.ferryman_loan": "Převozník vidí, jak málo ti v pokladně zbylo, a půjčí ti mince v hodnotě {amount}. Za úsvitu si vezme zpět {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ven do přístavu  →",
     "harbor.back": "Zpátky do obchodu",
     "harbor.door": "Do přístavu",
+    "shop.to_market": "Na trh",
 
     // Accounts at dawn
     "accounts.title": "Úsvit – účty za noc {night}",

@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Wang dalam laci tidak cukup untuk {item} ({cost}).",
     "log.ferry_brings": "Penambang membawa {count}× {item}.",
     "log.ferry_takes_back": "Penambang mengambil semula sepeti {item} dan memulangkan wang anda.",
+    "log.harbor_evening": "Penambang hanya datang pada waktu senja, sebelum kedai dibuka.",
+    "log.market_morning": "Pasar kampung dibuka pada waktu siang – selepas akaun pada waktu pagi.",
     "log.cell_blocked": "Tempat ini masih penuh dengan barang buruk lama. Tukang kayu di pasar kampung boleh mengosongkannya.",
     "log.saved": "Permainan disimpan: {slot}.",
     "log.ferryman_loan": "Penambang nampak betapa sedikitnya wang yang tinggal dalam laci anda lalu meminjamkan syiling bernilai {amount}. Pada waktu fajar dia akan mengambil balik {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Keluar ke jeti  →",
     "harbor.back": "Kembali ke kedai",
     "harbor.door": "Ke jeti",
+    "shop.to_market": "Ke pasar",
 
     // Accounts at dawn
     "accounts.title": "Fajar – Akaun malam {night}",

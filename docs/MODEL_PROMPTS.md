@@ -9,6 +9,7 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
+- The shop: `way_board` (section *Shop* below).
 - Shop improvements: `junk_1`, `junk_2`, `junk_3`, `waiting_bench`, `door_lantern`,
   `herb_sachets`, `ferry_contract` (section *Shop improvements* below).
 - The village market: `plan` (section *The village market* below).
@@ -124,6 +125,7 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 | `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
 | `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
+| `way_board` | 0.8 × 0.24 × 0.05 | A weathered wooden direction board with one pointed end and two old nails, **no lettering** (the game writes "To the harbour" and "To the market" on it). Two of them hang on the back wall in the corner by the shop door. Origin at the **centre of the back** of the board, front towards −Y. |
 | `shop_sign` | 1.0 × 0.75 × 0.05 | The hanging "closed / open" sign for the shop window: a painted wooden board 0.98 × 0.44 m in a thin frame, hanging from two cords that meet 0.3 m above it. The **front (−Y) is painted dark red**, the **back (+Y) green**, both with a thin cream border and **no lettering** (the game writes "closed"/"open" in the player's language). Origin at the **centre of the board**. The game flips it round. |
 
 **Room layout** (only if you make `room.glb`; Blender coordinates, Z up, origin at 0,0,0, do not

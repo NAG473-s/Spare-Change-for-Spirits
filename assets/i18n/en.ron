@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Not enough in the drawer for {item} ({cost}).",
     "log.ferry_brings": "The ferryman brings {count}× {item}.",
     "log.ferry_takes_back": "The ferryman takes a crate of {item} back and returns your coins.",
+    "log.harbor_evening": "The ferryman only comes in the evening, before the shop opens.",
+    "log.market_morning": "The village market is open by day – after the accounts in the morning.",
     "log.cell_blocked": "This spot is still full of old junk. The carpenter at the village market can clear it.",
     "log.saved": "Game saved: {slot}.",
     "log.ferryman_loan": "The ferryman sees how little is left in your drawer and lends you coins worth {amount}. At dawn he takes back {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Out to the harbour  →",
     "harbor.back": "Back into the shop",
     "harbor.door": "To the harbour",
+    "shop.to_market": "To the market",
 
     // Accounts at dawn
     "accounts.title": "Dawn – Accounts of night {night}",

@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Kassassa ei ole tarpeeksi: {item} ({cost}).",
     "log.ferry_brings": "Lautturi tuo: {count}× {item}.",
     "log.ferry_takes_back": "Lautturi vie laatikon takaisin ({item}) ja palauttaa kolikkosi.",
+    "log.harbor_evening": "Lautturi tulee vain illalla, ennen kuin puoti avataan.",
+    "log.market_morning": "Kylän markkinat ovat auki päivisin – aamun tilien jälkeen.",
     "log.cell_blocked": "Tämä kohta on yhä täynnä vanhaa romua. Kylän markkinoiden puuseppä voi raivata sen.",
     "log.saved": "Peli tallennettu: {slot}.",
     "log.ferryman_loan": "Lautturi näkee, kuinka vähän kassassasi on jäljellä, ja lainaa sinulle kolikoita {amount} edestä. Aamunkoitteessa hän ottaa takaisin {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ulos satamaan  →",
     "harbor.back": "Takaisin puotiin",
     "harbor.door": "Satamaan",
+    "shop.to_market": "Markkinoille",
 
     // Accounts at dawn
     "accounts.title": "Aamunkoitto – yön {night} tilit",

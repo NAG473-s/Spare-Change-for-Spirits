@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Ngăn kéo không đủ tiền để mua {item} ({cost}).",
     "log.ferry_brings": "Người lái đò mang đến {count}× {item}.",
     "log.ferry_takes_back": "Người lái đò lấy lại một thùng {item} và trả lại tiền cho bạn.",
+    "log.harbor_evening": "Người lái đò chỉ đến vào buổi tối, trước khi tiệm mở cửa.",
+    "log.market_morning": "Chợ làng mở cửa ban ngày – sau khi xem sổ sách buổi sáng.",
     "log.cell_blocked": "Chỗ này vẫn còn đầy đồ cũ bỏ đi. Bác thợ mộc ở chợ làng có thể dọn giúp.",
     "log.saved": "Đã lưu trò chơi: {slot}.",
     "log.ferryman_loan": "Người lái đò thấy ngăn kéo của bạn chẳng còn bao nhiêu nên cho bạn vay số xu trị giá {amount}. Rạng sáng ông ấy sẽ lấy lại {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ra bến thuyền  →",
     "harbor.back": "Quay vào tiệm",
     "harbor.door": "Ra bến thuyền",
+    "shop.to_market": "Ra chợ",
 
     // Accounts at dawn
     "accounts.title": "Rạng sáng – Sổ sách đêm {night}",

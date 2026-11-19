@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Ikke nok i pengeskuffen til {item} ({cost}).",
     "log.ferry_brings": "Fergemannen kommer med {count}× {item}.",
     "log.ferry_takes_back": "Fergemannen tar tilbake en kasse ({item}) og gir deg myntene dine igjen.",
+    "log.harbor_evening": "Fergemannen kommer bare om kvelden, før butikken åpner.",
+    "log.market_morning": "Landsbymarkedet er åpent om dagen – etter regnskapet om morgenen.",
     "log.cell_blocked": "Denne plassen er fortsatt full av gammelt skrot. Snekkeren på landsbymarkedet kan rydde den.",
     "log.saved": "Spillet er lagret: {slot}.",
     "log.ferryman_loan": "Fergemannen ser hvor lite som er igjen i pengeskuffen din, og låner deg mynter verdt {amount}. Ved daggry tar han tilbake {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ut til havna  →",
     "harbor.back": "Tilbake inn i butikken",
     "harbor.door": "Til havna",
+    "shop.to_market": "Til markedet",
 
     // Accounts at dawn
     "accounts.title": "Daggry – regnskap for natt {night}",

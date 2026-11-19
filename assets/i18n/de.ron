@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Nicht genug Geld in der Kasse für diese Kiste: {item} ({cost}).",
     "log.ferry_brings": "Der Fährmann liefert: {count}× {item}.",
     "log.ferry_takes_back": "Der Fährmann nimmt eine Kiste zurück ({item}) und gibt dir dein Geld wieder.",
+    "log.harbor_evening": "Der Fährmann kommt nur am Abend, bevor der Laden öffnet.",
+    "log.market_morning": "Der Dorfmarkt hat tagsüber geöffnet – nach der Abrechnung am Morgen.",
     "log.cell_blocked": "Hier liegt noch alter Kram. Der Schreiner auf dem Dorfmarkt kann ihn wegräumen.",
     "log.saved": "Spiel gespeichert: {slot}.",
     "log.ferryman_loan": "Der Fährmann sieht, wie wenig noch in deiner Kasse liegt, und leiht dir Münzen im Wert von {amount}. Im Morgengrauen nimmt er {due} zurück.",
@@ -272,6 +274,7 @@
     "harbor.go": "Hinaus zum Hafen  →",
     "harbor.back": "Zurück in den Laden",
     "harbor.door": "Zum Hafen",
+    "shop.to_market": "Zum Markt",
 
     // Accounts at dawn
     "accounts.title": "Morgengrauen – Abrechnung der Nacht {night}",

@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Ordine impossibile – {item} ({cost}): nel cassetto non c'è abbastanza.",
     "log.ferry_brings": "Il traghettatore porta: {count}× {item}.",
     "log.ferry_takes_back": "Il traghettatore si riprende una cassa ({item}) e ti restituisce le monete.",
+    "log.harbor_evening": "Il traghettatore arriva solo di sera, prima che apra la bottega.",
+    "log.market_morning": "Il mercato del villaggio è aperto di giorno – dopo i conti del mattino.",
     "log.cell_blocked": "Questo punto è ancora pieno di vecchia roba. Il falegname del mercato del villaggio può sgombrarlo.",
     "log.saved": "Partita salvata: {slot}.",
     "log.ferryman_loan": "Il traghettatore vede quanto poco è rimasto nel tuo cassetto e ti presta monete per {amount}. All'alba si riprende {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Fuori, al porto  →",
     "harbor.back": "Torna in bottega",
     "harbor.door": "Al porto",
+    "shop.to_market": "Al mercato",
 
     // Accounts at dawn
     "accounts.title": "Alba – Conti della notte {night}",

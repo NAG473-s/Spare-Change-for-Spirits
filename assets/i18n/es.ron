@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "No hay bastante en el cajón para esta caja: {item} ({cost}).",
     "log.ferry_brings": "El barquero trae: {count}× {item}.",
     "log.ferry_takes_back": "El barquero se lleva de vuelta una caja ({item}) y te devuelve las monedas.",
+    "log.harbor_evening": "El barquero solo viene al atardecer, antes de abrir la tienda.",
+    "log.market_morning": "El mercado del pueblo abre de día – después de las cuentas de la mañana.",
     "log.cell_blocked": "Este sitio sigue lleno de trastos viejos. El carpintero del mercado del pueblo puede despejarlo.",
     "log.saved": "Partida guardada: {slot}.",
     "log.ferryman_loan": "El barquero ve lo poco que queda en tu cajón y te presta monedas por valor de {amount}. Al amanecer se cobrará {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Salir al puerto  →",
     "harbor.back": "Volver a la tienda",
     "harbor.door": "Al puerto",
+    "shop.to_market": "Al mercado",
 
     // Accounts at dawn
     "accounts.title": "Amanecer – Cuentas de la noche {night}",

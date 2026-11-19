@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "{item} ({cost}): det finns inte nog i kassan.",
     "log.ferry_brings": "Färjkarlen kommer med {count}× {item}.",
     "log.ferry_takes_back": "Färjkarlen tar tillbaka en låda ({item}) och ger dig dina mynt igen.",
+    "log.harbor_evening": "Färjkarlen kommer bara på kvällen, innan butiken öppnar.",
+    "log.market_morning": "Byns marknad har öppet på dagen – efter räkenskaperna på morgonen.",
     "log.cell_blocked": "Den här platsen är fortfarande full av gammalt skräp. Snickaren på byns marknad kan röja den.",
     "log.saved": "Spelet sparat: {slot}.",
     "log.ferryman_loan": "Färjkarlen ser hur lite som finns kvar i din kassa och lånar dig mynt värda {amount}. Vid gryningen tar han tillbaka {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Ut till hamnen  →",
     "harbor.back": "Tillbaka in i butiken",
     "harbor.door": "Till hamnen",
+    "shop.to_market": "Till marknaden",
 
     // Accounts at dawn
     "accounts.title": "Gryning – Räkenskaper för natt {night}",

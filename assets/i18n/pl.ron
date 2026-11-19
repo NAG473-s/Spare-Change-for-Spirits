@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "Za mało w kasie: {item} ({cost}).",
     "log.ferry_brings": "Przewoźnik przywozi: {count}× {item}.",
     "log.ferry_takes_back": "Przewoźnik zabiera skrzynię z powrotem ({item}) i oddaje ci monety.",
+    "log.harbor_evening": "Przewoźnik przypływa tylko wieczorem, przed otwarciem sklepu.",
+    "log.market_morning": "Wiejski targ jest czynny za dnia – po porannym rozliczeniu.",
     "log.cell_blocked": "To miejsce wciąż jest zawalone starymi gratami. Stolarz z wiejskiego targu może je uprzątnąć.",
     "log.saved": "Gra zapisana: {slot}.",
     "log.ferryman_loan": "Przewoźnik widzi, jak mało zostało ci w kasie, i pożycza ci monety o wartości {amount}. O świcie odbierze {due}.",
@@ -272,6 +274,7 @@
     "harbor.go": "Do przystani  →",
     "harbor.back": "Z powrotem do sklepu",
     "harbor.door": "Do przystani",
+    "shop.to_market": "Na targ",
 
     // Accounts at dawn
     "accounts.title": "Świt – rozliczenie nocy {night}",

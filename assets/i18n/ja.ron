@@ -121,6 +121,8 @@
     "log.crate_too_expensive": "レジのお金が足りず、{item}を注文できない（{cost}）。",
     "log.ferry_brings": "渡し守が{item}×{count}を運んできた。",
     "log.ferry_takes_back": "渡し守が{item}の木箱を1つ引き取り、代金を返してくれた。",
+    "log.harbor_evening": "渡し守が来るのは夕方、開店前だけだ。",
+    "log.market_morning": "村の市場が開くのは昼間、朝の収支のあとだ。",
     "log.cell_blocked": "ここはまだ古いガラクタでいっぱいだ。村の市場の大工に頼めば片づけてくれる。",
     "log.saved": "セーブしました：{slot}。",
     "log.ferryman_loan": "レジの残りが心もとないのを見て、渡し守が{amount}分の硬貨を貸してくれた。夜明けに{due}を返すことになる。",
@@ -272,6 +274,7 @@
     "harbor.go": "船着き場へ出る  →",
     "harbor.back": "店に戻る",
     "harbor.door": "船着き場へ",
+    "shop.to_market": "市場へ",
 
     // Accounts at dawn
     "accounts.title": "夜明け – {night}夜目の収支",
