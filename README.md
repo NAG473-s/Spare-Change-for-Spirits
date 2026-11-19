@@ -66,6 +66,21 @@ During the first night a tips box explains each step (texts `tip.*` in the langu
 The coin bar at the top right shows the cash drawer in every phase; the clock on the shop wall
 shows the time of night.
 
+## Desktop icons
+
+Windows builds embed the ghost-and-button icon in the executable. On macOS, run
+`cargo build --release --locked` followed by `python3 tools/package_macos.py`. The resulting
+`target/macos/Spare Change for Spirits.app` includes the Finder and Dock icon and the game assets.
+
+On Linux the game sets its window icon and application ID. To add it to the application menu,
+place `spare_change_for_spirits` on your PATH with `assets/` beside the real executable. Install
+the launcher and its icon from the repository root.
+
+```sh
+xdg-icon-resource install --mode user --novendor --size 512 art/icons/spare-change-for-spirits.png spare-change-for-spirits
+xdg-desktop-menu install --mode user --novendor packaging/linux/spare-change-for-spirits.desktop
+```
+
 ## Windows build
 
 The GitHub Actions workflow [`build-windows.yml`](.github/workflows/build-windows.yml) builds a
