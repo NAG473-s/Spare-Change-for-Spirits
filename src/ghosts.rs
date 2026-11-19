@@ -4,6 +4,8 @@
 //! Entering → Browsing → ToCounter → Waiting → AtRegister → Leaving / Ascending
 //! (if the atmosphere does not suit them: Entering → Fleeing)
 
+mod motion;
+
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -18,7 +20,7 @@ use crate::tooltip::{HoverTip, TipKind};
 use crate::upgrades::Upgrades;
 use bevy::light::NotShadowCaster;
 
-use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
+use crate::scene::{Billboard, billboard_material, floor, world_label};
 use crate::shop::ShopLayout;
 use crate::ui::{GameLog, UiFont};
 
@@ -59,6 +61,7 @@ impl Plugin for GhostPlugin {
                     move_ghosts,
                     fade_ghosts,
                     animate_ghosts,
+                    motion::animate,
                     play_sheets,
                 )
                     .chain()
@@ -485,7 +488,8 @@ fn spawn_ghost(
     let body = commands
         .spawn((
             GhostBody,
-            Mesh3d(billboard_mesh(meshes, GHOST_SIZE)),
+            motion::Rig::new(&def.id, def.voice),
+            Mesh3d(meshes.add(motion::mesh())),
             MeshMaterial3d(material),
             NotShadowCaster,
             Pickable::IGNORE,
@@ -754,6 +758,7 @@ fn move_ghosts(time: Res<Time>, mut ghosts: Query<(&mut Ghost, &mut Transform)>)
 /// on arrival and stretching while passing into the light.
 fn animate_ghosts(
     time: Res<Time>,
+    settings: Res<Settings>,
     mut ghosts: Query<&mut Ghost>,
     mut bodies: Query<(&ChildOf, &mut Transform), With<GhostBody>>,
 ) {
@@ -777,7 +782,7 @@ fn animate_ghosts(
         let phase = g.bob_offset;
         let breathe = (t * 1.6 + phase).sin() * 0.04;
         let mut roll = (t * 1.1 + phase).sin() * 0.05 - (g.vel.x * 0.12).clamp(-0.2, 0.2);
-        if g.state == GhostState::Waiting {
+        if g.state == GhostState::Waiting && !settings.patient_ghosts {
             let worry = 1.0 - (g.patience / g.max_patience).clamp(0.0, 1.0);
             if worry > 0.65 {
                 roll += (t * 25.0).sin() * 0.06 * (worry - 0.65) / 0.35;
