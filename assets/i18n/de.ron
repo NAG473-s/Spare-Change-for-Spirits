@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Ich hab einen Knopf aus dem Fluss gefischt.",
+    "intro.story.2": "In deinem Laden wartete ein Geist.",
+    "intro.story.3": "»Den hat mir Mutter angenäht«, flüsterte er.",
     "menu.version": "Demo · Version {version}",
     "menu.version_full": "Version {version}",
     "menu.tagline": "Ein kleiner Laden, der nur zwischen Mitternacht und Morgengrauen öffnet.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Löschen und neues Spiel starten",
     "menu.language": "Sprache: {language}",
     "menu.choose_language": "Wähle deine Sprache",
+    "menu.language_auto": "Automatisch",
     "menu.back": "Zurück",
     "menu.settings": "Einstellungen",
     "hud.menu": "Menü",
@@ -31,6 +35,7 @@
     "settings.title": "Einstellungen",
     "settings.music": "Musik: {percent} %",
     "settings.effects": "Soundeffekte: {percent} %",
+    "settings.narration": "Erzählstimme: {percent} %",
     "settings.ui_size": "Oberflächengröße: {percent} %",
     "settings.fullscreen_on": "Vollbild: an",
     "settings.fullscreen_off": "Vollbild: aus",
