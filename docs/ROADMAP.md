@@ -21,8 +21,9 @@ publicly.
 end of the demo (night 5 played) continues in the full game with the evening of night 6 – shop,
 coins, stock, keepsakes and reputation included. The demo is built with `cargo build --features
 demo` (it stops after `demo_nights` in `assets/data/config.ron`); the full game stops after
-`last_night`. Saves must stay compatible between the two: new save fields get
-`#[serde(default)]` instead of a new save version.
+`last_night`. From the public demo release on, saves must stay compatible
+between the two (new save fields get `#[serde(default)]` instead of a new save version); until
+then the format may still change.
 
 ## Week by week
 

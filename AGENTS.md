@@ -54,8 +54,11 @@
     to `docs/MODEL_PROMPTS.md` or `docs/ART_PROMPTS.md`, list it under the open orders / to-do,
     and add it to `tools/check_models.py`. Positions and numbers that may be tuned go into
     `assets/data/*.ron` or named constants, not scattered literals.
-- Saves carry over from the demo (`--features demo`) to the full game: never break the save
-  format; give new `SaveGame` fields `#[serde(default)]` instead of bumping `SAVE_VERSION`.
+- Save format: the demo is **not released yet**, so the format may still change freely – bump
+  `SAVE_VERSION` when it does (older saves are then ignored). Once the demo is out on Steam (the
+  owner changes this line), saves must carry over from the demo (`--features demo`) to the full
+  game: never break the format again; give new `SaveGame` fields `#[serde(default)]` instead of
+  bumping `SAVE_VERSION`.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.
 - The project is proprietary (`LICENSE`, all rights reserved). After adding or updating a
   dependency, run `python3 tools/third_party_licenses.py` and commit `THIRD_PARTY_LICENSES.txt`.
