@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Я виловив із річки ґудзик.",
+    "intro.story.2": "У твоїй крамниці чекав привид.",
+    "intro.story.3": "«Мені його мама пришила», — прошепотів він.",
     "menu.version": "Демо · версія {version}",
     "menu.version_full": "Версія {version}",
     "menu.tagline": "Маленька крамничка, що відчиняється лише між північчю і світанком.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Видалити й почати нову гру",
     "menu.language": "Мова: {language}",
     "menu.choose_language": "Оберіть мову",
+    "menu.language_auto": "Автоматично",
     "menu.back": "Назад",
     "menu.settings": "Налаштування",
     "hud.menu": "Меню",
@@ -31,6 +35,7 @@
     "settings.title": "Налаштування",
     "settings.music": "Музика: {percent}%",
     "settings.effects": "Звукові ефекти: {percent}%",
+    "settings.narration": "Голос оповідача: {percent}%",
     "settings.ui_size": "Розмір інтерфейсу: {percent}%",
     "settings.fullscreen_on": "Повний екран: увімк.",
     "settings.fullscreen_off": "Повний екран: вимк.",
