@@ -12,6 +12,7 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 There are no open model orders. The shop's three junk piles, waiting bench, door lantern,
 herb sachets, ferry contract and wooden way board are in `assets/models/shop/`.
 The painted return post for the quay and market is in `assets/models/harbor/signpost.glb`.
+The seven market awnings carry embroidered trade emblems, and the quay has a storm lantern.
 The carpenter's rolled building plan is in `assets/models/market/plan.glb`.
 
 To check a fresh checkout, pull `main` and run `python3 tools/check_models.py`. A `missing` line
@@ -152,9 +153,9 @@ back wall; the game turns the wall pieces on the left wall towards the room).
 | `junk_2` | 0.85 × 0.75 × 0.85 | A pile of old junk: a broken chair upside down on a small trunk, a rolled carpet leaning against it, dust. |
 | `junk_3` | 0.85 × 0.75 × 0.85 | A pile of old junk: a covered birdcage, a stack of old books and a cracked flower pot on a low box, all under a thin layer of dust. |
 | `waiting_bench` | 1.4 × 0.55 × 0.45 | A worn little wooden bench with a curved backrest and two embroidered cushions, standing against the back wall. |
-| `door_lantern` | 0.3 × 0.45 × 0.3 | A small brass wall lantern with glass panes, its glass front towards −Y and a wrought-iron bracket at the back (+Y) that holds it against the wall; a candle inside with an emissive flame. |
+| `door_lantern` | 0.3 × 0.45 × 0.3 | A small brass wall lantern with glass panes, its glass front towards −Y and a wrought-iron bracket at the back (+Y) that holds it against the wall; a candle inside with an emissive flame. Mount above the entrance lintel. |
 | `herb_sachets` | 1.0 × 0.5 × 0.15 | Four bundles of dried herbs and small linen sachets tied with string, hanging from a short wooden rail; lavender, sage and rosemary colours. |
-| `ferry_contract` | 0.5 × 0.65 × 0.05 | A framed old contract on yellowed paper with ornate handwriting (no readable words), a red wax seal and a tiny drawing of a boat, in a thin dark wooden frame. |
+| `ferry_contract` | 0.5 × 0.65 × 0.05 | A framed old contract on yellowed paper with ornate handwriting (no readable words), a red wax seal and a tiny drawing of a boat, in a thin dark wooden frame. Mount above the direction boards beside the shop door. |
 
 ## The ferryman – `assets/models/shop/<id>.glb`
 
@@ -251,6 +252,7 @@ surface; items on the wall hang with their back against it (back at +Y in Blende
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
 | `crate_stack` | 0.95 × 0.95 × 0.7 | Three weathered wooden crates stacked unevenly, one with a rope around it. |
+| `storm_lantern` | 0.27 × 0.49 × 0.22 | A portable green enamel storm lantern with a low brass oil reservoir, an amber chimney, crossed wire guards and an arched carrying handle. Origin at the centre of the foot, flame 0.20 m up. It stands on the western mooring post. |
 | `fishing_net` | 1.3 × 1.2 × 0.4 | A fishing net draped over a simple wooden drying frame, a few cork floats hanging from it. |
 | `lobster_trap` | 0.6 × 0.4 × 0.45 | A wooden lobster pot with a rounded top of slats and netting. |
 | `anchor` | 0.7 × 1.0 × 0.3 | An old rusty iron anchor leaning on its side, a bit of chain. |
@@ -284,7 +286,10 @@ Each has a **stall** and the **trader** standing beside it (the game moves them:
 nod after a sale, the wisp floating, the raven hopping). The game puts small samples of the wares
 on the stall's table, so the table top stays **empty** at **0.85 m** height. Stalls: origin at the
 bottom centre, front (the customer side) towards −Y, table about 1.7 × 0.7 m, two posts at the
-back carrying an awning at about 2.2 m. Traders: origin at the feet, facing −Y.
+back carrying an awning at about 2.2 m. The cloth follows its folds and bears an embroidered
+trade emblem edged with old gold. In table order the emblems are a hand plane, three candles,
+a herb sprig, stained glass, a weaving shuttle, scales and an hourglass. Traders stand on
+their origin and face −Y.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
