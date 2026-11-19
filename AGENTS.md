@@ -43,6 +43,17 @@
   `docs/MODEL_PROMPTS.md`; check them with `python3 tools/check_models.py` and repair files with
   extra Blender scenes with `python3 tools/fix_models.py` (commit the repair). Placeholder sizes in
   `assets/data/decor.ron` must match the target sizes in that document.
+- Build every new visible thing **dynamically from the start**, never as hardcoded geometry only:
+  - It loads its asset if the file exists (3D model `assets/models/<folder>/<id>.glb`, image
+    `assets/sprites/<folder>/<id>.png`, sound `assets/sounds/<id>.ogg`) and otherwise shows a
+    simple placeholder built from primitives, so the game works before the art arrives.
+  - Lights, glows, particles and every movement (opening lids, swinging, bobbing, flipping)
+    stay in code; models are static and split into separate pieces where something moves
+    (e.g. crate and lid, post and bell), with the pivot as the origin.
+  - In the same change, order the asset: add a prompt with target size, origin and orientation
+    to `docs/MODEL_PROMPTS.md` or `docs/ART_PROMPTS.md`, list it under the open orders / to-do,
+    and add it to `tools/check_models.py`. Positions and numbers that may be tuned go into
+    `assets/data/*.ron` or named constants, not scattered literals.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.
 - The project is proprietary (`LICENSE`, all rights reserved). After adding or updating a
   dependency, run `python3 tools/third_party_licenses.py` and commit `THIRD_PARTY_LICENSES.txt`.
