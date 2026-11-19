@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Я выловил из реки пуговицу.",
+    "intro.story.2": "В твоей лавке ждал призрак.",
+    "intro.story.3": "«Мне её мама пришила», — прошептал он.",
     "menu.version": "Демо · версия {version}",
     "menu.version_full": "Версия {version}",
     "menu.tagline": "Маленькая лавка, которая открыта только с полуночи до рассвета.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Удалить и начать новую игру",
     "menu.language": "Язык: {language}",
     "menu.choose_language": "Выберите язык",
+    "menu.language_auto": "Автоматически",
     "menu.back": "Назад",
     "menu.settings": "Настройки",
     "hud.menu": "Меню",
@@ -31,6 +35,7 @@
     "settings.title": "Настройки",
     "settings.music": "Музыка: {percent}%",
     "settings.effects": "Звуковые эффекты: {percent}%",
+    "settings.narration": "Голос рассказчика: {percent}%",
     "settings.ui_size": "Размер интерфейса: {percent}%",
     "settings.fullscreen_on": "Полный экран: вкл.",
     "settings.fullscreen_off": "Полный экран: выкл.",
