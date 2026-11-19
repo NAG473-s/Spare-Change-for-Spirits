@@ -365,8 +365,9 @@ fn spawn_market(
             k.commands.entity(figure).with_child((
                 PointLight {
                     color: Color::srgb(0.6, 0.95, 1.0),
-                    intensity: 60_000.0,
-                    range: 4.0,
+                    intensity: 15_000.0,
+                    range: 2.8,
+                    radius: 0.18,
                     shadow_maps_enabled: false,
                     ..default()
                 },
