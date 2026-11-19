@@ -4,6 +4,7 @@
 //! Coordinates: the floor is the XZ plane at y = 0, one grid cell is one
 //! metre. Gameplay positions are `Vec2(x, z)`; [`floor`] lifts them into 3D.
 
+use bevy::camera::visibility::RenderLayers;
 use bevy::light::{CascadeShadowConfigBuilder, NotShadowCaster};
 use bevy::prelude::*;
 
@@ -64,6 +65,7 @@ impl Plugin for ScenePlugin {
         .add_systems(
             Update,
             (
+                set_camera_layers.run_if(state_changed::<Phase>),
                 time_of_day_light,
                 face_camera,
                 follow_labels,
@@ -85,12 +87,25 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn((
         MainCamera,
         Camera3d::default(),
+        RenderLayers::none(),
         Projection::Perspective(PerspectiveProjection {
             fov: 0.62,
             ..default()
         }),
         Transform::from_translation(SHOP_CAMERA_POS).looking_at(SHOP_CAMERA_TARGET, Vec3::Y),
     ));
+}
+
+/// The opening and title fill the window. Avoid drawing the diorama behind them.
+fn set_camera_layers(
+    phase: Res<State<Phase>>,
+    mut camera: Single<&mut RenderLayers, With<MainCamera>>,
+) {
+    **camera = if *phase.get() == Phase::Menu {
+        RenderLayers::none()
+    } else {
+        RenderLayers::default()
+    };
 }
 
 fn color_material(
