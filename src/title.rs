@@ -9,10 +9,26 @@ use crate::data::{GameData, asset_exists};
 use crate::day_cycle::Phase;
 use crate::rng::Rng;
 
+mod intro;
+
 pub struct TitlePlugin;
+
+/// Present until the first crossing ends. The language picker opens afterwards.
+#[derive(Resource, Default)]
+pub(crate) struct Opening {
+    pictures: Vec<Handle<Image>>,
+    rendered_frames: u8,
+}
 
 impl Plugin for TitlePlugin {
     fn build(&self, app: &mut App) {
+        if crate::save::claim_first_launch() {
+            app.init_resource::<Opening>()
+                .add_systems(Startup, intro::spawn)
+                .add_systems(Update, intro::animate.run_if(in_state(Phase::Menu)));
+            app.sub_app_mut(bevy::render::RenderApp)
+                .add_systems(bevy::render::ExtractSchedule, intro::check_uploads);
+        }
         app.add_systems(OnEnter(Phase::Menu), spawn_title)
             .add_systems(OnExit(Phase::Menu), |mut commands: Commands| {
                 spawn_fade(&mut commands, 0.8);
@@ -84,6 +100,9 @@ struct TitleScreen;
 struct TitleBackground(Handle<Image>);
 
 #[derive(Component)]
+struct MenuBackdrop;
+
+#[derive(Component)]
 struct Glow {
     tint: Color,
     strength: f32,
@@ -140,6 +159,7 @@ fn spawn_title(mut commands: Commands, asset_server: Res<AssetServer>, mut rng: 
     let background = commands
         .spawn((
             TitleBackground(image.clone()),
+            MenuBackdrop,
             ImageNode {
                 image,
                 image_mode: NodeImageMode::Stretch,
@@ -302,7 +322,7 @@ fn cover_window(
 /// A very slow zoom in and out, so the picture feels alive.
 fn breathe_background(
     time: Res<Time>,
-    mut backgrounds: Query<&mut UiTransform, With<TitleBackground>>,
+    mut backgrounds: Query<&mut UiTransform, With<MenuBackdrop>>,
 ) {
     let t = time.elapsed_secs();
     for mut transform in &mut backgrounds {
