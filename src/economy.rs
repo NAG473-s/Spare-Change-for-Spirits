@@ -118,35 +118,26 @@ impl Purse {
         p
     }
 
-    /// Pays an amount out of this purse, e.g. to the ferryman.
-    /// Without exact coins, a larger coin is used and the change
-    /// (in the fewest coins) is put back.
+    /// Pays an amount out of this purse, e.g. to the ferryman or a trader,
+    /// the way a shopkeeper would: with the largest coins that cover it,
+    /// taking change back (in the fewest coins). That keeps the buttons and
+    /// candle stubs the register needs for giving change.
     pub fn pay(&mut self, amount: u32) -> bool {
         if self.total() < amount {
             return false;
         }
-        let mut remaining = amount;
+        let mut remaining = amount as i64;
         for c in Coin::DESCENDING {
-            let n = self.get(c).min(remaining / c.value());
-            *self.get_mut(c) -= n;
-            remaining -= n * c.value();
-        }
-        // Cover the rest with the smallest coin still available.
-        let mut overpaid = 0;
-        while remaining > 0 {
-            let coin = Coin::ASCENDING
-                .into_iter()
-                .find(|c| self.get(*c) > 0)
-                .expect("total() >= amount guarantees a coin");
-            *self.get_mut(coin) -= 1;
-            if coin.value() >= remaining {
-                overpaid = coin.value() - remaining;
-                remaining = 0;
-            } else {
-                remaining -= coin.value();
+            if remaining <= 0 {
+                break;
             }
+            let value = c.value() as i64;
+            let needed = (remaining + value - 1) / value;
+            let used = needed.min(self.get(c) as i64);
+            *self.get_mut(c) -= used as u32;
+            remaining -= used * value;
         }
-        self.merge(&Purse::greedy(overpaid));
+        self.merge(&Purse::greedy((-remaining).max(0) as u32));
         true
     }
 
@@ -244,6 +235,18 @@ mod tests {
         let mut p = purse(0, 1, 0);
         assert!(!p.pay(6));
         assert_eq!(p, purse(0, 1, 0));
+    }
+
+    #[test]
+    fn paying_keeps_the_small_coins() {
+        // A crate for 12: one silver spoon, 13 back in candle stubs and buttons.
+        let mut p = purse(2, 6, 12);
+        assert!(p.pay(12));
+        assert_eq!(p, purse(1, 8, 15));
+        // Without spoons the candle stubs go first.
+        let mut p = purse(0, 3, 4);
+        assert!(p.pay(12));
+        assert_eq!(p, purse(0, 0, 7));
     }
 
     #[test]
