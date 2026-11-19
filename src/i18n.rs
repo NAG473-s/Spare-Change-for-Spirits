@@ -13,6 +13,8 @@ use serde::Deserialize;
 
 use crate::data::assets_dir;
 
+mod steam;
+
 pub const SOURCE: &str = "en";
 
 #[derive(Deserialize, Clone, Debug)]
@@ -47,6 +49,38 @@ pub fn languages() -> Vec<LanguageDef> {
     ron::from_str(&text).unwrap_or_else(|e| panic!("error in {}: {e}", path.display()))
 }
 
+/// The automatic preference is evaluated at launch, never saved as a manual choice.
+#[derive(Resource)]
+pub struct AutomaticLanguage {
+    pub code: String,
+    _steam: Option<steam::Language>,
+}
+
+impl AutomaticLanguage {
+    pub fn at_launch() -> Self {
+        let supported = languages();
+        let steam = steam::current();
+        let code = automatic_code(steam.as_ref().map(|s| s.name.as_str()), &supported, || {
+            detect(&supported)
+        });
+        Self {
+            code,
+            _steam: steam,
+        }
+    }
+}
+
+fn automatic_code(
+    steam: Option<&str>,
+    supported: &[LanguageDef],
+    system: impl FnOnce() -> Option<String>,
+) -> String {
+    steam
+        .and_then(|name| map_locale(steam::catalog_code(name).unwrap_or(name), supported))
+        .or_else(system)
+        .unwrap_or_else(|| SOURCE.to_string())
+}
+
 /// The active language with English as fallback for missing keys.
 #[derive(Resource)]
 pub struct Lang {
@@ -57,6 +91,16 @@ pub struct Lang {
 }
 
 impl Lang {
+    pub fn from_preference(manual: Option<&str>, automatic: &AutomaticLanguage) -> Self {
+        if let Some(code) = manual {
+            let selected = Self::load(code);
+            if selected.code == code {
+                return selected;
+            }
+        }
+        Self::load(&automatic.code)
+    }
+
     pub fn load(code: &str) -> Self {
         let languages = languages();
         let code = if languages.iter().any(|l| l.code == code) {
@@ -134,23 +178,32 @@ pub fn fill(template: &str, args: &[(&str, &dyn std::fmt::Display)]) -> String {
     out
 }
 
-/// Language from the environment (LANGUAGE, LC_ALL, LC_MESSAGES, LANG), e.g.
-/// "de_DE.UTF-8" → "de", "pt_BR" → "pt-BR", "zh_TW" → "zh-Hant".
+/// Honour explicit locale overrides, then the desktop's preferred languages.
+/// The first crossing plays before a new player has chosen a language.
 pub fn detect(languages: &[LanguageDef]) -> Option<String> {
-    let raw = ["LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]
+    ["LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]
         .iter()
         .filter_map(|v| std::env::var(v).ok())
-        .find(|v| !v.is_empty() && v != "C" && v != "POSIX")?;
-    map_locale(&raw, languages)
+        .find_map(|list| list.split(':').find_map(|raw| map_locale(raw, languages)))
+        .or_else(|| sys_locale::get_locales().find_map(|raw| map_locale(&raw, languages)))
 }
 
 pub fn map_locale(raw: &str, languages: &[LanguageDef]) -> Option<String> {
-    let locale = raw.split([':', '.', '@']).next()?.replace('_', "-");
+    let locale = raw.trim().split([':', '.', '@']).next()?.replace('_', "-");
     let mut parts = locale.split('-');
     let lang = parts.next()?.to_lowercase();
-    let region = parts.next().unwrap_or("").to_uppercase();
+    let mut script = String::new();
+    let mut region = String::new();
+    for tag in parts.take_while(|tag| tag.len() > 1) {
+        match tag.len() {
+            4 if script.is_empty() => script = tag.to_ascii_uppercase(),
+            2 | 3 if region.is_empty() => region = tag.to_ascii_uppercase(),
+            _ => {}
+        }
+    }
     let candidate = match (lang.as_str(), region.as_str()) {
-        ("zh", "TW" | "HK" | "MO" | "HANT") => "zh-Hant".to_string(),
+        ("zh", _) if script == "HANT" => "zh-Hant".to_string(),
+        ("zh", "TW" | "HK" | "MO") if script.is_empty() => "zh-Hant".to_string(),
         ("zh", _) => "zh-Hans".to_string(),
         ("pt", "BR") => "pt-BR".to_string(),
         ("pt", _) => "pt-PT".to_string(),
@@ -168,6 +221,33 @@ pub fn map_locale(raw: &str, languages: &[LanguageDef]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn steam_overrides_the_desktop_only_for_a_supported_language() {
+        let langs = languages();
+        let de = || Some("de".to_owned());
+        for (steam, code) in [
+            ("latam", "es-419"),
+            ("spanish", "es"),
+            ("brazilian", "pt-BR"),
+            ("portuguese", "pt-PT"),
+            ("schinese", "zh-Hans"),
+            ("tchinese", "zh-Hant"),
+            ("koreana", "ko"),
+        ] {
+            assert_eq!(automatic_code(Some(steam), &langs, de), code);
+        }
+        assert_eq!(automatic_code(Some("unsupported"), &langs, de), "de");
+        assert_eq!(automatic_code(None, &langs, de), "de");
+        assert_eq!(automatic_code(None, &langs, || None), SOURCE);
+        let auto = AutomaticLanguage {
+            code: "it".into(),
+            _steam: None,
+        };
+        assert_eq!(Lang::from_preference(Some("de"), &auto).code, "de");
+        assert_eq!(Lang::from_preference(Some("unsupported"), &auto).code, "it");
+        assert_eq!(Lang::from_preference(None, &auto).code, "it");
+    }
 
     fn placeholders(s: &str) -> Vec<String> {
         let mut out: Vec<String> = s
@@ -222,6 +302,8 @@ mod tests {
         let langs = languages();
         assert_eq!(map_locale("de_DE.UTF-8", &langs).as_deref(), Some("de"));
         assert_eq!(map_locale("pt_BR", &langs).as_deref(), Some("pt-BR"));
+        assert_eq!(map_locale("pt-Latn-BR", &langs).as_deref(), Some("pt-BR"));
+        assert_eq!(map_locale("zh-Hans-TW", &langs).as_deref(), Some("zh-Hans"));
         assert_eq!(
             map_locale("zh_TW.UTF-8", &langs).as_deref(),
             Some("zh-Hant")
