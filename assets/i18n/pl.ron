@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Wyłowiłem z rzeki guzik.",
+    "intro.story.2": "W twoim sklepie czekał duch.",
+    "intro.story.3": "„Mama mi go przyszyła” – wyszeptał.",
     "menu.version": "Demo · wersja {version}",
     "menu.version_full": "Wersja {version}",
     "menu.tagline": "Mały sklepik czynny tylko od północy do świtu.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Usuń i rozpocznij nową grę",
     "menu.language": "Język: {language}",
     "menu.choose_language": "Wybierz język",
+    "menu.language_auto": "Automatycznie",
     "menu.back": "Wstecz",
     "menu.settings": "Ustawienia",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Ustawienia",
     "settings.music": "Muzyka: {percent}%",
     "settings.effects": "Efekty dźwiękowe: {percent}%",
+    "settings.narration": "Głos narratora: {percent}%",
     "settings.ui_size": "Rozmiar interfejsu: {percent}%",
     "settings.fullscreen_on": "Pełny ekran: włączony",
     "settings.fullscreen_off": "Pełny ekran: wyłączony",
