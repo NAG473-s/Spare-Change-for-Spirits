@@ -471,8 +471,9 @@ fn spawn_boat(
     );
     b.commands.entity(lantern).insert(PointLight {
         color: Color::srgb(1.0, 0.75, 0.45),
-        intensity: 90_000.0,
-        range: 5.0,
+        intensity: 28_000.0,
+        range: 4.3,
+        radius: 0.10,
         shadow_maps_enabled: false,
         ..default()
     });
