@@ -16,11 +16,10 @@ use crate::ui::{TEXT, UiFont};
 /// Camera at the harbour and the market (relative to their origin).
 pub const CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
 pub const CAMERA_POS: Vec3 = Vec3::new(2.9, 11.4, 14.8);
-/// Camera in the shop. Kept apart from the harbour and market camera so
-/// the shop can be framed on its own (a closer, slightly turned view is
-/// being considered); for now it is the same view.
+/// Look slightly across the shop so the entrance, its signs and the counter
+/// are all visible beside the interface.
 pub const SHOP_CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
-pub const SHOP_CAMERA_POS: Vec3 = Vec3::new(2.9, 11.4, 14.8);
+pub const SHOP_CAMERA_POS: Vec3 = Vec3::new(6.5, 11.4, 14.8);
 
 /// Room bounds (metres).
 pub const ROOM_MIN_X: f32 = -7.0;
