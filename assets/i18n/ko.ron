@@ -295,10 +295,12 @@
     "accounts.sold": "판매됨",
     "accounts.fading_soon": "팔리지 않으면 다음 새벽에 빛바램",
     "end.title": "데모 끝",
+    "end.title_full": "시즌 끝",
     "end.reputation": "유령들 사이에서 당신의 평판: {reputation}",
     "end.wishes_left": "{name}에게는 아직 소원이 {count}개 남아 있어요. 다음 기회에.",
     "end.carry_over": "가게와 돈, 기념품은 모두 저장되어 있어요. 정식 버전에서는 바로 여기서 {night}번째 밤부터 이어서 할 수 있어요.",
     "end.thanks": "플레이해 주셔서 감사합니다! Steam 찜 목록에 Spare Change for Spirits를 추가해 주세요.",
+    "end.thanks_full": "가게를 지켜 주셔서 감사합니다. 유령들이 오래도록 기억할 거예요 – 그리고 다음 업데이트에서 더 많은 밤이 찾아옵니다.",
     "end.back": "메뉴로 돌아가기",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "가게 주위로 바람이 울부짖는다. 뱃사공이 가져오는 상자가 하나 줄고, 날씨는 더 추워지며, 선원들이 피할 곳을 찾아온다.",
     "event.all_souls.name": "위령의 밤",
     "event.all_souls.text": "일 년 중 가장 붐비는 밤. 유령들이 거리를 가득 메운다 – 게다가 돈도 후하게 낸다.",
+    "event.new_moon.name": "그믐밤",
+    "event.new_moon.text": "오늘 밤엔 달이 한 조각도 보이지 않는다. 가게는 그 어느 때보다 어둡다 – 수줍은 유령들은 무척 좋아하지만, 기사들은 발길을 끊는다.",
+    "event.first_frost.name": "첫서리",
+    "event.first_frost.text": "서리가 창문을 타고 번진다. 가게 안은 더 춥고, 작은 유령들이 따뜻한 구석을 찾아온다.",
+    "event.masquerade.name": "가면무도회",
+    "event.masquerade.text": "오래전 무도회에서 온 가면 쓴 유령들이 마을을 떠돈다. 멋 부리기를 좋아하고 조금 시끄럽지만, 돈은 후하게 낸다.",
+    "event.high_water.name": "불어난 강",
+    "event.high_water.text": "강물이 부두까지 차올랐다. 뱃사공이 상자를 두 개 더 가져올 수 있고, 물에 빠진 선원들이 뭍으로 올라온다.",
+    "event.longest_night.name": "가장 긴 밤",
+    "event.longest_night.text": "일 년 중 가장 긴 밤이자 이번 시즌의 마지막 밤. 그 어떤 밤보다 길게 이어지고, 마을의 모든 유령이 한 번 더 들른다 – 게다가 돈도 후하게 낸다.",
 
     // Tips during the first night.
     "tip.order": "매일 저녁 뱃사공이 상자를 최대 {count}개까지 가져다줘요. 문으로 나가 선착장에서 배 위의 상자를 클릭하면 살 수 있어요 – 대금은 돈통에서 나가요.",

@@ -295,10 +295,12 @@
     "accounts.sold": "Verkauft",
     "accounts.fading_soon": "Verblasst im nächsten Morgengrauen, falls nicht verkauft",
     "end.title": "Ende der Demo",
+    "end.title_full": "Das Ende der Saison",
     "end.reputation": "Dein Ansehen unter den Geistern: {reputation}",
     "end.wishes_left": "{name} hat noch offene Wünsche: {count}. Vielleicht beim nächsten Mal.",
     "end.carry_over": "Dein Laden, deine Münzen und deine Andenken sind gespeichert: In der Vollversion geht es genau hier weiter, mit Nacht {night}.",
     "end.thanks": "Danke fürs Spielen! Setz Spare Change for Spirits auf deine Steam-Wunschliste.",
+    "end.thanks_full": "Danke, dass du den Laden geführt hast. Die Geister werden sich an dich erinnern – und mit den nächsten Updates kommen weitere Nächte.",
     "end.back": "Zurück zum Menü",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Der Wind heult um den Laden. Der Fährmann kann eine Kiste weniger bringen, es ist kälter, und Seeleute suchen Schutz.",
     "event.all_souls.name": "Allerseelennacht",
     "event.all_souls.text": "Die geschäftigste Nacht des Jahres. Auf der Straße drängen sich die Geister – und sie zahlen gut.",
+    "event.new_moon.name": "Neumond",
+    "event.new_moon.text": "Heute Nacht ist nicht einmal eine Mondsichel zu sehen. Im Laden ist es dunkler denn je – die scheuen Geister lieben es, die Ritter bleiben fern.",
+    "event.first_frost.name": "Erster Frost",
+    "event.first_frost.text": "Frost kriecht über die Fenster. Drinnen ist es kälter, und kleine Geister suchen ein warmes Eckchen.",
+    "event.masquerade.name": "Maskenball",
+    "event.masquerade.text": "Maskierte Geister von einem längst vergangenen Ball schweben durchs Dorf. Sie sind eitel, ein wenig laut und zahlen großzügig.",
+    "event.high_water.name": "Hochwasser",
+    "event.high_water.text": "Der Fluss ist bis an den Kai gestiegen. Der Fährmann kann zwei Kisten mehr bringen, und ertrunkene Matrosen gehen an Land.",
+    "event.longest_night.name": "Die längste Nacht",
+    "event.longest_night.text": "Die längste Nacht des Jahres und die letzte der Saison. Sie dauert länger als jede andere, jeder Geist im Dorf schaut noch einmal vorbei – und sie zahlen gut.",
 
     // Tips during the first night.
     "tip.order": "Jeden Abend bringt der Fährmann bis zu {count} Kisten. Geh durch die Tür hinaus zum Hafen und klick auf eine Kiste in seinem Boot, um sie zu kaufen – bezahlt wird aus der Kasse.",

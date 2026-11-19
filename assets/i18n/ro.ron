@@ -295,10 +295,12 @@
     "accounts.sold": "Vândute",
     "accounts.fading_soon": "Se decolorează în zorii următori dacă nu se vinde",
     "end.title": "Sfârșitul demo-ului",
+    "end.title_full": "Sfârșitul sezonului",
     "end.reputation": "Reputația ta printre spirite: {reputation}",
     "end.wishes_left": "{name} mai are dorințe neîmplinite: {count}. Poate data viitoare.",
     "end.carry_over": "Magazinul, monedele și amintirile tale sunt salvate: în jocul complet continui chiar de aici, cu noaptea {night}.",
     "end.thanks": "Mulțumim că ai jucat! Adaugă Spare Change for Spirits în lista de dorințe pe Steam.",
+    "end.thanks_full": "Îți mulțumim că ai avut grijă de magazin. Spiritele nu te vor uita – iar alte nopți vor veni în actualizările următoare.",
     "end.back": "Înapoi la meniu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Vântul urlă în jurul magazinului. Luntrașul poate aduce cu o ladă mai puțin, e mai frig, iar marinarii caută adăpost.",
     "event.all_souls.name": "Noaptea tuturor sufletelor",
     "event.all_souls.text": "Cea mai aglomerată noapte a anului. Spiritele se îmbulzesc pe stradă – și plătesc bine.",
+    "event.new_moon.name": "Lună nouă",
+    "event.new_moon.text": "Nicio fărâmă de lună în noaptea asta. Magazinul e mai întunecat ca niciodată – spiritele timide sunt încântate, iar cavalerii stau departe.",
+    "event.first_frost.name": "Primul îngheț",
+    "event.first_frost.text": "Promoroaca se furișează pe geamuri. Înăuntru e mai frig, iar spiritele mici vin să caute un colțișor cald.",
+    "event.masquerade.name": "Bal mascat",
+    "event.masquerade.text": "Spirite mascate de la un bal de demult plutesc prin sat. Sunt vanitoase, cam gălăgioase și plătesc cu dărnicie.",
+    "event.high_water.name": "Ape mari",
+    "event.high_water.text": "Râul a crescut până la chei. Luntrașul poate aduce două lăzi în plus, iar marinarii înecați ies la mal.",
+    "event.longest_night.name": "Cea mai lungă noapte",
+    "event.longest_night.text": "Cea mai lungă noapte a anului și ultima din sezon. Durează mai mult decât oricare alta, fiecare spirit din sat mai trece o dată pe la tine – și plătesc bine.",
 
     // Tips during the first night.
     "tip.order": "În fiecare seară, luntrașul aduce până la {count} lăzi. Ieși pe ușă în port și apasă pe o ladă din barca lui ca s-o cumperi – plătești din sertarul casei.",

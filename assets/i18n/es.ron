@@ -295,10 +295,12 @@
     "accounts.sold": "Vendido",
     "accounts.fading_soon": "Se desvanece al próximo amanecer si no se vende",
     "end.title": "Fin de la demo",
+    "end.title_full": "El fin de la temporada",
     "end.reputation": "Tu reputación entre los espíritus: {reputation}",
     "end.wishes_left": "A {name} aún le quedan deseos: {count}. Quizá la próxima vez.",
     "end.carry_over": "Tu tienda, tus monedas y tus recuerdos están guardados: en el juego completo continuarás justo aquí, en la noche {night}.",
     "end.thanks": "¡Gracias por jugar! Añade Spare Change for Spirits a tu lista de deseados de Steam.",
+    "end.thanks_full": "Gracias por cuidar de la tienda. Los espíritus te recordarán – y llegarán más noches en las próximas actualizaciones.",
     "end.back": "Volver al menú",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "El viento aúlla alrededor de la tienda. El barquero puede traer una caja menos, hace más frío y los marineros buscan refugio.",
     "event.all_souls.name": "Noche de Difuntos",
     "event.all_souls.text": "La noche de más ajetreo del año. Los espíritus abarrotan la calle – y pagan bien.",
+    "event.new_moon.name": "Luna nueva",
+    "event.new_moon.text": "Esta noche no se ve ni una astilla de luna. La tienda está más oscura que nunca – a los espíritus tímidos les encanta y los caballeros no se acercan.",
+    "event.first_frost.name": "Primera helada",
+    "event.first_frost.text": "La escarcha trepa por las ventanas. Dentro hace más frío y los espíritus pequeños vienen a buscar un rincón calentito.",
+    "event.masquerade.name": "Mascarada",
+    "event.masquerade.text": "Espíritus enmascarados de un baile de antaño recorren flotando el pueblo. Son presumidos, algo ruidosos y pagan espléndidamente.",
+    "event.high_water.name": "Crecida del río",
+    "event.high_water.text": "El río ha subido hasta el muelle. El barquero puede traer dos cajas más y los marineros ahogados desembarcan.",
+    "event.longest_night.name": "La noche más larga",
+    "event.longest_night.text": "La noche más larga del año y la última de la temporada. Dura más que ninguna otra, todos los espíritus del pueblo pasan una vez más – y pagan bien.",
 
     // Tips during the first night.
     "tip.order": "Cada atardecer el barquero trae hasta {count} cajas. Sal por la puerta al puerto y haz clic en una caja de su barca para comprarla – se paga con el dinero del cajón.",

@@ -295,10 +295,12 @@
     "accounts.sold": "Vendus",
     "accounts.fading_soon": "Fanera à la prochaine aube s'il n'est pas vendu",
     "end.title": "Fin de la démo",
+    "end.title_full": "La fin de la saison",
     "end.reputation": "Ta réputation auprès des esprits : {reputation}",
     "end.wishes_left": "Il reste des vœux à {name} : {count}. Peut-être la prochaine fois.",
     "end.carry_over": "Ta boutique, tes pièces et tes souvenirs sont sauvegardés : dans le jeu complet, tu reprendras exactement ici, à la nuit {night}.",
     "end.thanks": "Merci d'avoir joué ! Ajoute Spare Change for Spirits à ta liste de souhaits sur Steam.",
+    "end.thanks_full": "Merci d'avoir tenu la boutique. Les esprits se souviendront de toi – et d'autres nuits arrivent avec les prochaines mises à jour.",
     "end.back": "Retour au menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Le vent hurle autour de la boutique. Le passeur peut apporter une caisse de moins, il fait plus froid et les marins cherchent un abri.",
     "event.all_souls.name": "Nuit des Défunts",
     "event.all_souls.text": "La nuit la plus animée de l'année. Les esprits se pressent dans la rue – et ils paient bien.",
+    "event.new_moon.name": "Nouvelle lune",
+    "event.new_moon.text": "Pas le moindre croissant de lune cette nuit. La boutique est plus sombre que jamais – les esprits timides adorent ça, les chevaliers se tiennent à l'écart.",
+    "event.first_frost.name": "Premières gelées",
+    "event.first_frost.text": "Le givre gagne les fenêtres. Il fait plus froid à l'intérieur, et de petits esprits viennent chercher un coin bien chaud.",
+    "event.masquerade.name": "Bal masqué",
+    "event.masquerade.text": "Des esprits masqués, échappés d'un bal d'autrefois, flottent à travers le village. Ils sont coquets, un peu bruyants, et paient grassement.",
+    "event.high_water.name": "Crue",
+    "event.high_water.text": "La rivière est montée jusqu'au quai. Le passeur peut apporter deux caisses de plus, et des marins noyés débarquent.",
+    "event.longest_night.name": "La nuit la plus longue",
+    "event.longest_night.text": "La nuit la plus longue de l'année, et la dernière de la saison. Elle dure plus que toutes les autres, chaque esprit du village passe une dernière fois – et ils paient bien.",
 
     // Tips during the first night.
     "tip.order": "Chaque soir, le passeur apporte jusqu'à {count} caisses. Sors par la porte jusqu'au port et clique sur une caisse dans sa barque pour l'acheter – tu paies avec le tiroir-caisse.",

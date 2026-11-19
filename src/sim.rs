@@ -191,9 +191,9 @@ impl<'a> Game<'a> {
 
     /// Expected units asked for tonight, per product.
     fn expected_demand(&self) -> Vec<(&'a str, f32)> {
-        let night_secs = self.data.config.night_length_secs - LAST_ARRIVAL_SECS;
-        let visitors = (night_secs / self.mean_interval())
-            .min(self.data.config.night_length_secs / SERVICE_SECS);
+        let length = self.data.night_length(self.night);
+        let night_secs = length - LAST_ARRIVAL_SECS;
+        let visitors = (night_secs / self.mean_interval()).min(length / SERVICE_SECS);
         let weights = self.ghost_weights();
         let total: f32 = weights.iter().map(|(_, w, _)| w).sum();
         let mut demand: Vec<(&str, f32)> = Vec::new();
@@ -312,7 +312,7 @@ impl<'a> Game<'a> {
         let data = self.data;
         let config = &data.config;
         let atmosphere = self.layout.atmosphere(data, self.night);
-        let end = config.night_length_secs - LAST_ARRIVAL_SECS;
+        let end = data.night_length(self.night) - LAST_ARRIVAL_SECS;
         let mut t = 0.0;
         let mut register_free = 0.0f32;
         // When each ghost in the shop leaves.

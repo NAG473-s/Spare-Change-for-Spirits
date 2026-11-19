@@ -295,10 +295,12 @@
     "accounts.sold": "Sprzedane",
     "accounts.fading_soon": "Wyblaknie o następnym świcie, jeśli się nie sprzeda",
     "end.title": "Koniec dema",
+    "end.title_full": "Koniec sezonu",
     "end.reputation": "Twoja reputacja wśród duchów: {reputation}",
     "end.wishes_left": "{name} ma jeszcze niespełnione życzenia: {count}. Może następnym razem.",
     "end.carry_over": "Twój sklep, monety i pamiątki są zapisane: w pełnej wersji gry zagrasz dalej dokładnie od tego miejsca, od nocy {night}.",
     "end.thanks": "Dzięki za grę! Dodaj Spare Change for Spirits do listy życzeń na Steamie.",
+    "end.thanks_full": "Dziękujemy za prowadzenie sklepu. Duchy będą cię pamiętać – a w kolejnych aktualizacjach czekają cię nowe noce.",
     "end.back": "Powrót do menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Wiatr wyje wokół sklepu. Przewoźnik przywiezie o jedną skrzynię mniej, jest zimniej, a marynarze szukają schronienia.",
     "event.all_souls.name": "Noc zaduszkowa",
     "event.all_souls.text": "Najbardziej ruchliwa noc w roku. Duchy tłoczą się na ulicy – i dobrze płacą.",
+    "event.new_moon.name": "Nów",
+    "event.new_moon.text": "Tej nocy ani skrawka księżyca. W sklepie jest ciemniej niż kiedykolwiek – nieśmiałe duchy są zachwycone, a rycerze trzymają się z daleka.",
+    "event.first_frost.name": "Pierwszy przymrozek",
+    "event.first_frost.text": "Szron pełznie po szybach. W środku jest zimniej, a małe duchy przychodzą poszukać ciepłego kąta.",
+    "event.masquerade.name": "Maskarada",
+    "event.masquerade.text": "Zamaskowane duchy z dawno minionego balu snują się po wsi. Są próżne, trochę hałaśliwe i płacą sowicie.",
+    "event.high_water.name": "Wysoka woda",
+    "event.high_water.text": "Rzeka podniosła się aż do nabrzeża. Przewoźnik może przywieźć dwie dodatkowe skrzynie, a utopieni marynarze wychodzą na brzeg.",
+    "event.longest_night.name": "Najdłuższa noc",
+    "event.longest_night.text": "Najdłuższa noc w roku i ostatnia w tym sezonie. Trwa dłużej niż jakakolwiek inna, każdy duch ze wsi zagląda jeszcze raz – i dobrze płacą.",
 
     // Tips during the first night.
     "tip.order": "Co wieczór przewoźnik przywozi do {count} skrzyń. Wyjdź przez drzwi do przystani i kliknij skrzynię na jego łodzi, aby ją kupić – płacisz z kasy.",

@@ -295,10 +295,12 @@
     "accounts.sold": "Venduti",
     "accounts.fading_soon": "Sbiadisce alla prossima alba, se non venduto",
     "end.title": "Fine della demo",
+    "end.title_full": "La fine della stagione",
     "end.reputation": "La tua reputazione tra gli spiriti: {reputation}",
     "end.wishes_left": "{name} ha ancora dei desideri: {count}. Forse la prossima volta.",
     "end.carry_over": "La tua bottega, le tue monete e i tuoi ricordi sono salvati: nel gioco completo riprenderai proprio da qui, dalla notte {night}.",
     "end.thanks": "Grazie per aver giocato! Aggiungi Spare Change for Spirits alla tua lista dei desideri su Steam.",
+    "end.thanks_full": "Grazie per aver mandato avanti la bottega. Gli spiriti si ricorderanno di te – e altre notti arriveranno con i prossimi aggiornamenti.",
     "end.back": "Torna al menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Il vento ulula attorno alla bottega. Il traghettatore può portare una cassa in meno, fa più freddo e i marinai cercano riparo.",
     "event.all_souls.name": "Notte dei Morti",
     "event.all_souls.text": "La notte più affollata dell'anno. Gli spiriti gremiscono la strada – e pagano bene.",
+    "event.new_moon.name": "Luna nuova",
+    "event.new_moon.text": "Stanotte non c'è neanche uno spicchio di luna. La bottega è più buia che mai – gli spiriti timidi la adorano, i cavalieri stanno alla larga.",
+    "event.first_frost.name": "Prima gelata",
+    "event.first_frost.text": "La brina si arrampica sulle finestre. Dentro fa più freddo, e piccoli spiriti vengono a cercare un angolino caldo.",
+    "event.masquerade.name": "Ballo in maschera",
+    "event.masquerade.text": "Spiriti mascherati di un ballo di tanto tempo fa fluttuano per il villaggio. Sono vanitosi, un po' chiassosi e pagano profumatamente.",
+    "event.high_water.name": "Piena del fiume",
+    "event.high_water.text": "Il fiume è salito fino alla banchina. Il traghettatore può portare due casse in più, e i marinai annegati sbarcano a riva.",
+    "event.longest_night.name": "La notte più lunga",
+    "event.longest_night.text": "La notte più lunga dell'anno e l'ultima della stagione. Dura più di ogni altra, ogni spirito del villaggio passa un'ultima volta – e pagano bene.",
 
     // Tips during the first night.
     "tip.order": "Ogni sera il traghettatore porta fino a {count} casse. Esci dalla porta fino al porto e clicca su una cassa sulla sua barca per comprarla – paghi con i soldi del cassetto.",

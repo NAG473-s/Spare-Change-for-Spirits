@@ -50,7 +50,7 @@ Checkboxes are ticked in the commit that finishes them.
 
 ### Week 3 · Dec 7 – Dec 13: content for Early Access
 
-- [ ] Nights 6–10: new events in `events.ron`, rising difficulty
+- [x] Nights 6–10: new events in `events.ron`, rising difficulty
 - [ ] 4 new ghosts with wishes, sprites and sheets ordered
 - [ ] A second story ghost for nights 6–10 (Edwin's story ends in the demo)
 - [ ] Shop upgrades (bigger shop, more shelves) as a reason to save money

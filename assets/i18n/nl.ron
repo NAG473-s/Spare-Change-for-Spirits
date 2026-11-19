@@ -295,10 +295,12 @@
     "accounts.sold": "Verkocht",
     "accounts.fading_soon": "Vervaagt bij de volgende dageraad als het niet verkocht wordt",
     "end.title": "Einde van de demo",
+    "end.title_full": "Het einde van het seizoen",
     "end.reputation": "Je reputatie onder de geesten: {reputation}",
     "end.wishes_left": "{name} heeft nog wensen over: {count}. Misschien de volgende keer.",
     "end.carry_over": "Je winkel, je munten en je aandenkens zijn opgeslagen: in de volledige versie ga je precies hier verder, met nacht {night}.",
     "end.thanks": "Bedankt voor het spelen! Zet Spare Change for Spirits op je verlanglijst op Steam.",
+    "end.thanks_full": "Bedankt dat je de winkel draaiende hebt gehouden. De geesten zullen je niet vergeten – en in de volgende updates komen er meer nachten.",
     "end.back": "Terug naar het menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "De wind giert om de winkel. De veerman kan één krat minder brengen, het is kouder en zeelieden zoeken beschutting.",
     "event.all_souls.name": "Allerzielen",
     "event.all_souls.text": "De drukste nacht van het jaar. Geesten verdringen zich in de straat – en ze betalen goed.",
+    "event.new_moon.name": "Nieuwe maan",
+    "event.new_moon.text": "Geen sprankje maan vannacht. De winkel is donkerder dan ooit – de verlegen geesten genieten ervan, de ridders blijven weg.",
+    "event.first_frost.name": "Eerste vorst",
+    "event.first_frost.text": "De vorst kruipt over de ramen. Binnen is het kouder, en kleine geesten komen een warm hoekje zoeken.",
+    "event.masquerade.name": "Gemaskerd bal",
+    "event.masquerade.text": "Gemaskerde geesten van een bal van lang geleden zweven door het dorp. Ze zijn ijdel, een beetje luidruchtig en betalen royaal.",
+    "event.high_water.name": "Hoogwater",
+    "event.high_water.text": "De rivier is tot aan de kade gestegen. De veerman kan twee extra kratten brengen, en verdronken zeelieden komen aan land.",
+    "event.longest_night.name": "De langste nacht",
+    "event.longest_night.text": "De langste nacht van het jaar en de laatste van het seizoen. Hij duurt langer dan alle andere, elke geest uit het dorp komt nog één keer langs, en ze betalen goed.",
 
     // Tips during the first night.
     "tip.order": "Elke avond brengt de veerman maximaal {count} kratten. Ga door de deur naar buiten, naar de haven, en klik op een krat in zijn boot om hem te kopen – je betaalt uit de kassa.",

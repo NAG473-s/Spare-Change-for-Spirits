@@ -295,10 +295,12 @@
     "accounts.sold": "Sold",
     "accounts.fading_soon": "Fades at the next dawn unless sold",
     "end.title": "End of the demo",
+    "end.title_full": "The end of the season",
     "end.reputation": "Your reputation among the spirits: {reputation}",
     "end.wishes_left": "{name} still has wishes left: {count}. Perhaps next time.",
     "end.carry_over": "Your shop, your coins and your keepsakes are saved: in the full game you continue right here, with night {night}.",
     "end.thanks": "Thanks for playing! Wishlist Spare Change for Spirits on Steam.",
+    "end.thanks_full": "Thank you for keeping the shop. The spirits will remember you – and more nights are coming in the next updates.",
     "end.back": "Back to the menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Wind howls around the shop. The ferryman can bring one crate less, it is colder, and sailors seek shelter.",
     "event.all_souls.name": "All Souls' Night",
     "event.all_souls.text": "The busiest night of the year. Spirits crowd the street – and they pay well.",
+    "event.new_moon.name": "New Moon",
+    "event.new_moon.text": "Not a sliver of moon tonight. The shop is darker than ever – the shy spirits love it, the knights stay away.",
+    "event.first_frost.name": "First Frost",
+    "event.first_frost.text": "Frost creeps over the windows. It is colder inside, and small spirits come looking for a warm corner.",
+    "event.masquerade.name": "Masquerade",
+    "event.masquerade.text": "Masked spirits from a ball long ago drift through the village. They are vain, a little loud, and pay handsomely.",
+    "event.high_water.name": "High Water",
+    "event.high_water.text": "The river has risen to the quay. The ferryman can bring two extra crates, and drowned sailors come ashore.",
+    "event.longest_night.name": "The Longest Night",
+    "event.longest_night.text": "The longest night of the year and the last of the season. It lasts longer than any other, every spirit in the village comes by once more, and they pay well.",
 
     // Tips during the first night.
     "tip.order": "Every evening the ferryman brings up to {count} crates. Go out through the door to the harbour and click a crate on his boat to buy it – you pay from the cash drawer.",

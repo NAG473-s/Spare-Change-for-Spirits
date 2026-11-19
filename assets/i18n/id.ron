@@ -295,10 +295,12 @@
     "accounts.sold": "Terjual",
     "accounts.fading_soon": "Memudar saat fajar berikutnya jika tidak terjual",
     "end.title": "Akhir demo",
+    "end.title_full": "Akhir musim",
     "end.reputation": "Reputasimu di antara para arwah: {reputation}",
     "end.wishes_left": "{name} masih punya {count} permintaan. Mungkin lain kali.",
     "end.carry_over": "Toko, koin, dan kenang-kenanganmu sudah tersimpan: di versi lengkap, kamu bisa lanjut tepat dari sini, mulai malam ke-{night}.",
     "end.thanks": "Terima kasih sudah bermain! Masukkan Spare Change for Spirits ke wishlist-mu di Steam.",
+    "end.thanks_full": "Terima kasih sudah menjaga toko ini. Para arwah akan selalu mengingatmu – dan lebih banyak malam akan hadir di pembaruan berikutnya.",
     "end.back": "Kembali ke menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Angin melolong di sekeliling toko. Tukang perahu membawa satu peti lebih sedikit, udara lebih dingin, dan para pelaut mencari tempat berteduh.",
     "event.all_souls.name": "Malam Para Arwah",
     "event.all_souls.text": "Malam tersibuk dalam setahun. Para arwah memadati jalan – dan mereka membayar dengan murah hati.",
+    "event.new_moon.name": "Bulan Baru",
+    "event.new_moon.text": "Tak ada secuil pun bulan malam ini. Toko lebih gelap dari sebelumnya – arwah-arwah pemalu menyukainya, para ksatria menjauh.",
+    "event.first_frost.name": "Embun Beku Pertama",
+    "event.first_frost.text": "Embun beku merambat di jendela. Di dalam lebih dingin, dan arwah-arwah kecil datang mencari sudut yang hangat.",
+    "event.masquerade.name": "Pesta Topeng",
+    "event.masquerade.text": "Arwah-arwah bertopeng dari pesta dansa zaman dulu melayang melintasi desa. Mereka pesolek, agak berisik, dan membayar dengan royal.",
+    "event.high_water.name": "Sungai Meluap",
+    "event.high_water.text": "Air sungai naik sampai ke dermaga. Tukang perahu bisa membawa dua peti tambahan, dan para pelaut tenggelam naik ke darat.",
+    "event.longest_night.name": "Malam Terpanjang",
+    "event.longest_night.text": "Malam terpanjang dalam setahun dan yang terakhir di musim ini. Malam ini berlangsung lebih lama dari malam lainnya, setiap arwah di desa mampir sekali lagi – dan mereka membayar dengan murah hati.",
 
     // Tips during the first night.
     "tip.order": "Setiap petang, tukang perahu membawa paling banyak {count} peti. Keluar lewat pintu ke dermaga dan klik sebuah peti di perahunya untuk membelinya – kamu membayarnya dari laci kasir.",

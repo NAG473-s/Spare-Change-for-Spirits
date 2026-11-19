@@ -295,10 +295,12 @@
     "accounts.sold": "已售出",
     "accounts.fading_soon": "若沒賣出，下次破曉就會褪色",
     "end.title": "試玩版結束",
+    "end.title_full": "本季結束",
     "end.reputation": "你在幽靈之間的聲望：{reputation}",
     "end.wishes_left": "{name}還有{count}個心願未了。也許下次吧。",
     "end.carry_over": "你的店舖、錢幣和紀念品都已儲存：在完整版中，你會從這裡繼續，迎接第{night}夜。",
     "end.thanks": "感謝遊玩！歡迎在 Steam 將《Spare Change for Spirits》加入願望清單。",
+    "end.thanks_full": "感謝你照顧這家小店。幽靈們會記得你的 – 更多夜晚將在之後的更新中到來。",
     "end.back": "回到主選單",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "狂風在店外呼嘯。擺渡人少送一箱貨，天氣更冷，水手們紛紛上門避風。",
     "event.all_souls.name": "萬靈節之夜",
     "event.all_souls.text": "一年中最熱鬧的一晚。幽靈擠滿了街道 – 而且出手很闊綽。",
+    "event.new_moon.name": "新月之夜",
+    "event.new_moon.text": "今晚連一絲月光都沒有。店裡比以往都還要暗 – 害羞的幽靈很喜歡，騎士們則躲得遠遠的。",
+    "event.first_frost.name": "初霜",
+    "event.first_frost.text": "霜花悄悄爬上窗戶。店裡更冷了，小幽靈們紛紛前來尋找溫暖的角落。",
+    "event.masquerade.name": "化裝舞會",
+    "event.masquerade.text": "來自一場古老舞會的戴面具幽靈飄過村莊。它們愛美，有點吵鬧，出手也很闊綽。",
+    "event.high_water.name": "漲水",
+    "event.high_water.text": "河水漲到了碼頭邊。擺渡人能多送兩箱貨，溺水的水手們也紛紛上岸。",
+    "event.longest_night.name": "最長的一夜",
+    "event.longest_night.text": "一年中最長的一夜，也是本季的最後一夜。這一夜比任何一夜都漫長，村裡的每個幽靈都會再來一次，而且出手闊綽。",
 
     // Tips during the first night.
     "tip.order": "每天傍晚，擺渡人最多會送來{count}箱貨。從門出去到碼頭，點選他船上的貨箱就能買下 – 貨款從錢箱裡付。",

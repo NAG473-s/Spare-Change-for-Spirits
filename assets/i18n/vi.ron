@@ -295,10 +295,12 @@
     "accounts.sold": "Đã bán",
     "accounts.fading_soon": "Sẽ phai mờ vào rạng sáng tới nếu không bán được",
     "end.title": "Hết bản demo",
+    "end.title_full": "Kết thúc mùa",
     "end.reputation": "Danh tiếng của bạn trong cõi linh hồn: {reputation}",
     "end.wishes_left": "{name} vẫn còn {count} điều ước. Có lẽ để lần sau.",
     "end.carry_over": "Cửa tiệm, tiền xu và kỷ vật của bạn đều đã được lưu: trong phiên bản đầy đủ, bạn sẽ tiếp tục ngay tại đây, với đêm {night}.",
     "end.thanks": "Cảm ơn bạn đã chơi! Hãy thêm Spare Change for Spirits vào danh sách mong muốn trên Steam.",
+    "end.thanks_full": "Cảm ơn bạn đã trông coi cửa tiệm. Các linh hồn sẽ nhớ đến bạn – và sẽ còn nhiều đêm nữa trong các bản cập nhật tới.",
     "end.back": "Về menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Gió gào thét quanh cửa tiệm. Người lái đò mang được ít đi một thùng, trời lạnh hơn, và các thủy thủ tìm chốn trú ẩn.",
     "event.all_souls.name": "Đêm các linh hồn",
     "event.all_souls.text": "Đêm đông đúc nhất trong năm. Các linh hồn chen chúc khắp phố – và họ trả tiền rất hậu.",
+    "event.new_moon.name": "Đêm không trăng",
+    "event.new_moon.text": "Đêm nay không có lấy một mảnh trăng. Cửa tiệm tối hơn bao giờ hết – những linh hồn nhút nhát rất thích, còn các hiệp sĩ thì tránh xa.",
+    "event.first_frost.name": "Sương giá đầu mùa",
+    "event.first_frost.text": "Sương giá bò dần trên ô cửa sổ. Trong tiệm lạnh hơn, và những linh hồn bé nhỏ tìm đến kiếm một góc ấm áp.",
+    "event.masquerade.name": "Dạ hội hóa trang",
+    "event.masquerade.text": "Những linh hồn đeo mặt nạ từ một buổi dạ hội xa xưa lướt qua làng. Họ điệu đà, hơi ồn ào và trả tiền rất hào phóng.",
+    "event.high_water.name": "Nước lên",
+    "event.high_water.text": "Nước sông đã dâng đến tận bến. Người lái đò mang thêm được hai thùng, và những thủy thủ chết đuối lên bờ.",
+    "event.longest_night.name": "Đêm dài nhất",
+    "event.longest_night.text": "Đêm dài nhất trong năm và là đêm cuối cùng của mùa. Đêm nay kéo dài hơn mọi đêm khác, mọi linh hồn trong làng đều ghé qua thêm một lần nữa, và họ trả tiền rất hậu.",
 
     // Tips during the first night.
     "tip.order": "Mỗi tối, người lái đò mang đến tối đa {count} thùng hàng. Đi ra cửa xuống bến và nhấp vào một thùng trên thuyền của ông để mua – tiền lấy từ ngăn kéo thu ngân.",

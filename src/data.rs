@@ -288,6 +288,9 @@ pub struct NightEvent {
     /// (ghost id, factor) for how often a ghost comes.
     #[serde(default)]
     pub ghost_weights: Vec<(String, f32)>,
+    /// Multiplies how long the night lasts.
+    #[serde(default = "one_f")]
+    pub length_factor: f32,
 }
 
 fn default_size() -> (f32, f32, f32) {
@@ -538,6 +541,11 @@ impl GameData {
 
     pub fn spawn_factor(&self, night: u32) -> f32 {
         self.event(night).map_or(1.0, |e| e.spawn_factor)
+    }
+
+    /// Real seconds this night lasts (before the Reaper's hourglass).
+    pub fn night_length(&self, night: u32) -> f32 {
+        self.config.night_length_secs * self.event(night).map_or(1.0, |e| e.length_factor)
     }
 
     /// Ids of products, decor and ghosts that become available on this night.

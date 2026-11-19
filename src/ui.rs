@@ -1202,7 +1202,8 @@ fn build_demo_end_panel(
     progress: Res<Progress>,
 ) {
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
-    ui.heading(&lang.t("end.title"));
+    let demo = cfg!(feature = "demo");
+    ui.heading(&lang.t(if demo { "end.title" } else { "end.title_full" }));
     ui.text(&lang.f("end.reputation", &[("reputation", &progress.reputation)]));
     let chapters = data.story.chapters.len();
     if progress.story_chapter >= chapters {
@@ -1216,10 +1217,12 @@ fn build_demo_end_panel(
             ],
         ));
     }
-    if cfg!(feature = "demo") {
+    if demo {
         ui.text(&lang.f("end.carry_over", &[("night", &(progress.night + 1))]));
+        ui.dim(&lang.t("end.thanks"));
+    } else {
+        ui.dim(&lang.t("end.thanks_full"));
     }
-    ui.dim(&lang.t("end.thanks"));
     ui.spacer();
     ui.primary(&lang.t("end.back"), Action::QuitToMenu);
 }

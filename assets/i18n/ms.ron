@@ -295,10 +295,12 @@
     "accounts.sold": "Terjual",
     "accounts.fading_soon": "Akan pudar pada fajar berikutnya jika tidak terjual",
     "end.title": "Tamat demo",
+    "end.title_full": "Penghujung musim",
     "end.reputation": "Reputasi anda dalam kalangan roh: {reputation}",
     "end.wishes_left": "{name} masih ada hajat yang belum tertunai: {count}. Mungkin lain kali.",
     "end.carry_over": "Kedai, wang dan barang kenangan anda telah disimpan: dalam versi penuh, anda boleh menyambung permainan tepat dari sini, bermula dengan malam {night}.",
     "end.thanks": "Terima kasih kerana bermain! Tambahkan Spare Change for Spirits ke senarai hajat anda di Steam.",
+    "end.thanks_full": "Terima kasih kerana menjaga kedai. Roh-roh akan sentiasa mengingati anda – dan lebih banyak malam akan tiba dalam kemas kini akan datang.",
     "end.back": "Kembali ke menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Angin melolong di sekeliling kedai. Penambang hanya mampu membawa satu peti kurang daripada biasa, cuaca lebih sejuk, dan kelasi-kelasi datang mencari tempat berteduh.",
     "event.all_souls.name": "Malam Semua Roh",
     "event.all_souls.text": "Malam paling sibuk dalam setahun. Roh-roh memenuhi jalan – dan mereka membayar dengan murah hati.",
+    "event.new_moon.name": "Bulan Baharu",
+    "event.new_moon.text": "Tiada secebis bulan pun malam ini. Kedai lebih gelap daripada biasa – roh-roh pemalu sangat menyukainya, para kesatria pula menjauhkan diri.",
+    "event.first_frost.name": "Embun Beku Pertama",
+    "event.first_frost.text": "Embun beku merayap di atas tingkap. Di dalam kedai lebih sejuk, dan roh-roh kecil datang mencari sudut yang hangat.",
+    "event.masquerade.name": "Majlis Bertopeng",
+    "event.masquerade.text": "Roh-roh bertopeng dari sebuah majlis tari-menari zaman dahulu melayang melalui kampung. Mereka pesolek, agak bising, dan membayar dengan lumayan.",
+    "event.high_water.name": "Air Pasang",
+    "event.high_water.text": "Paras sungai telah naik hingga ke jeti. Penambang boleh membawa dua peti tambahan, dan kelasi-kelasi lemas naik ke darat.",
+    "event.longest_night.name": "Malam Terpanjang",
+    "event.longest_night.text": "Malam terpanjang dalam setahun dan yang terakhir bagi musim ini. Ia berlangsung lebih lama daripada malam-malam lain, setiap roh di kampung singgah sekali lagi, dan mereka membayar dengan murah hati.",
 
     // Tips during the first night.
     "tip.order": "Setiap senja, penambang membawa sehingga {count} peti. Keluar melalui pintu ke jeti dan klik sebuah peti di perahunya untuk membelinya – anda membayar dari laci wang.",

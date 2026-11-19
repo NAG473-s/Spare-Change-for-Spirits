@@ -295,10 +295,12 @@
     "accounts.sold": "已售出",
     "accounts.fading_soon": "若未售出，下一个黎明就会褪色",
     "end.title": "演示结束",
+    "end.title_full": "本季结束",
     "end.reputation": "你在幽灵之间的声望：{reputation}",
     "end.wishes_left": "{name}还有{count}个心愿未了。下次再说吧。",
     "end.carry_over": "你的店铺、钱币和纪念品都已保存：在完整版中，你将从这里继续，迎来第{night}夜。",
     "end.thanks": "感谢游玩！请在 Steam 上将《Spare Change for Spirits》加入愿望单。",
+    "end.thanks_full": "感谢你照看这家小店。幽灵们会记住你的 – 更多夜晚将在后续更新中到来。",
     "end.back": "返回菜单",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "狂风在小店四周呼啸。摆渡人少送一箱货，天气更冷，水手们纷纷前来避风。",
     "event.all_souls.name": "万灵节之夜",
     "event.all_souls.text": "一年中最热闹的一夜。幽灵挤满了街道 – 而且出手很大方。",
+    "event.new_moon.name": "新月之夜",
+    "event.new_moon.text": "今晚连一丝月光都没有。店里比以往任何时候都暗 – 害羞的幽灵很喜欢，骑士们则躲得远远的。",
+    "event.first_frost.name": "初霜",
+    "event.first_frost.text": "霜花悄悄爬上窗户。店里更冷了，小幽灵们纷纷前来寻找温暖的角落。",
+    "event.masquerade.name": "假面舞会",
+    "event.masquerade.text": "来自一场久远舞会的戴面具幽灵飘过村庄。它们爱美，有点吵闹，出手也很阔绰。",
+    "event.high_water.name": "涨水",
+    "event.high_water.text": "河水涨到了码头边。摆渡人能多送两箱货，溺水的水手们也纷纷上岸。",
+    "event.longest_night.name": "最长的一夜",
+    "event.longest_night.text": "一年中最长的一夜，也是本季的最后一夜。这一夜比任何一夜都漫长，村里的每个幽灵都会再来一次，而且出手大方。",
 
     // Tips during the first night.
     "tip.order": "每天傍晚，摆渡人最多会送来{count}箱货。从门出去到码头，点击他船上的货箱即可购买 – 货款从钱箱里支付。",

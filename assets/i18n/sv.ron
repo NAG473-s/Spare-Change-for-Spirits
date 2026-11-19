@@ -295,10 +295,12 @@
     "accounts.sold": "Sålt",
     "accounts.fading_soon": "Bleknar vid nästa gryning om den inte säljs",
     "end.title": "Slut på demon",
+    "end.title_full": "Säsongens slut",
     "end.reputation": "Ditt rykte bland andarna: {reputation}",
     "end.wishes_left": "{name} har fortfarande önskningar kvar: {count}. Kanske nästa gång.",
     "end.carry_over": "Din butik, dina mynt och dina minnessaker är sparade: i fullversionen fortsätter du precis härifrån, med natt {night}.",
     "end.thanks": "Tack för att du spelade! Lägg till Spare Change for Spirits på din önskelista på Steam.",
+    "end.thanks_full": "Tack för att du skötte butiken. Andarna kommer att minnas dig – och fler nätter kommer i nästa uppdateringar.",
     "end.back": "Tillbaka till menyn",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Vinden yler kring butiken. Färjkarlen kan ta med en låda mindre, det är kallare och sjömän söker skydd.",
     "event.all_souls.name": "Alla själars natt",
     "event.all_souls.text": "Årets mest hektiska natt. Andarna trängs på gatan – och de betalar bra.",
+    "event.new_moon.name": "Nymåne",
+    "event.new_moon.text": "Inte en skärva av månen i natt. Butiken är mörkare än någonsin – de blyga andarna älskar det, riddarna håller sig borta.",
+    "event.first_frost.name": "Första frosten",
+    "event.first_frost.text": "Frosten kryper över fönstren. Det är kallare inomhus, och små andar kommer för att leta efter en varm vrå.",
+    "event.masquerade.name": "Maskerad",
+    "event.masquerade.text": "Maskerade andar från en bal för länge sedan svävar genom byn. De är fåfänga, lite högljudda och betalar frikostigt.",
+    "event.high_water.name": "Högvatten",
+    "event.high_water.text": "Floden har stigit ända upp till kajen. Färjkarlen kan ta med två extra lådor, och drunknade sjömän går i land.",
+    "event.longest_night.name": "Den längsta natten",
+    "event.longest_night.text": "Årets längsta natt och säsongens sista. Den varar längre än någon annan, varenda ande i byn tittar in en gång till, och de betalar bra.",
 
     // Tips during the first night.
     "tip.order": "Varje kväll kommer färjkarlen med upp till {count} lådor. Gå ut genom dörren till hamnen och klicka på en låda i hans båt för att köpa den – du betalar ur kassan.",

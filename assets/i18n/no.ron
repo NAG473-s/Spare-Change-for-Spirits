@@ -295,10 +295,12 @@
     "accounts.sold": "Solgt",
     "accounts.fading_soon": "Falmer ved neste daggry hvis den ikke blir solgt",
     "end.title": "Slutten på demoen",
+    "end.title_full": "Slutten på sesongen",
     "end.reputation": "Ditt omdømme blant åndene: {reputation}",
     "end.wishes_left": "{name} har fortsatt uoppfylte ønsker: {count}. Kanskje neste gang.",
     "end.carry_over": "Butikken din, myntene dine og minnene dine er lagret: i fullversjonen fortsetter du akkurat herfra, med natt {night}.",
     "end.thanks": "Takk for at du spilte! Legg Spare Change for Spirits på ønskelisten din på Steam.",
+    "end.thanks_full": "Takk for at du passet på butikken. Åndene vil huske deg – og flere netter kommer i de neste oppdateringene.",
     "end.back": "Tilbake til menyen",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Vinden uler rundt butikken. Fergemannen kan ta med én kasse mindre, det er kaldere, og sjøfolk søker ly.",
     "event.all_souls.name": "Allesjelersnatt",
     "event.all_souls.text": "Årets travleste natt. Åndene fyller gata – og de betaler godt.",
+    "event.new_moon.name": "Nymåne",
+    "event.new_moon.text": "Ikke en flik av månen i natt. Butikken er mørkere enn noen gang – de sjenerte åndene elsker det, ridderne holder seg unna.",
+    "event.first_frost.name": "Første frost",
+    "event.first_frost.text": "Frosten kryper over vinduene. Det er kaldere inne, og små ånder kommer for å finne en varm krok.",
+    "event.masquerade.name": "Maskerade",
+    "event.masquerade.text": "Maskerte ånder fra et ball for lenge siden driver gjennom landsbyen. De er forfengelige, litt bråkete og betaler rundhåndet.",
+    "event.high_water.name": "Flom",
+    "event.high_water.text": "Elva har steget helt opp til kaia. Fergemannen kan ta med to ekstra kasser, og druknede sjøfolk går i land.",
+    "event.longest_night.name": "Den lengste natten",
+    "event.longest_night.text": "Årets lengste natt og sesongens siste. Den varer lenger enn noen annen, hver eneste ånd i landsbyen kommer innom en gang til, og de betaler godt.",
 
     // Tips during the first night.
     "tip.order": "Hver kveld kommer fergemannen med opptil {count} kasser. Gå ut gjennom døra til havna og klikk på en kasse i båten hans for å kjøpe den – du betaler fra pengeskuffen.",

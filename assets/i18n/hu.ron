@@ -295,10 +295,12 @@
     "accounts.sold": "Eladva",
     "accounts.fading_soon": "A következő hajnalon megfakul, ha nem kel el",
     "end.title": "Vége a demónak",
+    "end.title_full": "Vége a szezonnak",
     "end.reputation": "Hírneved a szellemek között: {reputation}",
     "end.wishes_left": "{name} kívánságai közül még hátravan: {count}. Talán legközelebb.",
     "end.carry_over": "Elmentettük a boltodat, az érméidet és az emléktárgyaidat: a teljes játékban pontosan innen folytathatod, {night}. éjszaka következik.",
     "end.thanks": "Köszönjük, hogy játszottál! Tedd fel a Spare Change for Spirits játékot a kívánságlistádra a Steamen.",
+    "end.thanks_full": "Köszönjük, hogy vigyáztál a boltra. A szellemek emlékezni fognak rád – és a következő frissítésekkel újabb éjszakák érkeznek.",
     "end.back": "Vissza a menübe",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Süvít a szél a bolt körül. A révész eggyel kevesebb ládát hozhat, hidegebb van, és a matrózok menedéket keresnek.",
     "event.all_souls.name": "Halottak éjszakája",
     "event.all_souls.text": "Az év legforgalmasabb éjszakája. Szellemek tolonganak az utcán – és jól fizetnek.",
+    "event.new_moon.name": "Újhold",
+    "event.new_moon.text": "Ma éjjel egy szeletnyi hold sem látszik. Sötétebb van a boltban, mint valaha – a félénk szellemek imádják, a lovagok távol maradnak.",
+    "event.first_frost.name": "Első fagy",
+    "event.first_frost.text": "A dér felkúszik az ablakokra. Bent hidegebb van, és apró szellemek jönnek meleg zugot keresni.",
+    "event.masquerade.name": "Álarcosbál",
+    "event.masquerade.text": "Egy rég elmúlt bál álarcos szellemei suhannak át a falun. Hiúk, kissé hangosak, és bőkezűen fizetnek.",
+    "event.high_water.name": "Áradás",
+    "event.high_water.text": "A folyó egészen a rakpartig áradt. A révész két ládával többet hozhat, és vízbe fúlt matrózok lépnek partra.",
+    "event.longest_night.name": "A leghosszabb éjszaka",
+    "event.longest_night.text": "Az év leghosszabb éjszakája és a szezon utolsó éjjele. Tovább tart bármelyik másiknál, a falu minden szelleme benéz még egyszer – és jól fizetnek.",
 
     // Tips during the first night.
     "tip.order": "A révész minden este legfeljebb {count} ládát hoz. Menj ki az ajtón a kikötőbe, és kattints egy ládára a csónakjában, hogy megvedd – a kasszából fizetsz.",

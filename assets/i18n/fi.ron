@@ -295,10 +295,12 @@
     "accounts.sold": "Myyty",
     "accounts.fading_soon": "Haalistuu seuraavana aamunkoittona, ellei sitä myydä",
     "end.title": "Demo päättyi",
+    "end.title_full": "Kausi päättyi",
     "end.reputation": "Maineesi henkien keskuudessa: {reputation}",
     "end.wishes_left": "{name}: toiveita vielä jäljellä {count}. Ehkä ensi kerralla.",
     "end.carry_over": "Puotisi, kolikkosi ja muistoesineesi on tallennettu: täysversiossa jatkat juuri tästä, ja vuorossa on yö {night}.",
     "end.thanks": "Kiitos pelaamisesta! Lisää Spare Change for Spirits toivelistallesi Steamissä.",
+    "end.thanks_full": "Kiitos, että pidit puotia. Henget muistavat sinut – ja lisää öitä on tulossa seuraavissa päivityksissä.",
     "end.back": "Takaisin valikkoon",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Tuuli ulvoo puodin ympärillä. Lautturi voi tuoda yhden laatikon vähemmän, on kylmempää, ja merimiehet hakevat suojaa.",
     "event.all_souls.name": "Kaikkien sielujen yö",
     "event.all_souls.text": "Vuoden vilkkain yö. Henget tungeksivat kadulla – ja maksavat hyvin.",
+    "event.new_moon.name": "Uusikuu",
+    "event.new_moon.text": "Tänä yönä kuusta ei näy pienintäkään sirppiä. Puoti on pimeämpi kuin koskaan – ujot henget rakastavat sitä, ritarit pysyvät poissa.",
+    "event.first_frost.name": "Ensimmäinen halla",
+    "event.first_frost.text": "Kuura hiipii ikkunoihin. Sisällä on kylmempää, ja pienet henget tulevat etsimään lämmintä nurkkaa.",
+    "event.masquerade.name": "Naamiaiset",
+    "event.masquerade.text": "Naamioituneita henkiä kauan sitten pidetyistä tanssiaisista lipuu kylän halki. Ne ovat turhamaisia, hieman äänekkäitä ja maksavat auliisti.",
+    "event.high_water.name": "Tulva",
+    "event.high_water.text": "Joki on noussut laituriin asti. Lautturi voi tuoda kaksi ylimääräistä laatikkoa, ja hukkuneita merimiehiä nousee maihin.",
+    "event.longest_night.name": "Pisin yö",
+    "event.longest_night.text": "Vuoden pisin yö ja kauden viimeinen. Se kestää kauemmin kuin mikään muu, jokainen kylän henki poikkeaa vielä kerran – ja ne maksavat hyvin.",
 
     // Tips during the first night.
     "tip.order": "Joka ilta lautturi tuo enintään {count} laatikkoa. Mene ovesta ulos satamaan ja osta laatikko klikkaamalla sitä hänen veneessään – maksat kassasta.",

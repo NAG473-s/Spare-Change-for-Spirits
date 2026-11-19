@@ -295,10 +295,12 @@
     "accounts.sold": "売れた品",
     "accounts.fading_soon": "売れなければ次の夜明けに色あせる",
     "end.title": "体験版はここまで",
+    "end.title_full": "シーズンの終わり",
     "end.reputation": "幽霊たちの間でのあなたの評判：{reputation}",
     "end.wishes_left": "{name}の願いはまだ{count}つ残っている。また今度。",
     "end.carry_over": "お店もお金も思い出の品も、セーブされています。製品版では、ここから{night}夜目に進めます。",
     "end.thanks": "遊んでくれてありがとう！SteamでSpare Change for Spiritsをウィッシュリストに追加してね。",
+    "end.thanks_full": "お店を切り盛りしてくれてありがとう。幽霊たちはあなたのことを忘れない – 次のアップデートで、さらに夜が増える予定だよ。",
     "end.back": "メニューに戻る",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "店のまわりで風がうなる。渡し守が運べる木箱は1つ少なく、いつもより寒い。船乗りたちが嵐をしのぎにやってくる。",
     "event.all_souls.name": "万霊節の夜",
     "event.all_souls.text": "一年でいちばんにぎやかな夜。通りは幽霊であふれ – しかも気前よく払ってくれる。",
+    "event.new_moon.name": "新月",
+    "event.new_moon.text": "今夜は月がひとかけらも見えない。店はいつになく暗い – 内気な幽霊たちは大喜びで、騎士たちは寄りつかない。",
+    "event.first_frost.name": "初霜",
+    "event.first_frost.text": "窓に霜がはい上がる。店の中も冷え込み、小さな幽霊たちが暖かい隅っこを探してやってくる。",
+    "event.masquerade.name": "仮面舞踏会",
+    "event.masquerade.text": "遠い昔の舞踏会から来た仮面の幽霊たちが、村を漂っている。見栄っ張りで少し騒がしいけれど、気前よく払ってくれる。",
+    "event.high_water.name": "増水",
+    "event.high_water.text": "川の水が船着き場まで上がってきた。渡し守は木箱を2つ多く運べて、溺れた船乗りたちが岸に上がってくる。",
+    "event.longest_night.name": "いちばん長い夜",
+    "event.longest_night.text": "一年でいちばん長い夜で、今シーズン最後の夜。どの夜よりも長く続き、村じゅうの幽霊がもう一度やってくる – しかも気前よく払ってくれる。",
 
     // Tips during the first night.
     "tip.order": "毎日夕方になると、渡し守が木箱を最大{count}個まで運んできます。扉から船着き場へ出て、舟の上の木箱をクリックすると購入でき、代金はレジから支払います。",

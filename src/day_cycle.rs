@@ -153,7 +153,7 @@ fn start_night(
 ) {
     *clock = NightClock {
         elapsed: 0.0,
-        length: data.config.night_length_secs * bonus.0,
+        length: data.night_length(progress.night) * bonus.0,
     };
     bonus.0 = 1.0;
     *report = NightReport {

@@ -295,10 +295,12 @@
     "accounts.sold": "Vendidos",
     "accounts.fading_soon": "Desbota no próximo amanhecer se não for vendido",
     "end.title": "Fim da demo",
+    "end.title_full": "O fim da temporada",
     "end.reputation": "Sua reputação entre os espíritos: {reputation}",
     "end.wishes_left": "{name} ainda tem desejos a realizar: {count}. Fica para a próxima.",
     "end.carry_over": "Sua loja, suas moedas e suas lembranças estão salvas: no jogo completo, você continua bem daqui, na noite {night}.",
     "end.thanks": "Obrigado por jogar! Adicione Spare Change for Spirits à sua lista de desejos na Steam.",
+    "end.thanks_full": "Obrigado por cuidar da loja. Os espíritos vão se lembrar de você – e mais noites estão chegando nas próximas atualizações.",
     "end.back": "Voltar ao menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "O vento uiva em volta da loja. O barqueiro pode trazer uma caixa a menos, faz mais frio e marinheiros procuram abrigo.",
     "event.all_souls.name": "Noite de Finados",
     "event.all_souls.text": "A noite mais movimentada do ano. Os espíritos lotam a rua – e pagam bem.",
+    "event.new_moon.name": "Lua nova",
+    "event.new_moon.text": "Nem um fiapo de lua hoje à noite. A loja está mais escura do que nunca – os espíritos tímidos adoram, e os cavaleiros ficam longe.",
+    "event.first_frost.name": "Primeira geada",
+    "event.first_frost.text": "A geada se espalha pelas janelas. Faz mais frio aqui dentro, e espíritos pequenos aparecem procurando um cantinho quente.",
+    "event.masquerade.name": "Baile de máscaras",
+    "event.masquerade.text": "Espíritos mascarados de um baile de muito tempo atrás vagam pela vila. São vaidosos, um pouco barulhentos e pagam muito bem.",
+    "event.high_water.name": "Cheia do rio",
+    "event.high_water.text": "O rio subiu até o cais. O barqueiro pode trazer duas caixas a mais, e marinheiros afogados chegam à terra firme.",
+    "event.longest_night.name": "A noite mais longa",
+    "event.longest_night.text": "A noite mais longa do ano e a última da temporada. Ela dura mais do que qualquer outra, todos os espíritos da vila passam por aqui mais uma vez, e pagam bem.",
 
     // Tips during the first night.
     "tip.order": "Todo anoitecer, o barqueiro traz até {count} caixas. Saia pela porta até o porto e clique numa caixa no barco dele para comprá-la – você paga com o dinheiro da gaveta.",

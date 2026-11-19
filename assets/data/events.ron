@@ -2,6 +2,8 @@
 // spawn_factor: multiplies the time between ghosts (above 1 = fewer customers).
 // price_factor: multiplies what ghosts pay. crate_bonus: extra crates from the ferryman.
 // atmosphere: added to the shop's atmosphere. ghost_weights: (ghost id, factor) for how often it comes.
+// length_factor: multiplies how long the night lasts.
+// Nights 1–5 are the demo; 6–10 belong to the full game and get busier towards the finale.
 [
     (id: "first_night", night: 1, spawn_factor: 1.3),
     (id: "fog", night: 2, atmosphere: (light: -1), ghost_weights: [("shy", 2.0), ("sailor", 1.5)]),
@@ -9,4 +11,14 @@
     (id: "storm", night: 4, spawn_factor: 0.9, crate_bonus: -1, atmosphere: (warmth: -1),
      ghost_weights: [("sailor", 3.0)]),
     (id: "all_souls", night: 5, spawn_factor: 0.7, price_factor: 1.5),
+
+    (id: "new_moon", night: 6, spawn_factor: 0.85, atmosphere: (light: -2),
+     ghost_weights: [("shy", 2.0), ("knight", 0.5)]),
+    (id: "first_frost", night: 7, spawn_factor: 0.85, price_factor: 1.1, atmosphere: (warmth: -2),
+     ghost_weights: [("cat", 2.0), ("child", 1.5)]),
+    (id: "masquerade", night: 8, spawn_factor: 0.75, price_factor: 1.3,
+     ghost_weights: [("vain", 2.0), ("bride", 2.0)]),
+    (id: "high_water", night: 9, spawn_factor: 0.75, crate_bonus: 2, atmosphere: (silence: -1),
+     ghost_weights: [("sailor", 3.0), ("poltergeist", 1.5)]),
+    (id: "longest_night", night: 10, spawn_factor: 0.65, price_factor: 1.5, length_factor: 1.3),
 ]

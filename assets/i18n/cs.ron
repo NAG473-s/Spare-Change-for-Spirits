@@ -295,10 +295,12 @@
     "accounts.sold": "Prodáno",
     "accounts.fading_soon": "Pokud se neprodá, za příštího úsvitu vybledne",
     "end.title": "Konec dema",
+    "end.title_full": "Konec sezóny",
     "end.reputation": "Tvá pověst mezi duchy: {reputation}",
     "end.wishes_left": "{name} má ještě nesplněná přání: {count}. Snad příště.",
     "end.carry_over": "Tvůj obchod, mince i upomínky jsou uložené: v plné verzi hry budeš pokračovat přesně odsud, od noci {night}.",
     "end.thanks": "Díky za hraní! Přidej si Spare Change for Spirits na Steamu do seznamu přání.",
+    "end.thanks_full": "Díky za péči o obchod. Duchové na tebe nezapomenou – a v dalších aktualizacích přibudou nové noci.",
     "end.back": "Zpět do menu",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Kolem obchodu skučí vítr. Převozník přiveze o jednu bednu méně, je chladněji a námořníci hledají úkryt.",
     "event.all_souls.name": "Dušičková noc",
     "event.all_souls.text": "Nejrušnější noc v roce. Duchové se tlačí na ulici – a dobře platí.",
+    "event.new_moon.name": "Novoluní",
+    "event.new_moon.text": "Dnes v noci není vidět ani srpek měsíce. V obchodě je tma jako nikdy – plaší duchové to milují, rytíři se drží stranou.",
+    "event.first_frost.name": "První mráz",
+    "event.first_frost.text": "Po oknech se plíží jinovatka. Uvnitř je chladněji a malí duchové si přicházejí hledat teplý koutek.",
+    "event.masquerade.name": "Maškaráda",
+    "event.masquerade.text": "Maskovaní duchové z dávného plesu se vznášejí vesnicí. Jsou ješitní, trochu hluční a štědře platí.",
+    "event.high_water.name": "Velká voda",
+    "event.high_water.text": "Řeka vystoupala až k nábřeží. Převozník může přivézt dvě bedny navíc a na břeh vystupují utonulí námořníci.",
+    "event.longest_night.name": "Nejdelší noc",
+    "event.longest_night.text": "Nejdelší noc v roce a poslední v sezóně. Trvá déle než kterákoli jiná, všichni duchové z vesnice se ještě jednou zastaví – a dobře platí.",
 
     // Tips during the first night.
     "tip.order": "Každý večer ti převozník přiveze až {count} beden. Vyjdi dveřmi ven do přístavu a kliknutím na bednu v jeho loďce ji koupíš – platíš z pokladny.",

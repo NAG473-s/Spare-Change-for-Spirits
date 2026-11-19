@@ -295,10 +295,12 @@
     "accounts.sold": "Satılanlar",
     "accounts.fading_soon": "Satılmazsa sonraki şafakta solar",
     "end.title": "Demonun sonu",
+    "end.title_full": "Sezonun sonu",
     "end.reputation": "Ruhlar arasındaki itibarın: {reputation}",
     "end.wishes_left": "{name} için hâlâ dilek kaldı: {count}. Belki bir dahaki sefere.",
     "end.carry_over": "Dükkânın, paraların ve hatıraların kaydedildi: tam sürümde kaldığın yerden, {night}. geceyle devam edeceksin.",
     "end.thanks": "Oynadığın için teşekkürler! Spare Change for Spirits'i Steam'de istek listene ekle.",
+    "end.thanks_full": "Dükkâna baktığın için teşekkürler. Ruhlar seni unutmayacak – ve sonraki güncellemelerde daha fazla gece geliyor.",
     "end.back": "Menüye dön",
 
     // Products (ids from data/products.ron). Hints are numbered from 1; any number of hints works.
@@ -434,6 +436,16 @@
     "event.storm.text": "Rüzgâr dükkânın çevresinde uğulduyor. Kayıkçı bir sandık eksik getirebiliyor, hava daha soğuk ve denizciler sığınacak yer arıyor.",
     "event.all_souls.name": "Tüm Ruhlar Gecesi",
     "event.all_souls.text": "Yılın en kalabalık gecesi. Ruhlar sokağı dolduruyor – ve cömertçe ödüyorlar.",
+    "event.new_moon.name": "Yeni Ay",
+    "event.new_moon.text": "Bu gece gökyüzünde ayın kıyısı bile yok. Dükkân hiç olmadığı kadar karanlık – utangaç ruhlar buna bayılıyor, şövalyeler ise uzak duruyor.",
+    "event.first_frost.name": "İlk Kırağı",
+    "event.first_frost.text": "Kırağı camların üzerinde yayılıyor. İçerisi daha soğuk ve küçük ruhlar sıcak bir köşe aramaya geliyor.",
+    "event.masquerade.name": "Maskeli Balo",
+    "event.masquerade.text": "Çok eskilerde kalmış bir balodan gelen maskeli ruhlar köyün içinden süzülüyor. Kendilerini beğenmişler, biraz gürültücüler ve cömertçe ödüyorlar.",
+    "event.high_water.name": "Taşkın",
+    "event.high_water.text": "Nehir rıhtıma kadar yükseldi. Kayıkçı iki sandık fazla getirebiliyor ve boğulmuş denizciler karaya çıkıyor.",
+    "event.longest_night.name": "En Uzun Gece",
+    "event.longest_night.text": "Yılın en uzun gecesi ve sezonun son gecesi. Her geceden daha uzun sürüyor, köydeki her ruh bir kez daha uğruyor ve iyi ödüyorlar.",
 
     // Tips during the first night.
     "tip.order": "Kayıkçı her akşam en fazla {count} sandık getirir. Kapıdan iskeleye çık ve satın almak için kayığındaki bir sandığa tıkla – parasını kasa çekmecesinden ödersin.",
