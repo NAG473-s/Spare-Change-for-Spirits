@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Извадих едно копче от реката.",
+    "intro.story.2": "В дюкяна ти чакаше призрак.",
+    "intro.story.3": "„Мама ми го заши“, прошепна той.",
     "menu.version": "Демо · версия {version}",
     "menu.version_full": "Версия {version}",
     "menu.tagline": "Малко магазинче, което отваря само между полунощ и зазоряване.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Изтрий и започни нова игра",
     "menu.language": "Език: {language}",
     "menu.choose_language": "Избери език",
+    "menu.language_auto": "Автоматично",
     "menu.back": "Назад",
     "menu.settings": "Настройки",
     "hud.menu": "Меню",
@@ -31,6 +35,7 @@
     "settings.title": "Настройки",
     "settings.music": "Музика: {percent}%",
     "settings.effects": "Звукови ефекти: {percent}%",
+    "settings.narration": "Глас на разказвача: {percent}%",
     "settings.ui_size": "Размер на интерфейса: {percent}%",
     "settings.fullscreen_on": "Цял екран: вкл.",
     "settings.fullscreen_off": "Цял екран: изкл.",
