@@ -9,7 +9,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 - **The interface frame** – painted walnut and brass trim for menus, shop panels, crate tooltips
   and the traders' nameplates at the village market.
 - **Surface textures and light** – the shop floor, market cobblestones and the soft halo around harbour lamps.
-- **The title screen** – a dedicated Full HD background and the game logo.
+- **The opening and title screen** – a painted harbour, a punt with an articulated ferryman, the menu background and the game logo.
 - **The desktop icon** – the same ghost and brass button in the Linux, macOS and Windows launchers.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
@@ -26,8 +26,8 @@ python3 tools/check_models.py
 
 There are no open image orders. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
-The opening harbour painting and ferry cutout, the oak shop floor, the market street map
-and the quay paving are delivered. All ten ghost portraits have gestures for nine activities.
+The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
+floor, market street map and quay paving. All ten ghost portraits have gestures for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -142,13 +142,27 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 
 ## First launch at the harbour (done)
 
-The opening plays for 4.8 seconds on a new installation. Keep the frame fixed. The ferry and
-its reflection travel together, the bow lantern glows, and the existing logo fades into the sky.
+The first-launch crossing lasts 14 seconds. Keep the view fixed as the ferryman plants his pole
+four times and the title fades into the sky. The game moves the hull past each planted tip,
+opens a small ring in the water and lifts the pole for the next stroke. The lantern swings from
+the bow hook. All the moving pieces share one reflection.
 
 | File in `assets/sprites/title/` | Replacement artwork |
 |---|---|
 | `intro_harbor.png` | Opaque 1280 × 720 storybook painting at water level. Crooked amber-lit cottages and a pier on the left, a slim lighthouse and crescent moon on the right. Keep the upper centre dark for the logo and the lower two fifths clear for the moving boat. Use deep plum, slate and teal gouache with small gold reflections. |
-| `intro_ferry.png` | Transparent 768 × 256 side view. The full wooden punt faces right, with a hooded ferryman at the stern, two rope-bound crates and a bent brass lantern hook at the bow. Centre the lamp flame near 90.6% of the width and 28% of the height. The hull meets the water at about 92% of the height. The game adds its reflection. |
+| `intro_ferry.png` | Transparent 768 × 256 side view of the bare wooden punt, facing right. Keep the ropes, two lashed crates and empty brass lantern hook on the hull. Leave room on the stern deck for the ferryman’s boots at (96, 172). The hook ends at (702, 33) and the waterline is at y = 239, measured from the top left. |
+| `intro_crew.png` | Transparent 384 × 288 sheet in the same gouache and ink. Paint a right-facing ferryman with a plum hood, two separate sleeves ending in gripping fists, a wooden pole with a silver tip at its left end, and a brass lantern hanging from its top ring. Use the cutouts below. |
+
+Cutout coordinates start at the top left of the sheet. Both sleeves run from shoulder to fist
+left to right, with the shoulder at (13%, 32%) and the grip at (90%, 46%) of each cutout.
+
+| Piece | Left | Top | Width | Height |
+|---|---:|---:|---:|---:|
+| Hooded body and boots | 2 | 2 | 160 | 222 |
+| Near sleeve and fist | 168 | 2 | 152 | 70 |
+| Far sleeve and fist | 168 | 78 | 152 | 69 |
+| Pole | 2 | 270 | 376 | 14 |
+| Lantern | 168 | 153 | 82 | 110 |
 
 ## Title screen – canvas 1920 × 1080 (done)
 
