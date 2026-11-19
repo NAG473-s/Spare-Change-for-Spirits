@@ -242,6 +242,31 @@ def music_box_note(note, amp):
     return amp * tone(midi_hz(note), 2.5, partials, attack=0.003)
 
 
+def intro_music():
+    """Four slow bars for the punt, with the shop's music box answering the bowed bass."""
+    out = np.zeros(14 * SR)
+    bars = [(45, 64, 69), (41, 60, 64), (50, 62, 65), (40, 59, 68)]
+    for bar, (bass, fifth, top) in enumerate(bars):
+        at = 0.12 + 3 * bar
+        t = t_axis(3.38)
+        freq = midi_hz(bass) * (1 + 0.002 * np.sin(2 * np.pi * 4.3 * t))
+        phase = 2 * np.pi * np.cumsum(freq) / SR
+        bow = np.sin(phase) + 0.33 * np.sin(2 * phase) + 0.14 * np.sin(3 * phase)
+        envelope = np.interp(t, [0, 0.34, 1.1, 2.64, 3.38], [0, 0.8, 0.68, 0.57, 0])
+        place(out, 0.24 * bow * envelope, at)
+        for delay, note in [(0.08, fifth), (1.02, top), (2.04, fifth)]:
+            place(out, music_box_note(note, 0.22), at + delay)
+
+    # Leave space between the upper notes for the three spoken lines.
+    for at, note in [(0.36, 76), (4.34, 72), (7.94, 74), (11.85, 71), (12.49, 69)]:
+        place(out, music_box_note(note, 0.31), at)
+    place(out, music_box_note(45, 0.54), 12.28)
+    score = reverb(out, 0.24)
+    fade = int(0.95 * SR)
+    score[-fade:] *= np.linspace(1, 0, fade) ** 2
+    return normalise(score, 0.40)
+
+
 def evening_music():
     beat = 60 / 76
     loop = int(len(MELODY) * 3 * beat * SR)
@@ -294,6 +319,7 @@ SOUNDS = {
     "ghost_whisper": ghost_whisper,
     "ghost_hum": ghost_hum,
     "ghost_flee": ghost_flee,
+    "intro_music": intro_music,
     "evening_music": evening_music,
     "night_ambience": night_ambience,
 }
