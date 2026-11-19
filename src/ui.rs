@@ -178,14 +178,16 @@ impl FromWorld for UiTheme {
 }
 
 impl UiTheme {
-    fn frame(image: &Handle<Image>, corner_scale: f32) -> ImageNode {
-        ImageNode::new(image.clone()).with_mode(NodeImageMode::Sliced(TextureSlicer {
+    pub(crate) fn frame(&self, corner_scale: f32) -> Option<ImageNode> {
+        let image = self.0.as_ref()?;
+        let slicer = TextureSlicer {
             // The leaf ornaments fit inside the corners of the 512 px painting.
             border: BorderRect::all(86.0),
             center_scale_mode: SliceScaleMode::Stretch,
             sides_scale_mode: SliceScaleMode::Stretch,
             max_corner_scale: corner_scale,
-        }))
+        };
+        Some(ImageNode::new(image.clone()).with_mode(NodeImageMode::Sliced(slicer)))
     }
 
     /// Give the artwork the whole frame. UI images use the content box,
@@ -198,10 +200,8 @@ impl UiTheme {
         padding: f32,
         gap: f32,
     ) -> Entity {
-        if let Some(image) = &self.0 {
-            commands
-                .entity(frame)
-                .insert(Self::frame(image, corner_scale));
+        if let Some(image) = self.frame(corner_scale) {
+            commands.entity(frame).insert(image);
         }
         commands
             .spawn((
@@ -835,7 +835,12 @@ fn build_market_panel(
     ui.dim(&lang.t("market.intro"));
     ui.section(&lang.t("market.vendors"));
     for v in &data.vendors {
-        ui.text(&lang.t(&format!("vendor.{}.name", v.id)));
+        ui.display_text(
+            ui.root,
+            &lang.t(&format!("vendor.{}.name", v.id)),
+            14.0,
+            TEXT,
+        );
         ui.dim(&lang.t(&format!("vendor.{}.text", v.id)));
     }
     ui.section(&lang.t("market.storeroom"));
