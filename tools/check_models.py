@@ -21,7 +21,7 @@ ROOT = Path(__import__('os').environ.get('SCFS_ROOT', Path(__file__).resolve().p
 MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
-SHOP_SIZES = {"counter": (4.5, 1.0, 0.8), "door": (1.1, 2.3, 0.2)}
+SHOP_SIZES = {"counter": (4.5, 1.2, 0.81), "door": (1.1, 2.3, 0.2)}
 TRIANGLE_BUDGET = {
     "products": 1000,
     "decor": 3500,
@@ -261,7 +261,7 @@ def main():
             room=None,
             crate=(0.5, 0.3, 0.42),
             ferryman=(0.7, 1.45, 0.6),
-            ferry_boat=(7.4, 0.6, 1.7),
+            ferry_boat=(7.4, 0.66, 1.85),
             crate_lid=(0.52, 0.05, 0.44),
             wall_clock=(0.78, 0.78, 0.08),
             shop_sign=(1.0, 0.75, 0.05),
@@ -290,12 +290,17 @@ def main():
         for extra in sorted((MODELS / folder).glob("*.glb")) if (MODELS / folder).is_dir() else []:
             if extra.stem not in targets:
                 print(f"  unknown  {extra.relative_to(ROOT)} (no id with this name)")
-    # Images the 3D game uses: one sprite per ghost and the floor texture.
+    # Required portraits, interface art and scene textures.
     print()
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
-    for name in ("shop/floor.png", "shop/sign_paint.png", "shop/porthole_light.png", "ui/ledger_frame.png", "coins/button.png", "coins/candle.png", "coins/spoon.png"):
+    for name in (
+        "shop/floor.png", "market/square.png", "harbor/quay_stone.png",
+        "title/intro_harbor.png", "title/intro_ferry.png", "title/logo.png",
+        "shop/sign_paint.png", "shop/porthole_light.png", "ui/ledger_frame.png",
+        "coins/button.png", "coins/candle.png", "coins/spoon.png",
+    ):
         path = ROOT / "assets" / "sprites" / name
         print(("  ok       " if path.is_file() else "  missing  ") + f"sprites/{name}")
     # Button icons (optional: a button without one shows only its text).
