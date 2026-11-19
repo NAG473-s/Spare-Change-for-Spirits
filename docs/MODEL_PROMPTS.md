@@ -102,7 +102,7 @@ apply an offset): the floor is **not** part of the room model (the game draws th
 ## After generating
 
 1. Put each `.glb` in its folder with the exact id as file name.
-2. Optional check of size, origin and triangle count:
+2. Check of size, origin and triangle count (the rules were tested with Blender 5.3):
    `python3 tools/check_models.py` (lists every model and flags problems).
 3. Start the game – the model replaces the placeholder.
 

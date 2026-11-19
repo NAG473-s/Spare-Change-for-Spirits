@@ -4,6 +4,7 @@
 //! Entering → Browsing → ToCounter → Waiting → AtRegister → Leaving / Ascending
 //! (if the atmosphere does not suit them: Entering → Fleeing)
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::data::{GameData, GhostDef, rgb};
@@ -12,12 +13,18 @@ use crate::fx::Cue;
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
-use crate::shop::{ShopLayout, small_font, sprite_for};
+use bevy::light::NotShadowCaster;
+
+use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
+use crate::shop::ShopLayout;
 use crate::ui::{GameLog, UiFont};
 
-const SPEED: f32 = 110.0;
+/// Floating speed in metres per second.
+const SPEED: f32 = 1.7;
+/// Ghosts float this high above the floor.
+const HOVER: f32 = 0.25;
 /// Drawn size of a ghost (2:3, like the generated portrait images).
-const GHOST_SIZE: Vec2 = Vec2::new(44.0, 66.0);
+const GHOST_SIZE: Vec2 = Vec2::new(0.9, 1.35);
 
 pub struct GhostPlugin;
 
@@ -74,6 +81,8 @@ pub struct Ghost {
     pub timer: f32,
     pub patience: f32,
     pub max_patience: f32,
+    /// Height gained while passing into the light.
+    lift: f32,
     /// Story chapter this visit belongs to (story ghost only).
     pub chapter: Option<usize>,
     /// Shelf cell the ghost browses, if any.
@@ -83,7 +92,7 @@ pub struct Ghost {
 
 impl Ghost {
     fn arrived(&self) -> bool {
-        self.pos.distance(self.target) < 2.0
+        self.pos.distance(self.target) < 0.03
     }
 }
 
@@ -111,9 +120,8 @@ fn spawn_ghosts(
     layout: Res<ShopLayout>,
     clock: Res<NightClock>,
     progress: Res<Progress>,
-    font: Res<UiFont>,
     lang: Res<Lang>,
-    asset_server: Res<AssetServer>,
+    mut art: GhostArt,
     mut timer: ResMut<SpawnTimer>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
@@ -175,13 +183,24 @@ fn spawn_ghosts(
         &mut commands,
         &data,
         &layout,
-        &font,
+        &art.font,
         &lang,
-        &asset_server,
+        &art.asset_server,
+        &mut art.meshes,
+        &mut art.materials,
         &mut rng,
         visit,
     );
     cues.write(Cue::GhostEnters);
+}
+
+/// Everything needed to draw a new ghost.
+#[derive(SystemParam)]
+struct GhostArt<'w> {
+    font: Res<'w, UiFont>,
+    asset_server: Res<'w, AssetServer>,
+    meshes: ResMut<'w, Assets<Mesh>>,
+    materials: ResMut<'w, Assets<StandardMaterial>>,
 }
 
 /// What a newly arriving ghost comes for.
@@ -200,6 +219,8 @@ fn spawn_ghost(
     font: &UiFont,
     lang: &Lang,
     asset_server: &AssetServer,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
     rng: &mut Rng,
     visit: Visit,
 ) {
@@ -207,50 +228,55 @@ fn spawn_ghost(
     let shelves = layout.shelf_cells(data);
     let browse_cell = (!shelves.is_empty()).then(|| shelves[rng.index(shelves.len())]);
     let (state, target) = if visit.flees {
-        (
-            GhostState::Fleeing,
-            layout.door_pos() + Vec2::new(70.0, 0.0),
-        )
+        (GhostState::Fleeing, layout.door_pos() + Vec2::new(1.0, 0.0))
     } else {
         let target = match browse_cell {
-            Some(cell) => layout.cell_pos(cell) + Vec2::new(0.0, -28.0),
+            // In front of the shelf, on the camera side.
+            Some(cell) => layout.cell_pos(cell) + Vec2::new(0.0, 0.7),
             None => layout.cell_pos(rng.index(layout.cells.len())),
         };
         (GhostState::Entering, target)
     };
 
     let start = layout.door_pos();
-    let color = rgb(def.color).with_alpha(0.75);
-    let sprite = sprite_for(
+    let material = billboard_material(
+        materials,
         asset_server,
         &format!("sprites/ghosts/{}.png", def.id),
-        color,
-        GHOST_SIZE,
+        rgb(def.color).with_alpha(0.75),
     );
-    commands.spawn((
-        Ghost {
-            def: visit.def_idx,
-            wish: visit.wish,
-            hint: visit.hint,
-            state,
-            pos: start,
-            target,
-            timer: 0.0,
-            patience: def.patience_secs,
-            max_patience: def.patience_secs,
-            chapter: visit.chapter,
-            browse_cell,
-            bob_offset: rng.range(0.0, std::f32::consts::TAU),
-        },
-        sprite,
-        Transform::from_translation(start.extend(5.0)),
-        DespawnOnExit(Phase::Night),
-        children![(
-            Text2d::new(lang.ghost(&def.id)),
-            small_font(font, 10.0),
-            TextColor(Color::srgba(0.9, 0.9, 1.0, 0.8)),
-            Transform::from_xyz(0.0, GHOST_SIZE.y / 2.0 + 10.0, 1.0),
-        )],
+    let ghost = commands
+        .spawn((
+            Ghost {
+                def: visit.def_idx,
+                wish: visit.wish,
+                hint: visit.hint,
+                state,
+                pos: start,
+                target,
+                timer: 0.0,
+                patience: def.patience_secs,
+                max_patience: def.patience_secs,
+                lift: 0.0,
+                chapter: visit.chapter,
+                browse_cell,
+                bob_offset: rng.range(0.0, std::f32::consts::TAU),
+            },
+            Mesh3d(billboard_mesh(meshes, GHOST_SIZE)),
+            MeshMaterial3d(material),
+            Billboard,
+            NotShadowCaster,
+            Pickable::IGNORE,
+            Transform::from_translation(floor(start, HOVER)),
+            DespawnOnExit(Phase::Night),
+        ))
+        .id();
+    commands.spawn(world_label(
+        font,
+        lang.ghost(&def.id),
+        10.0,
+        ghost,
+        Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
     ));
 }
 
@@ -261,9 +287,8 @@ fn spawn_story_ghost(
     layout: Res<ShopLayout>,
     clock: Res<NightClock>,
     progress: Res<Progress>,
-    font: Res<UiFont>,
     lang: Res<Lang>,
-    asset_server: Res<AssetServer>,
+    mut art: GhostArt,
     mut rng: ResMut<Rng>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
@@ -294,9 +319,11 @@ fn spawn_story_ghost(
         &mut commands,
         &data,
         &layout,
-        &font,
+        &art.font,
         &lang,
-        &asset_server,
+        &art.asset_server,
+        &mut art.meshes,
+        &mut art.materials,
         &mut rng,
         visit,
     );
@@ -382,7 +409,7 @@ fn ghost_ai(
             }
             GhostState::Ascending => {
                 g.timer += dt;
-                g.target = g.pos + Vec2::Y * 100.0;
+                g.lift += dt * 0.9;
                 if g.timer > 1.8 {
                     commands.entity(entity).despawn();
                 }
@@ -412,39 +439,41 @@ fn move_ghosts(time: Res<Time>, mut ghosts: Query<(&mut Ghost, &mut Transform)>)
     let dt = time.delta_secs();
     let t = time.elapsed_secs();
     for (mut g, mut transform) in &mut ghosts {
-        let speed = if g.state == GhostState::Ascending {
-            60.0
-        } else {
-            SPEED
-        };
         let pos = g.pos;
-        g.pos = pos.move_towards(g.target, speed * dt);
-        let bob = (t * 2.2 + g.bob_offset).sin() * 4.0;
-        transform.translation = (g.pos + Vec2::new(0.0, bob)).extend(5.0);
+        g.pos = pos.move_towards(g.target, SPEED * dt);
+        let bob = (t * 2.2 + g.bob_offset).sin() * 0.06;
+        transform.translation = floor(g.pos, HOVER + g.lift + bob);
     }
 }
 
 /// Impatient ghosts grow paler; ascending ones glow and dissolve.
-fn fade_ghosts(data: Res<GameData>, mut ghosts: Query<(&Ghost, &mut Sprite)>) {
-    for (g, mut sprite) in &mut ghosts {
-        let base = rgb(data.ghosts[g.def].color);
+fn fade_ghosts(
+    data: Res<GameData>,
+    ghosts: Query<(&Ghost, &MeshMaterial3d<StandardMaterial>)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (g, handle) in &ghosts {
+        let Some(mut material) = materials.get_mut(&handle.0) else {
+            continue;
+        };
         let alpha = match g.state {
             GhostState::Waiting | GhostState::ToCounter => {
-                0.3 + 0.5 * (g.patience / g.max_patience).clamp(0.0, 1.0)
+                0.35 + 0.55 * (g.patience / g.max_patience).clamp(0.0, 1.0)
             }
             GhostState::Ascending => (1.0 - g.timer / 1.8).clamp(0.0, 1.0),
-            _ => 0.8,
+            _ => 0.9,
         };
-        let color = if g.state == GhostState::Ascending {
+        let color = if material.base_color_texture.is_some() {
+            Color::WHITE
+        } else if g.state == GhostState::Ascending {
             Color::srgb(1.0, 0.97, 0.8)
         } else {
-            base
+            rgb(data.ghosts[g.def].color)
         };
-        // With real images only change the transparency, not the colour.
-        sprite.color = if sprite.image == Handle::default() {
-            color.with_alpha(alpha)
-        } else {
-            Color::WHITE.with_alpha(alpha)
-        };
+        let new = color.with_alpha(alpha);
+        // Only touch the asset when it changes, so it is not re-uploaded every frame.
+        if material.base_color != new {
+            material.base_color = new;
+        }
     }
 }

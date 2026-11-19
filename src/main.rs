@@ -21,6 +21,7 @@ mod menu;
 mod register;
 mod rng;
 mod save;
+mod scene;
 mod shop;
 mod ui;
 
@@ -39,18 +40,16 @@ fn main() {
         .unwrap_or_else(|| i18n::SOURCE.to_string());
 
     App::new()
-        .add_plugins(
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "Spare Change for Spirits".into(),
-                        resolution: (1280, 720).into(),
-                        ..default()
-                    }),
-                    ..default()
-                })
-                .set(ImagePlugin::default_nearest()),
-        )
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Spare Change for Spirits".into(),
+                resolution: (1280, 720).into(),
+                ..default()
+            }),
+            ..default()
+        }))
+        // Clicking on 3D objects (floor tiles, furniture).
+        .add_plugins(MeshPickingPlugin)
         .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.07)))
         .insert_resource(Drawer(data.config.start_coins))
         .insert_resource(Progress {
@@ -72,9 +71,7 @@ fn main() {
             menu::MenuPlugin,
             fx::FxPlugin,
             audio::SoundPlugin,
+            scene::ScenePlugin,
         ))
-        .add_systems(Startup, |mut commands: Commands| {
-            commands.spawn(Camera2d);
-        })
         .run();
 }

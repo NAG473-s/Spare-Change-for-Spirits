@@ -1,5 +1,10 @@
 # Art prompts
 
+> Since the switch to the 3D diorama, furniture, the counter, the door and the walls are 3D models
+> (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Images are still used for the **ghosts**, the **floor
+> texture** and the **product pictures** (shown on shelves until a product has a model) and for the
+> Steam store art.
+
 Prompts for generating every image the game uses (e.g. with ChatGPT), plus the Steam store art.
 Until an image exists the game shows a coloured placeholder, so images can be added one by one.
 

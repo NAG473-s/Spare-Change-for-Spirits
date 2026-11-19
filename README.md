@@ -82,14 +82,15 @@ src/
   main.rs        app, window, plugins
   day_cycle.rs   evening/night/morning phases, clock, night report, progress
   inventory.rs   stock (with age → fading), orders from the ferryman
-  shop.rs        grid, decor, tools, atmosphere, door/counter
+  scene.rs       3D camera, room, time-of-day light, billboards, labels following 3D objects
+  shop.rs        floor grid, decor models/placeholders, lights, tools, atmosphere, door/counter
   ghosts.rs      ghosts: spawning, flow (Entering → … → Leaving/Ascending), queue
   register.rs    handing over items, payment, change
   economy.rs     coins, purses, paying and change logic (+ tests)
   ui.rs          top bar, side panel per phase, message log, buttons → actions
   menu.rs        main menu, pause menu, tips box
   audio.rs       sound effects and music
-  fx.rs          glow, night shade, particles, the Cue message
+  fx.rs          flickering lights, particles, the Cue message
   save.rs        saving, loading, new game
   data.rs        loading the RON files
   i18n.rs        language catalogs, placeholders, language detection
@@ -98,7 +99,8 @@ assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
-  sprites/       your own images (optional, see below)
+  models/        3D models (.glb), see docs/MODEL_PROMPTS.md
+  sprites/       ghost, product and floor images
 ```
 
 Buttons carry an `Action`. A global observer forwards it as a message, and every plugin reads
@@ -129,29 +131,36 @@ only wishes for products that exist.
 
 `show_change_due: true` in `config.ron` shows the change due (assist mode).
 
-## Adding images
+## 3D models and images
 
-Until there is an image, the game shows coloured placeholders. [docs/ART_PROMPTS.md](docs/ART_PROMPTS.md)
-has a style block and a ready prompt for every image. Prepare each generated image with
+The shop is a small 3D diorama (Bevy 3D): a fixed camera looks into the room, furniture and the shop
+are models, candles and lamps are real light sources, and the ghosts are hand-drawn sprites that
+float in the room and always face the camera.
+
+**Models** (`assets/models/`, glTF binary `.glb`): [docs/MODEL_PROMPTS.md](docs/MODEL_PROMPTS.md) has the
+technical rules (metres, origin at the bottom centre, front facing −Y in Blender, polygon budget,
+simple materials), a style block and a prompt with target size for every model. Until a model
+exists, the game shows a coloured box of the size given in `assets/data/decor.ron`.
+
+| What | Path |
+|---|---|
+| Furniture and keepsakes | `assets/models/decor/<id>.glb` |
+| Products (stand on shelves) | `assets/models/products/<id>.glb` |
+| Counter, door, walls | `assets/models/shop/counter.glb`, `door.glb`, `room.glb` (optional) |
+
+Check models (size, origin, triangles, missing files) with:
 
 ```bash
-python3 tools/prepare_sprite.py path/to/image.png KIND [ID]
+python3 tools/check_models.py
 ```
 
-which trims, fits and scales it and writes it to the right place (needs Pillow,
-`pip install -r tools/requirements.txt`):
+Tested with Blender 5.3 (any recent version with the bundled glTF exporter works).
 
-| Kind | Written to | Drawn at | Generate at |
-|---|---|---|---|
-| `ghost` | `assets/sprites/ghosts/<id>.png` | 44 × 66 | 1024 × 1536 |
-| `decor` | `assets/sprites/decor/<id>.png` (keepsakes too) | 52 × 52 | 1024 × 1024 |
-| `product` | `assets/sprites/products/<id>.png` | 24 × 24 | 1024 × 1024 |
-| `door` | `assets/sprites/shop/door.png` | 64 × 96 | 1024 × 1536 |
-| `counter` | `assets/sprites/shop/counter.png` | 48 × 272 | 1024 × 1536 |
-| `floor` | `assets/sprites/shop/floor.png` (one tile) | 62 × 62 | 1024 × 1024 |
-| `background` | `assets/sprites/shop/background.png` | 1280 × 720 | 1536 × 1024 |
+**Images** ([docs/ART_PROMPTS.md](docs/ART_PROMPTS.md), prepared with `tools/prepare_sprite.py`):
+ghosts (`assets/sprites/ghosts/<id>.png`) are always sprites; product pictures
+(`assets/sprites/products/<id>.png`) are shown on shelves while a product has no model; the floor
+texture is `assets/sprites/shop/floor.png`.
 
-`<id>` is the `id` from the corresponding RON file (e.g. `shy`, `candle`).
 **Steam:** AI-generated content must be disclosed in the Steamworks content survey.
 
 ## Sound and effects
@@ -161,9 +170,10 @@ shop bell, coins, chime, crash, click, sigh, a music-box waltz for the evening a
 ambience loop. They are generated from scratch, so there are no licence questions. To use your own
 recording, replace the file of the same name. Sound can be switched off in the menus.
 
-Visual atmosphere (`src/fx.rs`): candles, lamps and other light-giving decor glow and flicker, the
-shop darkens at night, dust drifts through the air, and particles mark ghosts passing into the
-light and items crashing off shelves. Gameplay triggers sounds and effects through the `Cue` message.
+Visual atmosphere: candles, lamps and other light-giving decor are flickering point lights
+(`src/fx.rs`), ambient and moon light follow the time of day (`src/scene.rs`), dust drifts through
+the air at night, and particles mark ghosts passing into the light and items crashing off shelves.
+Gameplay triggers sounds and effects through the `Cue` message.
 
 ## Next steps (ideas)
 

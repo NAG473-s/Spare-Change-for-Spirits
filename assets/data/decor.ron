@@ -1,30 +1,32 @@
 // Decor. Names: assets/i18n/<language>.ron (decor.<id>.name).
 // effect is added to the shop's atmosphere.
 // is_shelf: true -> products can be displayed here.
-// Images (optional): assets/sprites/decor/<id>.png
+// Model (optional): assets/models/decor/<id>.glb, see docs/MODEL_PROMPTS.md.
+// size: (width, height, depth) in metres – the placeholder box and the model's target size.
+// light_height: where the light source sits for decor with a light effect.
 [
     (id: "shelf", cost: 8, is_shelf: true,
-     effect: (silence: 1), color: (0.45, 0.32, 0.22)),
+     effect: (silence: 1), color: (0.45, 0.32, 0.22), size: (0.9, 1.5, 0.45)),
     (id: "candle", cost: 2,
-     effect: (light: 2, warmth: 1), color: (1.0, 0.85, 0.4)),
+     effect: (light: 2, warmth: 1), color: (1.0, 0.85, 0.4), size: (0.4, 1.1, 0.4), light_height: 1.05),
     (id: "mirror", cost: 12,
-     effect: (reflection: 2, light: 1), color: (0.72, 0.84, 0.92)),
+     effect: (reflection: 2, light: 1), color: (0.72, 0.84, 0.92), size: (0.8, 1.7, 0.3)),
     (id: "incense", cost: 5,
-     effect: (warmth: 1, silence: 1), color: (0.6, 0.5, 0.72)),
+     effect: (warmth: 1, silence: 1), color: (0.6, 0.5, 0.72), size: (0.4, 0.8, 0.4)),
     (id: "rug", cost: 6,
-     effect: (warmth: 2, silence: 1), color: (0.55, 0.2, 0.25)),
+     effect: (warmth: 2, silence: 1), color: (0.55, 0.2, 0.25), size: (0.95, 0.03, 0.95)),
     (id: "grandfather_clock", cost: 15,
-     effect: (warmth: 1, silence: -2), color: (0.35, 0.25, 0.18)),
+     effect: (warmth: 1, silence: -2), color: (0.35, 0.25, 0.18), size: (0.6, 2.1, 0.4)),
 
     // Keepsakes: not for sale, left behind by Edwin (story.ron).
     (id: "umbrella", cost: 0, keepsake: true,
-     effect: (silence: 1), color: (0.3, 0.35, 0.5)),
+     effect: (silence: 1), color: (0.3, 0.35, 0.5), size: (0.35, 0.9, 0.35)),
     (id: "teacup", cost: 0, keepsake: true,
-     effect: (warmth: 1), color: (0.85, 0.85, 0.8)),
+     effect: (warmth: 1), color: (0.85, 0.85, 0.8), size: (0.5, 0.7, 0.5)),
     (id: "blanket", cost: 0, keepsake: true,
-     effect: (warmth: 2), color: (0.7, 0.45, 0.35)),
+     effect: (warmth: 2), color: (0.7, 0.45, 0.35), size: (0.8, 0.9, 0.8)),
     (id: "wedding_photo", cost: 0, keepsake: true,
-     effect: (warmth: 1, reflection: 1), color: (0.8, 0.75, 0.55)),
+     effect: (warmth: 1, reflection: 1), color: (0.8, 0.75, 0.55), size: (0.5, 0.9, 0.4)),
     (id: "pocket_lantern", cost: 0, keepsake: true,
-     effect: (light: 1, warmth: 1), color: (1.0, 0.75, 0.35)),
+     effect: (light: 1, warmth: 1), color: (1.0, 0.75, 0.35), size: (0.4, 1.2, 0.4), light_height: 1.1),
 ]

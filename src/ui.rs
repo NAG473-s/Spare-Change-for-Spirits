@@ -22,7 +22,7 @@ use crate::shop::{Keepsakes, ShopLayout, Tool};
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
 pub(crate) const BG_PANEL: Color = Color::srgba(0.06, 0.06, 0.1, 0.94);
-const TEXT: Color = Color::srgb(0.88, 0.86, 0.8);
+pub(crate) const TEXT: Color = Color::srgb(0.88, 0.86, 0.8);
 pub(crate) const TEXT_DIM: Color = Color::srgb(0.6, 0.6, 0.65);
 const ACCENT: Color = Color::srgb(0.95, 0.8, 0.45);
 const BTN: Color = Color::srgb(0.17, 0.16, 0.24);

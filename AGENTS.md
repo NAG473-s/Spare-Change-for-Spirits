@@ -30,4 +30,7 @@
   translate it into **every** language in `assets/i18n/` in the same change (keep placeholders,
   match each catalog's style). Then run `python3 tools/subset_fonts.py` so the CJK, Thai and
   Arabic fonts contain the new characters. `cargo test` fails on missing keys.
+- The shop is a 3D diorama (`src/scene.rs`); ghosts are sprites. 3D models follow
+  `docs/MODEL_PROMPTS.md`; check them with `python3 tools/check_models.py`. Placeholder sizes in
+  `assets/data/decor.ron` must match the target sizes in that document.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.

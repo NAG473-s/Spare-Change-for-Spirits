@@ -156,6 +156,20 @@ pub struct DecorDef {
     /// Keepsakes cannot be bought; they are gifts from story ghosts.
     #[serde(default)]
     pub keepsake: bool,
+    /// (width, height, depth) in metres: placeholder box and model target size.
+    #[serde(default = "default_size")]
+    pub size: (f32, f32, f32),
+    /// Height of the light source for decor with a light effect.
+    #[serde(default = "default_light_height")]
+    pub light_height: f32,
+}
+
+fn default_size() -> (f32, f32, f32) {
+    (0.6, 0.6, 0.6)
+}
+
+fn default_light_height() -> f32 {
+    1.0
 }
 
 /// A story ghost who returns night after night.
