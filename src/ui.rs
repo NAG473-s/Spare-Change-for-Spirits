@@ -22,6 +22,7 @@ use crate::harbor::Location;
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
+use crate::save::Knob;
 use crate::shop::{ShopLayout, Storeroom, Tool};
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
@@ -129,6 +130,12 @@ pub enum Action {
     QuitGame,
     ToggleTips,
     ToggleSound,
+    /// The settings page in the main and pause menus.
+    OpenSettings,
+    CloseSettings,
+    /// Turn a setting one step up (`true`) or down.
+    Adjust(Knob, bool),
+    ToggleFullscreen,
     OpenLanguages,
     CloseLanguages,
     SetLanguage(String),

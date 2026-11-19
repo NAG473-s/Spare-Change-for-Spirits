@@ -76,7 +76,7 @@ fn play_cues(
         commands.spawn((
             AudioPlayer::new(sound.clone()),
             PlaybackSettings {
-                volume: Volume::Linear(volume),
+                volume: Volume::Linear(volume * settings.effects),
                 speed,
                 ..PlaybackSettings::DESPAWN
             },
@@ -141,13 +141,14 @@ fn choose_music(
 fn fade_music(
     mut commands: Commands,
     time: Res<Time<Real>>,
+    settings: Res<Settings>,
     mut playing: Query<(Entity, &mut Music, &mut AudioSink)>,
 ) {
     let step = time.delta_secs() / MUSIC_FADE_SECS;
     for (entity, mut music, mut sink) in &mut playing {
         let diff = music.target - music.volume;
         music.volume += diff.clamp(-step, step);
-        sink.set_volume(Volume::Linear(music.volume));
+        sink.set_volume(Volume::Linear(music.volume * settings.music));
         if music.target == 0.0 && music.volume <= 0.0 {
             commands.entity(entity).despawn();
         }

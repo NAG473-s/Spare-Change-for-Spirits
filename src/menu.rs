@@ -8,10 +8,14 @@ use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
 use crate::inventory::CratesOrdered;
 use crate::register::Register;
-use crate::save::{GameState, Settings, can_continue, read_save, write_save};
+use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
+
+use crate::save::{GameState, Knob, Settings, can_continue, read_save, write_save};
 use crate::shop::ShopLayout;
 use crate::title::{LOGO, TitleLogo};
-use crate::ui::{Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, UiFont, UiTheme, overlay};
+use crate::ui::{
+    Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, TEXT, UiFont, UiTheme, overlay,
+};
 
 pub struct MenuPlugin;
 
@@ -19,6 +23,8 @@ impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Paused>()
             .init_resource::<LanguageMenu>()
+            .init_resource::<SettingsMenu>()
+            .add_systems(PreUpdate, apply_display)
             .add_systems(Startup, spawn_tip_box)
             .add_systems(OnEnter(Phase::Menu), (leave_pause, build_main_menu).chain())
             .add_systems(
@@ -28,7 +34,8 @@ impl Plugin for MenuPlugin {
                         in_state(Phase::Menu).and_then(
                             resource_changed::<Settings>
                                 .or_else(resource_changed::<UiFont>)
-                                .or_else(resource_changed::<LanguageMenu>),
+                                .or_else(resource_changed::<LanguageMenu>)
+                                .or_else(resource_changed::<SettingsMenu>),
                         ),
                     ),
                     main_menu_actions.run_if(in_state(Phase::Menu)),
@@ -36,6 +43,7 @@ impl Plugin for MenuPlugin {
                     toggle_tips,
                     sync_pause.run_if(
                         resource_changed::<Paused>
+                            .or_else(resource_changed::<SettingsMenu>)
                             .or_else(resource_changed::<Settings>)
                             .or_else(resource_changed::<UiFont>),
                     ),
@@ -48,6 +56,10 @@ impl Plugin for MenuPlugin {
 /// The language list is open in the main menu.
 #[derive(Resource, Default)]
 pub struct LanguageMenu(pub bool);
+
+/// The settings page is open (in the main or the pause menu).
+#[derive(Resource, Default)]
+pub struct SettingsMenu(pub bool);
 
 /// The game is paused and the pause menu is open.
 #[derive(Resource, Default)]
@@ -166,6 +178,7 @@ fn build_main_menu(
     lang: Res<Lang>,
     settings: Res<Settings>,
     language_menu: Res<LanguageMenu>,
+    settings_menu: Res<SettingsMenu>,
     data: Res<GameData>,
     existing: Query<Entity, With<MenuRoot>>,
 ) {
@@ -195,6 +208,10 @@ fn build_main_menu(
         return;
     }
 
+    if settings_menu.0 {
+        settings_page(&mut ui, &settings, &lang);
+        return;
+    }
     if !has_logo {
         ui.heading(&lang.t("game.title"));
     }
@@ -216,19 +233,7 @@ fn build_main_menu(
         Action::OpenLanguages,
         false,
     );
-    let toggles = ui.row();
-    ui.menu_option(
-        toggles,
-        &tips_label(&settings, &lang),
-        Action::ToggleTips,
-        settings.tips,
-    );
-    ui.menu_option(
-        toggles,
-        &sound_label(&settings, &lang),
-        Action::ToggleSound,
-        settings.sound,
-    );
+    ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("menu.quit"), Action::QuitGame, false);
     ui.dim(&lang.f("menu.version", &[("version", &env!("CARGO_PKG_VERSION"))]));
 }
@@ -286,14 +291,113 @@ fn main_menu_actions(
     }
 }
 
-fn toggle_tips(mut actions: MessageReader<Action>, mut settings: ResMut<Settings>) {
+fn toggle_tips(
+    mut actions: MessageReader<Action>,
+    mut settings: ResMut<Settings>,
+    mut menu: ResMut<SettingsMenu>,
+) {
     for action in actions.read() {
         match action {
             Action::ToggleTips => settings.tips = !settings.tips,
             Action::ToggleSound => settings.sound = !settings.sound,
+            Action::ToggleFullscreen => settings.fullscreen = !settings.fullscreen,
+            Action::Adjust(knob, up) => settings.adjust(*knob, *up),
+            Action::OpenSettings => {
+                menu.0 = true;
+                continue;
+            }
+            Action::CloseSettings => {
+                menu.0 = false;
+                continue;
+            }
             _ => continue,
         }
         settings.store();
+    }
+}
+
+/// The settings page: tips and sound, volumes, interface size, fullscreen.
+fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
+    ui.heading(&lang.t("settings.title"));
+    let root = ui.root();
+    let toggles = ui.row();
+    ui.menu_option(
+        toggles,
+        &tips_label(settings, lang),
+        Action::ToggleTips,
+        settings.tips,
+    );
+    ui.menu_option(
+        toggles,
+        &sound_label(settings, lang),
+        Action::ToggleSound,
+        settings.sound,
+    );
+    let percent = |v: f32| ((v * 100.0).round() as i32).to_string();
+    for (knob, key, value) in [
+        (Knob::Music, "settings.music", settings.music),
+        (Knob::Effects, "settings.effects", settings.effects),
+        (Knob::UiSize, "settings.ui_size", settings.ui_size),
+    ] {
+        // Label on the left, small step buttons on the right.
+        let row = ui.node(
+            root,
+            Node {
+                align_items: AlignItems::Center,
+                column_gap: px(4),
+                ..default()
+            },
+        );
+        let label = ui.node(
+            row,
+            (
+                Node {
+                    flex_grow: 1.0,
+                    padding: UiRect::left(px(6)),
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ),
+        );
+        let text = lang.f(key, &[("percent", &percent(value))]);
+        ui.add_text(label, &text, false, 14.0, TEXT);
+        ui.button_in(row, "−", Action::Adjust(knob, false), false, true);
+        ui.button_in(row, "+", Action::Adjust(knob, true), false, true);
+    }
+    let fullscreen = if settings.fullscreen {
+        "settings.fullscreen_on"
+    } else {
+        "settings.fullscreen_off"
+    };
+    ui.menu_option(
+        root,
+        &lang.t(fullscreen),
+        Action::ToggleFullscreen,
+        settings.fullscreen,
+    );
+    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSettings, false);
+}
+
+/// The interface grows with the window (designed for 720 pixels high) and
+/// the player's size setting; fullscreen follows the setting.
+fn apply_display(
+    settings: Res<Settings>,
+    mut window: Single<&mut Window, With<PrimaryWindow>>,
+    mut scale: ResMut<UiScale>,
+    mut applied_mode: Local<Option<bool>>,
+) {
+    let auto = (window.height() / 720.0).clamp(0.8, 3.0);
+    let wanted = auto * settings.ui_size;
+    if (scale.0 - wanted).abs() > 0.001 {
+        scale.0 = wanted;
+    }
+    if *applied_mode != Some(settings.fullscreen) {
+        *applied_mode = Some(settings.fullscreen);
+        window.mode = if settings.fullscreen {
+            WindowMode::BorderlessFullscreen(MonitorSelection::Current)
+        } else {
+            WindowMode::Windowed
+        };
     }
 }
 
@@ -340,6 +444,7 @@ fn pause_actions(
 fn sync_pause(
     mut commands: Commands,
     paused: Res<Paused>,
+    settings_menu: Res<SettingsMenu>,
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
     font: Res<UiFont>,
@@ -359,6 +464,10 @@ fn sync_pause(
     let (layer, panel) = overlay(&mut commands, &theme, 0.6, 420.0);
     commands.entity(layer).insert(PauseRoot);
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
+    if settings_menu.0 {
+        settings_page(&mut ui, &settings, &lang);
+        return;
+    }
     ui.heading(&lang.t("pause.title"));
     ui.primary(&lang.t("pause.resume"), Action::Resume);
     let root = ui.root();
@@ -367,19 +476,7 @@ fn sync_pause(
         _ => "pause.save_quit",
     };
     ui.menu_option(root, &lang.t(quit_label), Action::QuitToMenu, false);
-    let toggles = ui.row();
-    ui.menu_option(
-        toggles,
-        &tips_label(&settings, &lang),
-        Action::ToggleTips,
-        settings.tips,
-    );
-    ui.menu_option(
-        toggles,
-        &sound_label(&settings, &lang),
-        Action::ToggleSound,
-        settings.sound,
-    );
+    ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("pause.quit_game"), Action::QuitGame, false);
     ui.dim(&lang.t("pause.hint"));
 }

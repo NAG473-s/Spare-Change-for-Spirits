@@ -25,8 +25,9 @@ cargo test
 tests the game logic and loads every data file.
 
 The game starts on the title screen: its own painted background with flickering lamp light,
-drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, tips on/off,
-quit). The game autosaves at the start of every evening and night and at dawn; a save always
+drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
+quit). Settings (main menu and pause menu): tips, sound, music and effect volume, interface size
+(on top of the automatic scaling with the window height) and fullscreen. The game autosaves at the start of every evening and night and at dawn; a save always
 continues at an evening (a night in progress restarts). Saves and settings live in
 `%APPDATA%\SpareChangeForSpirits` (Windows), `~/Library/Application Support/SpareChangeForSpirits`
 (macOS) or `~/.local/share/spare-change-for-spirits` (Linux). Set `SCFS_SAVE_DIR` to use another

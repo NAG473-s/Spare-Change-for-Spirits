@@ -988,6 +988,7 @@ fn update_tooltip(
     crates: Res<CratesOrdered>,
     bought: Res<BoughtTonight>,
     crate_q: Query<&Crate>,
+    ui_scale: Res<UiScale>,
     mut tooltip: Single<(&Tooltip, &ComputedNode, &mut Node, &mut Visibility)>,
     mut shown: Local<Option<Entity>>,
 ) {
@@ -1001,16 +1002,19 @@ fn update_tooltip(
         return;
     };
     **visibility = Visibility::Inherited;
-    let width = TOOLTIP_WIDTH.min(window.width() * 0.94);
+    // In interface units: window pixels divided by the interface scale.
+    let s = ui_scale.0;
+    let (cursor, win) = (cursor / s, Vec2::new(window.width(), window.height()) / s);
+    let width = TOOLTIP_WIDTH.min(win.x * 0.94);
     let height = computed.size().y * computed.inverse_scale_factor();
     // Keep the tooltip beside the pointer and fit the translated text on screen.
-    let x = if cursor.x + width + 26.0 <= window.width() {
+    let x = if cursor.x + width + 26.0 <= win.x {
         cursor.x + 18.0
     } else {
         cursor.x - width - 18.0
     };
-    let x = x.clamp(8.0, (window.width() - width - 8.0).max(8.0));
-    let y = (cursor.y - height * 0.65).clamp(8.0, (window.height() - height - 8.0).max(8.0));
+    let x = x.clamp(8.0, (win.x - width - 8.0).max(8.0));
+    let y = (cursor.y - height * 0.65).clamp(8.0, (win.y - height - 8.0).max(8.0));
     node.left = px(x);
     node.top = px(y);
 

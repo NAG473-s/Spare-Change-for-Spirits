@@ -277,10 +277,11 @@ pub fn spawn_fade(commands: &mut Commands, secs: f32) {
 /// overhang), like CSS `background-size: cover`.
 fn cover_window(
     window: Single<&Window, With<PrimaryWindow>>,
+    ui_scale: Res<UiScale>,
     images: Res<Assets<Image>>,
     mut backgrounds: Query<(&TitleBackground, &mut Node)>,
 ) {
-    let size = Vec2::new(window.width(), window.height());
+    let size = Vec2::new(window.width(), window.height()) / ui_scale.0;
     for (background, mut node) in &mut backgrounds {
         let aspect = images
             .get(&background.0)
@@ -347,6 +348,7 @@ fn drift_motes(
 fn float_ghost(
     time: Res<Time>,
     window: Single<&Window, With<PrimaryWindow>>,
+    ui_scale: Res<UiScale>,
     data: Res<GameData>,
     asset_server: Res<AssetServer>,
     mut rng: ResMut<Rng>,
@@ -360,7 +362,7 @@ fn float_ghost(
 ) {
     let dt = time.delta_secs();
     let t = time.elapsed_secs();
-    let width = window.width();
+    let width = window.width() / ui_scale.0;
     for (mut ghost, mut image, mut node, mut transform, mut visibility) in &mut ghosts {
         if ghost.progress < 0.0 {
             // Waiting: a negative progress counts up to the next pass.

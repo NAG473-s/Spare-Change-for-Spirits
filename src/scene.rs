@@ -366,6 +366,7 @@ fn follow_labels(
     mut commands: Commands,
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
     targets: Query<&GlobalTransform>,
+    ui_scale: Res<UiScale>,
     mut labels: Query<(Entity, &WorldLabel, &mut Node, &mut Visibility)>,
 ) {
     let (camera, cam_transform) = *camera;
@@ -376,6 +377,8 @@ fn follow_labels(
         };
         match camera.world_to_viewport(cam_transform, target.translation() + label.offset) {
             Ok(pos) => {
+                // Window pixels to interface units.
+                let pos = pos / ui_scale.0;
                 node.left = px(pos.x - LABEL_WIDTH / 2.0);
                 node.top = px(pos.y);
                 *visibility = Visibility::Inherited;

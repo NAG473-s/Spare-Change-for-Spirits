@@ -63,6 +63,45 @@ pub struct Settings {
     pub sound: bool,
     /// Chosen language code; `None` until the player picks one.
     pub language: Option<String>,
+    /// Music and sound effect volume, 0 to 1.
+    pub music: f32,
+    pub effects: f32,
+    /// Size of the interface on top of the automatic scaling with the
+    /// window height (1 = normal).
+    pub ui_size: f32,
+    pub fullscreen: bool,
+}
+
+/// Steps and limits of the adjustable settings.
+pub const VOLUME_STEP: f32 = 0.1;
+pub const UI_SIZE_STEP: f32 = 0.1;
+pub const UI_SIZE_RANGE: (f32, f32) = (0.7, 1.6);
+
+/// A setting the player turns up or down in the settings menu.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Knob {
+    Music,
+    Effects,
+    UiSize,
+}
+
+impl Settings {
+    /// Turns a setting one step up (`up`) or down, within its limits.
+    pub fn adjust(&mut self, knob: Knob, up: bool) {
+        let sign = if up { 1.0 } else { -1.0 };
+        let round = |v: f32| (v * 10.0).round() / 10.0;
+        match knob {
+            Knob::Music => self.music = round((self.music + sign * VOLUME_STEP).clamp(0.0, 1.0)),
+            Knob::Effects => {
+                self.effects = round((self.effects + sign * VOLUME_STEP).clamp(0.0, 1.0))
+            }
+            Knob::UiSize => {
+                self.ui_size = round(
+                    (self.ui_size + sign * UI_SIZE_STEP).clamp(UI_SIZE_RANGE.0, UI_SIZE_RANGE.1),
+                )
+            }
+        }
+    }
 }
 
 impl Default for Settings {
@@ -71,6 +110,10 @@ impl Default for Settings {
             tips: true,
             sound: true,
             language: None,
+            music: 0.8,
+            effects: 1.0,
+            ui_size: 1.0,
+            fullscreen: false,
         }
     }
 }
@@ -289,6 +332,25 @@ mod tests {
     }
 
     #[test]
+    fn settings_adjust_in_steps_within_limits() {
+        let mut settings = Settings::default();
+        for _ in 0..5 {
+            settings.adjust(Knob::Music, true);
+        }
+        assert_eq!(settings.music, 1.0);
+        settings.adjust(Knob::Effects, false);
+        assert_eq!(settings.effects, 0.9);
+        for _ in 0..20 {
+            settings.adjust(Knob::UiSize, false);
+        }
+        assert_eq!(settings.ui_size, UI_SIZE_RANGE.0);
+        for _ in 0..20 {
+            settings.adjust(Knob::UiSize, true);
+        }
+        assert_eq!(settings.ui_size, UI_SIZE_RANGE.1);
+    }
+
+    #[test]
     fn writes_and_reads_through_the_save_dir() {
         let dir = std::env::temp_dir().join(format!("scfs-save-test-{}", std::process::id()));
         // SAFETY: only this test sets the variable; other tests do not read it.
@@ -298,6 +360,10 @@ mod tests {
             tips: false,
             sound: false,
             language: Some("de".into()),
+            music: 0.3,
+            effects: 0.6,
+            ui_size: 1.2,
+            fullscreen: true,
         };
         settings.store();
         assert_eq!(Settings::load(), settings);
