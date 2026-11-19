@@ -23,8 +23,10 @@ use crate::shop::ShopLayout;
 
 /// Seconds a ghost spends between the door and the queue (walking, browsing).
 const TO_COUNTER_SECS: f32 = 6.0;
-/// Seconds the player needs at the register per customer.
+/// Seconds the player needs at the register per sale.
 const SERVICE_SECS: f32 = 9.0;
+/// Seconds to turn a ghost away whose wish is not in stock.
+const DECLINE_SECS: f32 = 3.0;
 /// Chance that the player spots a counterfeit coin.
 const SPOT_COUNTERFEIT: f32 = 0.7;
 /// Nobody new arrives in the last seconds of the night (as in the game).
@@ -34,8 +36,11 @@ const MARKET_RESERVE: u32 = 30;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Strategy {
-    /// Orders what the ghosts that can come tonight are likely to ask for.
+    /// Orders what the ghosts are likely to ask for until the ware fades
+    /// (or the game ends), when it pays off.
     Demand,
+    /// Like `Demand`, but always uses every crate the ferryman brings.
+    Eager,
     /// Like `Demand`, and buys furniture at the market so that more ghosts
     /// feel at home.
     DemandDecor,
@@ -44,11 +49,17 @@ pub enum Strategy {
 }
 
 impl Strategy {
-    const ALL: [Strategy; 3] = [Strategy::Demand, Strategy::DemandDecor, Strategy::Cheapest];
+    const ALL: [Strategy; 4] = [
+        Strategy::Demand,
+        Strategy::DemandDecor,
+        Strategy::Eager,
+        Strategy::Cheapest,
+    ];
 
     fn name(self) -> &'static str {
         match self {
-            Strategy::Demand => "demand: orders what tonight's ghosts want",
+            Strategy::Demand => "demand: orders what the ghosts will want, when it pays off",
+            Strategy::Eager => "eager: like demand, but always fills every crate",
             Strategy::DemandDecor => "demand + furniture for unmet needs",
             Strategy::Cheapest => "cheapest crates",
         }
@@ -174,7 +185,7 @@ impl<'a> Game<'a> {
 
     fn mean_interval(&self) -> f32 {
         let (min, max) = self.data.config.spawn_interval_secs;
-        let rep_factor = (1.0 - self.reputation as f32 * 0.02).clamp(0.5, 1.5);
+        let rep_factor = self.data.config.reputation_spawn_factor(self.reputation);
         (min + max) / 2.0 * rep_factor * self.data.spawn_factor(self.night)
     }
 
@@ -266,19 +277,23 @@ impl<'a> Game<'a> {
                 .filter(|p| p.unlock_night <= self.night && p.crate_cost <= self.drawer);
             let pick = match strategy {
                 Strategy::Cheapest => affordable.min_by_key(|p| p.crate_cost),
-                Strategy::Demand | Strategy::DemandDecor => affordable
+                Strategy::Demand | Strategy::DemandDecor | Strategy::Eager => affordable
                     .map(|p| {
-                        let wanted = demand
-                            .iter()
-                            .find(|(id, _)| *id == p.id)
-                            .map_or(0.0, |(_, d)| *d);
+                        // Demand until the ware fades or the game ends.
+                        let nights_left = data.config.final_night() + 1 - self.night;
+                        let horizon = p.fade_after.min(nights_left) as f32;
+                        let wanted = horizon
+                            * demand
+                                .iter()
+                                .find(|(id, _)| *id == p.id)
+                                .map_or(0.0, |(_, d)| *d);
                         let missing = (wanted - self.stock.count(&p.id) as f32).max(0.0);
                         let units = missing.min(p.crate_size as f32);
                         let value = units * sale_price(data, &p.id, self.night) as f32
                             - p.crate_cost as f32;
                         (p, value)
                     })
-                    .filter(|(_, value)| *value > 0.0)
+                    .filter(|(_, value)| strategy == Strategy::Eager || *value > 0.0)
                     .max_by(|a, b| a.1.total_cmp(&b.1))
                     .map(|(p, _)| p),
             };
@@ -304,7 +319,7 @@ impl<'a> Game<'a> {
         let mut leaving: Vec<f32> = Vec::new();
         loop {
             let (min, max) = config.spawn_interval_secs;
-            let rep_factor = (1.0 - self.reputation as f32 * 0.02).clamp(0.5, 1.5);
+            let rep_factor = data.config.reputation_spawn_factor(self.reputation);
             t += self.rng.range(min, max) * rep_factor * data.spawn_factor(self.night);
             if t > end {
                 break;
@@ -351,12 +366,15 @@ impl<'a> Game<'a> {
                 leaving.push(at_counter + def.patience_secs);
                 continue;
             }
-            register_free = start + SERVICE_SECS;
-            leaving.push(register_free);
             if !self.stock.take_one(wish) {
+                // "Sorry, we have none" is quick.
+                register_free = start + DECLINE_SECS;
+                leaving.push(register_free);
                 stats.missed += 1.0;
                 continue;
             }
+            register_free = start + SERVICE_SECS;
+            leaving.push(register_free);
             let base = data.product(wish).map_or(1, |p| p.price);
             let factor = def.pay_multiplier * data.price_factor(self.night);
             let price = ((base as f32 * factor).round() as u32).max(1);
@@ -451,7 +469,8 @@ pub fn run(data: &GameData, runs: u32) {
             "loans",
             "owed"
         );
-        for (i, n) in averages(data, strategy, runs).iter().enumerate() {
+        let nights = averages(data, strategy, runs);
+        for (i, n) in nights.iter().enumerate() {
             println!(
                 "{:>5} {:>7.1} {:>6.1} {:>8.1} {:>6.1} {:>8.1} {:>7.1} {:>6.1} {:>7.1} {:>6.1} {:>6.1} {:>7.1} {:>5.0}% {:>6.1}",
                 i + 1,
@@ -470,6 +489,18 @@ pub fn run(data: &GameData, runs: u32) {
                 n.owed
             );
         }
+        let total = |f: fn(&NightStats) -> f64| nights.iter().map(f).sum::<f64>();
+        let (visitors, sales) = (total(|n| n.visitors), total(|n| n.sales));
+        let (fled, unhappy) = (total(|n| n.fled), total(|n| n.unhappy));
+        let last = nights.last().copied().unwrap_or_default();
+        println!(
+            "total: money {:+.0} · wishes fulfilled {:.0}% · fled {:.0}% · unhappy {:.0}% · loans in {:.0}% of the nights",
+            last.money - start as f64,
+            100.0 * sales / visitors.max(1.0),
+            100.0 * fled / visitors.max(1.0),
+            100.0 * unhappy / visitors.max(1.0),
+            100.0 * total(|n| n.loans) / nights.len().max(1) as f64,
+        );
         println!();
     }
 }

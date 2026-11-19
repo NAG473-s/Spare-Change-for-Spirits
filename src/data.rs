@@ -307,9 +307,26 @@ pub struct Config {
     pub base_atmosphere: Atmosphere,
     /// What the ferryman lends a shop that cannot afford a single crate.
     pub ferryman_loan: crate::loan::LoanTerms,
+    /// How reputation changes the time between ghosts.
+    pub reputation_spawn: ReputationSpawn,
+}
+
+/// Each reputation point shortens (or, below zero, lengthens) the time
+/// between ghosts by `per_point`, within `fastest` and `slowest`.
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct ReputationSpawn {
+    pub per_point: f32,
+    pub fastest: f32,
+    pub slowest: f32,
 }
 
 impl Config {
+    /// Factor on the time between ghosts at this reputation.
+    pub fn reputation_spawn_factor(&self, reputation: i32) -> f32 {
+        let r = self.reputation_spawn;
+        (1.0 - reputation as f32 * r.per_point).clamp(r.fastest, r.slowest)
+    }
+
     /// The last night of this build: the demo stops earlier than the full game.
     pub fn final_night(&self) -> u32 {
         if cfg!(feature = "demo") {

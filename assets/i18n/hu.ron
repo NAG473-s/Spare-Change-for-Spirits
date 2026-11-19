@@ -410,7 +410,7 @@
     "event.all_souls.text": "Az év legforgalmasabb éjszakája. Szellemek tolonganak az utcán – és jól fizetnek.",
 
     // Tips during the first night.
-    "tip.order": "A révész minden este legfeljebb négy ládát hoz. Menj ki az ajtón a kikötőbe, és kattints egy ládára a csónakjában, hogy megvedd – a kasszából fizetsz.",
+    "tip.order": "A révész minden este legfeljebb {count} ládát hoz. Menj ki az ajtón a kikötőbe, és kattints egy ládára a csónakjában, hogy megvedd – a kasszából fizetsz.",
     "tip.shelve": "A szellemek csak azt vehetik meg, ami a polcon van. Válassz egy terméket a „Pakold polcra a termékeket” résznél, majd kattints egy polcra a boltban.",
     "tip.open": "Feltöltve a polcok! Figyelj a hangulatra: a félénk szellemek elmenekülnek a világos boltokból, a hiúk tükröt akarnak. Ha készen állsz, fordítsd meg a táblát az ablakban, és nyisd ki a boltot.",
     "tip.browse": "A szellemek beúsznak, végignézik a polcokat, és sorba állnak a pultnál. Várakozás közben egyre sápadtabbak – ne várakoztasd őket túl sokáig.",

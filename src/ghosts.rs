@@ -144,7 +144,7 @@ fn spawn_ghosts(
     }
     // Good reputation = more customers.
     let (min, max) = data.config.spawn_interval_secs;
-    let rep_factor = (1.0 - progress.reputation as f32 * 0.02).clamp(0.5, 1.5);
+    let rep_factor = data.config.reputation_spawn_factor(progress.reputation);
     let night = progress.night;
     timer.0 = rng.range(min, max) * rep_factor * data.spawn_factor(night);
 

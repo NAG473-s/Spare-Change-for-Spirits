@@ -410,7 +410,7 @@
     "event.all_souls.text": "Nejrušnější noc v roce. Duchové se tlačí na ulici – a dobře platí.",
 
     // Tips during the first night.
-    "tip.order": "Každý večer ti převozník přiveze až čtyři bedny. Vyjdi dveřmi ven do přístavu a kliknutím na bednu v jeho loďce ji koupíš – platíš z pokladny.",
+    "tip.order": "Každý večer ti převozník přiveze až {count} beden. Vyjdi dveřmi ven do přístavu a kliknutím na bednu v jeho loďce ji koupíš – platíš z pokladny.",
     "tip.shelve": "Duchové si můžou koupit jen to, co je na polici. Vyber zboží v části „Rozlož zboží na police“ a pak klikni na polici v obchodě.",
     "tip.open": "Police jsou plné! Hlídej atmosféru: plaší duchové prchají z jasně osvětlených obchodů, ješitní chtějí zrcadlo. Až bude všechno připravené, otoč cedulku v okně a otevři obchod.",
     "tip.browse": "Duchové se vznášejí dovnitř, prohlížejí si police a řadí se u pultu. Během čekání blednou – nenech je čekat moc dlouho.",

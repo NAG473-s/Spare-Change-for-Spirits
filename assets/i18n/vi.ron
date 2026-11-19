@@ -410,7 +410,7 @@
     "event.all_souls.text": "Đêm đông đúc nhất trong năm. Các linh hồn chen chúc khắp phố – và họ trả tiền rất hậu.",
 
     // Tips during the first night.
-    "tip.order": "Mỗi tối, người lái đò mang đến tối đa bốn thùng hàng. Đi ra cửa xuống bến và nhấp vào một thùng trên thuyền của ông để mua – tiền lấy từ ngăn kéo thu ngân.",
+    "tip.order": "Mỗi tối, người lái đò mang đến tối đa {count} thùng hàng. Đi ra cửa xuống bến và nhấp vào một thùng trên thuyền của ông để mua – tiền lấy từ ngăn kéo thu ngân.",
     "tip.shelve": "Hồn ma chỉ mua được những gì có trên kệ. Chọn một món trong mục “Bày hàng lên kệ”, rồi nhấp vào một cái kệ trong tiệm.",
     "tip.open": "Kệ đã đầy hàng! Hãy để ý không khí: ma nhút nhát sẽ bỏ chạy khỏi tiệm quá sáng, ma điệu đà thì muốn có gương. Khi đã sẵn sàng, hãy lật tấm biển ở cửa sổ để mở cửa tiệm.",
     "tip.browse": "Hồn ma lướt vào, ngắm nghía kệ hàng rồi xếp hàng ở quầy. Càng chờ chúng càng nhạt dần – đừng để chúng đợi lâu.",

@@ -410,7 +410,7 @@
     "event.all_souls.text": "Vuoden vilkkain yö. Henget tungeksivat kadulla – ja maksavat hyvin.",
 
     // Tips during the first night.
-    "tip.order": "Joka ilta lautturi tuo enintään neljä laatikkoa. Mene ovesta ulos satamaan ja osta laatikko klikkaamalla sitä hänen veneessään – maksat kassasta.",
+    "tip.order": "Joka ilta lautturi tuo enintään {count} laatikkoa. Mene ovesta ulos satamaan ja osta laatikko klikkaamalla sitä hänen veneessään – maksat kassasta.",
     "tip.shelve": "Haamut voivat ostaa vain sitä, mikä on hyllyssä. Valitse tuote kohdasta ”Laita tuotteet hyllyille” ja klikkaa sitten hyllyä puodissa.",
     "tip.open": "Hyllyt täynnä! Pidä silmällä tunnelmaa: ujot haamut pakenevat valoisista puodeista, turhamaiset haluavat peilin. Kun olet valmis, käännä ikkunassa oleva kyltti ja avaa puoti.",
     "tip.browse": "Haamut lipuvat sisään, katselevat hyllyjä ja jonottavat tiskille. Odottaessaan ne kalpenevat – älä pidätä niitä liian kauan.",

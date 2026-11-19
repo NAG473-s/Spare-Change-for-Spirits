@@ -410,7 +410,7 @@
     "event.all_souls.text": "Årets travleste natt. Åndene fyller gata – og de betaler godt.",
 
     // Tips during the first night.
-    "tip.order": "Hver kveld kommer fergemannen med opptil fire kasser. Gå ut gjennom døra til havna og klikk på en kasse i båten hans for å kjøpe den – du betaler fra pengeskuffen.",
+    "tip.order": "Hver kveld kommer fergemannen med opptil {count} kasser. Gå ut gjennom døra til havna og klikk på en kasse i båten hans for å kjøpe den – du betaler fra pengeskuffen.",
     "tip.shelve": "Spøkelser kan bare kjøpe det som står på en hylle. Velg en vare under «Sett varer på hyllene», og klikk så på en hylle i butikken.",
     "tip.open": "Hyllene er fylt! Pass på stemningen: sjenerte spøkelser flykter fra lyse butikker, forfengelige vil ha et speil. Når du er klar, snur du skiltet i vinduet for å åpne butikken.",
     "tip.browse": "Spøkelser driver inn, ser på hyllene og stiller seg i kø ved disken. De blir blekere mens de venter – ikke la dem vente for lenge.",

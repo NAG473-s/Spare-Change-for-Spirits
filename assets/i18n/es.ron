@@ -410,7 +410,7 @@
     "event.all_souls.text": "La noche de más ajetreo del año. Los espíritus abarrotan la calle – y pagan bien.",
 
     // Tips during the first night.
-    "tip.order": "Cada atardecer el barquero trae hasta cuatro cajas. Sal por la puerta al puerto y haz clic en una caja de su barca para comprarla – se paga con el dinero del cajón.",
+    "tip.order": "Cada atardecer el barquero trae hasta {count} cajas. Sal por la puerta al puerto y haz clic en una caja de su barca para comprarla – se paga con el dinero del cajón.",
     "tip.shelve": "Los fantasmas solo pueden comprar lo que está en una estantería. Elige un producto en «Colocar en estanterías» y haz clic en una estantería de la tienda.",
     "tip.open": "¡Estanterías llenas! Cuida el ambiente: los fantasmas tímidos huyen de las tiendas luminosas y los presumidos quieren un espejo. Cuando lo tengas todo a punto, da la vuelta al cartel del escaparate para abrir la tienda.",
     "tip.browse": "Los fantasmas entran flotando, curiosean en tus estanterías y hacen cola en el mostrador. Palidecen mientras esperan – no los hagas esperar demasiado.",

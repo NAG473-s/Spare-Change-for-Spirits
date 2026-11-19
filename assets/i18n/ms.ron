@@ -410,7 +410,7 @@
     "event.all_souls.text": "Malam paling sibuk dalam setahun. Roh-roh memenuhi jalan – dan mereka membayar dengan murah hati.",
 
     // Tips during the first night.
-    "tip.order": "Setiap senja, penambang membawa sehingga empat peti. Keluar melalui pintu ke jeti dan klik sebuah peti di perahunya untuk membelinya – anda membayar dari laci wang.",
+    "tip.order": "Setiap senja, penambang membawa sehingga {count} peti. Keluar melalui pintu ke jeti dan klik sebuah peti di perahunya untuk membelinya – anda membayar dari laci wang.",
     "tip.shelve": "Hantu hanya boleh membeli barang yang ada di rak. Pilih barangan di bawah “Susun barangan di rak”, kemudian klik rak di dalam kedai.",
     "tip.open": "Rak sudah berisi! Jaga suasana: hantu pemalu lari dari kedai yang terang, hantu pesolek mahukan cermin. Apabila sudah sedia, terbalikkan papan tanda di tingkap untuk membuka kedai.",
     "tip.browse": "Hantu-hantu melayang masuk, melihat-lihat rak dan beratur di kaunter. Mereka semakin pudar semasa menunggu – jangan biarkan mereka menunggu terlalu lama.",

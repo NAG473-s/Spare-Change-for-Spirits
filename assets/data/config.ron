@@ -5,13 +5,16 @@
     start_reputation: 0,
 
     // Maximum number of crates the ferryman brings per evening.
-    crates_per_night: 4,
+    crates_per_night: 6,
 
     // Length of one night (00:00–05:00) in real seconds.
     night_length_secs: 240.0,
     // Time between new ghosts (min, max) in seconds.
     spawn_interval_secs: (7.0, 13.0),
     max_ghosts_in_shop: 6,
+    // Reputation shortens the time between ghosts by `per_point` per point (negative reputation
+    // lengthens it), but never below `fastest` or above `slowest` times the normal interval.
+    reputation_spawn: (per_point: 0.01, fastest: 0.65, slowest: 1.5),
 
     grid_cols: 10,
     grid_rows: 5,

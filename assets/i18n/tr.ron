@@ -410,7 +410,7 @@
     "event.all_souls.text": "Yılın en kalabalık gecesi. Ruhlar sokağı dolduruyor – ve cömertçe ödüyorlar.",
 
     // Tips during the first night.
-    "tip.order": "Kayıkçı her akşam en fazla dört sandık getirir. Kapıdan iskeleye çık ve satın almak için kayığındaki bir sandığa tıkla – parasını kasa çekmecesinden ödersin.",
+    "tip.order": "Kayıkçı her akşam en fazla {count} sandık getirir. Kapıdan iskeleye çık ve satın almak için kayığındaki bir sandığa tıkla – parasını kasa çekmecesinden ödersin.",
     "tip.shelve": "Hayaletler yalnızca raftaki ürünleri alabilir. “Ürünleri raflara diz” altından bir ürün seç, sonra dükkândaki bir rafa tıkla.",
     "tip.open": "Raflar doldu! Atmosfere dikkat et: utangaç hayaletler aydınlık dükkândan kaçar, kendini beğenmişler ayna ister. Hazır olduğunda dükkânı açmak için penceredeki tabelayı çevir.",
     "tip.browse": "Hayaletler süzülerek içeri girer, raflara göz atar ve tezgâhta sıraya geçer. Beklerken solarlar – onları fazla bekletme.",

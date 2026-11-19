@@ -410,7 +410,7 @@
     "event.all_souls.text": "La notte più affollata dell'anno. Gli spiriti gremiscono la strada – e pagano bene.",
 
     // Tips during the first night.
-    "tip.order": "Ogni sera il traghettatore porta fino a quattro casse. Esci dalla porta fino al porto e clicca su una cassa sulla sua barca per comprarla – paghi con i soldi del cassetto.",
+    "tip.order": "Ogni sera il traghettatore porta fino a {count} casse. Esci dalla porta fino al porto e clicca su una cassa sulla sua barca per comprarla – paghi con i soldi del cassetto.",
     "tip.shelve": "I fantasmi possono comprare solo ciò che è sugli scaffali. Scegli un prodotto sotto «Rifornisci gli scaffali», poi clicca su uno scaffale della bottega.",
     "tip.open": "Scaffali pieni! Occhio all'atmosfera: i fantasmi timidi fuggono dalle botteghe luminose, quelli vanitosi vogliono uno specchio. Quando è tutto pronto, gira il cartello in vetrina per aprire la bottega.",
     "tip.browse": "I fantasmi entrano, curiosano tra gli scaffali e si mettono in fila al bancone. Mentre aspettano impallidiscono – non farli attendere troppo.",

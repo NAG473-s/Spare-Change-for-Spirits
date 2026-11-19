@@ -410,7 +410,7 @@
     "event.all_souls.text": "The busiest night of the year. Spirits crowd the street – and they pay well.",
 
     // Tips during the first night.
-    "tip.order": "Every evening the ferryman brings up to four crates. Go out through the door to the harbour and click a crate on his boat to buy it – you pay from the cash drawer.",
+    "tip.order": "Every evening the ferryman brings up to {count} crates. Go out through the door to the harbour and click a crate on his boat to buy it – you pay from the cash drawer.",
     "tip.shelve": "Ghosts can only buy what is on a shelf. Pick a product under \"Put products on shelves\", then click a shelf in the shop.",
     "tip.open": "Shelves stocked! Mind the atmosphere: shy ghosts flee bright shops, vain ones want a mirror. When you are ready, turn the sign in the window to open the shop.",
     "tip.browse": "Ghosts drift in, browse your shelves and queue at the counter. They grow paler while they wait – don't keep them too long.",

@@ -792,6 +792,7 @@ fn update_tips(
     mut commands: Commands,
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
+    data: Res<GameData>,
     lang: Res<Lang>,
     progress: Res<Progress>,
     crates: Res<CratesOrdered>,
@@ -820,7 +821,7 @@ fn update_tips(
             )
         })
         .flatten()
-        .map(|key| lang.t(key));
+        .map(|key| lang.f(key, &[("count", &data.crates_tonight(progress.night))]));
     if *shown == tip {
         return;
     }

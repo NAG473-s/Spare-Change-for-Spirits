@@ -410,7 +410,7 @@
     "event.all_souls.text": "Najbardziej ruchliwa noc w roku. Duchy tłoczą się na ulicy – i dobrze płacą.",
 
     // Tips during the first night.
-    "tip.order": "Co wieczór przewoźnik przywozi do czterech skrzyń. Wyjdź przez drzwi do przystani i kliknij skrzynię na jego łodzi, aby ją kupić – płacisz z kasy.",
+    "tip.order": "Co wieczór przewoźnik przywozi do {count} skrzyń. Wyjdź przez drzwi do przystani i kliknij skrzynię na jego łodzi, aby ją kupić – płacisz z kasy.",
     "tip.shelve": "Duchy mogą kupić tylko to, co leży na półce. Wybierz towar w sekcji „Rozłóż towary na półkach”, a potem kliknij półkę w sklepie.",
     "tip.open": "Półki pełne! Zwróć uwagę na atmosferę: nieśmiałe duchy uciekają z jasnych sklepów, próżne chcą lustra. Kiedy wszystko będzie gotowe, odwróć tabliczkę w oknie, aby otworzyć sklep.",
     "tip.browse": "Duchy wpływają do środka, oglądają półki i ustawiają się w kolejce do lady. Czekając, coraz bardziej bledną – nie każ im czekać zbyt długo.",

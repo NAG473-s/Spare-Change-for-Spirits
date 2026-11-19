@@ -410,7 +410,7 @@
     "event.all_souls.text": "Cea mai aglomerată noapte a anului. Spiritele se îmbulzesc pe stradă – și plătesc bine.",
 
     // Tips during the first night.
-    "tip.order": "În fiecare seară, luntrașul aduce până la patru lăzi. Ieși pe ușă în port și apasă pe o ladă din barca lui ca s-o cumperi – plătești din sertarul casei.",
+    "tip.order": "În fiecare seară, luntrașul aduce până la {count} lăzi. Ieși pe ușă în port și apasă pe o ladă din barca lui ca s-o cumperi – plătești din sertarul casei.",
     "tip.shelve": "Fantomele pot cumpăra doar ce e pe raft. Alege un produs de la „Pune produsele pe rafturi”, apoi apasă pe un raft din magazin.",
     "tip.open": "Rafturile sunt pline! Ai grijă la atmosferă: fantomele timide fug de magazinele luminoase, iar cele vanitoase vor o oglindă. Când ești gata, întoarce plăcuța din fereastră ca să deschizi magazinul.",
     "tip.browse": "Fantomele intră plutind, se uită prin rafturi și stau la coadă la tejghea. Cât așteaptă, pălesc – nu le lăsa să aștepte prea mult.",

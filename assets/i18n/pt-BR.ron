@@ -410,7 +410,7 @@
     "event.all_souls.text": "A noite mais movimentada do ano. Os espíritos lotam a rua – e pagam bem.",
 
     // Tips during the first night.
-    "tip.order": "Todo anoitecer, o barqueiro traz até quatro caixas. Saia pela porta até o porto e clique numa caixa no barco dele para comprá-la – você paga com o dinheiro da gaveta.",
+    "tip.order": "Todo anoitecer, o barqueiro traz até {count} caixas. Saia pela porta até o porto e clique numa caixa no barco dele para comprá-la – você paga com o dinheiro da gaveta.",
     "tip.shelve": "Fantasmas só compram o que está na prateleira. Escolha um produto em “Colocar produtos nas prateleiras” e clique numa prateleira da loja.",
     "tip.open": "Prateleiras abastecidas! Fique de olho na atmosfera: fantasmas tímidos fogem de lojas claras, os vaidosos querem um espelho. Quando quiser, vire a placa na janela para abrir a loja.",
     "tip.browse": "Os fantasmas entram flutuando, olham as prateleiras e fazem fila no balcão. Eles vão ficando pálidos enquanto esperam – não deixe ninguém esperando muito.",

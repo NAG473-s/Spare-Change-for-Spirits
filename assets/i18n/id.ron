@@ -410,7 +410,7 @@
     "event.all_souls.text": "Malam tersibuk dalam setahun. Para arwah memadati jalan – dan mereka membayar dengan murah hati.",
 
     // Tips during the first night.
-    "tip.order": "Setiap petang, tukang perahu membawa paling banyak empat peti. Keluar lewat pintu ke dermaga dan klik sebuah peti di perahunya untuk membelinya – kamu membayarnya dari laci kasir.",
+    "tip.order": "Setiap petang, tukang perahu membawa paling banyak {count} peti. Keluar lewat pintu ke dermaga dan klik sebuah peti di perahunya untuk membelinya – kamu membayarnya dari laci kasir.",
     "tip.shelve": "Hantu hanya bisa membeli barang yang ada di rak. Pilih barang di bawah “Taruh barang di rak”, lalu klik sebuah rak di toko.",
     "tip.open": "Rak sudah terisi! Perhatikan suasananya: hantu pemalu kabur dari toko yang terang, hantu pesolek ingin ada cermin. Kalau sudah siap, balik papan tanda di jendela untuk membuka tokonya.",
     "tip.browse": "Para hantu melayang masuk, melihat-lihat rak, lalu mengantre di meja kasir. Mereka makin pucat selama menunggu – jangan biarkan mereka menunggu terlalu lama.",

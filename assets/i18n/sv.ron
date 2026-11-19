@@ -410,7 +410,7 @@
     "event.all_souls.text": "Årets mest hektiska natt. Andarna trängs på gatan – och de betalar bra.",
 
     // Tips during the first night.
-    "tip.order": "Varje kväll kommer färjkarlen med upp till fyra lådor. Gå ut genom dörren till hamnen och klicka på en låda i hans båt för att köpa den – du betalar ur kassan.",
+    "tip.order": "Varje kväll kommer färjkarlen med upp till {count} lådor. Gå ut genom dörren till hamnen och klicka på en låda i hans båt för att köpa den – du betalar ur kassan.",
     "tip.shelve": "Spöken kan bara köpa det som står på en hylla. Välj en vara under ”Ställ varor på hyllorna” och klicka sedan på en hylla i butiken.",
     "tip.open": "Hyllorna är fyllda! Tänk på stämningen: blyga spöken flyr ljusa butiker, fåfänga vill ha en spegel. Vänd på skylten i fönstret för att öppna butiken när du är redo.",
     "tip.browse": "Spöken svävar in, tittar på hyllorna och ställer sig i kö vid disken. De bleknar medan de väntar – låt dem inte vänta för länge.",

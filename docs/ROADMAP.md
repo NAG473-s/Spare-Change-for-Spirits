@@ -36,7 +36,7 @@ Checkboxes are ticked in the commit that finishes them.
       lends `ferryman_loan` in `config.ron` and takes it back with a surcharge at dawn)
 - [x] Simulation that plays all nights with simple strategies and prints money, reputation and
       sales per night – the basis for balancing (`cargo run --release -- --simulate [runs]`)
-- [ ] First balancing pass in `assets/data/*.ron`
+- [x] First balancing pass in `assets/data/*.ron` (see `docs/BALANCING.md`)
 - [ ] Windows build run and the `.exe` played on a real Windows PC (assets, fonts, saves, sound)
 - [ ] Ledger frame (`assets/sprites/ui/ledger_frame.png`) used for the morning accounts
 - [ ] Repository private

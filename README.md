@@ -31,6 +31,8 @@ money, reputation, sales, missed wishes, fled and unhappy ghosts per night):
 BEVY_ASSET_ROOT=. cargo run --release -- --simulate 500
 ```
 
+Goals, results and open points of the balancing passes: [`docs/BALANCING.md`](docs/BALANCING.md).
+
 The game starts on the title screen: its own painted background with flickering lamp light,
 drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit; the *Menu* button in the top bar does the same). Settings (main menu and pause menu): tips,

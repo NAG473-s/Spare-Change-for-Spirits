@@ -410,7 +410,7 @@
     "event.all_souls.text": "Die geschäftigste Nacht des Jahres. Auf der Straße drängen sich die Geister – und sie zahlen gut.",
 
     // Tips during the first night.
-    "tip.order": "Jeden Abend bringt der Fährmann bis zu vier Kisten. Geh durch die Tür hinaus zum Hafen und klick auf eine Kiste in seinem Boot, um sie zu kaufen – bezahlt wird aus der Kasse.",
+    "tip.order": "Jeden Abend bringt der Fährmann bis zu {count} Kisten. Geh durch die Tür hinaus zum Hafen und klick auf eine Kiste in seinem Boot, um sie zu kaufen – bezahlt wird aus der Kasse.",
     "tip.shelve": "Geister können nur kaufen, was im Regal steht. Wähle unter „Waren einräumen“ eine Ware und klick dann im Laden auf ein Regal.",
     "tip.open": "Die Regale sind gefüllt! Achte auf die Atmosphäre: Scheue Geister meiden helle Läden, eitle wollen einen Spiegel. Wenn du bereit bist, dreh das Schild im Fenster um und öffne so den Laden.",
     "tip.browse": "Geister schweben herein, stöbern in deinen Regalen und stellen sich an der Theke an. Beim Warten verblassen sie – lass sie nicht zu lange stehen.",
