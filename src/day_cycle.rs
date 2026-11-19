@@ -112,6 +112,15 @@ pub struct NightReport {
     pub story_line: Option<String>,
     /// Keepsakes received tonight (decor ids).
     pub keepsakes: Vec<String>,
+    /// Ghosts that came in (or tried to) tonight.
+    pub visitors: u32,
+    /// Product id of every unit sold tonight.
+    pub sold: Vec<String>,
+    /// Change due minus change given, summed over all sales: positive when
+    /// too little change was handed out (the drawer keeps it).
+    pub change_kept: i64,
+    /// Value of second payments that were kept.
+    pub second_payments_kept: u32,
 }
 
 fn open_shop(mut actions: MessageReader<Action>, mut next: ResMut<NextState<Phase>>) {

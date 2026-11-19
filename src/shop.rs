@@ -11,10 +11,12 @@ use serde::{Deserialize, Serialize};
 
 use bevy::light::NotShadowCaster;
 
+use crate::accounts::Accounts;
 use crate::data::{Atmosphere, DecorDef, GameData, asset_exists, rgb};
 use crate::day_cycle::Phase;
 use crate::economy::Drawer;
 use crate::fx::Flicker;
+use crate::harbor::{ShopDoor, on_shop_door_click};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
@@ -216,7 +218,7 @@ pub struct GridCell(pub usize);
 
 /// Model if `assets/<path>` exists, otherwise a placeholder box; either way
 /// standing on its origin.
-fn model_or_box(
+pub(crate) fn model_or_box(
     commands: &mut Commands,
     asset_server: &AssetServer,
     meshes: &mut Assets<Mesh>,
@@ -305,6 +307,10 @@ fn spawn_shop(
         DOOR_SIZE,
         Color::srgb(0.3, 0.2, 0.13),
     );
+    commands
+        .entity(door)
+        .insert(ShopDoor)
+        .observe(on_shop_door_click);
     let door_spot = Vec2::new(crate::scene::ROOM_MIN_X + 0.1, layout.door_pos().y);
     commands.entity(door).insert(
         Transform::from_translation(floor(door_spot, 0.0))
@@ -386,6 +392,7 @@ fn on_cell_click(
     mut drawer: ResMut<Drawer>,
     mut keepsakes: ResMut<Keepsakes>,
     mut log: ResMut<GameLog>,
+    mut accounts: ResMut<Accounts>,
     lang: Res<Lang>,
 ) {
     if *phase.get() != Phase::Evening {
@@ -410,7 +417,9 @@ fn on_cell_click(
                     log.push(lang.f("log.keepsake_placed", &[("item", &lang.decor(id))]));
                     return;
                 }
-            } else if !drawer.pay(def.cost) {
+            } else if drawer.pay(def.cost) {
+                accounts.furniture += def.cost;
+            } else {
                 log.push(lang.f(
                     "log.decor_too_expensive",
                     &[("item", &lang.decor(id)), ("cost", &def.cost)],
@@ -606,8 +615,21 @@ fn spawn_product(
     materials: &mut Assets<StandardMaterial>,
     id: &str,
 ) -> Entity {
-    let model = format!("models/products/{id}.glb");
     let spot = Vec3::new(0.0, SHELF_BOARD, 0.08);
+    product_model(commands, asset_server, meshes, materials, id, spot)
+}
+
+/// A product standing at `spot`: its model, or its picture as a small
+/// billboard (also used on the ferryman's crates).
+pub(crate) fn product_model(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
+    id: &str,
+    spot: Vec3,
+) -> Entity {
+    let model = format!("models/products/{id}.glb");
     if asset_exists(&model) {
         commands
             .spawn((

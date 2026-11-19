@@ -28,6 +28,15 @@ impl Coin {
         }
     }
 
+    /// File and catalog id ("button", "candle", "spoon").
+    pub fn id(self) -> &'static str {
+        match self {
+            Coin::Button => "button",
+            Coin::Candle => "candle",
+            Coin::Spoon => "spoon",
+        }
+    }
+
     pub fn name(self, lang: &Lang) -> String {
         lang.t(match self {
             Coin::Button => "coin.button",
@@ -65,10 +74,6 @@ impl Purse {
 
     pub fn add(&mut self, coin: Coin, count: u32) {
         *self.get_mut(coin) += count;
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.total() == 0
     }
 
     pub fn total(&self) -> u32 {

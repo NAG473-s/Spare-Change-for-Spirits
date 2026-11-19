@@ -8,12 +8,12 @@ use bevy::light::{CascadeShadowConfigBuilder, NotShadowCaster};
 use bevy::prelude::*;
 
 use crate::data::asset_exists;
-use crate::day_cycle::Phase;
+use crate::day_cycle::{NightClock, Phase};
 use crate::ui::{TEXT, UiFont};
 
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
-const CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
-const CAMERA_POS: Vec3 = Vec3::new(2.9, 11.4, 14.8);
+pub const CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
+pub const CAMERA_POS: Vec3 = Vec3::new(2.9, 11.4, 14.8);
 
 /// Room bounds (metres).
 pub const ROOM_MIN_X: f32 = -7.0;
@@ -31,8 +31,19 @@ impl Plugin for ScenePlugin {
             brightness: 300.0,
             ..default()
         })
-        .add_systems(Startup, (spawn_camera, spawn_room, spawn_lights))
-        .add_systems(Update, (time_of_day_light, face_camera, follow_labels));
+        .add_systems(
+            Startup,
+            (spawn_camera, spawn_room, spawn_lights, spawn_wall_clock),
+        )
+        .add_systems(
+            Update,
+            (
+                time_of_day_light,
+                face_camera,
+                follow_labels,
+                turn_clock_hands,
+            ),
+        );
     }
 }
 
@@ -318,5 +329,122 @@ fn follow_labels(
             }
             Err(_) => *visibility = Visibility::Hidden,
         }
+    }
+}
+
+/// Where the wall clock hangs: on the back wall, right of the window.
+const CLOCK_POS: Vec3 = Vec3::new(0.9, 2.45, -2.93);
+const CLOCK_RADIUS: f32 = 0.34;
+
+/// A clock hand; the value is its length.
+#[derive(Component)]
+struct ClockHand {
+    minute: bool,
+}
+
+/// A round wall clock whose hands show the time of night: a little before
+/// midnight in the evening, midnight to five while the shop is open, five
+/// o'clock at dawn. `models/shop/wall_clock.glb` replaces the face.
+fn spawn_wall_clock(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let clock = commands
+        .spawn((
+            Transform::from_translation(CLOCK_POS),
+            Visibility::default(),
+            Pickable::IGNORE,
+        ))
+        .id();
+    // Faces +z (towards the camera); cylinders stand along y, so tip them over.
+    let facing = Quat::from_rotation_x(std::f32::consts::FRAC_PI_2);
+    let dark = color_material(&mut materials, Color::srgb(0.2, 0.13, 0.09));
+    if asset_exists("models/shop/wall_clock.glb") {
+        commands.spawn((
+            WorldAssetRoot(
+                asset_server
+                    .load(GltfAssetLabel::Scene(0).from_asset("models/shop/wall_clock.glb")),
+            ),
+            Transform::default(),
+            ChildOf(clock),
+        ));
+    } else {
+        commands.spawn((
+            Mesh3d(meshes.add(Cylinder::new(CLOCK_RADIUS + 0.05, 0.06))),
+            MeshMaterial3d(dark.clone()),
+            Transform::from_rotation(facing),
+            ChildOf(clock),
+        ));
+        commands.spawn((
+            Mesh3d(meshes.add(Cylinder::new(CLOCK_RADIUS, 0.02))),
+            MeshMaterial3d(color_material(&mut materials, Color::srgb(0.86, 0.8, 0.66))),
+            Transform::from_xyz(0.0, 0.0, 0.03).with_rotation(facing),
+            ChildOf(clock),
+        ));
+        let tick = meshes.add(Cuboid::new(0.025, 0.06, 0.01));
+        for i in 0..12 {
+            let a = i as f32 / 12.0 * std::f32::consts::TAU;
+            let r = CLOCK_RADIUS - 0.05;
+            commands.spawn((
+                Mesh3d(tick.clone()),
+                MeshMaterial3d(dark.clone()),
+                Transform::from_xyz(a.sin() * r, a.cos() * r, 0.045)
+                    .with_rotation(Quat::from_rotation_z(-a)),
+                ChildOf(clock),
+            ));
+        }
+    }
+    for (minute, length, width) in [(false, 0.17, 0.035), (true, 0.27, 0.022)] {
+        let hand = commands
+            .spawn((
+                ClockHand { minute },
+                Transform::from_xyz(0.0, 0.0, if minute { 0.065 } else { 0.055 }),
+                Visibility::default(),
+                ChildOf(clock),
+            ))
+            .id();
+        commands.spawn((
+            Mesh3d(meshes.add(Cuboid::new(width, length, 0.008))),
+            MeshMaterial3d(dark.clone()),
+            Transform::from_xyz(0.0, length / 2.0 - 0.03, 0.0),
+            NotShadowCaster,
+            ChildOf(hand),
+        ));
+    }
+    commands.spawn((
+        Mesh3d(meshes.add(Sphere::new(0.025))),
+        MeshMaterial3d(color_material(&mut materials, Color::srgb(0.7, 0.55, 0.3))),
+        Transform::from_xyz(0.0, 0.0, 0.075),
+        ChildOf(clock),
+    ));
+}
+
+/// Minutes after midnight shown by the shop's clock (negative before midnight).
+pub fn shop_minutes(phase: Phase, clock: &NightClock) -> f32 {
+    match phase {
+        Phase::Night => clock.elapsed / clock.length.max(1.0) * 300.0,
+        Phase::Morning | Phase::DemoEnd => 300.0,
+        Phase::Evening | Phase::Menu => -25.0,
+    }
+    .min(300.0)
+}
+
+fn turn_clock_hands(
+    phase: Res<State<Phase>>,
+    clock: Res<NightClock>,
+    mut hands: Query<(&ClockHand, &mut Transform)>,
+) {
+    let minutes = shop_minutes(*phase.get(), &clock).rem_euclid(720.0);
+    let tau = std::f32::consts::TAU;
+    for (hand, mut transform) in &mut hands {
+        // Clockwise as seen from the front means negative about +z.
+        let turn = if hand.minute {
+            minutes / 60.0
+        } else {
+            minutes / 720.0
+        };
+        transform.rotation = Quat::from_rotation_z(-turn * tau);
     }
 }

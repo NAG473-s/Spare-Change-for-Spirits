@@ -260,12 +260,14 @@ fn make_change(
                 stock.take_one(&sale.product);
                 report.sales += 1;
                 report.revenue += sale.price;
+                report.sold.push(sale.product.clone());
                 report
                     .counterfeits_taken
                     .extend(sale.coins.iter().filter(|c| c.fake).map(|c| c.coin));
 
                 let due = sale.change_due();
                 let given = sale.given.total();
+                report.change_kept += due as i64 - given as i64;
                 let Ok(mut ghost) = ghosts.get_mut(sale.ghost) else {
                     queue.remove(sale.ghost);
                     continue;
@@ -379,6 +381,7 @@ fn answer_double_pay(
         let name = lang.ghost_the(&def.id);
         if keep {
             drawer.merge(&Purse::greedy(question.amount));
+            report.second_payments_kept += question.amount;
             cues.write(Cue::Paid);
             progress.reputation -= 1;
             report.dishonest += 1;

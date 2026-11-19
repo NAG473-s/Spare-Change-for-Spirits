@@ -104,6 +104,19 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 | `counter` | 4.5 × 1.0 × 0.8 | A long wooden shop counter (front = customer side facing −Y): panelled front with a carved ghost emblem in the middle, a polished top, a small brass bell and an old brass cash register near the right end. The game turns it so it runs along the right side of the shop. |
 | `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
+| `wall_clock` | 0.78 × 0.78 × 0.08 | *(optional)* A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
+
+## The harbour – `assets/models/shop/<id>.glb` *(optional)*
+
+In the evening the player walks out to the harbour, where the ferryman sells crates from his boat.
+The game builds everything from simple shapes until these models exist.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `ferry_boat` | 7.4 × 0.6 × 1.7 | A long, low, flat-bottomed wooden ferry boat, dark weathered planks, a raised curved bow and stern, a narrow rim along both sides, an empty flat deck (crates, the ferryman and his lantern are added by the game). Origin at the **centre of the deck surface**; the hull reaches about 0.4 m below it. |
+| `crate` | 0.5 × 0.3 × 0.42 | A small wooden crate **without a lid**, open at the top, filled with straw almost to the rim, rope handles on the sides. |
+| `crate_lid` | 0.52 × 0.05 × 0.44 | The matching flat lid of planks with two battens. Origin at the **middle of its back edge** (the hinge); the lid extends forwards (−Y in Blender), so the game can swing it open. |
+| `ferryman` | 0.7 × 1.45 × 0.6 | A tall, gaunt ferryman in a long hooded dark cloak, slightly stooped, the face hidden in shadow except for two pale, softly glowing eyes (emissive), hands folded in front. **No pole** (the game adds it). |
 
 **Room layout** (only if you make `room.glb`; Blender coordinates, Z up, origin at 0,0,0, do not
 apply an offset): the floor is **not** part of the room model (the game draws the floor grid).

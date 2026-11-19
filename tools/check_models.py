@@ -145,7 +145,17 @@ def main():
     expected = {
         "decor": decor_sizes(),
         "products": {i: PRODUCT_SIZE for i in ids("assets/data/products.ron", r'id: "([^"]+)"')},
-        "shop": dict(SHOP_SIZES, room=None),
+        # Models with their origin elsewhere than the bottom centre are only
+        # checked for scenes and triangles (None).
+        "shop": dict(
+            SHOP_SIZES,
+            room=None,
+            crate=(0.5, 0.3, 0.42),
+            ferryman=(0.7, 1.45, 0.6),
+            ferry_boat=None,
+            crate_lid=None,
+            wall_clock=None,
+        ),
     }
     failures = 0
     for folder, targets in expected.items():

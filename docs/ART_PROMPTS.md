@@ -27,6 +27,7 @@ python3 tools/check_models.py
 | Icons for 8 products and 5 pieces of furniture | [Icons](#icons--canvas-1024--1024) |
 | *(optional)* Animation sheets for the ghosts | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
 | *(optional)* A title screen background in full HD | [Title screen](#title-screen-optional--canvas-1920--1080) |
+| *(optional)* Painted coin icons | [Coins](#coins-optional--canvas-1024--1024) |
 
 ## Workflow
 
@@ -191,6 +192,20 @@ just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
 `marbles`, `tea_tin`, `faceless_photo`, `rusty_key`, `powder_compact`, `lavender`, `tin_soldier`;
 furniture and keepsakes `shelf`, `candle`, `mirror`, `incense`, `rug`, `grandfather_clock`,
 `umbrella`, `teacup`, `blanket`, `wedding_photo`, `pocket_lantern` (from the old 2D version).
+
+## Coins (optional) – canvas 1024 × 1024
+
+The coin bar at the top and the change buttons at the register show a small picture of each coin:
+`assets/sprites/coins/<coin>.png` (96 × 96). The current ones are simple drawings made by
+`python3 tools/make_coin_icons.py`; painted versions replace them. Prepare with
+`python3 tools/prepare_sprite.py ~/Downloads/image.png product <coin> --out assets/sprites/coins/<coin>.png --colors 48`
+and deliver one commit per image, `Add <coin> coin icon [skip ci]`.
+
+| File id | Prompt |
+|---|---|
+| `button` | A single large old sewing button made of warm brown horn, four holes, a slightly raised rim, seen from the front. |
+| `candle` | A short stub of a cream wax candle with a few drips and a small warm flame. |
+| `spoon` | A small tarnished silver teaspoon with an ornate handle, lying diagonally. |
 
 ## Floor – canvas 1024 × 1024 (done)
 

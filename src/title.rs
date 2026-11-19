@@ -227,7 +227,7 @@ fn spawn_title(mut commands: Commands, asset_server: Res<AssetServer>, mut rng: 
 }
 
 /// Fades in from black, over everything including the menu.
-fn spawn_fade(commands: &mut Commands, secs: f32) {
+pub fn spawn_fade(commands: &mut Commands, secs: f32) {
     commands.spawn((
         FadeIn(0.0, secs),
         Node {

@@ -12,10 +12,12 @@ use bevy::ui::InteractionDisabled;
 use bevy::ui_widgets::{Activate, Button};
 
 use crate::data::{GameData, asset_exists};
-use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
+use crate::day_cycle::{NightClock, Phase, Progress};
 use crate::economy::{Coin, Drawer};
+use crate::ferry::BoughtTonight;
 use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
+use crate::harbor::Location;
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
@@ -58,6 +60,7 @@ impl Plugin for UiPlugin {
                 Update,
                 (
                     update_hud,
+                    update_coin_bar,
                     send_scroll_events,
                     update_log.run_if(resource_changed::<GameLog>),
                     refresh_static_fonts.run_if(resource_changed::<UiFont>),
@@ -75,6 +78,8 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<Drawer>)
                                 .or_else(resource_changed::<Keepsakes>)
                                 .or_else(resource_changed::<Progress>)
+                                .or_else(resource_changed::<BoughtTonight>)
+                                .or_else(resource_changed::<Location>)
                                 .or_else(resource_changed::<UiFont>),
                         ),
                     ),
@@ -95,7 +100,6 @@ impl Plugin for UiPlugin {
 /// Everything a button can trigger.
 #[derive(Message, Clone, Debug, PartialEq)]
 pub enum Action {
-    Order(String),
     ToolPlace(String),
     ToolStock(String),
     ToolRemove,
@@ -110,6 +114,9 @@ pub enum Action {
     KeepSecondPayment,
     RefuseSecondPayment,
     NextEvening,
+    /// Out through the shop door to the harbour, and back (evening).
+    GoToHarbor,
+    BackToShop,
     NewGame,
     Continue,
     Resume,
@@ -128,15 +135,14 @@ pub struct ActionButton(pub Action);
 #[derive(Component, Clone, Copy)]
 struct ButtonColor(Color);
 
-/// Fonts for the current language: Inter first, then the language's own
-/// script font (CJK, Thai, Arabic), then every other script font, so that
-/// any character – e.g. language names in the language menu – can be drawn.
 /// Small pictures for product and decor buttons: `sprites/products/<id>.png`
 /// and `sprites/decor/<id>.png`, where they exist.
 #[derive(Resource)]
 pub struct Icons {
     products: HashMap<String, Handle<Image>>,
     decor: HashMap<String, Handle<Image>>,
+    /// `sprites/coins/<coin>.png`, in the order of `Coin::ASCENDING`.
+    coins: Vec<Option<Handle<Image>>>,
 }
 
 impl Icons {
@@ -146,6 +152,11 @@ impl Icons {
 
     pub fn decor(&self, id: &str) -> Option<Handle<Image>> {
         self.decor.get(id).cloned()
+    }
+
+    pub fn coin(&self, coin: Coin) -> Option<Handle<Image>> {
+        let i = Coin::ASCENDING.iter().position(|c| *c == coin)?;
+        self.coins.get(i).cloned().flatten()
     }
 }
 
@@ -163,13 +174,24 @@ impl FromWorld for Icons {
                 })
                 .collect()
         };
+        let coins = Coin::ASCENDING
+            .iter()
+            .map(|c| {
+                let path = format!("sprites/coins/{}.png", c.id());
+                asset_exists(&path).then(|| assets.load(path))
+            })
+            .collect();
         Self {
             products: load("products", product_ids),
             decor: load("decor", decor_ids),
+            coins,
         }
     }
 }
 
+/// Fonts for the current language: Inter first, then the language's own
+/// script font (CJK, Thai, Arabic), then every other script font, so that
+/// any character – e.g. language names in the language menu – can be drawn.
 #[derive(Resource)]
 pub struct UiFont {
     pub regular: FontSource,
@@ -331,7 +353,7 @@ fn scroll_panel_to_top(
     }
 }
 
-fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
+fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>) {
     // Top bar
     commands.spawn((
         Node {
@@ -345,13 +367,20 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
             ..default()
         },
         BackgroundColor(BG_PANEL),
-        children![(
-            HudText,
-            StaticText { bold: true },
-            Text::new(""),
-            text_font(&font.bold, 15.0),
-            TextColor(TEXT)
-        )],
+        children![
+            (
+                HudText,
+                StaticText { bold: true },
+                Text::new(""),
+                text_font(&font.bold, 15.0),
+                TextColor(TEXT),
+                Node {
+                    flex_grow: 1.0,
+                    ..default()
+                },
+            ),
+            coin_bar(&font, &icons),
+        ],
     ));
 
     // Side panel: a scrolling body (rebuilt per phase) and a fixed footer for
@@ -451,7 +480,6 @@ fn update_hud(
     data: Res<GameData>,
     progress: Res<Progress>,
     clock: Res<NightClock>,
-    drawer: Res<Drawer>,
     mut hud: Single<&mut Text, With<HudText>>,
 ) {
     if *phase.get() == Phase::Menu {
@@ -470,11 +498,113 @@ fn update_hud(
             ("nights", &data.config.nights_in_demo),
             ("phase", &lang.t(phase.get().key())),
             ("time", &time),
-            ("drawer", &drawer.describe(&lang)),
-            ("total", &drawer.total()),
             ("reputation", &progress.reputation),
         ],
     );
+}
+
+/// Count of one coin in the coin bar.
+#[derive(Component)]
+struct CoinCount(Coin);
+
+/// Total value in the coin bar.
+#[derive(Component)]
+struct CoinTotal;
+
+#[derive(Component)]
+struct CoinBar;
+
+/// The cash drawer at a glance, top right: a picture and the count of each
+/// coin, then the total. Visible in every phase of the game.
+fn coin_bar(font: &UiFont, icons: &Icons) -> impl Bundle {
+    let coin = |c: Coin| {
+        (
+            Node {
+                align_items: AlignItems::Center,
+                column_gap: px(4),
+                ..default()
+            },
+            children![
+                (
+                    ImageNode::new(icons.coin(c).unwrap_or_default()),
+                    Node {
+                        width: px(24),
+                        height: px(24),
+                        ..default()
+                    },
+                ),
+                (
+                    CoinCount(c),
+                    StaticText { bold: true },
+                    Text::new("0"),
+                    text_font(&font.bold, 15.0),
+                    TextColor(TEXT),
+                ),
+            ],
+        )
+    };
+    (
+        CoinBar,
+        Node {
+            align_items: AlignItems::Center,
+            column_gap: px(14),
+            padding: UiRect::axes(px(12), px(3)),
+            border_radius: BorderRadius::all(px(14)),
+            ..default()
+        },
+        BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.05)),
+        children![
+            coin(Coin::Spoon),
+            coin(Coin::Candle),
+            coin(Coin::Button),
+            (
+                CoinTotal,
+                StaticText { bold: true },
+                Text::new(""),
+                text_font(&font.bold, 15.0),
+                TextColor(ACCENT),
+            ),
+        ],
+    )
+}
+
+/// Keeps the coin bar up to date; the total flashes green when money comes
+/// in and red when it goes out.
+fn update_coin_bar(
+    time: Res<Time<Real>>,
+    drawer: Res<Drawer>,
+    phase: Res<State<Phase>>,
+    mut bar: Single<&mut Visibility, With<CoinBar>>,
+    mut counts: Query<(&CoinCount, &mut Text), Without<CoinTotal>>,
+    mut total: Single<(&mut Text, &mut TextColor), With<CoinTotal>>,
+    mut last: Local<Option<u32>>,
+    mut flash: Local<(f32, bool)>,
+) {
+    **bar = if *phase.get() == Phase::Menu {
+        Visibility::Hidden
+    } else {
+        Visibility::Inherited
+    };
+    let now = drawer.total();
+    if drawer.is_changed() {
+        for (count, mut text) in &mut counts {
+            text.0 = drawer.get(count.0).to_string();
+        }
+        total.0.0 = format!("= {now}");
+        if let Some(before) = *last
+            && before != now
+        {
+            *flash = (1.0, now > before);
+        }
+        *last = Some(now);
+    }
+    flash.0 = (flash.0 - time.delta_secs() * 1.5).max(0.0);
+    let to = if flash.1 {
+        Color::srgb(0.55, 0.95, 0.6)
+    } else {
+        Color::srgb(1.0, 0.5, 0.45)
+    };
+    total.1.0 = ACCENT.mix(&to, flash.0);
 }
 
 /// The menu starts from a clean screen: no side panel, no old messages.
@@ -520,9 +650,47 @@ fn build_evening_panel(
     keepsakes: Res<Keepsakes>,
     progress: Res<Progress>,
     icons: Res<Icons>,
+    bought: Res<BoughtTonight>,
+    location: Res<Location>,
 ) {
     let night = progress.night;
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
+    let max_crates = data.crates_tonight(night);
+    let bought_units = bought.units(&data);
+
+    if *location == Location::Harbor {
+        ui.heading(&lang.t("harbor.title"));
+        ui.dim(&lang.t("harbor.intro"));
+        ui.section(&lang.f(
+            "evening.ferryman",
+            &[("count", &crates.0), ("max", &max_crates)],
+        ));
+        ui.dim(&lang.t("ferry.tip_controls"));
+        if !bought_units.is_empty() {
+            ui.text(&lang.f(
+                "evening.bought",
+                &[(
+                    "items",
+                    &count_list(&lang, &bought_units, |p| lang.product(p)),
+                )],
+            ));
+        }
+        ui.section(&lang.t("evening.shelve"));
+        let in_stock: Vec<String> = data
+            .products
+            .iter()
+            .flat_map(|p| std::iter::repeat_n(p.id.clone(), stock.count(&p.id) as usize))
+            .collect();
+        if in_stock.is_empty() {
+            ui.dim(&lang.t("evening.storeroom_empty"));
+        } else {
+            ui.text(&count_list(&lang, &in_stock, |p| lang.product(p)));
+        }
+        ui.spacer();
+        ui.primary(&lang.t("harbor.back"), Action::BackToShop);
+        return;
+    }
+
     ui.heading(&lang.t("evening.title"));
 
     if let Some(event) = data.event(night) {
@@ -545,30 +713,21 @@ fn build_evening_panel(
         }
     }
 
-    let max_crates = data.crates_tonight(night);
     ui.section(&lang.f(
         "evening.ferryman",
         &[("count", &crates.0), ("max", &max_crates)],
     ));
-    let row = ui.row();
-    let boat_full = crates.0 >= max_crates;
-    for p in data.products.iter().filter(|p| p.unlock_night <= night) {
-        let label = lang.f(
-            "evening.order_button",
-            &[
-                ("item", &lang.product(&p.id)),
-                ("size", &p.crate_size),
-                ("cost", &p.crate_cost),
-            ],
-        );
-        ui.icon_button_in(
-            row,
-            icons.product(&p.id),
-            &label,
-            Action::Order(p.id.clone()),
-            false,
-            !boat_full,
-        );
+    ui.dim(&lang.t("evening.ferry_hint"));
+    let root = ui.root();
+    ui.button_in(root, &lang.t("harbor.go"), Action::GoToHarbor, false, true);
+    if !bought_units.is_empty() {
+        ui.text(&lang.f(
+            "evening.bought",
+            &[(
+                "items",
+                &count_list(&lang, &bought_units, |p| lang.product(p)),
+            )],
+        ));
     }
 
     ui.section(&lang.t("evening.furnish"));
@@ -695,7 +854,14 @@ fn build_night_panel(
                 "night.coin_chip",
                 &[("coin", &c.coin.name(&lang)), ("tell", &lang.t(&c.tell))],
             );
-            ui.button_in(row, &label, Action::CheckCoin(i), false, !c.checked);
+            ui.icon_button_in(
+                row,
+                icons.coin(c.coin),
+                &label,
+                Action::CheckCoin(i),
+                false,
+                !c.checked,
+            );
         }
         if data.config.show_change_due {
             ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
@@ -718,7 +884,14 @@ fn build_night_panel(
                     ("left", &left),
                 ],
             );
-            ui.button_in(row, &label, Action::AddChange(coin), false, left > 0);
+            ui.icon_button_in(
+                row,
+                icons.coin(coin),
+                &label,
+                Action::AddChange(coin),
+                false,
+                left > 0,
+            );
         }
         let row = ui.row();
         ui.button_in(
@@ -804,97 +977,10 @@ fn build_morning_panel(
     parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
-    data: Res<GameData>,
-    report: Res<NightReport>,
-    progress: Res<Progress>,
 ) {
+    // The accounts are shown in the middle of the screen (`accounts.rs`).
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("morning.title"));
-    ui.text(&lang.f(
-        "morning.sales",
-        &[("sales", &report.sales), ("revenue", &report.revenue)],
-    ));
-    ui.text(&lang.f(
-        "morning.change",
-        &[
-            ("correct", &report.change_correct),
-            ("wrong", &report.change_wrong),
-        ],
-    ));
-    ui.text(&lang.f(
-        "morning.unhappy",
-        &[("unhappy", &report.unhappy), ("fled", &report.fled)],
-    ));
-    ui.text(&lang.f(
-        "morning.reputation",
-        &[
-            ("from", &report.reputation_start),
-            ("to", &progress.reputation),
-        ],
-    ));
-
-    if let Some(line) = &report.story_line {
-        ui.section(&lang.t("story.name"));
-        ui.dim(&lang.f("quote", &[("text", &lang.t(line))]));
-    }
-    if !report.keepsakes.is_empty() {
-        let names: Vec<String> = report.keepsakes.iter().map(|k| lang.decor(k)).collect();
-        ui.dim(&lang.f("morning.keepsake", &[("items", &lang.join(&names))]));
-    }
-    if report.honest + report.dishonest > 0 {
-        ui.text(&lang.f(
-            "morning.second_payments",
-            &[("refused", &report.honest), ("kept", &report.dishonest)],
-        ));
-    }
-    if report.counterfeits_caught > 0 {
-        ui.text(&lang.f(
-            "morning.counterfeits_spotted",
-            &[("count", &report.counterfeits_caught)],
-        ));
-    }
-    if !report.counterfeits_found.is_empty() {
-        ui.text(&lang.f(
-            "morning.counterfeits_found",
-            &[
-                ("coins", &report.counterfeits_found.describe(&lang)),
-                ("total", &report.counterfeits_found.total()),
-            ],
-        ));
-    }
-    if !report.knocked.is_empty() {
-        ui.text(&lang.f(
-            "morning.knocked",
-            &[(
-                "items",
-                &count_list(&lang, &report.knocked, |p| lang.product(p)),
-            )],
-        ));
-    }
-
-    if !report.redeemed.is_empty() {
-        ui.section(&lang.t("morning.redeemed"));
-        let names: Vec<String> = report.redeemed.iter().map(|g| lang.ghost(g)).collect();
-        ui.dim(&lang.join(&names));
-    }
-    if !report.faded.is_empty() {
-        ui.section(&lang.t("morning.faded"));
-        let lines: Vec<String> = report
-            .faded
-            .iter()
-            .map(|(id, n)| lang.f("count.entry", &[("count", n), ("item", &lang.product(id))]))
-            .collect();
-        ui.dim(&lang.join(&lines));
-    }
-
-    ui.spacer();
-    let last = progress.night >= data.config.nights_in_demo;
-    let label = if last {
-        "morning.to_end"
-    } else {
-        "morning.next"
-    };
-    ui.primary(&lang.t(label), Action::NextEvening);
 }
 
 fn build_demo_end_panel(
@@ -952,6 +1038,45 @@ pub fn text_font(font: &FontSource, size: f32) -> TextFont {
     }
 }
 
+/// Full-screen dimmed layer with a centred panel on top of the game
+/// (pause menu, ferryman's boat, accounts). Returns (layer, panel).
+pub(crate) fn overlay(commands: &mut Commands, dim: f32, width: f32) -> (Entity, Entity) {
+    let layer = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: px(0),
+                right: px(0),
+                top: px(0),
+                bottom: px(0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.02, 0.02, 0.05, dim)),
+            GlobalZIndex(100),
+        ))
+        .id();
+    let panel = commands
+        .spawn((
+            Node {
+                width: px(width),
+                max_height: percent(94),
+                padding: UiRect::all(px(24)),
+                flex_direction: FlexDirection::Column,
+                row_gap: px(10),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(8)),
+                ..default()
+            },
+            BackgroundColor(BG_PANEL),
+            BorderColor::all(Color::srgba(1.0, 1.0, 1.0, 0.1)),
+            ChildOf(layer),
+        ))
+        .id();
+    (layer, panel)
+}
+
 pub(crate) struct PanelBuilder<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
     root: Entity,
@@ -987,6 +1112,58 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
 
     pub(crate) fn root(&self) -> Entity {
         self.root
+    }
+
+    /// A plain layout node under `parent`.
+    pub(crate) fn node(&mut self, parent: Entity, node: Node) -> Entity {
+        self.commands.spawn((node, ChildOf(parent))).id()
+    }
+
+    /// A background colour for a node built here.
+    pub(crate) fn tint(&mut self, entity: Entity, color: Color) {
+        self.commands.entity(entity).insert(BackgroundColor(color));
+    }
+
+    /// A picture of any size under `parent`.
+    pub(crate) fn image_sized(&mut self, parent: Entity, image: Handle<Image>, size: Vec2) {
+        self.commands.spawn((
+            ImageNode::new(image),
+            Node {
+                width: px(size.x),
+                height: px(size.y),
+                flex_shrink: 0.0,
+                ..default()
+            },
+            Pickable::IGNORE,
+            ChildOf(parent),
+        ));
+    }
+
+    /// Text under `parent`, in a box of a fixed width (table cells).
+    pub(crate) fn cell(
+        &mut self,
+        parent: Entity,
+        text: &str,
+        width: f32,
+        justify: JustifyContent,
+        color: Color,
+    ) {
+        let cell = self.node(
+            parent,
+            Node {
+                width: px(width),
+                flex_shrink: 0.0,
+                justify_content: justify,
+                ..default()
+            },
+        );
+        self.add_text(cell, text, false, 13.0, color);
+    }
+
+    /// Lets `primary` buttons go into `footer` instead of the root.
+    pub(crate) fn with_footer(mut self, footer: Entity) -> Self {
+        self.footer = footer;
+        self
     }
 
     pub(crate) fn add_text(

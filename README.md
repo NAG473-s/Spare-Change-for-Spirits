@@ -37,6 +37,8 @@ SCFS_SAVE_DIR=/tmp/scfs-test cargo run
 ```
 
 During the first night a tips box explains each step (texts `tip.*` in the language catalogs).
+The coin bar at the top right shows the cash drawer in every phase; the clock on the shop wall
+shows the time of night.
 
 ## Windows build
 
@@ -56,9 +58,9 @@ release `.exe`, packages it together with `assets/` and uploads it as the artifa
 
 | Phase | What happens |
 |---|---|
-| **Evening** | Order crates from the ferryman (max. 4 per evening), pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. |
+| **Evening** | Step out through the shop door to the harbour, where the ferryman's boat waits: click a crate to buy it (max. 4 per evening), right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. |
 | **Night** | Ghosts come in, browse and queue at the counter. The ghost at the front whispers a hint – you hand over a product from the shelves. Guess right → it pays and you count out the change. |
-| **Morning** | Accounts: sales, change mistakes, ghosts that passed into the light, faded items. |
+| **Morning** | The accounts: a ledger of the cash drawer (dusk, ferryman, furniture, takings, counterfeits, profit or loss) and how the night went – visitors, sales, change, reputation, ghosts that passed into the light, faded items and what fades next. |
 
 If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost, it flees at the
 door. Served correctly **and** given exact change → the ghost passes into the light and your
@@ -96,6 +98,9 @@ src/
   ui.rs          top bar, side panel per phase, message log, buttons → actions
   menu.rs        main menu, pause menu, tips box
   title.rs       title screen behind the main menu (background, glow, dust, ghosts)
+  harbor.rs      the harbour behind the shop (quay, lighthouse, boats, mist) and walking there
+  ferry.rs       the ferryman's boat: crates to buy, tooltip, his arrival and departure
+  accounts.rs    the day's cash ledger and the morning accounts screen
   audio.rs       sound effects and music
   fx.rs          flickering lights, particles, the Cue message
   save.rs        saving, loading, new game
@@ -107,7 +112,7 @@ assets/
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md
-  sprites/       ghost sprites, product and furniture icons, floor and title screen images
+  sprites/       ghost sprites, product, furniture and coin icons, floor and title screen images
 ```
 
 Buttons carry an `Action`. A global observer forwards it as a message, and every plugin reads

@@ -1,14 +1,11 @@
-//! Stock and orders from the ferryman.
+//! Stock, and how many crates the ferryman has brought this evening.
 
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
 use crate::data::GameData;
-use crate::day_cycle::{Phase, Progress};
-use crate::economy::Drawer;
-use crate::i18n::Lang;
-use crate::ui::{Action, GameLog};
+use crate::day_cycle::Phase;
 
 pub struct InventoryPlugin;
 
@@ -19,8 +16,7 @@ impl Plugin for InventoryPlugin {
             // Reset for the next evening; a loaded save keeps its own count.
             .add_systems(OnEnter(Phase::Morning), |mut c: ResMut<CratesOrdered>| {
                 c.0 = 0
-            })
-            .add_systems(Update, handle_orders.run_if(in_state(Phase::Evening)));
+            });
     }
 }
 
@@ -49,6 +45,27 @@ impl Stock {
             .entry(id.to_string())
             .or_default()
             .extend(std::iter::repeat_n(0, n as usize));
+    }
+
+    /// Removes `n` units that arrived today (age 0), e.g. a crate given back
+    /// to the ferryman. Changes nothing if there are not that many.
+    pub fn remove_new(&mut self, id: &str, n: u32) -> bool {
+        let Some(units) = self.units.get_mut(id) else {
+            return false;
+        };
+        if units.iter().filter(|age| **age == 0).count() < n as usize {
+            return false;
+        }
+        let mut left = n;
+        units.retain(|age| {
+            if *age == 0 && left > 0 {
+                left -= 1;
+                false
+            } else {
+                true
+            }
+        });
+        true
     }
 
     /// Sells the oldest unit.
@@ -87,37 +104,16 @@ impl Stock {
 #[derive(Resource, Default)]
 pub struct CratesOrdered(pub u32);
 
-fn handle_orders(
-    mut actions: MessageReader<Action>,
-    data: Res<GameData>,
-    mut stock: ResMut<Stock>,
-    mut drawer: ResMut<Drawer>,
-    mut crates: ResMut<CratesOrdered>,
-    mut log: ResMut<GameLog>,
-    lang: Res<Lang>,
-    progress: Res<Progress>,
-) {
-    for action in actions.read() {
-        let Action::Order(id) = action else { continue };
-        let Some(product) = data.product(id) else {
-            continue;
-        };
-        if crates.0 >= data.crates_tonight(progress.night) {
-            log.push(lang.t("log.boat_full"));
-            continue;
-        }
-        if !drawer.pay(product.crate_cost) {
-            log.push(lang.f(
-                "log.crate_too_expensive",
-                &[("item", &lang.product(id)), ("cost", &product.crate_cost)],
-            ));
-            continue;
-        }
-        crates.0 += 1;
-        stock.add(id, product.crate_size);
-        log.push(lang.f(
-            "log.ferry_brings",
-            &[("count", &product.crate_size), ("item", &lang.product(id))],
-        ));
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_new_units_can_be_given_back() {
+        let mut stock = Stock::from_units(BTreeMap::from([("tea_tin".to_string(), vec![2, 0, 0])]));
+        assert!(!stock.remove_new("tea_tin", 3));
+        assert_eq!(stock.count("tea_tin"), 3);
+        assert!(stock.remove_new("tea_tin", 2));
+        assert_eq!(stock.units()["tea_tin"], vec![2]);
     }
 }

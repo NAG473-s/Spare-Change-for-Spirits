@@ -11,7 +11,7 @@ use crate::register::Register;
 use crate::save::{GameState, Settings, read_save, write_save};
 use crate::shop::ShopLayout;
 use crate::title::{LOGO, TitleLogo};
-use crate::ui::{Action, BG_PANEL, GameLog, PanelBuilder, TEXT_DIM, UiFont};
+use crate::ui::{Action, GameLog, PanelBuilder, TEXT_DIM, UiFont, overlay};
 
 pub struct MenuPlugin;
 
@@ -61,44 +61,6 @@ struct PauseRoot;
 
 #[derive(Component)]
 struct TipBox;
-
-/// Full-screen dimmed layer with a centred panel on top of everything.
-/// Returns (layer, panel).
-fn overlay(commands: &mut Commands, dim: f32, width: f32) -> (Entity, Entity) {
-    let layer = commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: px(0),
-                right: px(0),
-                top: px(0),
-                bottom: px(0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(Color::srgba(0.02, 0.02, 0.05, dim)),
-            GlobalZIndex(100),
-        ))
-        .id();
-    let panel = commands
-        .spawn((
-            Node {
-                width: px(width),
-                padding: UiRect::all(px(24)),
-                flex_direction: FlexDirection::Column,
-                row_gap: px(10),
-                border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(8)),
-                ..default()
-            },
-            BackgroundColor(BG_PANEL),
-            BorderColor::all(Color::srgba(1.0, 1.0, 1.0, 0.1)),
-            ChildOf(layer),
-        ))
-        .id();
-    (layer, panel)
-}
 
 /// Main menu on the title screen: the logo with a panel below it, on the
 /// left side of the screen. Returns (layer, panel).

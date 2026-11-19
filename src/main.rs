@@ -9,12 +9,15 @@
 // Bevy systems take many parameters and complex queries by design.
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+mod accounts;
 mod audio;
 mod data;
 mod day_cycle;
 mod economy;
+mod ferry;
 mod fx;
 mod ghosts;
+mod harbor;
 mod i18n;
 mod inventory;
 mod menu;
@@ -74,6 +77,9 @@ fn main() {
             audio::SoundPlugin,
             scene::ScenePlugin,
             title::TitlePlugin,
+            ferry::FerryPlugin,
+            harbor::HarborPlugin,
+            accounts::AccountsPlugin,
         ))
         .run();
 }
