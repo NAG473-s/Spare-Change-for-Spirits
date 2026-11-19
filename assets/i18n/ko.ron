@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "강에서 단추 하나를 건져 올렸어.",
+    "intro.story.2": "자네 가게에 유령 하나가 기다리고 있더군.",
+    "intro.story.3": "“어머니가 달아 주신 거예요.” 유령이 속삭였지.",
     "menu.version": "데모 · 버전 {version}",
     "menu.version_full": "버전 {version}",
     "menu.tagline": "자정부터 새벽까지만 문을 여는 작은 가게.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "삭제하고 새 게임 시작",
     "menu.language": "언어: {language}",
     "menu.choose_language": "언어를 선택하세요",
+    "menu.language_auto": "자동",
     "menu.back": "뒤로",
     "menu.settings": "설정",
     "hud.menu": "메뉴",
@@ -31,6 +35,7 @@
     "settings.title": "설정",
     "settings.music": "음악: {percent}%",
     "settings.effects": "효과음: {percent}%",
+    "settings.narration": "내레이션 음량: {percent}%",
     "settings.ui_size": "인터페이스 크기: {percent}%",
     "settings.fullscreen_on": "전체 화면: 켬",
     "settings.fullscreen_off": "전체 화면: 끔",
