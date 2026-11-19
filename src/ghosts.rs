@@ -9,7 +9,7 @@ use bevy::prelude::*;
 
 use crate::data::{GameData, GhostDef, rgb};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
-use crate::fx::Cue;
+use crate::fx::{Cue, Voice};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
@@ -45,6 +45,7 @@ impl Plugin for GhostPlugin {
                     spawn_ghosts,
                     spawn_story_ghost,
                     ghost_ai,
+                    ghost_murmurs,
                     move_ghosts,
                     fade_ghosts,
                     animate_ghosts,
@@ -210,6 +211,49 @@ fn spawn_ghosts(
         visit,
     );
     cues.write(Cue::GhostEnters);
+    let voice = data.ghosts[def_idx].voice;
+    if unmet.is_some() {
+        cues.write(Cue::GhostVoice(Voice::Flee, voice));
+    } else if rng.chance(ENTER_VOICE_CHANCE) {
+        cues.write(Cue::GhostVoice(Voice::Whoo, voice));
+    }
+}
+
+/// Chance that a ghost says "wooo" as it comes in.
+const ENTER_VOICE_CHANCE: f32 = 0.5;
+/// Seconds between two murmurs from the ghosts browsing the shelves.
+const MURMUR_SECS: (f32, f32) = (7.0, 15.0);
+/// Share of murmurs that are a "wooo" instead of a hum.
+const MURMUR_WHOO: f32 = 0.3;
+
+/// Now and then one of the browsing ghosts hums or sighs to itself.
+fn ghost_murmurs(
+    time: Res<Time>,
+    data: Res<GameData>,
+    ghosts: Query<&Ghost>,
+    mut rng: ResMut<Rng>,
+    mut cues: MessageWriter<Cue>,
+    mut wait: Local<f32>,
+) {
+    *wait -= time.delta_secs();
+    if *wait > 0.0 {
+        return;
+    }
+    *wait = rng.range(MURMUR_SECS.0, MURMUR_SECS.1);
+    let browsing: Vec<&Ghost> = ghosts
+        .iter()
+        .filter(|g| g.state == GhostState::Browsing)
+        .collect();
+    if browsing.is_empty() {
+        return;
+    }
+    let ghost = browsing[rng.index(browsing.len())];
+    let kind = if rng.chance(MURMUR_WHOO) {
+        Voice::Whoo
+    } else {
+        Voice::Hum
+    };
+    cues.write(Cue::GhostVoice(kind, data.ghosts[ghost.def].voice));
 }
 
 /// Everything needed to draw a new ghost.
@@ -434,6 +478,10 @@ fn ghost_ai(
             }
             GhostState::ToCounter if g.arrived() => {
                 g.state = GhostState::Waiting;
+                // At the front of the line it whispers what it is looking for.
+                if queue.front() == Some(entity) {
+                    cues.write(Cue::GhostVoice(Voice::Whisper, data.ghosts[g.def].voice));
+                }
             }
             GhostState::Waiting => {
                 // Assist setting: patient ghosts never give up.

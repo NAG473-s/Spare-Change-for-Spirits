@@ -35,6 +35,8 @@ update this file in the same change.
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.
+- Sounds only add atmosphere: whatever a sound tells (a ghost whispering its wish, something
+  falling off a shelf) is also shown on screen.
 - Every new camera or screen movement (shake, zoom, sway) gets a setting to turn it off, or
   *Camera Comfort* has to be withdrawn.
 - Everything must stay possible with the mouse alone.

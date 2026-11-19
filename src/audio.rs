@@ -5,11 +5,14 @@ use bevy::audio::Volume;
 use bevy::prelude::*;
 
 use crate::day_cycle::Phase;
-use crate::fx::Cue;
+use crate::fx::{Cue, Voice};
 use crate::rng::Rng;
 use crate::save::Settings;
 
 const MUSIC_FADE_SECS: f32 = 2.0;
+/// Seconds between two ghost "wooos" or hums, so several ghosts never
+/// turn into a choir. Whispers and startled sounds always play.
+const VOICE_GAP_SECS: f32 = 2.5;
 
 pub struct SoundPlugin;
 
@@ -30,6 +33,10 @@ pub struct Sounds {
     crash: Handle<AudioSource>,
     click: Handle<AudioSource>,
     sigh: Handle<AudioSource>,
+    ghost_whoo: [Handle<AudioSource>; 3],
+    ghost_whisper: Handle<AudioSource>,
+    ghost_hum: Handle<AudioSource>,
+    ghost_flee: Handle<AudioSource>,
     evening_music: Handle<AudioSource>,
     night_ambience: Handle<AudioSource>,
 }
@@ -45,6 +52,10 @@ impl FromWorld for Sounds {
             crash: assets.load("sounds/crash.ogg"),
             click: assets.load("sounds/click.ogg"),
             sigh: assets.load("sounds/sigh.ogg"),
+            ghost_whoo: [1, 2, 3].map(|n| assets.load(format!("sounds/ghost_whoo_{n}.ogg"))),
+            ghost_whisper: assets.load("sounds/ghost_whisper.ogg"),
+            ghost_hum: assets.load("sounds/ghost_hum.ogg"),
+            ghost_flee: assets.load("sounds/ghost_flee.ogg"),
             evening_music: assets.load("sounds/evening_music.ogg"),
             night_ambience: assets.load("sounds/night_ambience.ogg"),
         }
@@ -56,10 +67,35 @@ fn play_cues(
     mut cues: MessageReader<Cue>,
     sounds: Res<Sounds>,
     settings: Res<Settings>,
+    time: Res<Time<Real>>,
     mut rng: ResMut<Rng>,
+    mut last_voice: Local<Option<f32>>,
 ) {
     for cue in cues.read() {
         if !settings.sound {
+            continue;
+        }
+        if let Cue::GhostVoice(voice, pitch) = *cue {
+            let now = time.elapsed_secs();
+            let ambient = matches!(voice, Voice::Whoo | Voice::Hum);
+            if ambient && last_voice.is_some_and(|t| now - t < VOICE_GAP_SECS) {
+                continue;
+            }
+            *last_voice = Some(now);
+            let (sound, volume) = match voice {
+                Voice::Whoo => (&sounds.ghost_whoo[rng.index(3)], 0.45),
+                Voice::Whisper => (&sounds.ghost_whisper, 0.55),
+                Voice::Hum => (&sounds.ghost_hum, 0.4),
+                Voice::Flee => (&sounds.ghost_flee, 0.45),
+            };
+            commands.spawn((
+                AudioPlayer::new(sound.clone()),
+                PlaybackSettings {
+                    volume: Volume::Linear(volume * settings.effects),
+                    speed: pitch * rng.range(0.96, 1.04),
+                    ..PlaybackSettings::DESPAWN
+                },
+            ));
             continue;
         }
         let (sound, volume, vary) = match cue {
@@ -70,6 +106,7 @@ fn play_cues(
             Cue::Disappointed => (&sounds.sigh, 0.6, false),
             Cue::Click => (&sounds.click, 0.5, true),
             Cue::Midnight => (&sounds.midnight, 0.8, false),
+            Cue::GhostVoice(..) => continue,
         };
         // A little pitch variation keeps repeated sounds from feeling canned.
         let speed = if vary { rng.range(0.93, 1.07) } else { 1.0 };

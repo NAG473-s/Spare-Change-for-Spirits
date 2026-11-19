@@ -141,6 +141,86 @@ def sigh():
     return normalise(reverb(out, 0.3), 0.3)
 
 
+def bandpass_fft(x, low, high):
+    """Soft band-pass in the frequency domain."""
+    spec = np.fft.rfft(x)
+    f = np.fft.rfftfreq(len(x), 1 / SR)
+    spec /= np.sqrt(1 + (f / high) ** 4) * np.sqrt(1 + (low / np.maximum(f, 1)) ** 4)
+    return np.fft.irfft(spec, n=len(x))
+
+
+def ghost_voice(contour, seconds, base=midi_hz(62), breath=0.25, seed=1):
+    """A soft, hollow "oooo": a few low partials with slow vibrato that
+    follow a pitch contour (semitones over time), wrapped in breath."""
+    t = t_axis(seconds)
+    semis = np.interp(t / seconds, np.linspace(0, 1, len(contour)), contour)
+    vibrato = 0.25 * np.sin(2 * np.pi * 4.5 * t) * np.minimum(1, t / 0.4)
+    f = base * 2 ** ((semis + vibrato) / 12)
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    # Hollow "oo" vowel: strong fundamental, weak odd partials.
+    voice = np.sin(phase) + 0.18 * np.sin(3 * phase) + 0.05 * np.sin(5 * phase)
+    # Own random generator, so these sounds never shift the others.
+    air = bandpass_fft(np.random.default_rng(seed).standard_normal(len(t)), 300, 1600)
+    air = normalise(air, 1.0) * breath
+    env = np.minimum(1, t / (0.35 * seconds)) * np.minimum(1, (seconds - t) / (0.45 * seconds))
+    env = np.clip(env, 0, 1) ** 1.5
+    return (voice + air) * env
+
+
+def ghost_whoo_1():
+    """Rising, then falling "wooooo"."""
+    return normalise(reverb(ghost_voice([0, 4, 7, 5, 0, -3], 1.6), 0.45), 0.32)
+
+
+def ghost_whoo_2():
+    """A long, sinking "ooooh"."""
+    return normalise(reverb(ghost_voice([5, 4, 2, 0, -4], 1.4, seed=2), 0.45), 0.3)
+
+
+def ghost_whoo_3():
+    """Two short hoots, like a question: "oo-ooo?"."""
+    out = np.zeros(int(1.7 * SR))
+    place(out, ghost_voice([0, 1], 0.55, breath=0.3, seed=3), 0.0)
+    place(out, ghost_voice([-2, 0, 5], 0.8, breath=0.3, seed=4), 0.6)
+    return normalise(reverb(out, 0.45), 0.3)
+
+
+def ghost_whisper():
+    """Breathy, unvoiced syllables – a wish whispered across the counter."""
+    seconds = 1.3
+    t = t_axis(seconds)
+    g = np.random.default_rng(5)
+    hiss = bandpass_fft(g.standard_normal(len(t)), 1200, 5200)
+    hiss = normalise(hiss, 1.0)
+    env = np.zeros_like(t)
+    at = 0.05
+    while at < seconds - 0.15:
+        length = g.uniform(0.09, 0.2)
+        level = g.uniform(0.5, 1.0)
+        k = (t - at) / length
+        env += level * np.where((k >= 0) & (k <= 1), np.sin(np.pi * np.clip(k, 0, 1)) ** 2, 0)
+        at += length + g.uniform(0.02, 0.08)
+    # A faint, low "voice" under the hiss keeps it from sounding like steam.
+    murmur = 0.12 * np.sin(2 * np.pi * midi_hz(55) * t) * env
+    return normalise(reverb(hiss * env + murmur, 0.35), 0.34)
+
+
+def ghost_hum():
+    """A very soft, slowly beating hum from somewhere between the shelves."""
+    seconds = 2.2
+    t = t_axis(seconds)
+    f = midi_hz(57)
+    hum = np.sin(2 * np.pi * f * t) + 0.8 * np.sin(2 * np.pi * (f * 1.006) * t)
+    hum += 0.15 * np.sin(2 * np.pi * 2 * f * t)
+    env = np.sin(np.pi * t / seconds) ** 2
+    return normalise(reverb(hum * env, 0.4), 0.18)
+
+
+def ghost_flee():
+    """A startled "ooh?" that glides down and fades away."""
+    return normalise(reverb(ghost_voice([7, 8, 3, -5, -12], 1.2, breath=0.5, seed=6), 0.5), 0.3)
+
+
 # A small waltz in A minor for the music box: (midi, beats) per bar.
 MELODY = [
     [(76, 1.5), (74, 0.5), (72, 1)], [(72, 2), (69, 1)], [(67, 1), (72, 1), (76, 1)], [(74, 3)],
@@ -208,6 +288,12 @@ SOUNDS = {
     "crash": crash,
     "click": click,
     "sigh": sigh,
+    "ghost_whoo_1": ghost_whoo_1,
+    "ghost_whoo_2": ghost_whoo_2,
+    "ghost_whoo_3": ghost_whoo_3,
+    "ghost_whisper": ghost_whisper,
+    "ghost_hum": ghost_hum,
+    "ghost_flee": ghost_flee,
     "evening_music": evening_music,
     "night_ambience": night_ambience,
 }

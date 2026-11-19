@@ -76,6 +76,10 @@ pub struct PropDef {
     pub light: Option<(f32, f32)>,
 }
 
+fn one_f32() -> f32 {
+    1.0
+}
+
 fn one() -> u32 {
     1
 }
@@ -172,6 +176,9 @@ pub struct GhostDef {
     pub pay_multiplier: f32,
     /// Seconds the ghost waits at the counter.
     pub patience_secs: f32,
+    /// Pitch of its sounds (1 = normal, higher = a smaller, brighter voice).
+    #[serde(default = "one_f32")]
+    pub voice: f32,
     #[serde(default)]
     pub needs: Vec<Need>,
     /// Product ids this ghost may ask for.

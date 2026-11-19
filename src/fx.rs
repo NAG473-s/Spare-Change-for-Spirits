@@ -24,6 +24,21 @@ pub enum Cue {
     Click,
     /// The shop clock strikes midnight.
     Midnight,
+    /// A ghost makes a sound, at its own voice pitch.
+    GhostVoice(Voice, f32),
+}
+
+/// The ghosts' soft, slightly eerie sounds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Voice {
+    /// "Wooo" as it drifts in.
+    Whoo,
+    /// Whispering its wish at the counter.
+    Whisper,
+    /// Humming to itself between the shelves.
+    Hum,
+    /// A startled "ooh" when it turns away at the door.
+    Flee,
 }
 
 pub struct FxPlugin;
