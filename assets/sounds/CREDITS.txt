@@ -1,0 +1,49 @@
+Spare Change for Spirits
+Opening music and narration
+
+The story is written for this game. Its translations are in assets/i18n.
+The four-bar score is composed and synthesised in tools/make_sounds.py.
+The distributed voice files are finished readings of the three lines.
+Synthesis took place during production. The game plays local Ogg audio.
+
+Speech sources
+
+German uses Thorsten Müller’s German voice recordings, released under CC0.
+https://github.com/thorstenMueller/Thorsten-Voice
+
+English uses the public-domain LJ Speech Dataset, recorded by Linda Johnson
+and prepared by Keith Ito.
+https://keithito.com/LJ-Speech-Dataset/
+
+Czech, Dutch, Polish, Brazilian and European Portuguese, Romanian, Spanish
+from Spain, Turkish and both Mandarin readings use voices from the Open Home
+Foundation voice collection. The source recordings are released under CC0.
+https://github.com/OHF-Voice/voice-datasets
+
+The Latin American Spanish reading uses the Mexican Spanish recordings
+published by rmcpantoja under the Unlicense.
+https://huggingface.co/datasets/rmcpantoja/Ald_Mexican_Spanish_speech_dataset
+https://unlicense.org/
+
+Danish, Norwegian and Swedish use recordings distributed by the National
+Library of Norway under CC0. Finnish uses the Finnish single-speaker
+recordings distributed by Bryan Park under CC0.
+https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-21/
+https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-15/
+https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-17/
+https://www.kaggle.com/bryanpark/finnish-single-speaker-speech-dataset
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Arabic, Bulgarian, French, Greek, Hungarian, Indonesian, Italian, Japanese,
+Korean, Malay, Russian, Ukrainian and Vietnamese use preset voices from
+Supertone Inc. Their speech-generation weights are licensed under Open
+RAIL-M. The Malay reading uses the language-agnostic mode.
+https://huggingface.co/Supertone/supertonic-3/blob/main/LICENSE
+
+The Thai reading uses PyThaiNLP’s offline Thai voice, released under
+the Apache License 2.0.
+https://huggingface.co/pythainlp/MakHamTTS
+https://github.com/PyThaiNLP/PyThaiTTS
+
+The speech rendering tool sherpa-onnx is licensed under Apache 2.0.
+https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE
