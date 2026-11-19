@@ -9,7 +9,11 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-There are no open model orders. The shop's three junk piles, waiting bench, door lantern,
+- Five keepsakes for the story of Ida, the lighthouse keeper, and the finale:
+  `logbook`, `ship_bell`, `sea_chart`, `lifebuoy` and `apron` (see *Keepsakes* below,
+  `assets/models/decor/<id>.glb`). Until they exist the game shows coloured boxes.
+
+Everything else is delivered. The shop's three junk piles, waiting bench, door lantern,
 herb sachets, ferry contract and wooden way board are in `assets/models/shop/`.
 The painted return post for the quay and market is in `assets/models/harbor/signpost.glb`.
 The seven market awnings carry embroidered trade emblems, and the quay has a storm lantern.
@@ -79,7 +83,9 @@ origin, front facing -Y, Z up, 1 unit = 1 metre.
 | `stove` | 0.7 × 1.1 × 0.6 | A little round cast-iron stove on four feet with a short chimney pipe; the small door glows warm orange (emissive) at about 0.5 m height. |
 | `vanity` | 0.9 × 1.5 × 0.5 | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
 
-## Keepsakes (gifts from Edwin) – `assets/models/decor/<id>.glb`
+## Keepsakes (gifts from the story ghosts) – `assets/models/decor/<id>.glb`
+
+Placed like furniture on one floor cell; origin at the bottom centre, front towards −Y.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
@@ -88,6 +94,11 @@ origin, front facing -Y, Z up, 1 unit = 1 metre.
 | `blanket` | 0.8 × 0.9 × 0.8 | A small cosy armchair in faded green velvet with a hand-knitted rust-and-cream blanket draped over the backrest. |
 | `wedding_photo` | 0.5 × 0.9 × 0.4 | A small wooden easel holding an old sepia photograph in a gilded frame (the photo shows two blurry figures dancing, no faces needed). |
 | `pocket_lantern` | 0.4 × 1.2 × 0.4 | A short wooden post with a small brass lantern hanging from a hook at the top; warm emissive glass panes. |
+| `logbook` | 0.5 × 1.0 × 0.4 | A small wooden lectern holding a thick open lighthouse logbook with a cracked leather cover; a pencil on a string, a few loose pages sticking out. |
+| `ship_bell` | 0.5 × 1.3 × 0.4 | A polished brass ship's bell hanging from a small wooden gallows on a square foot; a short braided rope hangs from the clapper. The bell is part of the model and does not move. |
+| `sea_chart` | 0.7 × 1.2 × 0.3 | A wooden easel holding a framed, yellowed sea chart of a small harbour with a lighthouse; a tiny ghost doodle in one corner. |
+| `lifebuoy` | 0.6 × 1.1 × 0.3 | A red-and-white striped ring lifebuoy hanging on a weathered wooden post, a coil of rope looped over the top. |
+| `apron` | 0.5 × 1.6 × 0.5 | A slim wooden coat stand with a faded lavender shop apron hanging on it; the apron has a pocket with a small sprig of dried lavender peeking out. |
 
 ## Products – `assets/models/products/<id>.glb`
 
@@ -182,7 +193,7 @@ glowing glass and windows are just emissive materials.
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
 | `harbour_hut` | 2.6 × 2.9 × 2.1 | The harbour master's plank hut with a shingled roof, left-hand door, amber window and a lantern 1.75 m up. Hang a ship's wheel over the entrance, mount a striped tide staff by the door, and set a flower box below the window. Keep the wall rope and lifebuoy. |
-| `lighthouse` | 1.2 × 4.3 × 1.2 | A small, stout lighthouse on a round stone base: tapering tower with white and dusty-red bands, a little iron gallery, a glass lamp room **centred at 3.6 m height** glowing pale gold (emissive), a dark conical roof. |
+| `lighthouse` | 1.2 × 4.3 × 1.2 | A small, stout lighthouse on a round stone base: tapering tower with white and dusty-red bands, a little iron gallery, a glass lamp room **centred at 3.6 m height** glowing pale gold (emissive), a dark conical roof. The game dims the emissive glass while the story keeps the lighthouse dark. |
 | `lamp_post` | 0.4 × 2.7 × 0.4 | An old cast-iron harbour lamp post with a square glass lantern on top, the glass **centred at 2.45 m** and glowing warm amber (emissive). |
 | `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
 | `barrel` | 0.6 × 0.72 × 0.6 | An old wooden barrel with iron hoops. |

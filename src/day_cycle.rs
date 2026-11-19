@@ -31,7 +31,9 @@ impl Phase {
             Phase::Evening => "phase.evening",
             Phase::Night => "phase.night",
             Phase::Morning => "phase.morning",
-            Phase::DemoEnd => "phase.demo_end",
+            // The full game reaches the end of the season instead.
+            Phase::DemoEnd if cfg!(feature = "demo") => "phase.demo_end",
+            Phase::DemoEnd => "end.title_full",
         }
     }
 }
@@ -44,8 +46,11 @@ impl Plugin for DayCyclePlugin {
             .init_resource::<NightClock>()
             .init_resource::<NightReport>()
             .init_resource::<NightBonus>()
-            .add_systems(OnEnter(Phase::Night), start_night)
-            .add_systems(OnEnter(Phase::Morning), start_morning)
+            .add_systems(
+                OnEnter(Phase::Night),
+                (start_night, deliver_parcels).chain(),
+            )
+            .add_systems(OnEnter(Phase::Morning), (start_morning, count_story_tries))
             .add_systems(
                 Update,
                 (
@@ -54,18 +59,109 @@ impl Plugin for DayCyclePlugin {
                         .run_if(in_state(Phase::Night)),
                     next_evening.run_if(in_state(Phase::Morning)),
                     end_day.run_if(in_state(Phase::Day)),
+                    keep_playing.run_if(in_state(Phase::DemoEnd)),
                 ),
             );
     }
 }
 
 /// Running game state across all nights.
-#[derive(Resource)]
+#[derive(Resource, Clone, Debug, PartialEq)]
 pub struct Progress {
     pub night: u32,
     pub reputation: i32,
-    /// Index of the next story chapter; equal to the chapter count when finished.
-    pub story_chapter: usize,
+    /// Next chapter of each story in `story.ron` (same order); equal to its
+    /// chapter count once that story is finished.
+    pub story: Vec<usize>,
+    /// Nights the current chapter of each story was tried without success.
+    pub story_tries: Vec<u32>,
+    /// Stories whose ghost has a parcel from the ferryman waiting.
+    pub parcels: Vec<usize>,
+    /// The season is over and the shop stays open anyway.
+    pub free_play: bool,
+}
+
+/// From this many failed nights on, a story ghost names the ware it needs.
+pub const PLAIN_WISH_AFTER: u32 = 2;
+
+impl Progress {
+    pub fn new(reputation: i32) -> Self {
+        Self {
+            night: 1,
+            reputation,
+            story: Vec::new(),
+            story_tries: Vec::new(),
+            parcels: Vec::new(),
+            free_play: false,
+        }
+    }
+
+    /// The next chapter of story `i`.
+    pub fn chapter(&self, i: usize) -> usize {
+        self.story.get(i).copied().unwrap_or(0)
+    }
+
+    /// Nights the current chapter of story `i` has failed.
+    pub fn tries(&self, i: usize) -> u32 {
+        self.story_tries.get(i).copied().unwrap_or(0)
+    }
+
+    /// Does the ghost of story `i` come tonight?
+    pub fn story_due(&self, data: &GameData, i: usize) -> bool {
+        data.story_due(i, self.night, self.chapter(i))
+    }
+
+    /// Does the ghost of story `i` say plainly what it needs?
+    pub fn asks_plainly(&self, i: usize) -> bool {
+        self.tries(i) >= PLAIN_WISH_AFTER
+    }
+
+    /// Story `i` moves on to its next chapter.
+    pub fn finish_chapter(&mut self, i: usize) {
+        if self.story.len() <= i {
+            self.story.resize(i + 1, 0);
+        }
+        if self.story_tries.len() <= i {
+            self.story_tries.resize(i + 1, 0);
+        }
+        self.story[i] += 1;
+        self.story_tries[i] = 0;
+        self.parcels.retain(|p| *p != i);
+    }
+
+    /// The current chapter of story `i` failed tonight.
+    pub fn fail_chapter(&mut self, i: usize) {
+        if self.story_tries.len() <= i {
+            self.story_tries.resize(i + 1, 0);
+        }
+        self.story_tries[i] += 1;
+    }
+
+    /// Is the finale behind us? Without a finale story the season ends at
+    /// the last night.
+    pub fn finale_done(&self, data: &GameData) -> bool {
+        let mut finales = data.stories.iter().enumerate().filter(|(_, s)| s.finale);
+        let mut any = false;
+        let done = finales.all(|(i, s)| {
+            any = true;
+            self.chapter(i) >= s.chapters.len()
+        });
+        if any {
+            done
+        } else {
+            self.night >= data.config.last_night
+        }
+    }
+
+    /// Does the season end with this night? The demo stops at its last
+    /// night; the full game lasts until the finale, at least `last_night`
+    /// nights, unless the player keeps the shop open afterwards.
+    pub fn season_over(&self, data: &GameData) -> bool {
+        if cfg!(feature = "demo") {
+            return self.night >= data.config.final_night();
+        }
+        !self.free_play && self.night >= data.config.last_night && self.finale_done(data)
+    }
 }
 
 #[derive(Resource, Default)]
@@ -110,10 +206,12 @@ pub struct NightReport {
     /// Double payments refused / kept.
     pub honest: u32,
     pub dishonest: u32,
-    /// The story ghost has come tonight.
-    pub story_arrived: bool,
-    /// Catalog key of what the story ghost said tonight when served.
-    pub story_line: Option<String>,
+    /// Stories (index in `story.ron`) whose ghost has come tonight.
+    pub story_arrived: Vec<usize>,
+    /// Stories whose chapter was finished tonight.
+    pub story_done: Vec<usize>,
+    /// (ghost id, catalog key) of what story ghosts said tonight when served.
+    pub story_lines: Vec<(String, String)>,
     /// Keepsakes received tonight (decor ids).
     pub keepsakes: Vec<String>,
     /// Ghosts that came in (or tried to) tonight.
@@ -198,6 +296,51 @@ fn close_at_dawn(
     }
 }
 
+/// The ferryman makes sure no story gets stuck: a story ghost whose wish is
+/// not in stock when the shop opens – or who already left empty-handed
+/// once – gets a parcel holding exactly what it needs.
+pub fn deliver_parcels(
+    data: Res<GameData>,
+    stock: Res<Stock>,
+    mut progress: ResMut<Progress>,
+    mut log: ResMut<GameLog>,
+    lang: Res<Lang>,
+) {
+    for (i, story) in data.stories.iter().enumerate() {
+        if !progress.story_due(&data, i) || progress.parcels.contains(&i) {
+            continue;
+        }
+        let wish = &story.chapters[progress.chapter(i)].wish;
+        if stock.count(wish) == 0 || progress.tries(i) > 0 {
+            progress.parcels.push(i);
+            log.push(lang.f("log.parcel", &[("name", &lang.ghost(&story.ghost))]));
+        }
+    }
+}
+
+/// After the season: the shop stays open, night after night.
+fn keep_playing(
+    mut actions: MessageReader<Action>,
+    mut progress: ResMut<Progress>,
+    mut next: ResMut<NextState<Phase>>,
+) {
+    if actions.read().any(|a| *a == Action::KeepPlaying) {
+        progress.free_play = true;
+        progress.night += 1;
+        next.set(Phase::Day);
+    }
+}
+
+/// A story ghost that came tonight and did not get its wish tries again
+/// tomorrow – a little more plainly each time.
+pub fn count_story_tries(mut progress: ResMut<Progress>, report: Res<NightReport>) {
+    for &i in &report.story_arrived {
+        if !report.story_done.contains(&i) {
+            progress.fail_chapter(i);
+        }
+    }
+}
+
 pub fn start_morning(
     data: Res<GameData>,
     mut stock: ResMut<Stock>,
@@ -232,7 +375,7 @@ fn next_evening(
     if !actions.read().any(|a| *a == Action::NextEvening) {
         return;
     }
-    if progress.night >= data.config.final_night() {
+    if progress.season_over(&data) {
         next.set(Phase::DemoEnd);
     } else {
         progress.night += 1;
@@ -275,5 +418,75 @@ mod tests {
                 spoons: 0
             }
         );
+    }
+    /// Plays the stories with one chapter per night, the given nights failing.
+    fn play(data: &GameData, failures: &[u32]) -> Progress {
+        let mut progress = Progress::new(0);
+        loop {
+            for i in 0..data.stories.len() {
+                if progress.story_due(data, i) {
+                    if failures.contains(&progress.night) {
+                        progress.fail_chapter(i);
+                    } else {
+                        progress.finish_chapter(i);
+                    }
+                }
+            }
+            if progress.season_over(data) {
+                return progress;
+            }
+            progress.night += 1;
+            assert!(progress.night < 100, "the season never ends");
+        }
+    }
+
+    #[test]
+    fn the_season_lasts_until_the_finale() {
+        let data = GameData::load();
+        let smooth = play(&data, &[]);
+        assert_eq!(
+            smooth.night, data.config.last_night,
+            "every chapter on time"
+        );
+        // Two failed nights push the finale back by two nights.
+        let late = play(&data, &[7, 8]);
+        assert_eq!(late.night, data.config.last_night + 2);
+        assert!(late.finale_done(&data));
+        // Keeping the shop open after the finale: the season stays over.
+        let mut free = late.clone();
+        free.free_play = true;
+        assert!(!free.season_over(&data));
+    }
+
+    #[test]
+    fn a_failed_chapter_is_named_plainly_and_cleared_when_done() {
+        let mut progress = Progress::new(0);
+        assert!(!progress.asks_plainly(0));
+        for _ in 0..PLAIN_WISH_AFTER {
+            progress.fail_chapter(0);
+        }
+        assert!(progress.asks_plainly(0));
+        progress.parcels.push(0);
+        progress.finish_chapter(0);
+        assert_eq!(progress.chapter(0), 1);
+        assert!(!progress.asks_plainly(0));
+        assert!(progress.parcels.is_empty(), "the parcel is used up");
+    }
+
+    #[test]
+    fn the_lighthouse_brightens_with_the_story() {
+        let data = GameData::load();
+        let (i, story) = data
+            .stories
+            .iter()
+            .enumerate()
+            .find(|(_, s)| s.lighthouse)
+            .expect("a story lights the lighthouse");
+        let mut progress = Progress::new(0);
+        assert_eq!(crate::harbor::lighthouse_level(&data, &progress), 0.0);
+        for _ in 0..story.chapters.len() {
+            progress.finish_chapter(i);
+        }
+        assert_eq!(crate::harbor::lighthouse_level(&data, &progress), 1.0);
     }
 }

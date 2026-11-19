@@ -71,11 +71,7 @@ fn main() {
         .add_plugins(MeshPickingPlugin)
         .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.07)))
         .insert_resource(Drawer(data.config.start_coins))
-        .insert_resource(Progress {
-            night: 1,
-            reputation: data.config.start_reputation,
-            story_chapter: 0,
-        })
+        .insert_resource(Progress::new(data.config.start_reputation))
         .insert_resource(rng::Rng::from_time())
         .insert_resource(data)
         .insert_resource(automatic)

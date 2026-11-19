@@ -15,12 +15,14 @@
 //   otherwise a placeholder box of `size` in `color`. pos: (x, y, z) of its origin in the shop
 //   (metres, +x towards the counter, +z towards the camera), turn: degrees about the vertical
 //   axis, light_height: a warm point light at that height above the origin (0 = none).
+// letter (optional): clearing the junk turns up this letter from Hedda (letter.<n>), read in
+//   the evening. Letter 1 waits on the first evening.
 // The floor that is free at the start is `start_area` in config.ron.
 [
-    (id: "clear_corner", cost: 30, unlock_night: 2, effect: (cols: 2)),
-    (id: "back_room", cost: 55, unlock_night: 3, effect: (rows: 2)),
+    (id: "clear_corner", cost: 30, unlock_night: 2, effect: (cols: 2), letter: Some(2)),
+    (id: "back_room", cost: 55, unlock_night: 3, effect: (rows: 2), letter: Some(3)),
     (id: "knock_through", cost: 90, unlock_night: 5, requires: Some("clear_corner"),
-     effect: (cols: 2)),
+     effect: (cols: 2), letter: Some(4)),
     (id: "waiting_bench", cost: 25, unlock_night: 2, effect: (patience_factor: 1.3),
      model: Some((pos: (3.6, 0.0, -2.65), size: (1.4, 0.55, 0.45), color: (0.42, 0.28, 0.18)))),
     (id: "door_lantern", cost: 20, unlock_night: 2, effect: (spawn_factor: 0.9),

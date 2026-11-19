@@ -32,6 +32,10 @@ pub struct ProductDef {
 
 /// Containers the ferryman ships products in (each a model and a lid,
 /// `assets/models/shop/<id>.glb` and `<id>_lid.glb`).
+/// Letters from Hedda (`letter.1` …): the first waits on the first evening,
+/// the others turn up when improvements clear her old junk.
+pub const HEDDA_LETTERS: u32 = 4;
+
 /// How much less often a ghost comes when the atmosphere does not suit it.
 pub const UNFIT_GHOST_ODDS: f32 = 0.35;
 
@@ -304,14 +308,26 @@ fn default_light_height() -> f32 {
     1.0
 }
 
-/// A story ghost who returns night after night.
+/// A story ghost who returns night after night, one chapter per night
+/// (`story.ron`). Texts: `story.<ghost>.<n>.intro` / `.thanks`,
+/// `story.<ghost>.arrives`, `story.<ghost>.ending`.
 #[derive(Deserialize, Clone, Debug)]
 pub struct StoryDef {
     /// Ghost id from ghosts.ron (usually with spawn_weight 0).
     pub ghost: String,
+    /// The first night this ghost comes.
+    #[serde(default = "one")]
+    pub start_night: u32,
     /// When the ghost arrives, as a fraction of the night (0..1).
     pub arrive_at: f32,
     pub chapters: Vec<ChapterDef>,
+    /// Finishing this story ends the season (the finale). The season lasts
+    /// until it is finished, however many nights that takes.
+    #[serde(default)]
+    pub finale: bool,
+    /// Each chapter of this story repairs the harbour lighthouse a little.
+    #[serde(default)]
+    pub lighthouse: bool,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -380,7 +396,7 @@ pub struct GameData {
     pub products: Vec<ProductDef>,
     pub ghosts: Vec<GhostDef>,
     pub decor: Vec<DecorDef>,
-    pub story: StoryDef,
+    pub stories: Vec<StoryDef>,
     pub events: Vec<NightEvent>,
     pub props: Vec<PropDef>,
     pub vendors: Vec<VendorDef>,
@@ -433,6 +449,10 @@ pub struct UpgradeDef {
     /// What stands in the shop once it is bought.
     #[serde(default)]
     pub model: Option<UpgradeModel>,
+    /// The letter from Hedda found when this improvement clears old junk
+    /// (`letter.<n>`; letter 1 waits on the first evening).
+    #[serde(default)]
+    pub letter: Option<u32>,
 }
 
 /// What an improvement changes; see `upgrades.ron`.
@@ -496,7 +516,7 @@ impl GameData {
             products: load_ron("data/products.ron"),
             ghosts: load_ron("data/ghosts.ron"),
             decor: load_ron("data/decor.ron"),
-            story: load_ron("data/story.ron"),
+            stories: load_ron("data/story.ron"),
             events: load_ron("data/events.ron"),
             props: load_ron("data/props.ron"),
             vendors: load_ron("data/market.ron"),
@@ -590,11 +610,18 @@ impl GameData {
                 );
             }
         }
-        assert!(
-            self.ghost_index(&self.story.ghost).is_some(),
-            "story ghost '{}' is not in ghosts.ron",
-            self.story.ghost
-        );
+        for story in &self.stories {
+            assert!(
+                self.ghost_index(&story.ghost).is_some(),
+                "story ghost '{}' is not in ghosts.ron",
+                story.ghost
+            );
+            assert!(
+                !story.chapters.is_empty(),
+                "story '{}' has no chapters",
+                story.ghost
+            );
+        }
         for e in &self.events {
             for (g, _) in &e.ghost_weights {
                 assert!(
@@ -605,22 +632,43 @@ impl GameData {
                 );
             }
         }
-        for (i, c) in self.story.chapters.iter().enumerate() {
-            assert!(
-                self.product(&c.wish).is_some(),
-                "story chapter {} wishes for unknown product '{}'",
-                i + 1,
-                c.wish
-            );
-            if let Some(k) = &c.keepsake {
+        for story in &self.stories {
+            for (i, c) in story.chapters.iter().enumerate() {
                 assert!(
-                    self.decor(k).is_some_and(|d| d.keepsake),
-                    "story chapter {} gives '{}', which is not a keepsake in decor.ron",
+                    self.product(&c.wish).is_some(),
+                    "{} chapter {} wishes for unknown product '{}'",
+                    story.ghost,
                     i + 1,
-                    k
+                    c.wish
+                );
+                if let Some(k) = &c.keepsake {
+                    assert!(
+                        self.decor(k).is_some_and(|d| d.keepsake),
+                        "{} chapter {} gives '{}', which is not a keepsake in decor.ron",
+                        story.ghost,
+                        i + 1,
+                        k
+                    );
+                }
+            }
+        }
+        for u in &self.upgrades {
+            if let Some(n) = u.letter {
+                assert!(
+                    (1..=HEDDA_LETTERS).contains(&n),
+                    "improvement '{}' reveals unknown letter {}",
+                    u.id,
+                    n
                 );
             }
         }
+    }
+
+    /// Is the story with this index still running on this night: started,
+    /// and not every chapter done?
+    pub fn story_due(&self, i: usize, night: u32, chapter: usize) -> bool {
+        let s = &self.stories[i];
+        night >= s.start_night && chapter < s.chapters.len()
     }
 
     pub fn event(&self, night: u32) -> Option<&NightEvent> {
@@ -813,11 +861,21 @@ mod tests {
         for d in &data.decor {
             assert!(has(format!("decor.{}.name", d.id)), "no name for {}", d.id);
         }
-        for n in 1..=data.story.chapters.len() {
+        for story in &data.stories {
+            let g = &story.ghost;
             assert!(
-                has(format!("story.{n}.intro")) && has(format!("story.{n}.thanks")),
-                "story {n}"
+                has(format!("story.{g}.arrives")) && has(format!("story.{g}.ending")),
+                "story {g}"
             );
+            for n in 1..=story.chapters.len() {
+                assert!(
+                    has(format!("story.{g}.{n}.intro")) && has(format!("story.{g}.{n}.thanks")),
+                    "story {g} {n}"
+                );
+            }
+        }
+        for n in 1..=HEDDA_LETTERS {
+            assert!(has(format!("letter.{n}")), "letter {n}");
         }
         assert!(lang.count("tell.genuine.") > 0 && lang.count("tell.fake.") > 0);
         for e in &data.events {
@@ -831,7 +889,10 @@ mod tests {
         // Every product is wished for by some ghost or the story.
         for p in &data.products {
             let wished = data.ghosts.iter().any(|g| g.wishes.contains(&p.id))
-                || data.story.chapters.iter().any(|c| c.wish == p.id);
+                || data
+                    .stories
+                    .iter()
+                    .any(|s| s.chapters.iter().any(|c| c.wish == p.id));
             assert!(wished, "nobody ever asks for '{}'", p.id);
         }
     }

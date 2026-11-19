@@ -476,8 +476,8 @@ fn build_ledger(
             ),
         );
     }
-    if let Some(line) = &report.story_line {
-        ui.add_text(right, &lang.t("story.name"), true, 13.0, TEXT);
+    for (ghost, line) in &report.story_lines {
+        ui.add_text(right, &lang.ghost(ghost), true, 13.0, TEXT);
         ui.add_text(
             right,
             &lang.f("quote", &[("text", &lang.t(line))]),
@@ -591,9 +591,11 @@ fn build_ledger(
         },
     );
     let mut ui = ui.with_footer(footer);
-    let last = progress.night >= data.config.final_night();
-    let label = if last {
+    let last = progress.season_over(&data);
+    let label = if last && cfg!(feature = "demo") {
         "morning.to_end"
+    } else if last {
+        "morning.to_season_end"
     } else {
         "morning.next"
     };

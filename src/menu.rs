@@ -405,7 +405,7 @@ fn slot_name(slot: Slot, lang: &Lang) -> String {
 
 /// "Evening of night 3 · money 145 · reputation 12".
 fn describe_save(save: &SaveGame, lang: &Lang, final_night: u32) -> String {
-    let state = if save.night > final_night {
+    let state = if !crate::save::can_continue(save, final_night) {
         lang.t("save.state_finished")
     } else if save.market_open {
         lang.f("save.state_market", &[("night", &save.night)])

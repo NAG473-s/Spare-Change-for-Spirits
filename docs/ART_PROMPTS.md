@@ -24,7 +24,12 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open image orders. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
+- Ghost sprites (and later their 2 × 2 idle sheets) for the story ghosts `ida` and `hedda`,
+  see *Ghosts introduced in later nights* below.
+- Icons for the keepsakes `logbook`, `ship_bell`, `sea_chart`, `lifebuoy` and `apron`, see
+  *Icons* below.
+
+Everything else is delivered. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
 floor, market street map and quay paving. The opening score and all 31 readings are in
@@ -97,6 +102,8 @@ All ten sprites are included in `assets/sprites/ghosts/`. The prompts below can 
 | `sailor` | A drowned sailor ghost, sea-green glow, striped shirt and a knitted cap, a little seaweed in his beard, holding a coil of rope, wistful smile. |
 | `knight` | A friendly headless knight ghost, silver-blue glow, slightly rusty armour, carrying his smiling helmeted head under one arm. |
 | `bride` | A ghostly bride, pearly white glow, old-fashioned lace dress, no veil, a small bouquet held close, hopeful but sad eyes. |
+| `ida` | Ida, an elderly lighthouse keeper ghost, cool sea-blue glow, sturdy and weather-beaten, short grey hair under a knitted fisherman's cap, a thick oilskin coat, holding a small brass storm lantern, determined but kind eyes. |
+| `hedda` | Hedda, a small, round, elderly lady ghost with a warm peach glow, silver hair in a bun with a pencil stuck in it, little round spectacles, a lavender shop apron with a sprig of lavender in the pocket, hands folded, a gentle knowing smile. |
 
 **Original ghosts:**
 
@@ -236,6 +243,16 @@ the later ones:
 | `gramophone` | A small wooden cabinet with an old gramophone on top, big brass horn, a record on the turntable. |
 | `stove` | A little round cast-iron stove on four feet with a short chimney pipe, its small door glowing warm orange. |
 | `vanity` | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
+
+**Open keepsake icons** (kind `decor`):
+
+| File id | Prompt |
+|---|---|
+| `logbook` | A thick open lighthouse logbook with a cracked leather cover, a pencil on a string. |
+| `ship_bell` | A polished brass ship's bell hanging from a small wooden gallows. |
+| `sea_chart` | A framed, yellowed sea chart of a small harbour with a lighthouse. |
+| `lifebuoy` | A red-and-white striped ring lifebuoy with a coil of rope. |
+| `apron` | A faded lavender shop apron on a hook, a sprig of dried lavender in its pocket. |
 
 ## Coins – canvas 1024 × 1024 (done)
 

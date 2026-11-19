@@ -114,6 +114,10 @@ pub enum Action {
     ToolRemove,
     StartNight,
     Offer(String),
+    /// Hand the ferryman's parcel to the story ghost at the counter.
+    HandParcel,
+    /// The season is over: keep the shop open anyway.
+    KeepPlaying,
     Decline,
     /// Inspect (and reject, if fake) the paid coin with this index.
     CheckCoin(usize),
@@ -753,8 +757,15 @@ fn update_hud(
     } else {
         String::new()
     };
+    // Past the last night (the story still running, or after the season)
+    // the night count has no end.
+    let key = if progress.night > data.config.final_night() || progress.free_play {
+        "hud_open"
+    } else {
+        "hud"
+    };
     hud.0 = lang.f(
-        "hud",
+        key,
         &[
             ("night", &progress.night),
             ("nights", &data.config.final_night()),
@@ -965,6 +976,7 @@ fn build_evening_panel(
     bought: Res<BoughtTonight>,
     location: Res<Location>,
     upgrades: Res<Upgrades>,
+    letter: Res<crate::market::FoundLetter>,
 ) {
     let night = progress.night;
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
@@ -989,7 +1001,7 @@ fn build_evening_panel(
             ));
         }
         let odds = data.ghost_odds(night, &layout.atmosphere(&data, night));
-        expected_guests(&mut ui, &lang, &data, &stock, night, &odds);
+        expected_guests(&mut ui, &lang, &data, &stock, &progress, &odds);
         ui.section(&lang.t("evening.shelve"));
         let in_stock: Vec<String> = data
             .products
@@ -1007,6 +1019,14 @@ fn build_evening_panel(
     }
 
     ui.heading(&lang.t("evening.title"));
+
+    // Hedda's letters: the first waits on the first evening, the others
+    // turn up behind the junk her improvements clear.
+    let letter = if night == 1 { Some(1) } else { letter.0 };
+    if let Some(n) = letter {
+        ui.section(&lang.t("letter.title"));
+        ui.text(&lang.t(&format!("letter.{n}")));
+    }
 
     if let Some(event) = data.event(night) {
         ui.section(&lang.f(
@@ -1029,7 +1049,7 @@ fn build_evening_panel(
     }
 
     let odds = data.ghost_odds(night, &layout.atmosphere(&data, night));
-    expected_guests(&mut ui, &lang, &data, &stock, night, &odds);
+    expected_guests(&mut ui, &lang, &data, &stock, &progress, &odds);
 
     ui.section(&lang.f(
         "evening.ferryman",
@@ -1141,9 +1161,10 @@ fn expected_guests(
     lang: &Lang,
     data: &GameData,
     stock: &Stock,
-    night: u32,
+    progress: &Progress,
     odds: &[f32],
 ) {
+    let night = progress.night;
     let total: f32 = odds.iter().sum();
     if total <= 0.0 {
         return;
@@ -1151,6 +1172,30 @@ fn expected_guests(
     let mut likely: Vec<usize> = (0..odds.len()).filter(|&i| odds[i] > 0.0).collect();
     likely.sort_by(|&a, &b| odds[b].total_cmp(&odds[a]));
     ui.section(&lang.t("evening.expected"));
+    // Story ghosts come every night until they have what they need: their
+    // wish is announced, and the ferryman's parcel is mentioned.
+    for (i, story) in data.stories.iter().enumerate() {
+        if !progress.story_due(data, i) {
+            continue;
+        }
+        let name = lang.ghost(&story.ghost);
+        let chapter = progress.chapter(i);
+        let mut wish = lang.t(&format!("story.{}.{}.intro", story.ghost, chapter + 1));
+        if progress.asks_plainly(i) {
+            let item = lang.product(&story.chapters[chapter].wish);
+            wish = format!("{wish} {}", lang.f("story.plainly", &[("item", &item)]));
+        }
+        ui.text(&lang.f(
+            "evening.story_comes",
+            &[
+                ("name", &name),
+                ("text", &lang.f("quote", &[("text", &wish)])),
+            ],
+        ));
+        if progress.parcels.contains(&i) {
+            ui.dim(&lang.f("evening.parcel_waits", &[("name", &name)]));
+        }
+    }
     for &i in likely.iter().take(EXPECTED_GUESTS) {
         let ghost = &data.ghosts[i];
         let wishes: Vec<String> = data
@@ -1201,6 +1246,7 @@ fn build_night_panel(
     settings: Res<crate::save::Settings>,
     ghosts: Query<&Ghost>,
     phase: Res<State<Phase>>,
+    progress: Res<Progress>,
     mut shown: Local<Option<NightPanelShows>>,
 ) {
     // Rebuild only when something this panel shows has changed. Rebuilding
@@ -1320,14 +1366,27 @@ fn build_night_panel(
         Some(ghost) if ghost.state == GhostState::Waiting => {
             let def = &data.ghosts[ghost.def];
             if ghost.chapter.is_some() {
-                ui.section(&lang.f("night.story_says", &[("name", &lang.t("story.name"))]));
+                ui.section(&lang.f("night.story_says", &[("name", &lang.ghost(&def.id))]));
             } else {
                 ui.section(&lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))]));
             }
-            ui.text(&lang.f("quote", &[("text", &lang.t(&ghost.hint))]));
+            ui.text(&lang.f("quote", &[("text", &ghost.whisper(&lang))]));
             ui.section(&lang.t("night.what_hand_over"));
             let row = ui.row();
             let mut any = false;
+            // The ferryman's parcel holds exactly what a story ghost needs.
+            let parcel = ghost
+                .chapter
+                .is_some_and(|(story, _)| progress.parcels.contains(&story));
+            if parcel {
+                ui.button_in(
+                    row,
+                    &lang.f("night.parcel", &[("name", &lang.ghost(&def.id))]),
+                    Action::HandParcel,
+                    false,
+                    true,
+                );
+            }
             // Its wish was not on display (or it would have brought it), so
             // everything in the storeroom is offered: the wares on display
             // first, then the rest.
@@ -1358,7 +1417,7 @@ fn build_night_panel(
             }
             if any {
                 ui.dim(&lang.t("night.storeroom_hint"));
-            } else {
+            } else if !parcel {
                 ui.dim(&lang.t("night.nothing_on_shelves"));
             }
             ui.spacer();
@@ -1395,23 +1454,34 @@ fn build_demo_end_panel(
     let demo = cfg!(feature = "demo");
     ui.heading(&lang.t(if demo { "end.title" } else { "end.title_full" }));
     ui.text(&lang.f("end.reputation", &[("reputation", &progress.reputation)]));
-    let chapters = data.story.chapters.len();
-    if progress.story_chapter >= chapters {
-        ui.dim(&lang.t("story.ending"));
-    } else {
-        ui.dim(&lang.f(
-            "end.wishes_left",
-            &[
-                ("name", &lang.t("story.name")),
-                ("count", &(chapters - progress.story_chapter)),
-            ],
-        ));
+    for (i, story) in data.stories.iter().enumerate() {
+        let left = story.chapters.len().saturating_sub(progress.chapter(i));
+        if progress.night < story.start_night {
+            continue;
+        }
+        if left == 0 {
+            ui.dim(&lang.t(&format!("story.{}.ending", story.ghost)));
+        } else {
+            ui.dim(&lang.f(
+                "end.wishes_left",
+                &[("name", &lang.ghost(&story.ghost)), ("count", &left)],
+            ));
+        }
     }
     if demo {
         ui.text(&lang.f("end.carry_over", &[("night", &(progress.night + 1))]));
         ui.dim(&lang.t("end.thanks"));
     } else {
+        ui.text(&lang.t("finale.epilogue"));
         ui.dim(&lang.t("end.thanks_full"));
+        let root = ui.root();
+        ui.button_in(
+            root,
+            &lang.t("end.keep_playing"),
+            Action::KeepPlaying,
+            false,
+            true,
+        );
     }
     ui.spacer();
     ui.primary(&lang.t("end.back"), Action::QuitToMenu);

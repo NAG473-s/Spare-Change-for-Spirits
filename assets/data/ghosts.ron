@@ -37,6 +37,16 @@
      spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 0.8,
      needs: [],
      wishes: ["rain_jar", "tea_tin", "wool_scarf", "music_box", "letter_paper"]),
+    // Ida, the lighthouse keeper (story.ron), from night 6.
+    (id: "ida", color: (0.72, 0.84, 0.95),
+     spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 0.95,
+     needs: [],
+     wishes: ["polishing_cloth", "pocket_watch", "brass_compass", "ship_in_bottle", "lavender"]),
+    // Hedda, who kept this shop before you. She only comes home at the finale.
+    (id: "hedda", color: (0.98, 0.86, 0.72),
+     spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 1.0,
+     needs: [],
+     wishes: ["lavender"]),
 
     // Customers who first appear on later nights (unlock_night).
     (id: "cat", color: (0.8, 0.85, 0.95), unlock_night: 2,

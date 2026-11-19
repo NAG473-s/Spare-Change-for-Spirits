@@ -123,9 +123,16 @@ Special customers:
   reputation, and counterfeits left in the drawer turn to dust at dawn.
 - **Forgetful Ghost** – sometimes forgets it has paid and offers to pay again. Keep the money or
   tell it the truth.
-- **Edwin** – a story ghost who comes once per night with one wish per chapter (`story.ron`).
-  Each fulfilled wish leaves a **keepsake**: free decor that only he can give. An unfulfilled
-  chapter repeats the next night.
+- **Story ghosts** (`story.ron`) – **Edwin** (from night 1) and **Ida**, the lighthouse keeper
+  (from night 6), come once per night with one wish per chapter. Each fulfilled wish leaves a
+  **keepsake**: free decor that only they can give. The evening panel announces their wish. An
+  unfulfilled chapter repeats the next night; from the second failed night on the ghost names the
+  ware, and whenever it is not in stock at opening time the ferryman brings a parcel with it, so
+  no story can get stuck. Ida's chapters relight the harbour lighthouse; her last one is the
+  finale, and the season lasts until it is done.
+- **Hedda's letters** – the player inherited the shop from great-aunt Hedda. Her first letter
+  waits on the first evening, the others turn up when improvements clear her old junk
+  (`letter` in `upgrades.ron`). At the finale she comes home through the shop door.
 
 ## Project layout
 
@@ -189,7 +196,7 @@ offline. It checks the user’s selection before the installed depot language.
 
 - Data files (`assets/data/*.ron`) hold only ids and numbers. Texts for an id use keys like
   `product.<id>.name`, `product.<id>.hint.1`, `ghost.<id>.name`, `ghost.<id>.the` (the subject at
-  the start of a sentence, with article), `decor.<id>.name`, `story.<n>.intro`.
+  the start of a sentence, with article), `decor.<id>.name`, `story.<ghost>.<n>.intro`, `letter.<n>`.
 - Placeholders such as `{who}` and `{item}` must stay in every translation; sentences may be
   rearranged. Coin amounts are shown as "silver spoon ×2" to avoid plural rules.
 - `cargo test` checks that every language has every key with the same placeholders.
@@ -271,6 +278,7 @@ The plan up to the festival and the Early Access launch is in [docs/ROADMAP.md](
 - [x] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
 - [x] Forgetful ghost: wants to pay twice – accept or be honest?
 - [x] Edwin: a story across five nights, keepsakes as decor
+- [x] Ida, Hedda's letters and the finale; stories can never get stuck, the season waits for them
 - [x] Main menu, pause, save games, first-night tips
 - [x] Sound: shop bell, coins, chime, music box, night ambience
 - [x] Particles when passing into the light, candle glow, night shade

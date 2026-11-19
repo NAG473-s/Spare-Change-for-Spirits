@@ -23,7 +23,7 @@ use crate::shop::{CellContent, ShopLayout, Storeroom};
 use crate::upgrades::Upgrades;
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 3;
+pub const SAVE_VERSION: u32 = 4;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -36,8 +36,18 @@ impl Plugin for SavePlugin {
             .init_resource::<ActiveProfile>()
             .init_resource::<NightStart>()
             .add_systems(OnEnter(Phase::Evening), autosave_evening.after(lend))
-            .add_systems(OnEnter(Phase::Night), autosave_night)
-            .add_systems(OnEnter(Phase::Morning), autosave_dawn.after(repay));
+            .add_systems(
+                OnEnter(Phase::Night),
+                autosave_night.after(crate::day_cycle::deliver_parcels),
+            )
+            // Keeping the shop open after the season: continue at that market.
+            .add_systems(OnExit(Phase::DemoEnd), autosave_free_play)
+            .add_systems(
+                OnEnter(Phase::Morning),
+                autosave_dawn
+                    .after(repay)
+                    .after(crate::day_cycle::count_story_tries),
+            );
     }
 }
 
@@ -47,7 +57,17 @@ pub struct SaveGame {
     /// The night whose evening the game continues at.
     pub night: u32,
     pub reputation: i32,
-    pub story_chapter: usize,
+    /// Next chapter of each story (see `Progress`).
+    #[serde(default)]
+    pub story: Vec<usize>,
+    #[serde(default)]
+    pub story_tries: Vec<u32>,
+    /// Stories whose ghost has a parcel from the ferryman waiting.
+    #[serde(default)]
+    pub parcels: Vec<usize>,
+    /// The season is over and the shop stays open anyway.
+    #[serde(default)]
+    pub free_play: bool,
     pub drawer: Purse,
     pub stock: BTreeMap<String, Vec<u32>>,
     pub cells: Vec<CellContent>,
@@ -381,7 +401,10 @@ impl GameState<'_> {
             version: SAVE_VERSION,
             night,
             reputation: self.progress.reputation,
-            story_chapter: self.progress.story_chapter,
+            story: self.progress.story.clone(),
+            story_tries: self.progress.story_tries.clone(),
+            parcels: self.progress.parcels.clone(),
+            free_play: self.progress.free_play,
             drawer: self.drawer.0,
             stock: self.stock.units().clone(),
             cells: self.layout.cells.clone(),
@@ -398,7 +421,10 @@ impl GameState<'_> {
         *self.progress = Progress {
             night: save.night,
             reputation: save.reputation,
-            story_chapter: save.story_chapter,
+            story: save.story.clone(),
+            story_tries: save.story_tries.clone(),
+            parcels: save.parcels.clone(),
+            free_play: save.free_play,
         };
         self.drawer.0 = save.drawer;
         *self.stock = Stock::from_units(save.stock.clone());
@@ -415,11 +441,7 @@ impl GameState<'_> {
     }
 
     pub fn reset(&mut self, data: &GameData) {
-        *self.progress = Progress {
-            night: 1,
-            reputation: data.config.start_reputation,
-            story_chapter: 0,
-        };
+        *self.progress = Progress::new(data.config.start_reputation);
         self.drawer.0 = data.config.start_coins;
         *self.stock = Stock::default();
         *self.layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
@@ -435,7 +457,8 @@ impl GameState<'_> {
 /// Saves never break between the demo and the full game: new fields need
 /// `#[serde(default)]` instead of a new `SAVE_VERSION`.
 pub fn can_continue(save: &SaveGame, final_night: u32) -> bool {
-    save.night <= final_night
+    // The full game lasts until the finale, however many nights it takes.
+    save.night <= final_night || (!cfg!(feature = "demo") && !save.finished)
 }
 
 /// The state at the start of the current night: what a save made during
@@ -459,6 +482,16 @@ fn autosave_night(state: GameState, profile: Res<ActiveProfile>, mut start: ResM
     start.0 = Some(save);
 }
 
+fn autosave_free_play(state: GameState, profile: Res<ActiveProfile>) {
+    if state.progress.free_play {
+        write_slot(
+            profile.0,
+            Slot::Auto,
+            &state.snapshot(state.progress.night, false, true),
+        );
+    }
+}
+
 /// Dawn: the night is done; continue with the market of the next day.
 fn autosave_dawn(state: GameState, data: Res<GameData>, profile: Res<ActiveProfile>) {
     write_slot(profile.0, Slot::Auto, &dawn_snapshot(&state, &data));
@@ -466,7 +499,7 @@ fn autosave_dawn(state: GameState, data: Res<GameData>, profile: Res<ActiveProfi
 
 fn dawn_snapshot(state: &GameState, data: &GameData) -> SaveGame {
     let night = state.progress.night;
-    let finished = night >= data.config.final_night();
+    let finished = state.progress.season_over(data);
     state.snapshot(night + 1, finished, !finished)
 }
 
@@ -499,7 +532,10 @@ mod tests {
             version: SAVE_VERSION,
             night: 6,
             reputation: 3,
-            story_chapter: 5,
+            story: vec![5],
+            story_tries: Vec::new(),
+            parcels: Vec::new(),
+            free_play: false,
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),
@@ -522,7 +558,10 @@ mod tests {
             version: SAVE_VERSION,
             night: 3,
             reputation: -2,
-            story_chapter: 2,
+            story: vec![2],
+            story_tries: Vec::new(),
+            parcels: Vec::new(),
+            free_play: false,
             drawer: Purse {
                 buttons: 4,
                 candles: 1,
@@ -553,7 +592,10 @@ mod tests {
             version: SAVE_VERSION,
             night,
             reputation: 0,
-            story_chapter: 0,
+            story: vec![0],
+            story_tries: Vec::new(),
+            parcels: Vec::new(),
+            free_play: false,
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),

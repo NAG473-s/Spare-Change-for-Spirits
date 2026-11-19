@@ -59,8 +59,10 @@ pub struct Sale {
     pub coins: Vec<PaidCoin>,
     /// What the player has counted out as change so far.
     pub given: Purse,
-    /// Story chapter this sale completes, if it is the story ghost.
-    pub chapter: Option<usize>,
+    /// (story, chapter) this sale completes, if it is a story ghost.
+    pub chapter: Option<(usize, usize)>,
+    /// The ferryman's parcel for a story ghost: it does not come out of stock.
+    pub parcel: bool,
     /// Fetched from the storeroom, not found on the shelves: correct change
     /// earns no reputation then.
     pub from_storeroom: bool,
@@ -186,9 +188,21 @@ fn serve_front_ghost(
         }
         let def = &data.ghosts[ghost.def];
 
-        match action {
-            Action::Offer(product) => {
-                if stock.count(product) == 0 {
+        // The ferryman's parcel holds exactly what this story ghost needs.
+        let parcel = *action == Action::HandParcel;
+        let parcel_for = ghost
+            .chapter
+            .map(|(story, _)| story)
+            .filter(|s| progress.parcels.contains(s));
+        let offer = match action {
+            Action::Offer(product) => Some(product.clone()),
+            Action::HandParcel if parcel_for.is_some() => Some(ghost.wish.clone()),
+            _ => None,
+        };
+        match (action, offer) {
+            (Action::Offer(_) | Action::HandParcel, Some(product)) => {
+                let product = &product;
+                if !parcel && stock.count(product) == 0 {
                     continue;
                 }
                 if *product != ghost.wish {
@@ -225,11 +239,12 @@ fn serve_front_ghost(
                     coins,
                     given: Purse::default(),
                     chapter: ghost.chapter,
+                    parcel,
                     from_storeroom: ghost.carrying.is_none()
                         && !layout.displayed_products().contains(product),
                 });
             }
-            Action::Decline => {
+            (Action::Decline, _) => {
                 report.declined += 1;
                 log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
                 ghost.state = GhostState::Leaving;
@@ -255,6 +270,7 @@ fn make_change(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
+    mut finale: MessageWriter<crate::ghosts::Finale>,
     lang: Res<Lang>,
 ) {
     for action in actions.read() {
@@ -301,7 +317,9 @@ fn make_change(
             Action::GiveChange => {
                 let sale = register.sale.take().expect("checked above");
                 drawer.remove(&sale.given);
-                stock.take_one(&sale.product);
+                if !sale.parcel {
+                    stock.take_one(&sale.product);
+                }
                 report.sales += 1;
                 report.revenue += sale.price;
                 report.sold.push(sale.product.clone());
@@ -345,27 +363,34 @@ fn make_change(
                     }
                 }
 
-                if let Some(chapter) = sale.chapter {
-                    // The story ghost got what he needed, whatever the change.
-                    let story = &data.story;
+                if let Some((i, chapter)) = sale.chapter {
+                    // The story ghost got what it needed, whatever the change.
+                    let story = &data.stories[i];
                     let c = &story.chapters[chapter];
-                    let thanks = format!("story.{}.thanks", chapter + 1);
+                    let thanks = format!("story.{}.{}.thanks", story.ghost, chapter + 1);
                     log.push(lang.f(
                         "log.story_says",
-                        &[("name", &lang.t("story.name")), ("text", &lang.t(&thanks))],
+                        &[
+                            ("name", &lang.ghost(&story.ghost)),
+                            ("text", &lang.t(&thanks)),
+                        ],
                     ));
-                    report.story_line = Some(thanks);
+                    report.story_lines.push((story.ghost.clone(), thanks));
+                    report.story_done.push(i);
                     if let Some(k) = &c.keepsake {
                         storeroom.give(k);
                         report.keepsakes.push(k.clone());
                     }
-                    progress.story_chapter = chapter + 1;
-                    if progress.story_chapter >= story.chapters.len() {
-                        log.push(lang.t("story.ending"));
+                    progress.finish_chapter(i);
+                    if progress.chapter(i) >= story.chapters.len() {
+                        log.push(lang.t(&format!("story.{}.ending", story.ghost)));
                         report.redeemed.push(story.ghost.clone());
                         cues.write(Cue::Ascend(ghost.pos));
                         ghost.state = GhostState::Ascending;
                         ghost.timer = 0.0;
+                        if story.finale {
+                            finale.write(crate::ghosts::Finale);
+                        }
                     } else {
                         ghost.state = GhostState::Leaving;
                     }
@@ -494,6 +519,7 @@ mod tests {
             coins: paid_coins(&spoon, true, &lang(), &mut Rng::new(1)),
             given: Purse::default(),
             chapter: None,
+            parcel: false,
             from_storeroom: false,
         };
         assert_eq!(sale.change_due(), 18);

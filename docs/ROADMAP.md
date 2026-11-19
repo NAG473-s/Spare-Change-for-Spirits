@@ -13,7 +13,7 @@ publicly.
 |---|---|---|---|
 | Nights | 1–5, ends with "continue with night 6 in the full game" | 1–10 | 11–15, endless mode |
 | Ghosts | all 10 | + 4 new | more, seasonal ones |
-| Story | Edwin, all 5 chapters | + a second story ghost for nights 6–10 | a third story |
+| Story | Hedda's first letter, Edwin, all 5 chapters | + Ida the lighthouse keeper (nights 6–10), Hedda's letters, finale | a third story |
 | Shop | furniture, harbour, ferryman | + shop upgrades (bigger shop, second counter) | decoration sets |
 | Polish | everything shown must look finished | all models in, no placeholders | |
 
@@ -21,7 +21,10 @@ publicly.
 end of the demo (night 5 played) continues in the full game with the evening of night 6 – shop,
 coins, stock, keepsakes and reputation included. The demo is built with `cargo build --features
 demo` (it stops after `demo_nights` in `assets/data/config.ron`); the full game stops after
-`last_night`. From the public demo release on, saves must stay compatible
+`last_night` – or later, if the finale story is not finished yet: the season lasts until it is
+(story ghosts repeat a failed chapter, name the ware from the second failed night on and get a
+parcel from the ferryman, so no story can get stuck). After the finale the player can keep the
+shop open in free play. From the public demo release on, saves must stay compatible
 between the two (new save fields get `#[serde(default)]` instead of a new save version); until
 then the format may still change.
 
@@ -52,7 +55,9 @@ Checkboxes are ticked in the commit that finishes them.
 
 - [x] Nights 6–10: new events in `events.ron`, rising difficulty
 - [ ] 4 new ghosts with wishes, sprites and sheets ordered
-- [ ] A second story ghost for nights 6–10 (Edwin's story ends in the demo)
+- [x] A second story ghost for nights 6–10: Ida the lighthouse keeper repairs the harbour
+      lighthouse chapter by chapter; Hedda's letters and the finale tell the player's own story
+      (`story.ron`)
 - [x] Shop upgrades (bigger shop, more shelves) as a reason to save money (`upgrades.ron`,
       sold at the market; old junk blocks part of the floor until it is cleared)
 

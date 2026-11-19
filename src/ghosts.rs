@@ -35,7 +35,8 @@ pub struct GhostPlugin;
 
 impl Plugin for GhostPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Queue>()
+        app.add_message::<Finale>()
+            .init_resource::<Queue>()
             .init_resource::<HoveredGhost>()
             .insert_resource(SpawnTimer(2.0))
             .add_systems(
@@ -55,6 +56,8 @@ impl Plugin for GhostPlugin {
                 (
                     spawn_ghosts,
                     spawn_story_ghost,
+                    come_home,
+                    say_farewell,
                     ghost_ai,
                     ghost_murmurs,
                     ghost_tooltip,
@@ -107,8 +110,10 @@ pub struct Ghost {
     facing: f32,
     /// Seconds since the ghost appeared.
     age: f32,
-    /// Story chapter this visit belongs to (story ghost only).
-    pub chapter: Option<usize>,
+    /// (story, chapter) this visit belongs to (story ghosts only).
+    pub chapter: Option<(usize, usize)>,
+    /// A story ghost that has waited for its wish long enough names it.
+    pub plain: bool,
     /// Shelf cell the ghost browses, if any.
     browse_cell: Option<usize>,
     /// The ware it took from the shelf and brings to the counter (its wish
@@ -118,6 +123,17 @@ pub struct Ghost {
 }
 
 impl Ghost {
+    /// What the ghost whispers, in the current language.
+    pub fn whisper(&self, lang: &Lang) -> String {
+        let text = lang.t(&self.hint);
+        if self.plain {
+            let plainly = lang.f("story.plainly", &[("item", &lang.product(&self.wish))]);
+            format!("{text} {plainly}")
+        } else {
+            text
+        }
+    }
+
     fn arrived(&self) -> bool {
         self.pos.distance(self.target) < 0.03
     }
@@ -201,6 +217,7 @@ fn spawn_ghosts(
         wish,
         hint,
         chapter: None,
+        plain: false,
         flees: unmet.is_some(),
         patience_factor: upgrades.patience_factor(&data),
     };
@@ -346,7 +363,7 @@ fn ghost_tooltip(
             TipKind::Text,
             lang.f(
                 "ghost_tip.whispers",
-                &[("quote", &lang.f("quote", &[("text", &lang.t(&g.hint))]))],
+                &[("quote", &lang.f("quote", &[("text", &g.whisper(&lang))]))],
             ),
         );
     } else if !matches!(
@@ -405,7 +422,8 @@ struct Visit {
     def_idx: usize,
     wish: String,
     hint: String,
-    chapter: Option<usize>,
+    chapter: Option<(usize, usize)>,
+    plain: bool,
     flees: bool,
     /// The waiting bench: ghosts wait longer.
     patience_factor: f32,
@@ -422,7 +440,7 @@ fn spawn_ghost(
     materials: &mut Assets<StandardMaterial>,
     rng: &mut Rng,
     visit: Visit,
-) {
+) -> Entity {
     let def: &GhostDef = &data.ghosts[visit.def_idx];
     // A ghost goes straight to the shelf that shows its wish; otherwise it
     // looks around a shelf at random.
@@ -475,6 +493,7 @@ fn spawn_ghost(
                 facing: 1.0,
                 age: 0.0,
                 chapter: visit.chapter,
+                plain: visit.plain,
                 browse_cell,
                 carrying: None,
                 bob_offset: rng.range(0.0, std::f32::consts::TAU),
@@ -538,6 +557,7 @@ fn spawn_ghost(
         ))
         .id();
     commands.entity(ghost).insert(GhostLabel(label));
+    ghost
 }
 
 /// A ghost that already shows the ware it carries.
@@ -602,7 +622,87 @@ fn mute_browsing_names(
     }
 }
 
-/// The story ghost arrives once per night until his story is finished.
+/// The last chapter of the finale story is done: the ghost who brought the
+/// shopkeeper here comes home through the shop door.
+#[derive(Message, Clone, Copy)]
+pub struct Finale;
+
+/// The ghost id of the finale guest (ghosts.ron).
+pub const FINALE_GHOST: &str = "hedda";
+
+/// The finale guest: she does not shop, she says goodbye.
+#[derive(Component)]
+struct Farewell;
+
+fn come_home(
+    mut finale: MessageReader<Finale>,
+    mut commands: Commands,
+    data: Res<GameData>,
+    layout: Res<ShopLayout>,
+    lang: Res<Lang>,
+    mut art: GhostArt,
+    mut rng: ResMut<Rng>,
+    mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
+    mut report: ResMut<NightReport>,
+) {
+    if finale.read().count() == 0 {
+        return;
+    }
+    let Some(def_idx) = data.ghost_index(FINALE_GHOST) else {
+        return;
+    };
+    let def = &data.ghosts[def_idx];
+    // Her goodbye is told at once: the finale can come just before dawn.
+    log.push(lang.t("finale.arrives"));
+    log.push(lang.f(
+        "log.story_says",
+        &[
+            ("name", &lang.ghost(FINALE_GHOST)),
+            ("text", &lang.t("finale.farewell")),
+        ],
+    ));
+    report
+        .story_lines
+        .push((FINALE_GHOST.to_string(), "finale.farewell".to_string()));
+    let visit = Visit {
+        def_idx,
+        wish: def.wishes[0].clone(),
+        hint: "finale.farewell".into(),
+        chapter: None,
+        plain: false,
+        flees: false,
+        patience_factor: 1.0,
+    };
+    let ghost = spawn_ghost(
+        &mut commands,
+        &data,
+        &layout,
+        &art.font,
+        &lang,
+        &art.asset_server,
+        &mut art.meshes,
+        &mut art.materials,
+        &mut rng,
+        visit,
+    );
+    commands.entity(ghost).insert(Farewell);
+    cues.write(Cue::GhostEnters);
+}
+
+/// Once inside, the finale guest passes into the light.
+fn say_farewell(mut ghosts: Query<&mut Ghost, With<Farewell>>, mut cues: MessageWriter<Cue>) {
+    for mut g in &mut ghosts {
+        if g.state != GhostState::Browsing {
+            continue;
+        }
+        cues.write(Cue::Ascend(g.pos));
+        g.state = GhostState::Ascending;
+        g.timer = 0.0;
+    }
+}
+
+/// Each story ghost arrives once per night until its story is finished.
 fn spawn_story_ghost(
     mut commands: Commands,
     data: Res<GameData>,
@@ -617,41 +717,43 @@ fn spawn_story_ghost(
     mut cues: MessageWriter<Cue>,
     upgrades: Res<Upgrades>,
 ) {
-    let story = &data.story;
-    let chapter = progress.story_chapter;
-    if report.story_arrived
-        || chapter >= story.chapters.len()
-        || clock.elapsed < story.arrive_at * clock.length
-    {
-        return;
+    for (i, story) in data.stories.iter().enumerate() {
+        if report.story_arrived.contains(&i)
+            || !progress.story_due(&data, i)
+            || clock.elapsed < story.arrive_at * clock.length
+        {
+            continue;
+        }
+        let Some(def_idx) = data.ghost_index(&story.ghost) else {
+            continue;
+        };
+        report.story_arrived.push(i);
+        let chapter = progress.chapter(i);
+        let c = &story.chapters[chapter];
+        log.push(lang.t(&format!("story.{}.arrives", story.ghost)));
+        let visit = Visit {
+            def_idx,
+            wish: c.wish.clone(),
+            hint: format!("story.{}.{}.intro", story.ghost, chapter + 1),
+            chapter: Some((i, chapter)),
+            plain: progress.asks_plainly(i),
+            flees: false,
+            patience_factor: upgrades.patience_factor(&data),
+        };
+        spawn_ghost(
+            &mut commands,
+            &data,
+            &layout,
+            &art.font,
+            &lang,
+            &art.asset_server,
+            &mut art.meshes,
+            &mut art.materials,
+            &mut rng,
+            visit,
+        );
+        cues.write(Cue::GhostEnters);
     }
-    let Some(def_idx) = data.ghost_index(&story.ghost) else {
-        return;
-    };
-    report.story_arrived = true;
-    let c = &story.chapters[chapter];
-    log.push(lang.t("story.arrives"));
-    let visit = Visit {
-        def_idx,
-        wish: c.wish.clone(),
-        hint: format!("story.{}.intro", chapter + 1),
-        chapter: Some(chapter),
-        flees: false,
-        patience_factor: upgrades.patience_factor(&data),
-    };
-    spawn_ghost(
-        &mut commands,
-        &data,
-        &layout,
-        &art.font,
-        &lang,
-        &art.asset_server,
-        &mut art.meshes,
-        &mut art.materials,
-        &mut rng,
-        visit,
-    );
-    cues.write(Cue::GhostEnters);
 }
 
 fn ghost_ai(

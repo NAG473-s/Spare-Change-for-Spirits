@@ -59,6 +59,7 @@ impl Plugin for HarborPlugin {
                     bob_rowboats,
                     move_waves.run_if(resource_equals(Location::Harbor)),
                     sweep_beam,
+                    light_lighthouse,
                 ),
             );
     }
@@ -104,6 +105,123 @@ struct Rowboat {
 /// Pivot of the lighthouse beam; it turns slowly.
 #[derive(Component)]
 struct LighthouseBeam;
+
+/// Part of the lighthouse that glows: the model (and every mesh in it), the
+/// placeholder lamp glass or the halo around the lamp.
+#[derive(Component)]
+struct LighthouseTower;
+
+/// The spotlight of the lighthouse beam.
+#[derive(Component)]
+struct BeamLight;
+
+/// What a lighthouse material looked like when it was loaded: the repairs
+/// scale from there.
+#[derive(Component, Clone, Copy)]
+struct LitAtFull {
+    emissive: LinearRgba,
+    base: Color,
+}
+
+/// How bright the lamp glass looks while the lighthouse is dark.
+const DARK_GLASS: f32 = 0.3;
+
+/// How visible the mist in the beam is at full light.
+const BEAM_MIST_ALPHA: f32 = 0.19;
+/// From this share of its repairs on, the lighthouse beam turns again.
+const BEAM_FROM: f32 = 0.4;
+/// The beam's spotlight when the lighthouse is fully repaired.
+const BEAM_INTENSITY: f32 = 430_000.0;
+
+/// How far the lighthouse is repaired, from 0 (dark) to 1 (shining): the
+/// story marked `lighthouse` in story.ron lights it chapter by chapter.
+/// Without such a story it simply shines.
+pub fn lighthouse_level(data: &GameData, progress: &Progress) -> f32 {
+    data.stories
+        .iter()
+        .enumerate()
+        .find(|(_, s)| s.lighthouse)
+        .map_or(1.0, |(i, s)| {
+            progress.chapter(i).min(s.chapters.len()) as f32 / s.chapters.len() as f32
+        })
+}
+
+/// The lamp glows as brightly as the lighthouse is repaired; the beam turns
+/// only once the clockwork runs again.
+#[allow(clippy::type_complexity)]
+fn light_lighthouse(
+    mut commands: Commands,
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    towers: Query<Entity, With<LighthouseTower>>,
+    children: Query<&Children>,
+    parts: Query<(&MeshMaterial3d<StandardMaterial>, Option<&LitAtFull>)>,
+    mist: Query<&MeshMaterial3d<StandardMaterial>, With<BeamMist>>,
+    mut pivot: Query<&mut Visibility, With<LighthouseBeam>>,
+    mut spot: Query<&mut SpotLight, With<BeamLight>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut shown: Local<Option<f32>>,
+) {
+    let lamp = lighthouse_level(&data, &progress);
+    let beam = if lamp >= BEAM_FROM { lamp } else { 0.0 };
+    // The model loads later than the scene: catch its meshes as they come.
+    let mut fresh = false;
+    for tower in &towers {
+        for e in std::iter::once(tower).chain(children.iter_descendants(tower)) {
+            let Ok((handle, lit)) = parts.get(e) else {
+                continue;
+            };
+            if lit.is_some() && *shown == Some(lamp) {
+                continue;
+            }
+            let Some(mut m) = materials.get_mut(&handle.0) else {
+                continue;
+            };
+            let full = *lit.unwrap_or(&LitAtFull {
+                emissive: m.emissive,
+                base: m.base_color,
+            });
+            if lit.is_none() {
+                commands.entity(e).insert(full);
+                fresh = true;
+            }
+            m.emissive = full.emissive * lamp;
+            if m.alpha_mode == AlphaMode::Add {
+                // A halo fades out.
+                m.base_color = full.base.with_alpha(full.base.alpha() * lamp);
+            } else if full.emissive != LinearRgba::BLACK {
+                // Unlit lamp glass turns dull; the rest of the tower keeps its paint.
+                let dull = DARK_GLASS + (1.0 - DARK_GLASS) * lamp;
+                let c = full.base.to_linear();
+                m.base_color = Color::LinearRgba(LinearRgba::new(
+                    c.red * dull,
+                    c.green * dull,
+                    c.blue * dull,
+                    c.alpha,
+                ));
+            }
+        }
+    }
+    if *shown == Some(lamp) && !fresh {
+        return;
+    }
+    *shown = Some(lamp);
+    for handle in &mist {
+        if let Some(mut m) = materials.get_mut(&handle.0) {
+            m.base_color.set_alpha(BEAM_MIST_ALPHA * beam);
+        }
+    }
+    for mut v in &mut pivot {
+        *v = if beam > 0.0 {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+    }
+    for mut s in &mut spot {
+        s.intensity = BEAM_INTENSITY * beam;
+    }
+}
 
 /// The visible light scattered by mist along the spotlight's axis.
 #[derive(Component)]
@@ -455,10 +573,9 @@ fn spawn_harbor(
     // A small lighthouse at the end of the harbour wall; its beam sweeps
     // over the water.
     let tower = Vec3::new(-6.0, 0.0, -3.6);
-    if kit
-        .model("lighthouse", Transform::from_translation(tower))
-        .is_none()
-    {
+    if let Some(model) = kit.model("lighthouse", Transform::from_translation(tower)) {
+        kit.commands.entity(model).insert(LighthouseTower);
+    } else {
         for (i, (r, h)) in [(0.55, 1.2), (0.45, 1.2), (0.38, 1.0)]
             .into_iter()
             .enumerate()
@@ -475,11 +592,12 @@ fn spawn_harbor(
                 Transform::from_translation(tower + Vec3::Y * y),
             );
         }
-        kit.glow(
+        let glass = kit.glow(
             Cylinder::new(0.3, 0.45),
             LinearRgba::rgb(6.0, 5.0, 2.5),
             tower + Vec3::Y * 3.62,
         );
+        kit.commands.entity(glass).insert(LighthouseTower);
         kit.add(
             Cone {
                 radius: 0.42,
@@ -498,7 +616,7 @@ fn spawn_harbor(
         ))
         .id();
     let beam_mat = kit.materials.add(StandardMaterial {
-        base_color: Color::srgba(1.0, 0.89, 0.66, 0.19),
+        base_color: Color::srgba(1.0, 0.89, 0.66, BEAM_MIST_ALPHA),
         alpha_mode: AlphaMode::Add,
         unlit: true,
         cull_mode: None,
@@ -516,7 +634,7 @@ fn spawn_harbor(
     kit.commands.spawn((
         SpotLight {
             color: Color::srgb(1.0, 0.92, 0.7),
-            intensity: 430_000.0,
+            intensity: BEAM_INTENSITY,
             range: BEAM_RANGE,
             outer_angle: BEAM_ANGLE,
             inner_angle: BEAM_ANGLE * 0.45,
@@ -525,6 +643,7 @@ fn spawn_harbor(
         },
         Transform::default().looking_to(BEAM_DIRECTION, Vec3::Y),
         ChildOf(beam_pivot),
+        BeamLight,
     ));
 
     // A wooden jetty on posts on the right, with a rowboat tied to it.
@@ -807,7 +926,7 @@ fn spawn_harbor(
         (hut_lamp, 0.9, Color::srgba(1.0, 0.7, 0.35, 0.3)),
         (lighthouse_lamp, 2.4, Color::srgba(1.0, 0.92, 0.65, 0.3)),
     ] {
-        commands.spawn((
+        let halo = commands.spawn((
             Mesh3d(meshes.add(Rectangle::new(size, size))),
             MeshMaterial3d(materials.add(StandardMaterial {
                 base_color: color,
@@ -821,6 +940,10 @@ fn spawn_harbor(
             NotShadowCaster,
             Pickable::IGNORE,
         ));
+        if pos == lighthouse_lamp {
+            let mut halo = halo;
+            halo.insert(LighthouseTower);
+        }
     }
 
     commands.insert_resource(RippleMesh(meshes.add(Annulus::new(0.92, 1.0))));
@@ -855,10 +978,10 @@ const WAY_BOARDS: [(Way, &str, f32); 2] = [
 ];
 
 /// What a board does right now: go there, or explain when it can be used.
-fn way_action(way: Way, phase: Phase, night: u32, final_night: u32) -> Action {
+fn way_action(way: Way, phase: Phase, season_over: bool) -> Action {
     match way {
         Way::Harbor if phase == Phase::Evening => Action::GoToHarbor,
-        Way::Market if phase == Phase::Morning && night < final_night => Action::NextEvening,
+        Way::Market if phase == Phase::Morning && !season_over => Action::NextEvening,
         _ => Action::WayHint(way),
     }
 }
@@ -933,8 +1056,7 @@ fn on_door_board_click(
         return;
     }
     if let Ok(DoorBoard(way)) = boards.get(click.event_target()) {
-        let final_night = data.config.final_night();
-        actions.write(way_action(*way, *phase.get(), progress.night, final_night));
+        actions.write(way_action(*way, *phase.get(), progress.season_over(&data)));
     }
 }
 
@@ -948,12 +1070,7 @@ fn update_door_boards(
 ) {
     for (DoorBoard(way), paint) in &boards {
         let open = !matches!(
-            way_action(
-                *way,
-                *phase.get(),
-                progress.night,
-                data.config.final_night()
-            ),
+            way_action(*way, *phase.get(), progress.season_over(&data)),
             Action::WayHint(_)
         );
         let wanted = if open {

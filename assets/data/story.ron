@@ -1,14 +1,42 @@
-// Edwin's story: one chapter per night. If he is not served correctly, the
-// chapter repeats the next night. Texts: assets/i18n/<language>.ron
-// (story.name, story.arrives, story.N.intro, story.N.thanks, story.ending).
-(
-    ghost: "edwin",
-    arrive_at: 0.3,
-    chapters: [
-        (wish: "rain_jar", keepsake: Some("umbrella")),
-        (wish: "tea_tin", keepsake: Some("teacup")),
-        (wish: "wool_scarf", keepsake: Some("blanket")),
-        (wish: "music_box", keepsake: Some("wedding_photo")),
-        (wish: "letter_paper", keepsake: Some("pocket_lantern")),
-    ],
-)
+// Story ghosts: each comes once per night, from `start_night` on, with the wish of its next
+// chapter. If it is not served, the chapter repeats the next night; from the second failed
+// night on it names the ware plainly, and whenever its wish is not in stock when the shop opens
+// (or it already left empty-handed) the ferryman brings a parcel holding exactly that ware.
+// So no story can get stuck.
+// arrive_at: when the ghost arrives, as a fraction of the night (0..1).
+// finale: finishing this story ends the season – the season lasts until it is finished.
+// lighthouse: every chapter of this story repairs the harbour lighthouse a little.
+// keepsake: decor (keepsake: true in decor.ron) left in your storeroom as thanks.
+// Texts: assets/i18n/<language>.ron (story.<ghost>.arrives, story.<ghost>.<n>.intro,
+// story.<ghost>.<n>.thanks, story.<ghost>.ending).
+[
+    // Edwin, an old regular of Hedda's, misses his wife Margaret.
+    (
+        ghost: "edwin",
+        start_night: 1,
+        arrive_at: 0.3,
+        chapters: [
+            (wish: "rain_jar", keepsake: Some("umbrella")),
+            (wish: "tea_tin", keepsake: Some("teacup")),
+            (wish: "wool_scarf", keepsake: Some("blanket")),
+            (wish: "music_box", keepsake: Some("wedding_photo")),
+            (wish: "letter_paper", keepsake: Some("pocket_lantern")),
+        ],
+    ),
+    // Ida, the lighthouse keeper, Hedda's best friend. Her light has been out since Hedda left;
+    // the drowned sailors cannot find their way home. Her last chapter is the finale.
+    (
+        ghost: "ida",
+        start_night: 6,
+        arrive_at: 0.4,
+        finale: true,
+        lighthouse: true,
+        chapters: [
+            (wish: "polishing_cloth", keepsake: Some("logbook")),
+            (wish: "pocket_watch", keepsake: Some("ship_bell")),
+            (wish: "brass_compass", keepsake: Some("sea_chart")),
+            (wish: "ship_in_bottle", keepsake: Some("lifebuoy")),
+            (wish: "lavender", keepsake: Some("apron")),
+        ],
+    ),
+]

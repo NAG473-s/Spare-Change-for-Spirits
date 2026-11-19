@@ -35,6 +35,10 @@ pub struct MarketPlugin;
 impl Plugin for MarketPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MarketDay>()
+            .init_resource::<FoundLetter>()
+            .add_systems(OnEnter(Phase::Night), |mut l: ResMut<FoundLetter>| {
+                l.0 = None
+            })
             .init_resource::<HoveredWare>()
             .add_systems(Startup, spawn_market)
             .add_systems(OnEnter(Phase::Day), (open_market, spawn_vendor_plaques))
@@ -80,6 +84,11 @@ const DAY_SKY: Color = Color::srgb(0.5, 0.56, 0.64);
 const NIGHT_SKY: Color = Color::srgb(0.04, 0.04, 0.07);
 const SQUARE_PAVING: &str = "sprites/market/square.png";
 const COBBLES: &str = "sprites/market/cobbles.png";
+
+/// A letter from Hedda found today behind cleared junk (`letter.<n>`),
+/// read in the evening.
+#[derive(Resource, Default)]
+pub struct FoundLetter(pub Option<u32>);
 
 /// What happened at the market today.
 #[derive(Resource, Default)]
@@ -961,6 +970,7 @@ fn on_ware_click(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut figures: Query<&mut VendorFigure>,
+    mut letter: ResMut<FoundLetter>,
 ) {
     let Ok(item) = items.get(click.event_target()) else {
         return;
@@ -1030,6 +1040,11 @@ fn on_ware_click(
                             ("vendor", &vendor),
                         ],
                     ));
+                    // Clearing Hedda's junk turns up one of her letters.
+                    if let Some(n) = data.upgrade(id).and_then(|u| u.letter) {
+                        letter.0 = Some(n);
+                        log.push(lang.t("log.letter_found"));
+                    }
                     // Done for good: it leaves the table.
                     commands.entity(click.event_target()).despawn();
                 }
