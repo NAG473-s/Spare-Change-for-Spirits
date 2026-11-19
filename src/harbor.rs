@@ -67,6 +67,7 @@ pub const WATER_Y: f32 = -0.12;
 const QUAY_EDGE: f32 = -0.7;
 /// The hand cart on the quay, where bought crates are stacked (local).
 pub const CART: Vec3 = Vec3::new(-2.3, 0.0, -2.3);
+pub const CART_BED_HEIGHT: f32 = 0.42;
 /// The signpost back to the shop (local).
 const SIGNPOST: Vec3 = Vec3::new(-5.0, 0.0, -1.5);
 /// Lanterns and mist wrap around between these x positions (local).
@@ -600,7 +601,7 @@ fn spawn_harbor(
         kit.add(
             Cuboid::new(1.2, 0.08, 0.8),
             wood,
-            Transform::from_translation(CART + Vec3::Y * 0.42),
+            Transform::from_translation(CART + Vec3::Y * (CART_BED_HEIGHT - 0.04)),
         );
         for side in [-1.0, 1.0] {
             kit.add(

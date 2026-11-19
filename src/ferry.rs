@@ -16,7 +16,7 @@ use crate::data::{GameData, asset_exists};
 use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Drawer, Purse};
 use crate::fx::Cue;
-use crate::harbor::{CART, HARBOR, RippleMesh, spawn_ripple};
+use crate::harbor::{CART, CART_BED_HEIGHT, HARBOR, RippleMesh, spawn_ripple};
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::rng::Rng;
@@ -324,7 +324,9 @@ fn spawn_boat(
         .id();
 
     // The hull: a model, or a long dark box with a raised bow and stern.
-    if b.model(boat, "ferry_boat", Transform::default()).is_none() {
+    if b.model(boat, "ferry_boat", Transform::from_xyz(0.0, DECK_Y, 0.0))
+        .is_none()
+    {
         let hull = Color::srgb(0.17, 0.11, 0.08);
         b.part(
             boat,
@@ -842,7 +844,7 @@ fn fly_crates(
             stacked += 1;
             let spot = Vec3::new(
                 if slot % 2 == 0 { -0.27 } else { 0.27 },
-                0.46 + (slot / 4) as f32 * CRATE_SIZE.y * 0.85,
+                CART_BED_HEIGHT + (slot / 4) as f32 * CRATE_SIZE.y * 0.85,
                 if slot % 4 < 2 { -0.18 } else { 0.18 },
             );
             *transform =

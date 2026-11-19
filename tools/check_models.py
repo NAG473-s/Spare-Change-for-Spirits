@@ -23,8 +23,7 @@ MODELS = ROOT / "assets" / "models"
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
 SHOP_SIZES = {"counter": (4.5, 1.0, 0.8), "door": (1.1, 2.3, 0.2)}
 TRIANGLE_BUDGET = {"products": 1000, "decor": 3500, "shop": 8000, "harbor": 6000}
-# The harbour scene (docs/MODEL_PROMPTS.md). None: origin not at the bottom
-# centre, so only scenes and triangles are checked.
+# The harbour scene (docs/MODEL_PROMPTS.md).
 HARBOR_SIZES = {
     "harbour_hut": (2.6, 2.9, 2.1),
     "lighthouse": (1.2, 4.3, 1.2),
@@ -33,12 +32,28 @@ HARBOR_SIZES = {
     "barrel": (0.6, 0.72, 0.6),
     "mooring_post": (0.3, 0.6, 0.3),
     "bell_post": (0.6, 1.95, 0.2),
-    "ferry_bell": None,
+    "ferry_bell": (0.25, 0.22, 0.25),
     "hand_cart": (2.0, 0.75, 1.0),
     "signpost": (0.95, 1.95, 0.2),
     "rowboat": (0.8, 0.45, 2.0),
-    "jetty": None,
+    "jetty": (1.1, 0.7, 3.8),
     "paper_lantern": (0.26, 0.34, 0.26),
+}
+
+# Bounds that meet the origin in glTF coordinates. None denotes an anchor
+# inside the bounds, such as the board centre of a hanging sign.
+BOTTOM_CENTRE = ("centre", "minimum", "centre")
+ORIGIN_AXES = {
+    "room": (None, None, None),
+    "wall_clock": ("centre", "centre", "minimum"),
+    "shop_sign": ("centre", None, "centre"),
+    "ferry_boat": ("centre", None, "centre"),
+    "crate_lid": ("centre", None, "minimum"),
+    "bell_post": (None, "minimum", "centre"),
+    "ferry_bell": ("centre", "maximum", "centre"),
+    "hand_cart": (None, "minimum", "centre"),
+    "signpost": (None, "minimum", "centre"),
+    "jetty": ("centre", "maximum", "centre"),
 }
 
 
@@ -135,10 +150,13 @@ def check(path, target, budget):
         f"{path.relative_to(ROOT)}: {size[0]:.2f} × {size[1]:.2f} × {size[2]:.2f} m, "
         f"bottom at y={lo[1]:.2f}, centre x={(lo[0] + hi[0]) / 2:.2f} z={(lo[2] + hi[2]) / 2:.2f}, {tris} triangles"
     )
-    if abs(lo[1]) > 0.05:
-        problems.append("origin is not at the bottom (model should stand on y = 0)")
-    if abs((lo[0] + hi[0]) / 2) > 0.15 or abs((lo[2] + hi[2]) / 2) > 0.15:
-        problems.append("origin is not centred")
+    for i, anchor in enumerate(ORIGIN_AXES.get(path.stem, BOTTOM_CENTRE)):
+        if anchor is None:
+            continue
+        anchors = {"minimum": lo[i], "maximum": hi[i], "centre": (lo[i] + hi[i]) / 2}
+        tolerance = 0.05 if i == 1 else 0.15
+        if abs(anchors[anchor]) > tolerance:
+            problems.append(f"origin should be at the {anchor} on the {'xyz'[i]} axis")
     if target:
         # Products only need to fit (some lie flat); furniture should match its size.
         lower = 0.0 if target == PRODUCT_SIZE else 0.5
@@ -162,17 +180,15 @@ def main():
     expected = {
         "decor": decor_sizes(),
         "products": {i: PRODUCT_SIZE for i in ids("assets/data/products.ron", r'id: "([^"]+)"')},
-        # Models with their origin elsewhere than the bottom centre are only
-        # checked for scenes and triangles (None).
         "shop": dict(
             SHOP_SIZES,
             room=None,
             crate=(0.5, 0.3, 0.42),
             ferryman=(0.7, 1.45, 0.6),
-            ferry_boat=None,
-            crate_lid=None,
-            wall_clock=None,
-            shop_sign=None,
+            ferry_boat=(7.4, 0.6, 1.7),
+            crate_lid=(0.52, 0.05, 0.44),
+            wall_clock=(0.78, 0.78, 0.08),
+            shop_sign=(1.0, 0.75, 0.05),
         ),
         "harbor": HARBOR_SIZES,
     }
@@ -196,8 +212,9 @@ def main():
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
-    floor = ROOT / "assets" / "sprites" / "shop" / "floor.png"
-    print(("  ok       " if floor.is_file() else "  missing  ") + "sprites/shop/floor.png")
+    for name in ("shop/floor.png", "ui/ledger_frame.png"):
+        path = ROOT / "assets" / "sprites" / name
+        print(("  ok       " if path.is_file() else "  missing  ") + f"sprites/{name}")
     # Button icons (optional: a button without one shows only its text).
     print()
     for folder in ("products", "decor"):
