@@ -24,7 +24,7 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open image orders. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
+There are no open image orders. The painted sign emblems are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The game generates the water surface and its ripple normals at runtime.
 
@@ -226,6 +226,14 @@ and deliver one commit per image, `Add <coin> coin icon [skip ci]`.
 `assets/sprites/ui/ledger_frame.png`: a square painted walnut frame with worn brass leaf corners,
 a straight border on each side and a quiet dark plum centre. Keep the area outside the frame
 transparent. The game stretches the centre and edges around the corner paintings.
+
+## Painted sign emblems – 512 × 1008 (done)
+
+`assets/sprites/shop/sign_paint.png` contains seven transparent 512 × 144 strips. The first six show
+an anchor, market awning, hanging lantern, shop doorway, crescent moon and rising sun.
+The last strip centres the shop crest between two flourishes for destinations that fit on a single plank. Use worn gilt pinstripes and cream highlights over muted teal and rose enamel.
+Keep the right three quarters of the first six strips clear for localised signwriting. The game lays both the motif
+and the wording onto the wood, including the two sides of the turning window sign.
 
 ## Water and light – canvas 1024 × 1024
 
