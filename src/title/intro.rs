@@ -3,14 +3,19 @@
 use super::{LOGO, Opening, TitleBackground, spawn_fade};
 use crate::{data::asset_exists, day_cycle::Phase, i18n::Lang, ui::UiFont};
 use bevy::prelude::*;
-use bevy::render::{MainWorld, render_asset::RenderAssets, texture::GpuImage};
+use bevy::render::{
+    ExtractSchedule, MainWorld, RenderApp, render_asset::RenderAssets,
+    render_resource::PipelineCache, texture::GpuImage,
+};
+
+mod ferry;
+mod stroke;
 
 const HARBOR: &str = "sprites/title/intro_harbor.png";
-const FERRY: &str = "sprites/title/intro_ferry.png";
-const GLOW: &str = "sprites/fx/glow.png";
-const DURATION: f32 = 4.8;
-const BOAT_WIDTH: f32 = 38.0;
-const WATERLINE: f32 = 78.0;
+const TITLE_AT: f32 = 2.8;
+const TITLE_FADE: f32 = 1.7;
+const END_FADE: f32 = 0.75;
+const READY_FRAMES: u8 = 2;
 
 #[derive(Component, Default)]
 pub(super) struct Crossing {
@@ -18,11 +23,7 @@ pub(super) struct Crossing {
 }
 
 #[derive(Component)]
-pub(super) struct Ferry;
-#[derive(Component)]
 pub(super) struct Title;
-#[derive(Component)]
-pub(super) struct Lantern;
 #[derive(Component)]
 pub(super) struct Curtain;
 
@@ -35,6 +36,19 @@ fn rect(x: f32, y: f32, width: f32, height: f32) -> Node {
         height: percent(height),
         ..default()
     }
+}
+
+pub(super) fn install(app: &mut App) {
+    app.init_resource::<Opening>()
+        .add_systems(Startup, spawn)
+        .add_systems(
+            Update,
+            (animate, ferry::animate)
+                .chain()
+                .run_if(in_state(Phase::Menu)),
+        );
+    app.sub_app_mut(RenderApp)
+        .add_systems(ExtractSchedule, check_uploads);
 }
 
 pub(super) fn spawn(
@@ -88,73 +102,13 @@ pub(super) fn spawn(
             ChildOf(root),
         ));
     }
-    let ferry = commands
-        .spawn((
-            Ferry,
-            Node {
-                position_type: PositionType::Absolute,
-                left: percent(6),
-                top: percent(WATERLINE),
-                width: percent(BOAT_WIDTH),
-                max_width: vh(76),
-                aspect_ratio: Some(3.0),
-                ..default()
-            },
-            // Hull and its reflection share the same waterline at any window size.
-            UiTransform::from_translation(Val2::percent(0., -92.)),
-            Pickable::IGNORE,
-            ChildOf(root),
-        ))
-        .id();
-    if let Some(image) = picture(FERRY) {
-        commands.spawn((
-            ImageNode {
-                image: image.clone(),
-                image_mode: NodeImageMode::Stretch,
-                flip_y: true,
-                color: Color::srgba(0.51, 0.64, 0.75, 0.17),
-                ..default()
-            },
-            rect(0., 89., 100., 35.),
-            Pickable::IGNORE,
-            ChildOf(ferry),
-        ));
-        commands.spawn((
-            ImageNode::new(image),
-            rect(0., 0., 100., 100.),
-            Pickable::IGNORE,
-            ChildOf(ferry),
-        ));
-    } else {
-        for (x, y, w, h, tint) in [
-            (1., 70., 97., 22., Color::srgb(0.28, 0.19, 0.18)),
-            (87., 18., 1., 54., Color::srgb(0.44, 0.32, 0.23)),
-            (88., 26., 4., 13., Color::srgb(1.0, 0.80, 0.42)),
-        ] {
-            commands.spawn((
-                Node {
-                    border_radius: BorderRadius::all(percent(38)),
-                    ..rect(x, y, w, h)
-                },
-                BackgroundColor(tint),
-                Pickable::IGNORE,
-                ChildOf(ferry),
-            ));
-        }
-    }
-    if asset_exists(GLOW) {
-        commands.spawn((
-            Lantern,
-            ImageNode {
-                image: assets.load(GLOW),
-                color: Color::srgba(1., 0.75, 0.35, 0.39),
-                ..default()
-            },
-            rect(81.6, 1., 18., 54.),
-            Pickable::IGNORE,
-            ChildOf(ferry),
-        ));
-    }
+    ferry::spawn(
+        &mut commands,
+        root,
+        picture(ferry::HULL),
+        picture(ferry::CREW),
+        asset_exists(ferry::GLOW).then(|| assets.load(ferry::GLOW)),
+    );
     let title = commands
         .spawn((
             Title,
@@ -217,23 +171,33 @@ pub(super) fn spawn(
     commands.entity(root).insert(Crossing::default());
 }
 
-/// Wait for the ferry and harbour to reach the renderer before timing their crossing.
-pub(super) fn check_uploads(mut world: ResMut<MainWorld>, images: Res<RenderAssets<GpuImage>>) {
+/// Start counting once the harbour can be drawn, including on a cold shader cache.
+pub(super) fn check_uploads(
+    mut world: ResMut<MainWorld>,
+    images: Res<RenderAssets<GpuImage>>,
+    pipelines: Res<PipelineCache>,
+) {
     let Some(opening) = world.get_resource::<Opening>() else {
         return;
     };
-    if opening.rendered_frames >= 2 {
+    if opening.rendered_frames >= READY_FRAMES {
         return;
     }
     let assets = world.resource::<AssetServer>();
-    if opening.pictures.iter().all(|image| {
-        images.get(image).is_some()
-            || assets
-                .get_load_state(image.id())
-                .is_some_and(|s| s.is_failed())
-    }) {
-        world.resource_mut::<Opening>().rendered_frames += 1;
-    }
+    let ready = pipelines.pipelines().next().is_some()
+        && pipelines.waiting_pipelines().next().is_none()
+        && opening.pictures.iter().all(|image| {
+            images.get(image).is_some()
+                || assets
+                    .get_load_state(image.id())
+                    .is_some_and(|s| s.is_failed())
+        });
+    let frames = if ready {
+        opening.rendered_frames + 1
+    } else {
+        0
+    };
+    world.resource_mut::<Opening>().rendered_frames = frames;
 }
 
 fn ease(t: f32) -> f32 {
@@ -249,12 +213,7 @@ pub(super) fn animate(
     keys: Res<ButtonInput<KeyCode>>,
     touches: Res<Touches>,
     mut crossings: Query<(Entity, &mut Crossing)>,
-    mut ferries: Query<&mut Node, With<Ferry>>,
-    mut titles: Query<
-        (Option<&mut ImageNode>, Option<&mut TextColor>),
-        (With<Title>, Without<Lantern>),
-    >,
-    mut lanterns: Query<&mut ImageNode, With<Lantern>>,
+    mut titles: Query<(Option<&mut ImageNode>, Option<&mut TextColor>), With<Title>>,
     mut curtains: Query<&mut BackgroundColor, With<Curtain>>,
 ) {
     let Ok((root, mut crossing)) = crossings.single_mut() else {
@@ -264,7 +223,7 @@ pub(super) fn animate(
         || touches.any_just_released()
         || keys.get_just_released().next().is_some();
     let held = mouse.pressed(MouseButton::Left) || touches.iter().next().is_some();
-    if skip || (crossing.elapsed >= DURATION && !held) {
+    if skip || (crossing.elapsed >= stroke::DURATION && !held) {
         commands.entity(root).despawn();
         commands.remove_resource::<Opening>();
         debug!(
@@ -276,20 +235,15 @@ pub(super) fn animate(
         }
         return;
     }
-    if opening.is_none_or(|loading| loading.rendered_frames < 2) {
+    if opening.is_none_or(|loading| loading.rendered_frames < READY_FRAMES) {
         return;
     }
     // Shader compilation or resuming a suspended window must not consume the
     // crossing before the player has seen it. At normal frame rates this is real time.
     crossing.elapsed += time.delta_secs().min(0.25);
     let t = crossing.elapsed;
-    let progress = (t / DURATION).min(1.);
-    for mut node in &mut ferries {
-        node.left = percent(6. + 43. * progress);
-        node.top = percent(WATERLINE + 0.38 * (t * 2.7).sin());
-    }
     for (image, text) in &mut titles {
-        let alpha = ease((t - 0.80) / 1.15);
+        let alpha = ease((t - TITLE_AT) / TITLE_FADE);
         if let Some(mut image) = image {
             image.color.set_alpha(alpha);
         }
@@ -297,12 +251,10 @@ pub(super) fn animate(
             text.0.set_alpha(alpha);
         }
     }
-    for mut image in &mut lanterns {
-        image.color.set_alpha(0.36 + 0.08 * (t * 3.8).sin());
-    }
     for mut curtain in &mut curtains {
-        curtain
-            .0
-            .set_alpha((0.42 * (1. - ease(t / 0.40))).max(ease((t - (DURATION - 0.5)) / 0.5)));
+        curtain.0.set_alpha(
+            (0.42 * (1. - ease(t / 0.40)))
+                .max(ease((t - (stroke::DURATION - END_FADE)) / END_FADE)),
+        );
     }
 }
