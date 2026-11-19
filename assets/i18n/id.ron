@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Aku mengail sebuah kancing dari sungai.",
+    "intro.story.2": "Sesosok hantu menunggu di tokomu.",
+    "intro.story.3": "“Ibuku yang menjahitnya,” bisiknya.",
     "menu.version": "Demo · versi {version}",
     "menu.version_full": "Versi {version}",
     "menu.tagline": "Toko kecil yang hanya buka antara tengah malam dan fajar.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Hapus dan mulai permainan baru",
     "menu.language": "Bahasa: {language}",
     "menu.choose_language": "Pilih bahasamu",
+    "menu.language_auto": "Otomatis",
     "menu.back": "Kembali",
     "menu.settings": "Pengaturan",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Pengaturan",
     "settings.music": "Musik: {percent}%",
     "settings.effects": "Efek suara: {percent}%",
+    "settings.narration": "Narasi: {percent}%",
     "settings.ui_size": "Ukuran antarmuka: {percent}%",
     "settings.fullscreen_on": "Layar penuh: nyala",
     "settings.fullscreen_off": "Layar penuh: mati",
