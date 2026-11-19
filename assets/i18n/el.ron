@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Ψάρεψα ένα κουμπί απ’ το ποτάμι.",
+    "intro.story.2": "Στο μαγαζί σου περίμενε ένα φάντασμα.",
+    "intro.story.3": "«Μου το είχε ράψει η μάνα μου», ψιθύρισε.",
     "menu.version": "Demo · έκδοση {version}",
     "menu.version_full": "Έκδοση {version}",
     "menu.tagline": "Ένα μικρό μαγαζί που ανοίγει μόνο από τα μεσάνυχτα ως την αυγή.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Διαγραφή και νέο παιχνίδι",
     "menu.language": "Γλώσσα: {language}",
     "menu.choose_language": "Διάλεξε γλώσσα",
+    "menu.language_auto": "Αυτόματα",
     "menu.back": "Πίσω",
     "menu.settings": "Ρυθμίσεις",
     "hud.menu": "Μενού",
@@ -31,6 +35,7 @@
     "settings.title": "Ρυθμίσεις",
     "settings.music": "Μουσική: {percent}%",
     "settings.effects": "Ηχητικά εφέ: {percent}%",
+    "settings.narration": "Αφήγηση: {percent}%",
     "settings.ui_size": "Μέγεθος διεπαφής: {percent}%",
     "settings.fullscreen_on": "Πλήρης οθόνη: ενεργή",
     "settings.fullscreen_off": "Πλήρης οθόνη: ανενεργή",
