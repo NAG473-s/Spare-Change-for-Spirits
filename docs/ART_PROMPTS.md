@@ -4,7 +4,8 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Images are only needed for:
 
 - **Ghosts** – hand-drawn sprites that float in the room and always face the camera.
-- **Product pictures** – shown on the shelves while a product has no 3D model yet.
+- **Product pictures** – the existing ones are shown on the shelves while a product has no 3D
+  model yet. New products get 3D models only, no pictures.
 - **The floor texture.**
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
@@ -22,7 +23,6 @@ python3 tools/check_models.py
 | What | Prompts |
 |---|---|
 | Sprites for the four new ghosts: `cat`, `sailor`, `knight`, `bride` | [Ghosts](#ghosts--canvas-1024--1536-portrait) |
-| *(optional)* Pictures for the eight new products – only needed if their 3D models take a while | [Products](#products--canvas-1024--1024) |
 
 ## Workflow
 
@@ -36,7 +36,6 @@ python3 tools/check_models.py
 
    ```bash
    python3 tools/prepare_sprite.py ~/Downloads/image.png ghost cat --colors 48
-   python3 tools/prepare_sprite.py ~/Downloads/image.png product fish_bone --colors 48
    python3 tools/prepare_sprite.py ~/Downloads/image.png floor
    ```
 
@@ -95,26 +94,12 @@ In the game they are about 1.35 m tall and face the camera.
 | `child` | A small child ghost, mint green glow, round and bouncy, missing front tooth grin, holding a paper pinwheel. |
 | `edwin` | Edwin, an elderly gentleman ghost, warm pale-yellow glow, kind tired eyes, neat moustache, flat cap and a long coat, holding his hat to his chest. |
 
-## Products – canvas 1024 × 1024
+## Products (done)
 
-Only a fallback: a product picture appears on the shelves while the product has no 3D model.
-Keep the silhouette simple and readable at small size.
-
-**Optional – new products without picture or model yet:**
-
-| File id | Prompt |
-|---|---|
-| `ship_in_bottle` | A tiny sailing ship inside a corked glass bottle. |
-| `brass_compass` | An open round brass compass with a needle pointing north. |
-| `fish_bone` | A cartoonish fish skeleton, head, spine and tail. |
-| `ball_of_yarn` | A loose ball of soft blue yarn with a strand hanging out. |
-| `polishing_cloth` | A folded soft cloth with a little tin of metal polish. |
-| `hair_ribbon` | A light blue silk ribbon tied in a bow. |
-| `wedding_veil` | A folded white lace veil with a small pearl comb. |
-| `pressed_flower` | A pressed pink flower between two pages of an open old book. |
-
-**Done:** `rain_jar`, `letter_paper`, `music_box`, `pocket_watch`, `wool_scarf`, `marbles`,
-`tea_tin`, `faceless_photo`, `rusty_key`, `powder_compact`, `lavender`, `tin_soldier`.
+Product pictures are only a fallback until a product has its 3D model; new products get models
+only (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Existing pictures: `rain_jar`, `letter_paper`,
+`music_box`, `pocket_watch`, `wool_scarf`, `marbles`, `tea_tin`, `faceless_photo`, `rusty_key`,
+`powder_compact`, `lavender`, `tin_soldier`.
 
 ## Floor – canvas 1024 × 1024 (done)
 
