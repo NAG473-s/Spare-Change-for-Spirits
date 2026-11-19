@@ -11,6 +11,7 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 There are no open model orders. The shop's three junk piles, waiting bench, door lantern,
 herb sachets, ferry contract and wooden way board are in `assets/models/shop/`.
+The painted return post for the quay and market is in `assets/models/harbor/signpost.glb`.
 The carpenter's rolled building plan is in `assets/models/market/plan.glb`.
 
 To check a fresh checkout, pull `main` and run `python3 tools/check_models.py`. A `missing` line
@@ -121,8 +122,8 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 | `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
 | `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
-| `way_board` | 0.8 × 0.24 × 0.05 | A weathered wooden direction board with one pointed end and two old nails, **no lettering** (the game writes "To the harbour" and "To the market" on it). Two of them hang on the back wall in the corner by the shop door. Origin at the **centre of the back** of the board, front towards −Y. |
-| `shop_sign` | 1.0 × 0.75 × 0.05 | The hanging "closed / open" sign for the shop window: a painted wooden board 0.98 × 0.44 m in a thin frame, hanging from two cords that meet 0.3 m above it. The **front (−Y) is painted dark red**, the **back (+Y) green**, both with a thin cream border and **no lettering** (the game writes "closed"/"open" in the player's language). Origin at the **centre of the board**. The game flips it round. |
+| `way_board` | 0.8 × 0.24 × 0.05 | A weathered wooden direction board with one pointed end and two old nails, **no lettering** (the game writes "To the harbour" and "To the market" on it). The game mounts two of these flush with the left wall immediately beside the doorframe and paints the anchor or market awning beside the localised wording. Keep the broad front face flat at +0.039 m in glTF Z. Origin at the **centre of the back** of the board, front towards −Y. |
+| `shop_sign` | 1.0 × 0.75 × 0.05 | The hanging "closed / open" sign for the shop window: a painted wooden board 0.98 × 0.44 m in a thin frame, hanging from two cords that meet 0.3 m above it. The **front (−Y) is painted dark red**, the **back (+Y) green**, both with a thin cream border and **no lettering** (the game writes "closed"/"open" in the player's language). Origin at the **centre of the board**. The game paints each side separately and flips the entire sign. Keep the red and green faces flat at +0.025 and −0.025 m in glTF Z. |
 
 **Room layout** (only if you make `room.glb`; Blender coordinates, Z up, origin at 0,0,0, do not
 apply an offset): the floor is **not** part of the room model (the game draws the floor grid).
@@ -185,7 +186,7 @@ glowing glass and windows are just emissive materials.
 | `bell_post` | 0.6 × 1.95 × 0.2 | A wooden post with its origin at the foot. A short arm sticks out to the right (+X), with a hook **0.38 m right of the post, 1.85 m high** for the separate bell. |
 | `ferry_bell` | 0.25 × 0.22 × 0.25 | A small, slightly tarnished brass bell with a clapper and a ring at the top. Origin at the **top of the ring** (where it hangs), the bell below it, so the game can swing it. |
 | `hand_cart` | 2.0 × 0.75 × 1.0 | A wooden two-wheeled hand cart: a flat loading bed of planks **0.42 m high, 1.2 × 0.8 m**, with a low rim, two spoked wheels under the middle, two long handles reaching out to the left (−X). The origin is on the ground below the centre of the bed where the game stacks bought crates. |
-| `signpost` | 0.95 × 1.95 × 0.2 | A crooked wooden signpost with its origin at the foot and two arrow-shaped boards pointing to the right, one at 1.6 m and one at 1.3 m, **no lettering**. |
+| `signpost` | 0.95 × 1.95 × 0.2 | A crooked wooden signpost with its origin at the foot and two arrow-shaped boards pointing to the right, with broad flat faces centred at 1.64 m and 1.22 m high. In glTF the upper face is at Z +0.098 m and the lower at +0.091 m. Carve a few long grain lines and a worn gilt chevron into the arrow tips. Leave the wood unlettered for the game’s painted lantern, shop crest and localised return directions. |
 | `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along the Y axis (front to back), two seats, a pair of oars resting inside. |
 | `jetty` | 1.1 × 0.7 × 3.8 | A narrow wooden jetty: a deck of planks running along the Y axis (3.8 m long, 1.0 m wide) on four posts. Origin at the **centre of the deck surface**; the posts reach about 0.6 m below it. |
 | `paper_lantern` | 0.26 × 0.34 × 0.26 | A small floating paper lantern on a tiny round wooden raft: a box of warm paper glowing amber (emissive). |
