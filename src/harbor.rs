@@ -254,10 +254,13 @@ fn spawn_harbor(
             base_color: if painted.is_some() {
                 Color::WHITE
             } else {
-                Color::srgb(0.035, 0.07, 0.11)
+                Color::srgb(0.045, 0.16, 0.20)
             },
             base_color_texture: painted,
-            perceptual_roughness: 0.39,
+            // The open sky gives the water a cool undertone between the
+            // warmer reflections from the low evening sun and the lamps.
+            emissive: LinearRgba::rgb(0.006, 0.024, 0.041),
+            perceptual_roughness: 0.31,
             reflectance: 0.32,
             normal_map_texture: Some(normals),
             uv_transform: water_uv(0.0),
@@ -956,7 +959,7 @@ pub(crate) fn repeating(asset_server: &AssetServer, path: &str, srgb: bool) -> H
 struct Water;
 
 /// How often the wave texture repeats across the water (x, z).
-const WAVE_TILES: Vec2 = Vec2::new(7.0, 2.6);
+const WAVE_TILES: Vec2 = Vec2::new(5.5, 5.2);
 
 fn water_uv(t: f32) -> bevy::math::Affine2 {
     bevy::math::Affine2::from_scale_angle_translation(
