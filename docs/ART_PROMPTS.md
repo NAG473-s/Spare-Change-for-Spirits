@@ -6,7 +6,8 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 - **Ghosts** – hand-drawn sprites that float in the room and always face the camera.
 - **Icons** – small pictures of the products, furniture and coins used in the interface. A product
   picture is also shown on the shelf while the product has no 3D model yet.
-- **The interface frame** – painted walnut and brass trim for menus, shop panels and crate tooltips.
+- **The interface frame** – painted walnut and brass trim for menus, shop panels, crate tooltips
+  and the traders' nameplates at the village market.
 - **Surface textures and light** – the shop floor, market cobblestones and the soft halo around harbour lamps.
 - **The title screen** – a dedicated Full HD background and the game logo.
 - **The desktop icon** – the same ghost and brass button in the Linux, macOS and Windows launchers.
@@ -23,8 +24,9 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open image orders. The desktop icon, five furniture icons, market cobblestones and
-harbour lamp halo are included. The game generates the water surface and its ripple normals at runtime.
+There are no open image orders. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
+The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
+The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
 It marks absent files with `missing` or `no icon`. The environment textures and their paths are
