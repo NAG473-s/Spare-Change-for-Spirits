@@ -9,7 +9,7 @@ use bevy::prelude::*;
 
 use crate::data::asset_exists;
 use crate::day_cycle::{NightClock, Phase};
-use crate::harbor::Location;
+use crate::harbor::{Location, ShopDoor};
 use crate::ui::{TEXT, UiFont};
 
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
@@ -60,6 +60,7 @@ impl Plugin for ScenePlugin {
             Startup,
             (spawn_camera, spawn_room, spawn_lights, spawn_wall_clock),
         )
+        .add_systems(PostStartup, spawn_door_light)
         .add_systems(
             Update,
             (
@@ -393,6 +394,52 @@ fn spawn_lights(mut commands: Commands) {
     ));
 }
 
+/// Moonlight transmitted through the little bullseye in the entrance.
+#[derive(Component)]
+struct DoorGlass(Option<Handle<StandardMaterial>>);
+
+const PORTHOLE_LIGHT: &str = "sprites/shop/porthole_light.png";
+const PORTHOLE_HEIGHT: f32 = 1.62;
+
+fn spawn_door_light(
+    mut commands: Commands,
+    door: Single<&Transform, With<ShopDoor>>,
+    assets: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let sill = door.translation.with_y(0.0);
+    let reflection = asset_exists(PORTHOLE_LIGHT).then(|| {
+        let glass = materials.add(StandardMaterial {
+            base_color: Color::NONE,
+            base_color_texture: Some(assets.load(PORTHOLE_LIGHT)),
+            alpha_mode: AlphaMode::Add,
+            unlit: true,
+            ..default()
+        });
+        let patch = sill + door.rotation * Vec3::new(-0.32, 0.003, 1.42);
+        commands.spawn((
+            Mesh3d(meshes.add(Plane3d::default().mesh().size(1.02, 1.96))),
+            MeshMaterial3d(glass.clone()),
+            Transform::from_translation(patch)
+                .with_rotation(door.rotation * Quat::from_rotation_y(-0.22)),
+            NotShadowCaster,
+            Pickable::IGNORE,
+        ));
+        glass
+    });
+    commands.spawn((
+        DoorGlass(reflection),
+        PointLight {
+            intensity: 0.0,
+            radius: 0.19,
+            range: 3.7,
+            ..default()
+        },
+        Transform::from_translation(sill + door.rotation * Vec3::new(0.0, PORTHOLE_HEIGHT, 0.44)),
+    ));
+}
+
 struct DaylightSettings {
     /// Diffuse skylight, including the shadowed side of stalls and furniture.
     sky: (f32, Color),
@@ -461,6 +508,8 @@ fn time_of_day_light(
     mut ambient: ResMut<GlobalAmbientLight>,
     daylight: Single<(&mut DirectionalLight, &mut Transform), With<Daylight>>,
     mut window: Single<&mut SpotLight, With<WindowLight>>,
+    door: Single<(&DoorGlass, &mut PointLight)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let target = lighting_for(*phase.get(), *location);
     let k = 1.0 - (-1.8 * time.delta_secs()).exp();
@@ -475,6 +524,18 @@ fn time_of_day_light(
     transform.rotation = transform.rotation.slerp(rotation, k);
     window.intensity = window.intensity.lerp(target.window.0, k);
     window.color = window.color.mix(&target.window.1, k);
+    let (glass, mut light) = door.into_inner();
+    light.intensity = window.intensity * 0.32;
+    light.color = window.color;
+    if let Some(paint) = &glass.0 {
+        let opacity = (window.intensity / 110_000.0).clamp(0.0, 1.0) * 0.29;
+        let tint = light.color.with_alpha(opacity);
+        if materials.get(paint).is_some_and(|m| m.base_color != tint)
+            && let Some(mut m) = materials.get_mut(paint)
+        {
+            m.base_color = tint;
+        }
+    }
 }
 
 /// A flat sprite that turns around the Y axis to face the camera.
