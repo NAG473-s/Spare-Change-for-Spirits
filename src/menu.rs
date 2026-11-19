@@ -8,7 +8,7 @@ use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
 use crate::inventory::CratesOrdered;
 use crate::register::Register;
-use crate::save::{GameState, Settings, read_save, write_save};
+use crate::save::{GameState, Settings, can_continue, read_save, write_save};
 use crate::shop::ShopLayout;
 use crate::title::{LOGO, TitleLogo};
 use crate::ui::{Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, UiFont, UiTheme, overlay};
@@ -166,6 +166,7 @@ fn build_main_menu(
     lang: Res<Lang>,
     settings: Res<Settings>,
     language_menu: Res<LanguageMenu>,
+    data: Res<GameData>,
     existing: Query<Entity, With<MenuRoot>>,
 ) {
     for e in &existing {
@@ -199,7 +200,7 @@ fn build_main_menu(
     }
     ui.text(&lang.t("menu.tagline"));
     ui.rule();
-    if let Some(save) = read_save().filter(|s| !s.finished) {
+    if let Some(save) = read_save().filter(|s| can_continue(s, data.config.final_night())) {
         ui.primary(
             &lang.f("menu.continue", &[("night", &save.night)]),
             Action::Continue,

@@ -179,6 +179,7 @@
     "end.title": "Einde van de demo",
     "end.reputation": "Je reputatie onder de geesten: {reputation}",
     "end.wishes_left": "{name} heeft nog wensen over: {count}. Misschien de volgende keer.",
+    "end.carry_over": "Je winkel, je munten en je aandenkens zijn opgeslagen: in de volledige versie ga je precies hier verder, met nacht {night}.",
     "end.thanks": "Bedankt voor het spelen! Zet Spare Change for Spirits op je verlanglijst op Steam.",
     "end.back": "Terug naar het menu",
 

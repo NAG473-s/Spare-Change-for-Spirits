@@ -179,6 +179,7 @@
     "end.title": "Sfârșitul demo-ului",
     "end.reputation": "Reputația ta printre spirite: {reputation}",
     "end.wishes_left": "{name} mai are dorințe neîmplinite: {count}. Poate data viitoare.",
+    "end.carry_over": "Magazinul, monedele și amintirile tale sunt salvate: în jocul complet continui chiar de aici, cu noaptea {night}.",
     "end.thanks": "Mulțumim că ai jucat! Adaugă Spare Change for Spirits în lista de dorințe pe Steam.",
     "end.back": "Înapoi la meniu",
 

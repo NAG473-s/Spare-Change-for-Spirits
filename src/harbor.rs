@@ -649,7 +649,7 @@ fn spawn_harbor(
         }
     }
     spawn_wayfinder(
-        &mut kit.commands,
+        kit.commands,
         &font,
         &lang,
         "harbor.back",

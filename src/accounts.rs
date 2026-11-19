@@ -473,7 +473,7 @@ fn build_ledger(
         },
     );
     let mut ui = ui.with_footer(footer);
-    let last = progress.night >= data.config.nights_in_demo;
+    let last = progress.night >= data.config.final_night();
     let label = if last {
         "morning.to_end"
     } else {

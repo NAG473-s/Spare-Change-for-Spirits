@@ -179,6 +179,7 @@
     "end.title": "Demo päättyi",
     "end.reputation": "Maineesi henkien keskuudessa: {reputation}",
     "end.wishes_left": "{name}: toiveita vielä jäljellä {count}. Ehkä ensi kerralla.",
+    "end.carry_over": "Puotisi, kolikkosi ja muistoesineesi on tallennettu: täysversiossa jatkat juuri tästä, ja vuorossa on yö {night}.",
     "end.thanks": "Kiitos pelaamisesta! Lisää Spare Change for Spirits toivelistallesi Steamissä.",
     "end.back": "Takaisin valikkoon",
 

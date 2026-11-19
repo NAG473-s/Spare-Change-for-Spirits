@@ -179,6 +179,7 @@
     "end.title": "試玩版結束",
     "end.reputation": "你在幽靈之間的聲望：{reputation}",
     "end.wishes_left": "{name}還有{count}個心願未了。也許下次吧。",
+    "end.carry_over": "你的店舖、錢幣和紀念品都已儲存：在完整版中，你會從這裡繼續，迎接第{night}夜。",
     "end.thanks": "感謝遊玩！歡迎在 Steam 將《Spare Change for Spirits》加入願望清單。",
     "end.back": "回到主選單",
 

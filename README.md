@@ -67,7 +67,8 @@ If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost
 door. Served correctly **and** given exact change → the ghost passes into the light and your
 reputation rises. Better reputation = more customers.
 
-**Five demo nights, each different:** every night has an event (`assets/data/events.ron`) –
+**Five demo nights, each different** (the demo is built with `cargo build --features demo`; a save
+from its end continues in the full game with night 6): every night has an event (`assets/data/events.ron`) –
 a quiet first night, fog (darker, more shy ghosts), a harvest moon (higher prices), a storm (one
 crate less, colder, sailors) and All Souls' Night (crowds, good prices). New products, decor and
 ghosts unlock on later nights (`unlock_night`); the evening panel lists what is new.

@@ -8,6 +8,10 @@ description = "A shop management game for ghosts"
 license-file = "LICENSE"
 publish = false
 
+[features]
+# The Steam demo: stops after `demo_nights` (assets/data/config.ron).
+demo = []
+
 [dependencies]
 bevy = "0.20.1"
 ron = "0.12.3"

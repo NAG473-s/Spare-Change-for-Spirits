@@ -179,6 +179,7 @@
     "end.title": "体験版はここまで",
     "end.reputation": "幽霊たちの間でのあなたの評判：{reputation}",
     "end.wishes_left": "{name}の願いはまだ{count}つ残っている。また今度。",
+    "end.carry_over": "お店もお金も思い出の品も、セーブされています。製品版では、ここから{night}夜目に進めます。",
     "end.thanks": "遊んでくれてありがとう！SteamでSpare Change for Spiritsをウィッシュリストに追加してね。",
     "end.back": "メニューに戻る",
 

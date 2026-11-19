@@ -11,13 +11,18 @@ publicly.
 
 | | Demo (festival) | Early Access launch | First updates |
 |---|---|---|---|
-| Nights | 1–3 (ends with a "to be continued" screen) | 1–10 | 11–15, endless mode |
-| Ghosts | the first 6 | all 10 + 4 new | more, seasonal ones |
-| Story | Edwin, chapters 1–2 | Edwin complete, with an ending | a second story ghost |
+| Nights | 1–5, ends with "continue with night 6 in the full game" | 1–10 | 11–15, endless mode |
+| Ghosts | all 10 | + 4 new | more, seasonal ones |
+| Story | Edwin, all 5 chapters | + a second story ghost for nights 6–10 | a third story |
 | Shop | furniture, harbour, ferryman | + shop upgrades (bigger shop, second counter) | decoration sets |
 | Polish | everything shown must look finished | all models in, no placeholders | |
 
-Save games from the demo carry over to the full game.
+**Save games carry over:** the demo and the full game save to the same folder. A save from the
+end of the demo (night 5 played) continues in the full game with the evening of night 6 – shop,
+coins, stock, keepsakes and reputation included. The demo is built with `cargo build --features
+demo` (it stops after `demo_nights` in `assets/data/config.ron`); the full game stops after
+`last_night`. Saves must stay compatible between the two: new save fields get
+`#[serde(default)]` instead of a new save version.
 
 ## Week by week
 
@@ -45,7 +50,7 @@ Checkboxes are ticked in the commit that finishes them.
 
 - [ ] Nights 6–10: new events in `events.ron`, rising difficulty
 - [ ] 4 new ghosts with wishes, sprites and sheets ordered
-- [ ] Edwin's story to its ending (chapters, keepsakes, final scene)
+- [ ] A second story ghost for nights 6–10 (Edwin's story ends in the demo)
 - [ ] Shop upgrades (bigger shop, more shelves) as a reason to save money
 
 ### Week 4 · Dec 14 – Dec 20: store page live
@@ -63,7 +68,9 @@ Checkboxes are ticked in the commit that finishes them.
 
 ### Week 6 · Jan 4 – Jan 10: demo build
 
-- [ ] Demo cut: nights 1–3, "to be continued" screen with a wishlist link
+- [ ] Demo build with `--features demo` (nights 1–5); end screen with "continue with night 6"
+      and a wishlist link; check that a finished demo save continues in the full build
+- [ ] Windows workflow builds both editions
 - [ ] Demo build uploaded and submitted for Steam's build review
 - [ ] Second playtest round with the Early Access content
 

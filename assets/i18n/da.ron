@@ -179,6 +179,7 @@
     "end.title": "Demoen er slut",
     "end.reputation": "Dit omdømme blandt ånderne: {reputation}",
     "end.wishes_left": "{name} har stadig ønsker tilbage: {count}. Måske næste gang.",
+    "end.carry_over": "Din butik, dine mønter og dine mindeting er gemt: I den fulde version fortsætter du lige herfra, med nat {night}.",
     "end.thanks": "Tak, fordi du spillede! Sæt Spare Change for Spirits på din ønskeliste på Steam.",
     "end.back": "Tilbage til menuen",
 

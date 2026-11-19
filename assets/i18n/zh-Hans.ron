@@ -179,6 +179,7 @@
     "end.title": "演示结束",
     "end.reputation": "你在幽灵之间的声望：{reputation}",
     "end.wishes_left": "{name}还有{count}个心愿未了。下次再说吧。",
+    "end.carry_over": "你的店铺、钱币和纪念品都已保存：在完整版中，你将从这里继续，迎来第{night}夜。",
     "end.thanks": "感谢游玩！请在 Steam 上将《Spare Change for Spirits》加入愿望单。",
     "end.back": "返回菜单",
 

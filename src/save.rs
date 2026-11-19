@@ -45,7 +45,8 @@ pub struct SaveGame {
     pub cells: Vec<CellContent>,
     pub keepsakes: BTreeMap<String, u32>,
     pub crates_ordered: u32,
-    /// The demo has been played to the end; there is nothing to continue.
+    /// The last night of the build that wrote it has been played. A save
+    /// from the end of the demo can still continue in the full game.
     pub finished: bool,
 }
 
@@ -206,6 +207,14 @@ impl GameState<'_> {
     }
 }
 
+/// Whether this build can continue a save: always, unless the save is
+/// past this build's last night (the end of the demo, played in the demo).
+/// Saves never break between the demo and the full game: new fields need
+/// `#[serde(default)]` instead of a new `SAVE_VERSION`.
+pub fn can_continue(save: &SaveGame, final_night: u32) -> bool {
+    save.night <= final_night
+}
+
 /// Evening and the start of the night: continue at this evening.
 fn autosave_evening(state: GameState) {
     write_save(&state.snapshot(state.progress.night, false));
@@ -214,13 +223,32 @@ fn autosave_evening(state: GameState) {
 /// Dawn: the night is done, continue at the next evening.
 fn autosave_dawn(state: GameState, data: Res<GameData>) {
     let night = state.progress.night;
-    let finished = night >= data.config.nights_in_demo;
+    let finished = night >= data.config.final_night();
     write_save(&state.snapshot(night + 1, finished));
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_end_of_the_demo_continues_in_the_full_game() {
+        // Dawn after night 5 of the demo: continue at the evening of night 6.
+        let save = SaveGame {
+            version: SAVE_VERSION,
+            night: 6,
+            reputation: 3,
+            story_chapter: 5,
+            drawer: Purse::default(),
+            stock: BTreeMap::new(),
+            cells: Vec::new(),
+            keepsakes: BTreeMap::new(),
+            crates_ordered: 0,
+            finished: true,
+        };
+        assert!(!can_continue(&save, 5), "nothing left in the demo");
+        assert!(can_continue(&save, 10), "the full game goes on");
+    }
 
     #[test]
     fn save_round_trips_through_ron() {

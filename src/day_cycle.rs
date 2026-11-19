@@ -209,7 +209,7 @@ fn next_evening(
     if !actions.read().any(|a| *a == Action::NextEvening) {
         return;
     }
-    if progress.night >= data.config.nights_in_demo {
+    if progress.night >= data.config.final_night() {
         next.set(Phase::DemoEnd);
     } else {
         progress.night += 1;

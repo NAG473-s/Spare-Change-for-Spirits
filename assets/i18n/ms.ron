@@ -179,6 +179,7 @@
     "end.title": "Tamat demo",
     "end.reputation": "Reputasi anda dalam kalangan roh: {reputation}",
     "end.wishes_left": "{name} masih ada hajat yang belum tertunai: {count}. Mungkin lain kali.",
+    "end.carry_over": "Kedai, wang dan barang kenangan anda telah disimpan: dalam versi penuh, anda boleh menyambung permainan tepat dari sini, bermula dengan malam {night}.",
     "end.thanks": "Terima kasih kerana bermain! Tambahkan Spare Change for Spirits ke senarai hajat anda di Steam.",
     "end.back": "Kembali ke menu",
 

@@ -179,6 +179,7 @@
     "end.title": "Hết bản demo",
     "end.reputation": "Danh tiếng của bạn trong cõi linh hồn: {reputation}",
     "end.wishes_left": "{name} vẫn còn {count} điều ước. Có lẽ để lần sau.",
+    "end.carry_over": "Cửa tiệm, tiền xu và kỷ vật của bạn đều đã được lưu: trong phiên bản đầy đủ, bạn sẽ tiếp tục ngay tại đây, với đêm {night}.",
     "end.thanks": "Cảm ơn bạn đã chơi! Hãy thêm Spare Change for Spirits vào danh sách mong muốn trên Steam.",
     "end.back": "Về menu",
 

@@ -179,6 +179,7 @@
     "end.title": "Akhir demo",
     "end.reputation": "Reputasimu di antara para arwah: {reputation}",
     "end.wishes_left": "{name} masih punya {count} permintaan. Mungkin lain kali.",
+    "end.carry_over": "Toko, koin, dan kenang-kenanganmu sudah tersimpan: di versi lengkap, kamu bisa lanjut tepat dari sini, mulai malam ke-{night}.",
     "end.thanks": "Terima kasih sudah bermain! Masukkan Spare Change for Spirits ke wishlist-mu di Steam.",
     "end.back": "Kembali ke menu",
 

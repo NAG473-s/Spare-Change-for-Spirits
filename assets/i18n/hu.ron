@@ -179,6 +179,7 @@
     "end.title": "Vége a demónak",
     "end.reputation": "Hírneved a szellemek között: {reputation}",
     "end.wishes_left": "{name} kívánságai közül még hátravan: {count}. Talán legközelebb.",
+    "end.carry_over": "Elmentettük a boltodat, az érméidet és az emléktárgyaidat: a teljes játékban pontosan innen folytathatod, {night}. éjszaka következik.",
     "end.thanks": "Köszönjük, hogy játszottál! Tedd fel a Spare Change for Spirits játékot a kívánságlistádra a Steamen.",
     "end.back": "Vissza a menübe",
 

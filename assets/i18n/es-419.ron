@@ -179,6 +179,7 @@
     "end.title": "Fin de la demo",
     "end.reputation": "Tu reputación entre los espíritus: {reputation}",
     "end.wishes_left": "A {name} todavía le quedan deseos: {count}. Quizás la próxima vez.",
+    "end.carry_over": "Tu tienda, tus monedas y tus recuerdos están guardados: en el juego completo seguirás justo desde aquí, en la noche {night}.",
     "end.thanks": "¡Gracias por jugar! Agrega Spare Change for Spirits a tu lista de deseados en Steam.",
     "end.back": "Volver al menú",
 

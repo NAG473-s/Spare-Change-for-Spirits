@@ -240,10 +240,25 @@ pub struct Config {
     pub max_ghosts_in_shop: usize,
     pub grid_cols: usize,
     pub grid_rows: usize,
-    pub nights_in_demo: u32,
+    /// The last night of the full game.
+    pub last_night: u32,
+    /// The last night of the demo (built with `--features demo`). A save from
+    /// the end of the demo continues in the full game with the night after.
+    pub demo_nights: u32,
     pub base_atmosphere: Atmosphere,
     /// Assist mode: shows the change due at the register.
     pub show_change_due: bool,
+}
+
+impl Config {
+    /// The last night of this build: the demo stops earlier than the full game.
+    pub fn final_night(&self) -> u32 {
+        if cfg!(feature = "demo") {
+            self.demo_nights.min(self.last_night)
+        } else {
+            self.last_night
+        }
+    }
 }
 
 #[derive(Resource)]
@@ -433,12 +448,12 @@ mod tests {
         assert_eq!(data.price_factor(quiet), 1.0);
         assert_eq!(data.ghost_weight_factor(quiet, "shy"), 1.0);
         // Every night of the demo has an event, and every later ghost unlocks within the demo.
-        for night in 1..=data.config.nights_in_demo {
+        for night in 1..=data.config.final_night() {
             assert!(data.event(night).is_some(), "night {night} has no event");
         }
         for g in &data.ghosts {
             assert!(
-                g.unlock_night <= data.config.nights_in_demo,
+                g.unlock_night <= data.config.final_night(),
                 "{} never appears",
                 g.id
             );

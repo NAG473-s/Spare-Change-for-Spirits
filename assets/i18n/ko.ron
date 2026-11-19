@@ -179,6 +179,7 @@
     "end.title": "데모 끝",
     "end.reputation": "유령들 사이에서 당신의 평판: {reputation}",
     "end.wishes_left": "{name}에게는 아직 소원이 {count}개 남아 있어요. 다음 기회에.",
+    "end.carry_over": "가게와 돈, 기념품은 모두 저장되어 있어요. 정식 버전에서는 바로 여기서 {night}번째 밤부터 이어서 할 수 있어요.",
     "end.thanks": "플레이해 주셔서 감사합니다! Steam 찜 목록에 Spare Change for Spirits를 추가해 주세요.",
     "end.back": "메뉴로 돌아가기",
 

@@ -597,7 +597,7 @@ fn update_hud(
         "hud",
         &[
             ("night", &progress.night),
-            ("nights", &data.config.nights_in_demo),
+            ("nights", &data.config.final_night()),
             ("phase", &lang.t(phase.get().key())),
             ("time", &time),
             ("reputation", &progress.reputation),
@@ -1109,6 +1109,9 @@ fn build_demo_end_panel(
                 ("count", &(chapters - progress.story_chapter)),
             ],
         ));
+    }
+    if cfg!(feature = "demo") {
+        ui.text(&lang.f("end.carry_over", &[("night", &(progress.night + 1))]));
     }
     ui.dim(&lang.t("end.thanks"));
     ui.spacer();

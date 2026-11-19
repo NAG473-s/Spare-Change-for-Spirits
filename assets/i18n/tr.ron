@@ -179,6 +179,7 @@
     "end.title": "Demonun sonu",
     "end.reputation": "Ruhlar arasındaki itibarın: {reputation}",
     "end.wishes_left": "{name} için hâlâ dilek kaldı: {count}. Belki bir dahaki sefere.",
+    "end.carry_over": "Dükkânın, paraların ve hatıraların kaydedildi: tam sürümde kaldığın yerden, {night}. geceyle devam edeceksin.",
     "end.thanks": "Oynadığın için teşekkürler! Spare Change for Spirits'i Steam'de istek listene ekle.",
     "end.back": "Menüye dön",
 

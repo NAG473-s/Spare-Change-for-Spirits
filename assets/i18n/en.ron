@@ -179,6 +179,7 @@
     "end.title": "End of the demo",
     "end.reputation": "Your reputation among the spirits: {reputation}",
     "end.wishes_left": "{name} still has wishes left: {count}. Perhaps next time.",
+    "end.carry_over": "Your shop, your coins and your keepsakes are saved: in the full game you continue right here, with night {night}.",
     "end.thanks": "Thanks for playing! Wishlist Spare Change for Spirits on Steam.",
     "end.back": "Back to the menu",
 

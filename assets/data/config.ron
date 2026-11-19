@@ -16,7 +16,10 @@
     grid_cols: 10,
     grid_rows: 5,
 
-    nights_in_demo: 5,
+    // The full game ends after `last_night`, the demo (cargo build --features demo)
+    // after `demo_nights`; a finished demo save continues in the full game.
+    last_night: 5,
+    demo_nights: 5,
 
     // Atmosphere of the empty shop. Decor is added on top.
     base_atmosphere: (light: 0, warmth: 0, silence: 1, reflection: 0),

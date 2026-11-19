@@ -179,6 +179,7 @@
     "end.title": "Konec dema",
     "end.reputation": "Tvá pověst mezi duchy: {reputation}",
     "end.wishes_left": "{name} má ještě nesplněná přání: {count}. Snad příště.",
+    "end.carry_over": "Tvůj obchod, mince i upomínky jsou uložené: v plné verzi hry budeš pokračovat přesně odsud, od noci {night}.",
     "end.thanks": "Díky za hraní! Přidej si Spare Change for Spirits na Steamu do seznamu přání.",
     "end.back": "Zpět do menu",
 
