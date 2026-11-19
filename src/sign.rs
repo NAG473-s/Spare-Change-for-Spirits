@@ -3,7 +3,10 @@
 //! flips, the wall clock runs on to midnight and strikes, and the night
 //! begins. At dawn the sign turns back to "closed".
 
+pub(crate) mod paint;
+
 use bevy::light::NotShadowCaster;
+use bevy::picking::hover::Hovered;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 
@@ -12,13 +15,16 @@ use crate::day_cycle::Phase;
 use crate::fx::Cue;
 use crate::harbor::Location;
 use crate::i18n::Lang;
-use crate::scene::{ClockOverride, ROOM_BACK_Z, shop_minutes, world_label};
-use crate::ui::{Action, UiFont, text_font};
+use crate::scene::{ClockOverride, ROOM_BACK_Z, shop_minutes};
+use crate::tooltip::HoverTip;
+use crate::ui::Action;
+use paint::{Motif, on_board};
 
 pub struct SignPlugin;
 
 impl Plugin for SignPlugin {
     fn build(&self, app: &mut App) {
+        paint::install(app);
         app.init_resource::<Opening>()
             .init_resource::<SignHovered>()
             .add_systems(Startup, spawn_sign)
@@ -35,7 +41,7 @@ impl Plugin for SignPlugin {
                     start_opening.run_if(in_state(Phase::Evening)),
                     run_opening.run_if(in_state(Phase::Evening)),
                     turn_sign,
-                    update_sign_label,
+                    show_reading,
                 ),
             );
     }
@@ -55,13 +61,33 @@ struct Sign {
     turn: f32,
 }
 
-#[derive(Component)]
-struct SignLabel;
+/// The full wording can be read at the player's interface size on hover.
+#[derive(Component, PartialEq)]
+#[require(Hovered)]
+pub(crate) struct SignReading(pub &'static str);
+
+fn show_reading(
+    boards: Query<(&SignReading, &Hovered)>,
+    lang: Res<Lang>,
+    mut tip: ResMut<HoverTip>,
+    mut last: Local<Option<String>>,
+) {
+    if let Some((reading, _)) = boards.iter().find(|(_, over)| over.get()) {
+        let title = lang.t(reading.0);
+        *last = Some(title.clone());
+        HoverTip::show(&mut tip, HoverTip { title, ..default() });
+    } else if let Some(old) = last.take()
+        && tip.title == old
+    {
+        HoverTip::hide(&mut tip);
+    }
+}
 
 /// Hangs inside the arched window of the back wall.
 const SIGN_POS: Vec3 = Vec3::new(-3.2, 1.45, ROOM_BACK_Z + 0.2);
 const SIGN_MODEL: &str = "models/shop/shop_sign.glb";
-const BOARD: Vec3 = Vec3::new(0.98, 0.44, 0.03);
+const BOARD: Vec3 = Vec3::new(0.98, 0.44, 0.025);
+const WINDOW_SIGN_SCALE: f32 = 1.38;
 /// The sign flips during the first part of the opening ...
 const FLIP_SECS: f32 = 0.6;
 /// ... then the clock runs on to midnight ...
@@ -73,15 +99,14 @@ const OPEN_AT: f32 = CLOCK_FROM + CLOCK_SECS + 1.2;
 fn spawn_sign(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    font: Res<UiFont>,
-    lang: Res<Lang>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let sign = commands
         .spawn((
             Sign { turn: 0.0 },
-            Transform::from_translation(SIGN_POS),
+            Transform::from_translation(SIGN_POS).with_scale(Vec3::splat(WINDOW_SIGN_SCALE)),
+            SignReading("sign.closed"),
             Visibility::default(),
         ))
         .observe(on_sign_click)
@@ -139,24 +164,24 @@ fn spawn_sign(
             ));
         }
     }
-    commands
-        .spawn((
-            SignLabel,
-            world_label(
-                &font,
-                lang.t("sign.closed"),
-                13.0,
-                sign,
-                Vec3::new(0.0, 0.1, 0.05),
-            ),
-        ))
-        .insert((
-            text_font(&font.display, 13.0),
-            TextShadow {
-                offset: Vec2::splat(1.0),
-                ..default()
-            },
-        ));
+    for (key, motif, side) in [
+        ("sign.closed", Motif::Moon, 1.0),
+        ("sign.open", Motif::Sunrise, -1.0),
+    ] {
+        let rotation = if side > 0.0 {
+            Quat::IDENTITY
+        } else {
+            Quat::from_rotation_y(std::f32::consts::PI)
+        };
+        on_board(
+            &mut commands,
+            sign,
+            key,
+            motif,
+            Transform::from_xyz(0.0, 0.0, side * 0.027).with_rotation(rotation),
+            Vec2::new(0.88, 0.33),
+        );
+    }
 }
 
 fn on_sign_click(
@@ -217,17 +242,22 @@ fn turn_sign(
     phase: Res<State<Phase>>,
     opening: Res<Opening>,
     hovered: Res<SignHovered>,
-    mut signs: Query<(&mut Sign, &mut Transform)>,
+    mut signs: Query<(&mut Sign, &mut Transform, &mut SignReading)>,
 ) {
     let t = time.elapsed_secs();
     let dt = time.delta_secs();
     let open = *phase.get() == Phase::Night || opening.0.is_some();
-    for (mut sign, mut transform) in &mut signs {
+    for (mut sign, mut transform, mut reading) in &mut signs {
         let target = if open { 1.0 } else { 0.0 };
         let step = dt / FLIP_SECS;
         sign.turn += (target - sign.turn).clamp(-step, step);
         // An overshoot makes the flip look like it swings round.
         let k = sign.turn;
+        reading.set_if_neq(SignReading(if k > 0.5 {
+            "sign.open"
+        } else {
+            "sign.closed"
+        }));
         let angle = std::f32::consts::PI * (k + 0.12 * (k * std::f32::consts::PI).sin());
         let can_click = *phase.get() == Phase::Evening && !open;
         let swing = if hovered.0 && can_click {
@@ -239,36 +269,67 @@ fn turn_sign(
     }
 }
 
-/// "Closed" / "open" on the sign while it faces the room; faded mid-flip.
-fn update_sign_label(
-    lang: Res<Lang>,
-    font: Res<UiFont>,
-    signs: Query<&Sign>,
-    mut labels: Query<(&mut Text, &mut TextColor, &mut TextFont), With<SignLabel>>,
-) {
-    let Some(sign) = signs.iter().next() else {
-        return;
-    };
-    for (mut text, mut color, mut face) in &mut labels {
-        if font.is_changed() {
-            face.font = font.display.clone();
-        }
-        let key = if sign.turn > 0.5 {
-            "sign.open"
-        } else {
-            "sign.closed"
-        };
-        let wanted = lang.t(key);
-        if text.0 != wanted {
-            text.0 = wanted;
-        }
-        // (`follow_labels` owns the visibility, so fade with the colour.)
-        let alpha = (((sign.turn - 0.5).abs() - 0.25) * 6.0).clamp(0.0, 1.0);
-        if (color.0.alpha() - alpha).abs() > 0.01 {
-            color.0 = Color::srgba(1.0, 0.95, 0.85, alpha);
-        }
-    }
-}
-
 // The clock strikes and the sign has turned before the night begins.
 const _: () = assert!(CLOCK_FROM + CLOCK_SECS < OPEN_AT && FLIP_SECS < OPEN_AT);
+
+/// A wide, weathered two-plank post shared by the quay and the market.
+/// The paint sits just proud of each plank and below the heads of its nails.
+pub(crate) fn return_post(
+    commands: &mut Commands,
+    assets: &AssetServer,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
+    position: Vec3,
+    key: &'static str,
+) -> Entity {
+    const MODEL: &str = "models/harbor/signpost.glb";
+    const SCALE: Vec3 = Vec3::new(1.85, 1.14, 1.0);
+    let post = commands
+        .spawn((
+            Transform::from_translation(position).with_scale(SCALE),
+            Visibility::default(),
+            SignReading(key),
+        ))
+        .id();
+    let has_model = asset_exists(MODEL);
+    if has_model {
+        commands.spawn((
+            WorldAssetRoot(assets.load(GltfAssetLabel::Scene(0).from_asset(MODEL))),
+            Transform::default(),
+            ChildOf(post),
+        ));
+    } else {
+        commands.spawn((
+            Mesh3d(meshes.add(Cuboid::new(0.12, 1.93, 0.13))),
+            MeshMaterial3d(materials.add(Color::srgb(0.32, 0.23, 0.20))),
+            Transform::from_xyz(0.0, 0.965, 0.0),
+            ChildOf(post),
+        ));
+    }
+    for (motif, position, angle, size) in [
+        (
+            Motif::Lantern,
+            Vec3::new(0.217, 1.64, 0.100),
+            -0.024,
+            Vec2::new(0.70, 0.268),
+        ),
+        (
+            Motif::Shop,
+            Vec3::new(0.165, 1.217, 0.093),
+            -0.068,
+            Vec2::new(0.605, 0.246),
+        ),
+    ] {
+        let at = Transform::from_translation(position).with_rotation(Quat::from_rotation_z(angle));
+        if !has_model {
+            commands.spawn((
+                Mesh3d(meshes.add(Cuboid::new(size.x + 0.10, size.y + 0.025, 0.045))),
+                MeshMaterial3d(materials.add(Color::srgb(0.47, 0.33, 0.25))),
+                at.with_translation(position - Vec3::Z * 0.025),
+                ChildOf(post),
+            ));
+        }
+        on_board(commands, post, key, motif, at, size);
+    }
+    post
+}
