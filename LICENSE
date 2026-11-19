@@ -44,8 +44,9 @@ own licences, which apply only to those parts:
   (listed in Cargo.lock) - their own licences, mostly MIT and/or
   Apache-2.0
 
-All sounds and music are synthesised by tools/make_sounds.py and belong to
-this project.
+The sound effects and instrumental music are synthesised by tools/make_sounds.py.
+The opening story is original and its readings were rendered offline. Speech
+production credits and source licences are listed in assets/sounds/CREDITS.txt.
 
 
 TRADEMARKS
