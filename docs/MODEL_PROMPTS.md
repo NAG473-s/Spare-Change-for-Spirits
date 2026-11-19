@@ -99,9 +99,23 @@ apply an offset): the floor is **not** part of the room model (the game draws th
   to 0.9 m, a few cobwebs in the upper corners.
 - Leave the right side and the front open (the camera looks in from the front).
 
+## Delivery: push every model on its own
+
+Put each model into the repository **as soon as it is finished** – do not wait for the others.
+
+- Repository: `https://github.com/NAG473-s/Spare-Change-for-Spirits`, branch `main`
+  (commit directly to `main`, no pull requests).
+- **One commit per model:** exactly one `.glb` file per commit, at the path given in its section
+  (e.g. `assets/models/decor/shelf.glb`), file name = the id.
+- Commit message in English: `Add <id> model [skip ci]`, e.g. `Add shelf model [skip ci]`.
+  Use the repository's existing author identity (see `AGENTS.md`); no co-author lines.
+- Run `git pull --rebase origin main` before each push, then push right away.
+- Commit only the `.glb` (textures embedded); no `.blend` files, renders or other changes.
+- A replacement for an existing model is again one commit: `Update <id> model [skip ci]`.
+
 ## After generating
 
-1. Put each `.glb` in its folder with the exact id as file name.
+1. Each `.glb` is in its folder with the exact id as file name (and pushed on its own, see above).
 2. Check of size, origin and triangle count (the rules were tested with Blender 5.3):
    `python3 tools/check_models.py` (lists every model and flags problems).
 3. Start the game – the model replaces the placeholder.

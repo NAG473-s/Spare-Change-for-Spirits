@@ -42,6 +42,14 @@ assets. The logo lettering was composed separately from the generated scenes.
 If one image looks off next to the others, regenerate it in the same conversation with
 "Same style as the previous images, but …".
 
+## Delivery: push every image on its own
+
+Put each prepared image into the repository as soon as it is finished: repository
+`https://github.com/NAG473-s/Spare-Change-for-Spirits`, branch `main`, **one commit per image**
+at the path `tools/prepare_sprite.py` wrote, message `Add <id> sprite [skip ci]` (English, the
+repository's author identity from `AGENTS.md`, no co-author lines), `git pull --rebase origin main`
+before each push.
+
 ## Style block
 
 ```
