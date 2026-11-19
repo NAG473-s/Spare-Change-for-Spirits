@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Checks the 3D models in assets/models/ against docs/MODEL_PROMPTS.md.
+"""Checks the 3D models in assets/models/ against docs/MODEL_PROMPTS.md
+and lists which ghost sprites (docs/ART_PROMPTS.md) are still missing.
 
 For every .glb it reports the size (width × height × depth in metres),
 where the origin sits and the triangle count, and flags models that are
@@ -159,6 +160,13 @@ def main():
         for extra in sorted((MODELS / folder).glob("*.glb")) if (MODELS / folder).is_dir() else []:
             if extra.stem not in targets:
                 print(f"  unknown  {extra.relative_to(ROOT)} (no id with this name)")
+    # Images the 3D game still uses: one sprite per ghost and the floor texture.
+    print()
+    for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
+        sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
+        print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
+    floor = ROOT / "assets" / "sprites" / "shop" / "floor.png"
+    print(("  ok       " if floor.is_file() else "  missing  ") + "sprites/shop/floor.png")
     return 1 if failures else 0
 
 

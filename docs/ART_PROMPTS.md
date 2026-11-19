@@ -1,43 +1,48 @@
 # Art prompts
 
-> Since the switch to the 3D diorama, furniture, the counter, the door and the walls are 3D models
-> (see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Images are still used for the **ghosts**, the **floor
-> texture** and the **product pictures** (shown on shelves until a product has a model) and for the
-> Steam store art.
+The shop is a 3D diorama: furniture, products, the counter, the door and the walls are 3D models
+(see [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Images are only needed for:
 
-Prompts for generating every image the game uses (e.g. with ChatGPT), plus the Steam store art.
-Until an image exists the game shows a coloured placeholder, so images can be added one by one.
+- **Ghosts** – hand-drawn sprites that float in the room and always face the camera.
+- **Product pictures** – shown on the shelves while a product has no 3D model yet.
+- **The floor texture.**
+- **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
-## Prepared assets
+Images from the old 2D version (furniture, keepsakes, door, counter, back wall) are no longer used
+by the game and live in [`art/legacy-2d/`](../art/legacy-2d/README.md).
 
-The complete set is included under `assets/sprites/`: 6 ghosts, 11 decor/keepsake
-images, 12 products and 4 shop images. Sprites and the floor texture were prepared
-with `tools/prepare_sprite.py --colors 48`; the background keeps its full colour
-range. PNG dimensions match the script's output sizes, with transparency on all
-isolated objects and opaque floor/background images.
+See what is still missing (models and ghost sprites):
 
-The seven Steam exports, text-free artwork and editable vector logo are in
-[`art/steam/`](../art/steam/README.md). They are kept outside the game's packaged
-assets. The logo lettering was composed separately from the generated scenes.
+```bash
+python3 tools/check_models.py
+```
+
+## To do
+
+| What | Prompts |
+|---|---|
+| Sprites for the four new ghosts: `cat`, `sailor`, `knight`, `bride` | [Ghosts](#ghosts--canvas-1024--1536-portrait) |
+| *(optional)* Pictures for the eight new products – only needed if their 3D models take a while | [Products](#products--canvas-1024--1024) |
 
 ## Workflow
 
 1. Start a new ChatGPT conversation and paste the **style block** below once, with
-   "Use this style for every image in this conversation."
-2. Send one asset prompt at a time. Ask for a **transparent background** (except floor and
-   background) and the canvas size given in the table.
-3. Download the PNG and run it through the prepare script, which trims empty borders, fits the
-   image to the game's aspect ratio and writes it to the right place:
+   "Use this style for every image in this conversation." For new ghosts, also attach one or two
+   existing ghost sprites from `assets/sprites/ghosts/` as a style reference.
+2. Send one prompt at a time. Ask for a **transparent background** (except the floor) and the
+   canvas size given in the section.
+3. Prepare the download – this trims empty borders, fits the image to the game's aspect ratio
+   and writes it to the right place:
 
    ```bash
-   python3 tools/prepare_sprite.py ~/Downloads/image.png ghost shy
+   python3 tools/prepare_sprite.py ~/Downloads/image.png ghost cat --colors 48
+   python3 tools/prepare_sprite.py ~/Downloads/image.png product fish_bone --colors 48
+   python3 tools/prepare_sprite.py ~/Downloads/image.png floor
    ```
 
-   Kinds: `ghost`, `decor`, `product`, `door`, `counter`, `floor`, `background`.
-   Options: `--remove-bg` if the background did not come out transparent,
-   `--colors 48` to reduce the image to 48 colours (helps consistency).
-   Needs Pillow: `pip install -r tools/requirements.txt`.
-4. Start the game – the image replaces the placeholder automatically.
+   `--remove-bg` helps if the background did not come out transparent; `--colors 48` matches the
+   existing sprites. Needs Pillow: `pip install -r tools/requirements.txt`.
+4. Start the game – the image replaces the coloured placeholder automatically.
 
 If one image looks off next to the others, regenerate it in the same conversation with
 "Same style as the previous images, but …".
@@ -59,15 +64,27 @@ shading with visible brush texture, gentle rounded shapes, slightly chunky
 proportions. Muted night palette: deep indigo, slate blue, teal, dusty rose,
 old wood brown, with warm candlelight amber as the only strong accent.
 Light comes from the upper left. Clean dark-brown outline about 2 px at
-256 px size. 3/4 top-down view (like a cozy farming game). Single centered
-object, no text, no letters, no frame, no drop shadow on the ground,
+256 px size. Front view, seen very slightly from above. Single centred
+character or object, no text, no letters, no frame, no shadow on the ground,
 transparent background, PNG.
 ```
 
 ## Ghosts – canvas 1024 × 1536 (portrait)
 
 Ghosts are friendly, semi-transparent, softly glowing and float slightly; no legs, a wispy tail.
-Keep the same body shape for all of them and vary colour, face and one accessory.
+Keep the same body shape and size as the existing ghosts; vary colour, face and one accessory.
+In the game they are about 1.35 m tall and face the camera.
+
+**Missing:**
+
+| File id | Prompt |
+|---|---|
+| `cat` | A small ghost cat, pale lavender glow, round and fluffy with a wispy tail instead of legs, big curious eyes, one paw raised. |
+| `sailor` | A drowned sailor ghost, sea-green glow, striped shirt and a knitted cap, a little seaweed in his beard, holding a coil of rope, wistful smile. |
+| `knight` | A friendly headless knight ghost, silver-blue glow, slightly rusty armour, carrying his smiling helmeted head under one arm. |
+| `bride` | A ghostly bride, pearly white glow, old-fashioned lace dress, no veil, a small bouquet held close, hopeful but sad eyes. |
+
+**Done** (prompts kept for redoing a sprite):
 
 | File id | Prompt |
 |---|---|
@@ -77,50 +94,16 @@ Keep the same body shape for all of them and vary colour, face and one accessory
 | `forgetful` | A forgetful old ghost, faded beige glow, puzzled expression, a knot tied in a wispy finger, spectacles pushed up on its forehead. |
 | `child` | A small child ghost, mint green glow, round and bouncy, missing front tooth grin, holding a paper pinwheel. |
 | `edwin` | Edwin, an elderly gentleman ghost, warm pale-yellow glow, kind tired eyes, neat moustache, flat cap and a long coat, holding his hat to his chest. |
-| `cat` | A small ghost cat, pale lavender glow, round and fluffy with a wispy tail instead of legs, big curious eyes, one paw raised. |
-| `sailor` | A drowned sailor ghost, sea-green glow, striped shirt and a knitted cap, a little seaweed in his beard, holding a coil of rope, wistful smile. |
-| `knight` | A friendly headless knight ghost, silver-blue glow, slightly rusty armour, carrying his smiling helmeted head under one arm. |
-| `bride` | A ghostly bride, pearly white glow, old-fashioned lace dress, no veil, a small bouquet held close, hopeful but sad eyes. |
-
-## Decor – canvas 1024 × 1024 (square)
-
-| File id | Prompt |
-|---|---|
-| `shelf` | A small wooden shop shelf with three empty boards, old dark wood, a little lace trim on the top board. |
-| `candle` | A cluster of three melted candles on a brass dish, warm glowing flames, wax drips. |
-| `mirror` | A standing oval mirror in an ornate silver frame, the glass shows a faint blue shimmer. |
-| `incense` | A brass incense burner on a small stand, thin curling purple smoke. |
-| `rug` | A small round woven rug, dusty rose and indigo pattern, seen from above, slightly wrinkled. |
-| `grandfather_clock` | A tall narrow grandfather clock in dark wood, brass pendulum, hands stopped at midnight. |
-
-## Keepsakes (Edwin's gifts) – canvas 1024 × 1024
-
-| File id | Prompt |
-|---|---|
-| `umbrella` | A closed black umbrella with a curved wooden handle, a few raindrops still on it, leaning upright. |
-| `teacup` | A floral porcelain teacup on a saucer, with a small chip on the rim. |
-| `blanket` | A folded hand-knitted blanket in warm rust and cream, slightly uneven stitches. |
-| `wedding_photo` | An old sepia wedding photograph in a small standing wooden frame, a couple dancing. |
-| `pocket_lantern` | A small brass hand lantern with a warm glowing candle inside. |
 
 ## Products – canvas 1024 × 1024
 
-Products are shown as small icons on the shelves, so keep the silhouette simple and readable.
+Only a fallback: a product picture appears on the shelves while the product has no 3D model.
+Keep the silhouette simple and readable at small size.
+
+**Optional – new products without picture or model yet:**
 
 | File id | Prompt |
 |---|---|
-| `rain_jar` | A corked glass jar holding a tiny grey rain cloud with falling droplets. |
-| `letter_paper` | A small stack of yellowed letter paper tied with a ribbon, a quill beside it. |
-| `music_box` | A small wooden music box with the lid open and a tiny brass crank. |
-| `pocket_watch` | A silver pocket watch on a chain, the glass cracked, hands stopped. |
-| `wool_scarf` | A rolled-up knitted wool scarf in mustard yellow with tassels. |
-| `marbles` | A handful of colourful glass marbles with swirls inside. |
-| `tea_tin` | An old round tea tin with a faded floral label and a dented lid. |
-| `faceless_photo` | An old photograph in a paper frame showing a person whose face is a soft blur. |
-| `rusty_key` | A large old rusty iron key with an ornate bow. |
-| `powder_compact` | A round silver powder compact, slightly open, with a tiny puff. |
-| `lavender` | A small bundle of dried lavender tied with twine. |
-| `tin_soldier` | A small painted tin toy soldier with a drum. |
 | `ship_in_bottle` | A tiny sailing ship inside a corked glass bottle. |
 | `brass_compass` | An open round brass compass with a needle pointing north. |
 | `fish_bone` | A cartoonish fish skeleton, head, spine and tail. |
@@ -130,29 +113,20 @@ Products are shown as small icons on the shelves, so keep the silhouette simple 
 | `wedding_veil` | A folded white lace veil with a small pearl comb. |
 | `pressed_flower` | A pressed pink flower between two pages of an open old book. |
 
-## Shop
+**Done:** `rain_jar`, `letter_paper`, `music_box`, `pocket_watch`, `wool_scarf`, `marbles`,
+`tea_tin`, `faceless_photo`, `rusty_key`, `powder_compact`, `lavender`, `tin_soldier`.
 
-| File id | Kind | Canvas | Prompt |
-|---|---|---|---|
-| `door` | `door` | 1024 × 1536 | An old wooden shop door with a small round window, a brass bell hanging above it, faint blue light leaking through the gap. |
-| `counter` | `counter` | 1024 × 1536 | A very long, narrow wooden shop counter seen from above at 3/4 view, standing vertically and filling a tall thin strip in the middle of the canvas, a brass cash register at the top end. |
-| `floor` | `floor` | 1024 × 1024 | Seamless tileable texture of old dark wooden floorboards seen straight from above, subtle wear, no objects. Not transparent. |
-| `background` | `background` | 1536 × 1024 | Interior back wall of a small cosy ghost shop at night: dark wallpaper with a faded pattern, a window with moonlight on the left, cobwebs in the corners, empty in the middle. Not transparent. |
+## Floor – canvas 1024 × 1024 (done)
 
-## Steam store art
+`floor`: Seamless tileable texture of old dark wooden floorboards seen straight from above,
+subtle wear, no objects. Not transparent. (Prepared with kind `floor`; used on every grid tile.)
 
-Steam requires several capsule images. Generate the artwork **without any text** and add the
-game logo afterwards in an image editor – AI images render lettering badly. Sizes as listed in
-Steamworks (check there before uploading):
+## Steam store art (done)
 
-| Image | Size | Prompt idea |
-|---|---|---|
-| Header capsule | 920 × 430 | The cosy ghost shop at night seen from the street, warm light in the window, a few ghosts queueing at the door, empty space on the left for the logo. |
-| Small capsule | 462 × 174 | Close-up of the shop counter with a candle, a silver spoon and a few buttons, a ghost hand reaching in. |
-| Main capsule | 1232 × 706 | Inside the shop: shelves with odd items, Edwin at the counter, the shy ghost peeking from behind a shelf, candlelight. |
-| Vertical capsule | 748 × 896 | The shop door with the bell, ghosts drifting towards it under the moon. |
-| Library capsule | 600 × 900 | Edwin holding his hat, standing in the warm shop doorway, rain outside. |
-| Library hero | 3840 × 1240 | Wide panorama of the shop interior, no characters in the centre (the logo goes on top). |
-| Library logo | 1280 × 720 | The logo only, transparent – best made by hand. |
+The seven Steam images, the text-free artwork and the editable vector logo are in
+[`art/steam/`](../art/steam/README.md), outside the game's packaged assets. For new versions:
+generate the artwork **without any text**, add the logo afterwards, and check the sizes in
+Steamworks before uploading (header 920 × 430, small 462 × 174, main 1232 × 706, vertical
+748 × 896, library capsule 600 × 900, library hero 3840 × 1240, library logo 1280 × 720).
 
 **Steam requires AI-generated content to be disclosed** in the Steamworks content survey.
