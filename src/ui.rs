@@ -9,6 +9,7 @@ use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::picking::hover::{HoverMap, Hovered};
 use bevy::prelude::*;
 use bevy::ui::InteractionDisabled;
+use bevy::ui::widget::NodeImageMode;
 use bevy::ui_widgets::{Activate, Button};
 
 use crate::data::{GameData, asset_exists};
@@ -24,15 +25,12 @@ use crate::register::Register;
 use crate::shop::{Keepsakes, ShopLayout, Tool};
 
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
-pub(crate) const BG_PANEL: Color = Color::srgba(0.06, 0.06, 0.1, 0.94);
-pub(crate) const TEXT: Color = Color::srgb(0.88, 0.86, 0.8);
-pub(crate) const TEXT_DIM: Color = Color::srgb(0.6, 0.6, 0.65);
-const ACCENT: Color = Color::srgb(0.95, 0.8, 0.45);
-const BTN: Color = Color::srgb(0.17, 0.16, 0.24);
-const BTN_HOVER: Color = Color::srgb(0.26, 0.24, 0.36);
-const BTN_SELECTED: Color = Color::srgb(0.45, 0.36, 0.18);
-const BTN_PRIMARY: Color = Color::srgb(0.22, 0.38, 0.3);
-const BTN_DISABLED: Color = Color::srgb(0.1, 0.1, 0.12);
+pub(crate) const BG_PANEL: Color = Color::srgb(0.11, 0.08, 0.12);
+pub(crate) const PANEL_EDGE: Color = Color::srgb(0.39, 0.27, 0.19);
+pub(crate) const TEXT: Color = Color::srgb(0.95, 0.89, 0.79);
+pub(crate) const TEXT_DIM: Color = Color::srgb(0.76, 0.68, 0.61);
+const ACCENT: Color = Color::srgb(0.98, 0.78, 0.49);
+const INK: Color = Color::srgb(0.13, 0.08, 0.06);
 /// Size of the pictures on product and decor buttons.
 const ICON_SIZE: f32 = 24.0;
 
@@ -44,6 +42,7 @@ impl Plugin for UiPlugin {
             .init_resource::<UiFont>()
             .init_resource::<GameLog>()
             .init_resource::<Icons>()
+            .init_resource::<UiTheme>()
             .add_systems(Startup, spawn_ui)
             // Before Update, so every rebuild this frame already uses the new font.
             .add_systems(PreUpdate, apply_language.run_if(resource_changed::<Lang>))
@@ -132,8 +131,101 @@ pub enum Action {
 #[derive(Component, Clone)]
 pub struct ActionButton(pub Action);
 
+/// Hand-painted walnut and brass used by the shop panels.
+#[derive(Resource)]
+pub(crate) struct UiTheme(Option<Handle<Image>>);
+
+impl FromWorld for UiTheme {
+    fn from_world(world: &mut World) -> Self {
+        const FRAME: &str = "sprites/ui/ledger_frame.png";
+        let image = asset_exists(FRAME).then(|| world.resource::<AssetServer>().load(FRAME));
+        Self(image)
+    }
+}
+
+impl UiTheme {
+    fn frame(image: &Handle<Image>, corner_scale: f32) -> ImageNode {
+        ImageNode::new(image.clone()).with_mode(NodeImageMode::Sliced(TextureSlicer {
+            // The leaf ornaments fit inside the corners of the 512 px painting.
+            border: BorderRect::all(86.0),
+            center_scale_mode: SliceScaleMode::Stretch,
+            sides_scale_mode: SliceScaleMode::Stretch,
+            max_corner_scale: corner_scale,
+        }))
+    }
+
+    /// Give the artwork the whole frame. UI images use the content box,
+    /// so the padding belongs on a separate layout node inside it.
+    pub(crate) fn panel_body(
+        &self,
+        commands: &mut Commands,
+        frame: Entity,
+        corner_scale: f32,
+        padding: f32,
+        gap: f32,
+    ) -> Entity {
+        if let Some(image) = &self.0 {
+            commands
+                .entity(frame)
+                .insert(Self::frame(image, corner_scale));
+        }
+        commands
+            .spawn((
+                Node {
+                    min_height: px(0),
+                    flex_grow: 1.0,
+                    flex_direction: FlexDirection::Column,
+                    padding: UiRect::all(px(padding)),
+                    row_gap: px(gap),
+                    ..default()
+                },
+                ChildOf(frame),
+            ))
+            .id()
+    }
+}
+
+pub(crate) fn finish(top: Color, bottom: Color) -> BackgroundGradient {
+    BackgroundGradient(vec![
+        LinearGradient::to_bottom(vec![
+            ColorStop::new(top, percent(0)),
+            ColorStop::new(bottom, percent(100)),
+        ])
+        .into(),
+    ])
+}
+
 #[derive(Component, Clone, Copy)]
-struct ButtonColor(Color);
+enum ButtonTone {
+    Walnut,
+    Selected,
+    Brass,
+    Disabled,
+}
+
+impl ButtonTone {
+    fn option(enabled: bool, selected: bool) -> Self {
+        match (enabled, selected) {
+            (false, _) => Self::Disabled,
+            (true, true) => Self::Selected,
+            (true, false) => Self::Walnut,
+        }
+    }
+
+    fn paint(self, hovered: bool) -> (BackgroundGradient, BorderColor) {
+        let (top, bottom, trim) = match (self, hovered) {
+            (Self::Walnut, false) => ((60, 43, 46), (40, 28, 35), (103, 72, 57)),
+            (Self::Walnut, true) => ((92, 62, 52), (57, 39, 42), (177, 127, 77)),
+            (Self::Selected, false) => ((53, 84, 79), (33, 54, 53), (166, 129, 79)),
+            (Self::Selected, true) => ((67, 97, 87), (42, 65, 62), (213, 165, 99)),
+            (Self::Brass, false) => ((236, 193, 127), (181, 122, 72), (248, 210, 151)),
+            (Self::Brass, true) => ((252, 218, 159), (202, 148, 87), (255, 227, 174)),
+            (Self::Disabled, _) => ((48, 39, 44), (37, 29, 37), (72, 56, 50)),
+        };
+        let rgb = |(r, g, b)| Color::srgb_u8(r, g, b);
+        (finish(rgb(top), rgb(bottom)), BorderColor::all(rgb(trim)))
+    }
+}
 
 /// Small pictures for product and decor buttons: `sprites/products/<id>.png`
 /// and `sprites/decor/<id>.png`, where they exist.
@@ -196,8 +288,10 @@ impl FromWorld for Icons {
 pub struct UiFont {
     pub regular: FontSource,
     pub bold: FontSource,
+    pub display: FontSource,
     inter: Handle<Font>,
     inter_bold: Handle<Font>,
+    serif_bold: Handle<Font>,
     /// (language code, script font)
     extras: Vec<(String, Handle<Font>)>,
 }
@@ -217,8 +311,10 @@ impl FromWorld for UiFont {
         let mut font = Self {
             regular: FontSource::default(),
             bold: FontSource::default(),
+            display: FontSource::default(),
             inter: assets.load("fonts/Inter-Regular.otf"),
             inter_bold: assets.load("fonts/Inter-SemiBold.otf"),
+            serif_bold: assets.load("fonts/NotoSerif-Bold.ttf"),
             extras,
         };
         font.set_language(&code);
@@ -227,17 +323,21 @@ impl FromWorld for UiFont {
 }
 
 impl UiFont {
-    fn chain(&self, base: &Handle<Font>, code: &str) -> FontSource {
+    fn chain(&self, bases: &[Handle<Font>], code: &str) -> FontSource {
         let own = self.extras.iter().filter(|(c, _)| c == code);
         let others = self.extras.iter().filter(|(c, _)| c != code);
         FontSource::list(
-            std::iter::once(base.clone()).chain(own.chain(others).map(|(_, h)| h.clone())),
+            bases
+                .iter()
+                .cloned()
+                .chain(own.chain(others).map(|(_, h)| h.clone())),
         )
     }
 
     pub fn set_language(&mut self, code: &str) {
-        self.regular = self.chain(&self.inter, code);
-        self.bold = self.chain(&self.inter_bold, code);
+        self.regular = self.chain(std::slice::from_ref(&self.inter), code);
+        self.bold = self.chain(std::slice::from_ref(&self.inter_bold), code);
+        self.display = self.chain(&[self.serif_bold.clone(), self.inter_bold.clone()], code);
     }
 }
 
@@ -353,7 +453,7 @@ fn scroll_panel_to_top(
     }
 }
 
-fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>) {
+fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme: Res<UiTheme>) {
     // Top bar
     commands.spawn((
         Node {
@@ -363,10 +463,12 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>) {
             top: px(0),
             height: px(40),
             padding: UiRect::horizontal(px(16)),
+            border: UiRect::bottom(px(1)),
             align_items: AlignItems::Center,
             ..default()
         },
-        BackgroundColor(BG_PANEL),
+        finish(Color::srgb_u8(51, 36, 42), Color::srgb_u8(28, 21, 29)),
+        BorderColor::all(PANEL_EDGE),
         children![
             (
                 HudText,
@@ -403,10 +505,12 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>) {
             flex_direction: FlexDirection::Column,
             row_gap: px(6),
             padding: UiRect::top(px(8)),
+            border: UiRect::top(px(1)),
             ..default()
         })
+        .insert(BorderColor::all(PANEL_EDGE))
         .id();
-    commands
+    let frame = commands
         .spawn((
             SidePanel,
             Node {
@@ -415,13 +519,14 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>) {
                 top: px(40),
                 bottom: px(0),
                 width: px(PANEL_WIDTH),
-                padding: UiRect::all(px(14)),
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
             BackgroundColor(BG_PANEL),
         ))
-        .add_children(&[body, footer]);
+        .id();
+    let content = theme.panel_body(&mut commands, frame, 0.27, 16.0, 0.0);
+    commands.entity(content).add_children(&[body, footer]);
     commands.insert_resource(SidePanelParts { body, footer });
 
     // Message log
@@ -458,19 +563,16 @@ fn button_hover(
     mut buttons: Query<
         (
             &Hovered,
-            &ButtonColor,
-            &mut BackgroundColor,
+            &ButtonTone,
+            &mut BackgroundGradient,
+            &mut BorderColor,
             Has<InteractionDisabled>,
         ),
         Changed<Hovered>,
     >,
 ) {
-    for (hovered, base, mut bg, disabled) in &mut buttons {
-        *bg = if hovered.get() && !disabled && base.0 == BTN {
-            BTN_HOVER.into()
-        } else {
-            base.0.into()
-        };
+    for (hovered, tone, mut bg, mut edge, disabled) in &mut buttons {
+        (*bg, *edge) = tone.paint(hovered.get() && !disabled);
     }
 }
 
@@ -549,10 +651,12 @@ fn coin_bar(font: &UiFont, icons: &Icons) -> impl Bundle {
             align_items: AlignItems::Center,
             column_gap: px(14),
             padding: UiRect::axes(px(12), px(3)),
-            border_radius: BorderRadius::all(px(14)),
+            border: UiRect::all(px(1)),
+            border_radius: BorderRadius::all(px(6)),
             ..default()
         },
-        BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.05)),
+        BackgroundColor(Color::srgb_u8(35, 25, 31)),
+        BorderColor::all(PANEL_EDGE),
         children![
             coin(Coin::Spoon),
             coin(Coin::Candle),
@@ -1040,7 +1144,12 @@ pub fn text_font(font: &FontSource, size: f32) -> TextFont {
 
 /// Full-screen dimmed layer with a centred panel on top of the game
 /// (pause menu, ferryman's boat, accounts). Returns (layer, panel).
-pub(crate) fn overlay(commands: &mut Commands, dim: f32, width: f32) -> (Entity, Entity) {
+pub(crate) fn overlay(
+    commands: &mut Commands,
+    theme: &UiTheme,
+    dim: f32,
+    width: f32,
+) -> (Entity, Entity) {
     let layer = commands
         .spawn((
             Node {
@@ -1053,27 +1162,25 @@ pub(crate) fn overlay(commands: &mut Commands, dim: f32, width: f32) -> (Entity,
                 align_items: AlignItems::Center,
                 ..default()
             },
-            BackgroundColor(Color::srgba(0.02, 0.02, 0.05, dim)),
+            BackgroundColor(Color::srgba(0.06, 0.035, 0.06, dim)),
             GlobalZIndex(100),
         ))
         .id();
-    let panel = commands
+    let frame = commands
         .spawn((
             Node {
                 width: px(width),
+                max_width: percent(96),
                 max_height: percent(94),
-                padding: UiRect::all(px(24)),
                 flex_direction: FlexDirection::Column,
-                row_gap: px(10),
-                border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(8)),
+                border_radius: BorderRadius::all(px(6)),
                 ..default()
             },
             BackgroundColor(BG_PANEL),
-            BorderColor::all(Color::srgba(1.0, 1.0, 1.0, 0.1)),
             ChildOf(layer),
         ))
         .id();
+    let panel = theme.panel_body(commands, frame, 0.36, 24.0, 10.0);
     (layer, panel)
 }
 
@@ -1115,8 +1222,8 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     /// A plain layout node under `parent`.
-    pub(crate) fn node(&mut self, parent: Entity, node: Node) -> Entity {
-        self.commands.spawn((node, ChildOf(parent))).id()
+    pub(crate) fn node(&mut self, parent: Entity, bundle: impl Bundle) -> Entity {
+        self.commands.spawn((bundle, ChildOf(parent))).id()
     }
 
     /// A background colour for a node built here.
@@ -1183,12 +1290,44 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             Text::new(text),
             text_font(font, size),
             TextColor(color),
+            Pickable::IGNORE,
+            ChildOf(parent),
+        ));
+    }
+
+    pub(crate) fn display_text(&mut self, parent: Entity, text: &str, size: f32, color: Color) {
+        self.commands.spawn((
+            Text::new(text),
+            text_font(&self.font.display, size),
+            TextColor(color),
+            Pickable::IGNORE,
             ChildOf(parent),
         ));
     }
 
     pub(crate) fn heading(&mut self, text: &str) {
-        self.add_text(self.root, text, true, 20.0, ACCENT);
+        self.display_text(self.root, text, 23.0, ACCENT);
+        self.rule();
+    }
+
+    pub(crate) fn rule(&mut self) {
+        self.commands.spawn((
+            Node {
+                height: px(1),
+                flex_shrink: 0.0,
+                ..default()
+            },
+            BackgroundGradient(vec![
+                LinearGradient::to_right(vec![
+                    ColorStop::new(PANEL_EDGE, percent(0)),
+                    ColorStop::new(ACCENT.with_alpha(0.45), percent(48)),
+                    ColorStop::new(PANEL_EDGE, percent(100)),
+                ])
+                .into(),
+            ]),
+            Pickable::IGNORE,
+            ChildOf(self.root),
+        ));
     }
 
     pub(crate) fn section(&mut self, text: &str) {
@@ -1243,12 +1382,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         selected: bool,
         enabled: bool,
     ) {
-        let color = match (enabled, selected) {
-            (false, _) => BTN_DISABLED,
-            (true, true) => BTN_SELECTED,
-            (true, false) => BTN,
-        };
-        self.spawn_button(parent, None, label, action, color, enabled, 12.0);
+        self.icon_button_in(parent, None, label, action, selected, enabled);
     }
 
     /// Like `button_in`, with a small picture in front of the label.
@@ -1261,50 +1395,88 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         selected: bool,
         enabled: bool,
     ) {
-        let color = match (enabled, selected) {
-            (false, _) => BTN_DISABLED,
-            (true, true) => BTN_SELECTED,
-            (true, false) => BTN,
-        };
-        self.spawn_button(parent, icon, label, action, color, enabled, 12.0);
+        self.spawn_button(
+            parent,
+            icon,
+            label,
+            action,
+            ButtonTone::option(enabled, selected),
+            12.0,
+            false,
+        );
+    }
+
+    /// Full-width menu rows can share equal space for related settings.
+    pub(crate) fn menu_option(
+        &mut self,
+        parent: Entity,
+        label: &str,
+        action: Action,
+        selected: bool,
+    ) {
+        self.spawn_button(
+            parent,
+            None,
+            label,
+            action,
+            ButtonTone::option(true, selected),
+            14.0,
+            true,
+        );
     }
 
     pub(crate) fn primary(&mut self, label: &str, action: Action) {
-        self.spawn_button(self.footer, None, label, action, BTN_PRIMARY, true, 16.0);
+        self.spawn_button(
+            self.footer,
+            None,
+            label,
+            action,
+            ButtonTone::Brass,
+            16.0,
+            false,
+        );
     }
 
-    pub(crate) fn spawn_button(
+    fn spawn_button(
         &mut self,
         parent: Entity,
         icon: Option<Handle<Image>>,
         label: &str,
         action: Action,
-        color: Color,
-        enabled: bool,
+        tone: ButtonTone,
         size: f32,
+        grow: bool,
     ) {
-        let text_color = if enabled { TEXT } else { TEXT_DIM };
+        let enabled = !matches!(tone, ButtonTone::Disabled);
+        let (label_font, text_color) = match tone {
+            ButtonTone::Brass => (&self.font.display, INK),
+            ButtonTone::Disabled => (&self.font.regular, TEXT_DIM),
+            _ => (&self.font.regular, TEXT),
+        };
         let padding = if icon.is_some() {
             UiRect::new(px(4), px(8), px(2), px(2))
         } else {
-            UiRect::axes(px(8), px(5))
+            UiRect::axes(px(8), px(if size >= 14.0 { 7 } else { 5 }))
         };
+        let (surface, trim) = tone.paint(false);
         let mut button = self.commands.spawn((
             Button,
             Hovered::default(),
             ActionButton(action),
-            ButtonColor(color),
+            tone,
             Node {
                 padding,
+                max_width: percent(100),
+                flex_grow: if grow { 1.0 } else { 0.0 },
                 border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(4)),
+                border_radius: BorderRadius::all(px(3)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 column_gap: px(5),
                 ..default()
             },
-            BackgroundColor(color),
-            BorderColor::all(Color::srgba(1.0, 1.0, 1.0, 0.08)),
+            surface,
+            trim,
             ChildOf(parent),
         ));
         let id = button.id();
@@ -1315,6 +1487,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
                 Node {
                     width: px(ICON_SIZE),
                     height: px(ICON_SIZE),
+                    flex_shrink: 0.0,
                     ..default()
                 },
                 Pickable::IGNORE,
@@ -1323,7 +1496,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         }
         button.commands().spawn((
             Text::new(label),
-            text_font(&self.font.regular, size),
+            text_font(label_font, size),
             TextColor(text_color),
             Pickable::IGNORE,
             ChildOf(id),

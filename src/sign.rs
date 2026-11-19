@@ -13,7 +13,7 @@ use crate::fx::Cue;
 use crate::harbor::Location;
 use crate::i18n::Lang;
 use crate::scene::{ClockOverride, ROOM_BACK_Z, shop_minutes, world_label};
-use crate::ui::{Action, UiFont};
+use crate::ui::{Action, UiFont, text_font};
 
 pub struct SignPlugin;
 
@@ -139,16 +139,24 @@ fn spawn_sign(
             ));
         }
     }
-    commands.spawn((
-        SignLabel,
-        world_label(
-            &font,
-            lang.t("sign.closed"),
-            16.0,
-            sign,
-            Vec3::new(0.0, 0.1, 0.05),
-        ),
-    ));
+    commands
+        .spawn((
+            SignLabel,
+            world_label(
+                &font,
+                lang.t("sign.closed"),
+                13.0,
+                sign,
+                Vec3::new(0.0, 0.1, 0.05),
+            ),
+        ))
+        .insert((
+            text_font(&font.display, 13.0),
+            TextShadow {
+                offset: Vec2::splat(1.0),
+                ..default()
+            },
+        ));
 }
 
 fn on_sign_click(
@@ -234,13 +242,17 @@ fn turn_sign(
 /// "Closed" / "open" on the sign while it faces the room; faded mid-flip.
 fn update_sign_label(
     lang: Res<Lang>,
+    font: Res<UiFont>,
     signs: Query<&Sign>,
-    mut labels: Query<(&mut Text, &mut TextColor), With<SignLabel>>,
+    mut labels: Query<(&mut Text, &mut TextColor, &mut TextFont), With<SignLabel>>,
 ) {
     let Some(sign) = signs.iter().next() else {
         return;
     };
-    for (mut text, mut color) in &mut labels {
+    for (mut text, mut color, mut face) in &mut labels {
+        if font.is_changed() {
+            face.font = font.display.clone();
+        }
         let key = if sign.turn > 0.5 {
             "sign.open"
         } else {

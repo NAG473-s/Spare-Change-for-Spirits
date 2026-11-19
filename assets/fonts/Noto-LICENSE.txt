@@ -1,3 +1,7 @@
+Noto Serif Bold (NotoSerif-Bold.ttf)
+Copyright 2015 Google LLC. All Rights Reserved.
+Licensed under the SIL Open Font License, Version 1.1.
+
 Noto Sans CJK (SC, TC, JP, KR), Noto Sans Thai and Noto Sans Arabic
 (the *-subset.* files in this folder are subsets made by tools/subset_fonts.py)
 

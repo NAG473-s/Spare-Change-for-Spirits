@@ -11,7 +11,7 @@ use crate::register::Register;
 use crate::save::{GameState, Settings, read_save, write_save};
 use crate::shop::ShopLayout;
 use crate::title::{LOGO, TitleLogo};
-use crate::ui::{Action, GameLog, PanelBuilder, TEXT_DIM, UiFont, overlay};
+use crate::ui::{Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, UiFont, UiTheme, overlay};
 
 pub struct MenuPlugin;
 
@@ -67,6 +67,7 @@ struct TipBox;
 fn title_layout(
     commands: &mut Commands,
     asset_server: &AssetServer,
+    theme: &UiTheme,
     width: f32,
 ) -> (Entity, Entity, bool) {
     let layer = commands
@@ -95,6 +96,7 @@ fn title_layout(
                 top: px(0),
                 bottom: px(0),
                 width: px(width.max(LOGO_WIDTH)),
+                max_width: percent(90),
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -112,6 +114,7 @@ fn title_layout(
             ImageNode::new(asset_server.load(LOGO)),
             Node {
                 width: px(LOGO_WIDTH),
+                max_width: percent(100),
                 ..default()
             },
             UiTransform::IDENTITY,
@@ -119,22 +122,20 @@ fn title_layout(
             ChildOf(column),
         ));
     }
-    let panel = commands
+    let frame = commands
         .spawn((
             Node {
                 width: px(width),
-                padding: UiRect::all(px(20)),
+                max_width: percent(100),
                 flex_direction: FlexDirection::Column,
-                row_gap: px(10),
-                border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(8)),
+                border_radius: BorderRadius::all(px(6)),
                 ..default()
             },
-            BackgroundColor(Color::srgba(0.05, 0.05, 0.09, 0.8)),
-            BorderColor::all(Color::srgba(1.0, 0.85, 0.55, 0.18)),
+            BackgroundColor(BG_PANEL),
             ChildOf(column),
         ))
         .id();
+    let panel = theme.panel_body(commands, frame, 0.37, 25.0, 8.0);
     (layer, panel, has_logo)
 }
 
@@ -161,6 +162,7 @@ fn build_main_menu(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     font: Res<UiFont>,
+    theme: Res<UiTheme>,
     lang: Res<Lang>,
     settings: Res<Settings>,
     language_menu: Res<LanguageMenu>,
@@ -171,8 +173,8 @@ fn build_main_menu(
     }
     // First start: let the player pick a language before anything else.
     let choose_language = language_menu.0 || settings.language.is_none();
-    let width = if choose_language { 560.0 } else { 360.0 };
-    let (layer, panel, has_logo) = title_layout(&mut commands, &asset_server, width);
+    let width = if choose_language { 560.0 } else { 386.0 };
+    let (layer, panel, has_logo) = title_layout(&mut commands, &asset_server, &theme, width);
     commands
         .entity(layer)
         .insert((MenuRoot, DespawnOnExit(Phase::Menu)));
@@ -184,22 +186,10 @@ fn build_main_menu(
         let row = ui.row();
         for l in &lang.languages {
             let selected = l.code == lang.code;
-            ui.button_in(
-                row,
-                &l.name,
-                Action::SetLanguage(l.code.clone()),
-                selected,
-                true,
-            );
+            ui.menu_option(row, &l.name, Action::SetLanguage(l.code.clone()), selected);
         }
         if settings.language.is_some() {
-            ui.button_in(
-                root,
-                &lang.t("menu.back"),
-                Action::CloseLanguages,
-                false,
-                true,
-            );
+            ui.menu_option(root, &lang.t("menu.back"), Action::CloseLanguages, false);
         }
         return;
     }
@@ -208,38 +198,37 @@ fn build_main_menu(
         ui.heading(&lang.t("game.title"));
     }
     ui.text(&lang.t("menu.tagline"));
+    ui.rule();
     if let Some(save) = read_save().filter(|s| !s.finished) {
         ui.primary(
             &lang.f("menu.continue", &[("night", &save.night)]),
             Action::Continue,
         );
-        ui.button_in(root, &lang.t("menu.new_game"), Action::NewGame, false, true);
+        ui.menu_option(root, &lang.t("menu.new_game"), Action::NewGame, false);
     } else {
         ui.primary(&lang.t("menu.new_game"), Action::NewGame);
     }
     let language = lang.def().map(|l| l.name.clone()).unwrap_or_default();
-    ui.button_in(
+    ui.menu_option(
         root,
         &lang.f("menu.language", &[("language", &language)]),
         Action::OpenLanguages,
         false,
-        true,
     );
-    ui.button_in(
-        root,
+    let toggles = ui.row();
+    ui.menu_option(
+        toggles,
         &tips_label(&settings, &lang),
         Action::ToggleTips,
-        false,
-        true,
+        settings.tips,
     );
-    ui.button_in(
-        root,
+    ui.menu_option(
+        toggles,
         &sound_label(&settings, &lang),
         Action::ToggleSound,
-        false,
-        true,
+        settings.sound,
     );
-    ui.button_in(root, &lang.t("menu.quit"), Action::QuitGame, false, true);
+    ui.menu_option(root, &lang.t("menu.quit"), Action::QuitGame, false);
     ui.dim(&lang.f("menu.version", &[("version", &env!("CARGO_PKG_VERSION"))]));
 }
 
@@ -345,6 +334,7 @@ fn sync_pause(
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
     font: Res<UiFont>,
+    theme: Res<UiTheme>,
     lang: Res<Lang>,
     existing: Query<Entity, With<PauseRoot>>,
     mut time: ResMut<Time<Virtual>>,
@@ -357,7 +347,7 @@ fn sync_pause(
         return;
     }
     time.pause();
-    let (layer, panel) = overlay(&mut commands, 0.6, 420.0);
+    let (layer, panel) = overlay(&mut commands, &theme, 0.6, 420.0);
     commands.entity(layer).insert(PauseRoot);
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     ui.heading(&lang.t("pause.title"));
@@ -367,28 +357,21 @@ fn sync_pause(
         Phase::Night => "pause.quit_night",
         _ => "pause.save_quit",
     };
-    ui.button_in(root, &lang.t(quit_label), Action::QuitToMenu, false, true);
-    ui.button_in(
-        root,
+    ui.menu_option(root, &lang.t(quit_label), Action::QuitToMenu, false);
+    let toggles = ui.row();
+    ui.menu_option(
+        toggles,
         &tips_label(&settings, &lang),
         Action::ToggleTips,
-        false,
-        true,
+        settings.tips,
     );
-    ui.button_in(
-        root,
+    ui.menu_option(
+        toggles,
         &sound_label(&settings, &lang),
         Action::ToggleSound,
-        false,
-        true,
+        settings.sound,
     );
-    ui.button_in(
-        root,
-        &lang.t("pause.quit_game"),
-        Action::QuitGame,
-        false,
-        true,
-    );
+    ui.menu_option(root, &lang.t("pause.quit_game"), Action::QuitGame, false);
     ui.dim(&lang.t("pause.hint"));
 }
 
@@ -408,8 +391,8 @@ fn spawn_tip_box(mut commands: Commands) {
             display: Display::None,
             ..default()
         },
-        BackgroundColor(Color::srgba(0.14, 0.11, 0.24, 0.94)),
-        BorderColor::all(TEXT_DIM.with_alpha(0.4)),
+        BackgroundColor(BG_PANEL.with_alpha(0.96)),
+        BorderColor::all(PANEL_EDGE),
     ));
 }
 

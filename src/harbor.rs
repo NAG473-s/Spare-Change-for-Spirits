@@ -21,7 +21,7 @@ use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::scene::{Billboard, CAMERA_POS, CAMERA_TARGET, MainCamera, world_label};
 use crate::title::spawn_fade;
-use crate::ui::{Action, UiFont};
+use crate::ui::{Action, PANEL_EDGE, UiFont, finish, text_font};
 
 pub struct HarborPlugin;
 
@@ -37,6 +37,7 @@ impl Plugin for HarborPlugin {
                 Update,
                 (
                     walk.run_if(in_state(Phase::Evening)),
+                    translate_wayfinders.run_if(resource_changed::<UiFont>),
                     move_camera.run_if(resource_changed::<Location>),
                     drift_lanterns,
                     drift_mist,
@@ -78,6 +79,9 @@ pub struct ShopDoor;
 /// The signpost on the quay: clicking it leads back into the shop.
 #[derive(Component)]
 struct Signpost;
+
+#[derive(Component)]
+struct Wayfinder(&'static str);
 
 #[derive(Component)]
 struct Rowboat {
@@ -643,13 +647,14 @@ fn spawn_harbor(
             ));
         }
     }
-    kit.commands.spawn(world_label(
+    spawn_wayfinder(
+        &mut kit.commands,
         &font,
-        lang.t("harbor.back"),
-        13.0,
+        &lang,
+        "harbor.back",
         sign,
-        Vec3::Y * 2.3,
-    ));
+        Vec3::new(0.22, 2.35, 0.0),
+    );
 
     // Paper lanterns drifting slowly across the water.
     let lantern_model = asset_exists("models/harbor/paper_lantern.glb");
@@ -753,16 +758,57 @@ fn label_shop_door(
     door: Option<Single<Entity, With<ShopDoor>>>,
 ) {
     let Some(door) = door else { return };
-    commands.spawn((
-        world_label(
-            &font,
-            lang.t("harbor.door"),
-            13.0,
-            *door,
-            Vec3::new(1.1, 2.5, 0.0),
-        ),
-        DespawnOnExit(Phase::Evening),
-    ));
+    let label = spawn_wayfinder(
+        &mut commands,
+        &font,
+        &lang,
+        "harbor.door",
+        *door,
+        Vec3::new(1.1, 2.5, 0.0),
+    );
+    commands.entity(label).insert(DespawnOnExit(Phase::Evening));
+}
+
+fn spawn_wayfinder(
+    commands: &mut Commands,
+    font: &UiFont,
+    lang: &Lang,
+    key: &'static str,
+    target: Entity,
+    offset: Vec3,
+) -> Entity {
+    commands
+        .spawn(world_label(font, lang.t(key), 13.0, target, offset))
+        .insert((
+            Wayfinder(key),
+            text_font(&font.display, 13.0),
+            TextShadow {
+                offset: Vec2::splat(1.0),
+                ..default()
+            },
+            Node {
+                position_type: PositionType::Absolute,
+                width: px(crate::scene::LABEL_WIDTH),
+                padding: UiRect::axes(px(5), px(3)),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(4)),
+                ..default()
+            },
+            BorderColor::all(PANEL_EDGE),
+            finish(Color::srgb_u8(77, 50, 38), Color::srgb_u8(44, 29, 29)),
+        ))
+        .id()
+}
+
+fn translate_wayfinders(
+    lang: Res<Lang>,
+    font: Res<UiFont>,
+    mut labels: Query<(&Wayfinder, &mut Text, &mut TextFont)>,
+) {
+    for (wayfinder, mut text, mut face) in &mut labels {
+        text.0 = lang.t(wayfinder.0);
+        face.font = font.display.clone();
+    }
 }
 
 /// Clicking the shop door in the evening goes out to the harbour.

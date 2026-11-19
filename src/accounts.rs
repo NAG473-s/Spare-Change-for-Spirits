@@ -11,7 +11,7 @@ use crate::ferry::signed;
 use crate::ghosts::Ghost;
 use crate::i18n::Lang;
 use crate::inventory::Stock;
-use crate::ui::{Action, Icons, PanelBuilder, TEXT, TEXT_DIM, UiFont, overlay};
+use crate::ui::{Action, Icons, PanelBuilder, UiFont, UiTheme, overlay};
 
 pub struct AccountsPlugin;
 
@@ -97,15 +97,35 @@ fn count_visitors(added: Query<(), Added<Ghost>>, mut report: ResMut<NightReport
     }
 }
 
-const GREEN: Color = Color::srgb(0.55, 0.85, 0.6);
-const RED: Color = Color::srgb(0.95, 0.5, 0.45);
-const GOLD: Color = Color::srgb(0.95, 0.8, 0.45);
-const LEFT_WIDTH: f32 = 330.0;
+const TEXT: Color = Color::srgb(0.22, 0.14, 0.12);
+const TEXT_DIM: Color = Color::srgb(0.34, 0.24, 0.19);
+const GREEN: Color = Color::srgb(0.16, 0.35, 0.23);
+const RED: Color = Color::srgb(0.55, 0.18, 0.20);
+const RULE: Color = Color::srgba(0.46, 0.26, 0.13, 0.32);
 const AMOUNT_WIDTH: f32 = 70.0;
+
+fn paper(left: bool) -> BackgroundGradient {
+    let (start, end) = if left {
+        (Color::srgb_u8(205, 175, 130), Color::srgb_u8(181, 147, 111))
+    } else {
+        (Color::srgb_u8(181, 147, 111), Color::srgb_u8(205, 175, 130))
+    };
+    let cream = Color::srgb_u8(233, 211, 171);
+    BackgroundGradient(vec![
+        LinearGradient::to_right(vec![
+            ColorStop::new(start, percent(0)),
+            ColorStop::new(cream, percent(16)),
+            ColorStop::new(cream, percent(84)),
+            ColorStop::new(end, percent(100)),
+        ])
+        .into(),
+    ])
+}
 
 fn build_ledger(
     mut commands: Commands,
     font: Res<UiFont>,
+    theme: Res<UiTheme>,
     lang: Res<Lang>,
     data: Res<GameData>,
     icons: Res<Icons>,
@@ -119,7 +139,7 @@ fn build_ledger(
     for e in &existing {
         commands.entity(e).despawn();
     }
-    let (layer, panel) = overlay(&mut commands, 0.55, 860.0);
+    let (layer, panel) = overlay(&mut commands, &theme, 0.55, 860.0);
     commands
         .entity(layer)
         .insert((Ledger, DespawnOnExit(Phase::Morning)));
@@ -130,33 +150,48 @@ fn build_ledger(
     let columns = ui.node(
         root,
         Node {
-            column_gap: px(28),
+            column_gap: px(5),
             min_height: px(0),
             flex_shrink: 1.0,
+            padding: UiRect::all(px(3)),
+            border_radius: BorderRadius::all(px(7)),
             ..default()
         },
     );
+    ui.tint(columns, Color::srgb_u8(79, 46, 39));
 
     // Left: the cash drawer, line by line.
     let left = ui.node(
         columns,
-        Node {
-            width: px(LEFT_WIDTH),
-            flex_shrink: 0.0,
-            flex_direction: FlexDirection::Column,
-            row_gap: px(5),
-            ..default()
-        },
+        (
+            Node {
+                width: percent(45),
+                min_height: px(0),
+                flex_shrink: 0.0,
+                flex_direction: FlexDirection::Column,
+                row_gap: px(4),
+                padding: UiRect::all(px(14)),
+                border_radius: BorderRadius::all(px(4)),
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            paper(true),
+            ScrollPosition::default(),
+        ),
     );
-    ui.add_text(left, &lang.t("accounts.cash"), true, 15.0, TEXT);
+    ui.display_text(left, &lang.t("accounts.cash"), 18.0, TEXT);
     let line = |ui: &mut PanelBuilder, label: &str, amount: String, color: Color, indent: bool| {
         let row = ui.node(
             left,
-            Node {
-                justify_content: JustifyContent::SpaceBetween,
-                padding: UiRect::left(px(if indent { 16.0 } else { 0.0 })),
-                ..default()
-            },
+            (
+                Node {
+                    justify_content: JustifyContent::SpaceBetween,
+                    padding: UiRect::left(px(if indent { 12.0 } else { 0.0 })),
+                    border: UiRect::bottom(px(1)),
+                    ..default()
+                },
+                BorderColor::all(RULE),
+            ),
         );
         let size = if indent { 12.0 } else { 14.0 };
         let label_color = if indent { TEXT_DIM } else { TEXT };
@@ -226,27 +261,21 @@ fn build_ledger(
             false,
         );
     }
-    ui.node(
-        left,
-        Node {
-            height: px(1),
-            margin: UiRect::vertical(px(3)),
-            ..default()
-        },
-    );
     let rule = ui.node(
         left,
         Node {
             height: px(1),
+            flex_shrink: 0.0,
+            margin: UiRect::vertical(px(3)),
             ..default()
         },
     );
-    ui.tint(rule, Color::srgba(1.0, 1.0, 1.0, 0.25));
+    ui.tint(rule, RULE.with_alpha(0.8));
     line(
         &mut ui,
         &lang.t("accounts.closing"),
         a.closing.to_string(),
-        GOLD,
+        TEXT,
         false,
     );
     let profit = a.profit();
@@ -260,17 +289,24 @@ fn build_ledger(
     // Right: how the night went.
     let right = ui.node(
         columns,
-        Node {
-            flex_grow: 1.0,
-            flex_shrink: 1.0,
-            min_height: px(0),
-            flex_direction: FlexDirection::Column,
-            row_gap: px(5),
-            overflow: Overflow::scroll_y(),
-            ..default()
-        },
+        (
+            Node {
+                flex_grow: 1.0,
+                flex_shrink: 1.0,
+                min_height: px(0),
+                min_width: px(0),
+                flex_direction: FlexDirection::Column,
+                row_gap: px(5),
+                padding: UiRect::all(px(14)),
+                border_radius: BorderRadius::all(px(4)),
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            paper(false),
+            ScrollPosition::default(),
+        ),
     );
-    ui.add_text(right, &lang.t("accounts.night"), true, 15.0, TEXT);
+    ui.display_text(right, &lang.t("accounts.night"), 18.0, TEXT);
     let text = |ui: &mut PanelBuilder, s: String| ui.add_text(right, &s, false, 13.0, TEXT);
     text(
         &mut ui,
@@ -367,7 +403,7 @@ fn build_ledger(
                         ..default()
                     },
                 );
-                ui.tint(chip, Color::srgba(1.0, 1.0, 1.0, 0.06));
+                ui.tint(chip, RULE.with_alpha(0.14));
                 if let Some(image) = image {
                     ui.image_sized(chip, image, size);
                 }

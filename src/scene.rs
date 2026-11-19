@@ -285,7 +285,7 @@ pub struct WorldLabel {
     pub offset: Vec3,
 }
 
-const LABEL_WIDTH: f32 = 120.0;
+pub(crate) const LABEL_WIDTH: f32 = 120.0;
 
 pub fn world_label(
     font: &UiFont,

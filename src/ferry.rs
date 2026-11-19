@@ -22,7 +22,7 @@ use crate::inventory::{CratesOrdered, Stock};
 use crate::rng::Rng;
 use crate::scene::world_label;
 use crate::shop::{model_or_box, product_model};
-use crate::ui::{GameLog, PanelBuilder, TEXT, TEXT_DIM, UiFont};
+use crate::ui::{BG_PANEL, GameLog, Icons, PanelBuilder, TEXT_DIM, UiFont, UiTheme};
 
 pub struct FerryPlugin;
 
@@ -128,7 +128,7 @@ struct CartCrate(usize);
 struct CrateLabel(Entity);
 
 #[derive(Component)]
-struct Tooltip;
+struct Tooltip(Entity);
 
 /// Where the boat moors at the harbour quay (centre of the deck).
 const MOORING: Vec3 = Vec3::new(HARBOR.x + 0.3, 0.0, 0.25);
@@ -298,6 +298,7 @@ fn spawn_boat(
     data: Res<GameData>,
     progress: Res<Progress>,
     font: Res<UiFont>,
+    theme: Res<UiTheme>,
     lang: Res<Lang>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -446,25 +447,27 @@ fn spawn_boat(
     }
 
     // Details of the hovered crate, next to the mouse pointer.
-    b.commands.spawn((
-        Tooltip,
-        Node {
-            position_type: PositionType::Absolute,
-            width: px(TOOLTIP_WIDTH),
-            padding: UiRect::all(px(10)),
-            flex_direction: FlexDirection::Column,
-            row_gap: px(4),
-            border: UiRect::all(px(1)),
-            border_radius: BorderRadius::all(px(6)),
-            ..default()
-        },
-        BackgroundColor(Color::srgba(0.05, 0.05, 0.09, 0.95)),
-        BorderColor::all(Color::srgba(1.0, 0.85, 0.55, 0.25)),
-        GlobalZIndex(150),
-        Visibility::Hidden,
-        Pickable::IGNORE,
-        DespawnOnExit(Phase::Evening),
-    ));
+    let frame = b
+        .commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                width: px(TOOLTIP_WIDTH),
+                max_width: percent(94),
+                flex_direction: FlexDirection::Column,
+                border_radius: BorderRadius::all(px(4)),
+                ..default()
+            },
+            BackgroundColor(BG_PANEL),
+            GlobalZIndex(150),
+            Visibility::Hidden,
+            Pickable::IGNORE,
+            DespawnOnExit(Phase::Evening),
+        ))
+        .id();
+    let body = theme.panel_body(&mut b.commands, frame, 0.23, 13.0, 4.0);
+    b.commands.entity(body).insert(Pickable::IGNORE);
+    b.commands.entity(frame).insert(Tooltip(body));
 }
 
 /// A tall hooded figure at the stern with a long pole: a model
@@ -887,6 +890,7 @@ fn update_tooltip(
     hovered: Res<HoveredCrate>,
     window: Single<&Window, With<PrimaryWindow>>,
     font: Res<UiFont>,
+    icons: Res<Icons>,
     lang: Res<Lang>,
     data: Res<GameData>,
     progress: Res<Progress>,
@@ -895,10 +899,10 @@ fn update_tooltip(
     crates: Res<CratesOrdered>,
     bought: Res<BoughtTonight>,
     crate_q: Query<&Crate>,
-    mut tooltip: Single<(Entity, &mut Node, &mut Visibility), With<Tooltip>>,
+    mut tooltip: Single<(&Tooltip, &ComputedNode, &mut Node, &mut Visibility)>,
     mut shown: Local<Option<Entity>>,
 ) {
-    let (entity, node, visibility) = &mut *tooltip;
+    let (tooltip, computed, node, visibility) = &mut *tooltip;
     let item = hovered
         .0
         .and_then(|e| crate_q.get(e).ok().map(|c| (e, c.id.clone())));
@@ -908,9 +912,16 @@ fn update_tooltip(
         return;
     };
     **visibility = Visibility::Inherited;
-    // Above and next to the pointer, kept inside the window.
-    let x = (cursor.x + 18.0).min(window.width() - TOOLTIP_WIDTH - 8.0);
-    let y = (cursor.y - 190.0).max(8.0);
+    let width = TOOLTIP_WIDTH.min(window.width() * 0.94);
+    let height = computed.size().y * computed.inverse_scale_factor();
+    // Keep the tooltip beside the pointer and fit the translated text on screen.
+    let x = if cursor.x + width + 26.0 <= window.width() {
+        cursor.x + 18.0
+    } else {
+        cursor.x - width - 18.0
+    };
+    let x = x.clamp(8.0, (window.width() - width - 8.0).max(8.0));
+    let y = (cursor.y - height * 0.65).clamp(8.0, (window.height() - height - 8.0).max(8.0));
     node.left = px(x);
     node.top = px(y);
 
@@ -925,8 +936,29 @@ fn update_tooltip(
     *shown = Some(hovered_entity);
     let Some(p) = data.product(&id) else { return };
     let night = progress.night;
-    let mut ui = PanelBuilder::new(&mut commands, *entity, &font);
-    ui.add_text(*entity, &lang.product(&id), true, 15.0, TEXT);
+    let body = tooltip.0;
+    let mut ui = PanelBuilder::new(&mut commands, body, &font);
+    let heading = ui.node(
+        body,
+        (
+            Node {
+                align_items: AlignItems::Center,
+                column_gap: px(8),
+                ..default()
+            },
+            Pickable::IGNORE,
+        ),
+    );
+    if let Some(icon) = icons.product(&id) {
+        ui.image_sized(heading, icon, Vec2::splat(32.0));
+    }
+    ui.display_text(
+        heading,
+        &lang.product(&id),
+        17.0,
+        Color::srgb_u8(249, 200, 132),
+    );
+    ui.rule();
     ui.text(&lang.f(
         "ferry.tip_crate",
         &[("size", &p.crate_size), ("cost", &p.crate_cost)],
@@ -937,7 +969,7 @@ fn update_tooltip(
     ));
     let profit = crate_profit(&data, &id, night);
     ui.add_text(
-        *entity,
+        body,
         &lang.f("ferry.tip_profit", &[("profit", &signed(profit))]),
         false,
         14.0,
@@ -949,14 +981,8 @@ fn update_tooltip(
         ui.text(&lang.f("ferry.tip_bought", &[("count", n)]));
     }
     match blocked(&data, &crates, &drawer, night, &id) {
-        Some(key) => ui.add_text(*entity, &lang.t(key), false, 13.0, RED),
-        None => ui.add_text(
-            *entity,
-            &lang.t("ferry.tip_controls"),
-            false,
-            12.0,
-            TEXT_DIM,
-        ),
+        Some(key) => ui.add_text(body, &lang.t(key), false, 13.0, RED),
+        None => ui.add_text(body, &lang.t("ferry.tip_controls"), false, 12.0, TEXT_DIM),
     }
 }
 
