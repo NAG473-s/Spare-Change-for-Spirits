@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Nehirden bir düğme çıkardım.",
+    "intro.story.2": "Dükkânında bir hayalet bekliyordu.",
+    "intro.story.3": "“Onu annem dikmişti,” diye fısıldadı.",
     "menu.version": "Demo · sürüm {version}",
     "menu.version_full": "Sürüm {version}",
     "menu.tagline": "Yalnızca gece yarısıyla şafak arasında açılan küçük bir dükkân.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Sil ve yeni oyun başlat",
     "menu.language": "Dil: {language}",
     "menu.choose_language": "Dilini seç",
+    "menu.language_auto": "Otomatik",
     "menu.back": "Geri",
     "menu.settings": "Ayarlar",
     "hud.menu": "Menü",
@@ -31,6 +35,7 @@
     "settings.title": "Ayarlar",
     "settings.music": "Müzik: %{percent}",
     "settings.effects": "Ses efektleri: %{percent}",
+    "settings.narration": "Anlatıcı sesi: %{percent}",
     "settings.ui_size": "Arayüz boyutu: %{percent}",
     "settings.fullscreen_on": "Tam ekran: açık",
     "settings.fullscreen_off": "Tam ekran: kapalı",
