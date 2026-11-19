@@ -75,11 +75,12 @@ pub struct Settings {
     pub tips: bool,
     /// Play music and sound effects.
     pub sound: bool,
-    /// Chosen language code; `None` until the player picks one.
+    /// A manual preference. With `None` the game follows Steam or the desktop.
     pub language: Option<String>,
-    /// Music and sound effect volume, 0 to 1.
+    /// Music, sound effects and narration have independent levels from 0 to 1.
     pub music: f32,
     pub effects: f32,
+    pub narration: f32,
     /// Size of the interface on top of the automatic scaling with the
     /// window height (1 = normal).
     pub ui_size: f32,
@@ -102,6 +103,7 @@ pub const UI_SIZE_RANGE: (f32, f32) = (0.7, 2.0);
 pub enum Knob {
     Music,
     Effects,
+    Narration,
     UiSize,
 }
 
@@ -114,6 +116,9 @@ impl Settings {
             Knob::Music => self.music = round((self.music + sign * VOLUME_STEP).clamp(0.0, 1.0)),
             Knob::Effects => {
                 self.effects = round((self.effects + sign * VOLUME_STEP).clamp(0.0, 1.0))
+            }
+            Knob::Narration => {
+                self.narration = round((self.narration + sign * VOLUME_STEP).clamp(0.0, 1.0))
             }
             Knob::UiSize => {
                 self.ui_size = round(
@@ -132,6 +137,7 @@ impl Default for Settings {
             language: None,
             music: 0.8,
             effects: 1.0,
+            narration: 1.0,
             ui_size: 1.0,
             fullscreen: false,
             patient_ghosts: false,
@@ -632,6 +638,8 @@ mod tests {
         assert_eq!(settings.music, 1.0);
         settings.adjust(Knob::Effects, false);
         assert_eq!(settings.effects, 0.9);
+        settings.adjust(Knob::Narration, false);
+        assert_eq!(settings.narration, 0.9);
         for _ in 0..20 {
             settings.adjust(Knob::UiSize, false);
         }
@@ -654,6 +662,7 @@ mod tests {
             language: Some("de".into()),
             music: 0.3,
             effects: 0.6,
+            narration: 0.7,
             ui_size: 1.2,
             fullscreen: true,
             patient_ghosts: true,
