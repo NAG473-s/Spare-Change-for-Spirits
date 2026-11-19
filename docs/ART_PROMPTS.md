@@ -27,7 +27,8 @@ python3 tools/check_models.py
 There are no open image orders. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
-floor, market street map and quay paving. All ten ghost portraits have gestures for nine activities.
+floor, market street map and quay paving. The opening score and all 31 readings are in
+`assets/sounds/`. All ten ghost portraits have gestures for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -145,7 +146,8 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 The first-launch crossing lasts 14 seconds. Keep the view fixed as the ferryman plants his pole
 four times and the title fades into the sky. The game moves the hull past each planted tip,
 opens a small ring in the water and lifts the pole for the next stroke. The lantern swings from
-the bow hook. All the moving pieces share one reflection.
+the bow hook. All the moving pieces share one reflection. Keep the bottom centre clear for the
+three lines of the ferryman’s story.
 
 | File in `assets/sprites/title/` | Replacement artwork |
 |---|---|
