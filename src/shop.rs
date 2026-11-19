@@ -31,7 +31,8 @@ use crate::upgrades::Upgrades;
 pub const CELL: f32 = 1.0;
 /// Centre of the floor grid (x, z).
 const GRID_CENTER: Vec2 = Vec2::new(0.0, 0.2);
-const COUNTER_SIZE: Vec3 = Vec3::new(4.5, 1.0, 0.8);
+// Countertop height, below the till. The loose props rest on this surface.
+const COUNTER_SIZE: Vec3 = Vec3::new(4.5, 0.742, 0.8);
 const DOOR_SIZE: Vec3 = Vec3::new(1.1, 2.3, 0.2);
 
 pub struct ShopPlugin;
@@ -526,7 +527,7 @@ fn spawn_shop(
             lang.t("shop.counter"),
             12.0,
             counter,
-            Vec3::new(0.0, COUNTER_SIZE.y + 0.3 - y, 0.0),
+            Vec3::new(0.0, 1.3 - y, 0.0),
         ),
     ));
 
