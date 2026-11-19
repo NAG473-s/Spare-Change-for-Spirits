@@ -53,11 +53,8 @@ fn main() {
         sim::run(&data, runs);
         return;
     }
-    // The saved language, else the system's, else English.
-    let code = save::Settings::load()
-        .language
-        .or_else(|| i18n::detect(&i18n::languages()))
-        .unwrap_or_else(|| i18n::SOURCE.to_string());
+    let automatic = i18n::AutomaticLanguage::at_launch();
+    let lang = i18n::Lang::from_preference(save::Settings::load().language.as_deref(), &automatic);
 
     let plugins = DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
@@ -81,7 +78,8 @@ fn main() {
         })
         .insert_resource(rng::Rng::from_time())
         .insert_resource(data)
-        .insert_resource(i18n::Lang::load(&code))
+        .insert_resource(automatic)
+        .insert_resource(lang)
         .add_plugins((
             ui::UiPlugin,
             day_cycle::DayCyclePlugin,
