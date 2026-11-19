@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "ห้องเก็บของว่างเปล่า ลองสั่งของจากคนแจวเรือดูสิ",
     "evening.atmosphere": "บรรยากาศ",
     "evening.display_summary": "ชั้นวาง: {shelves} · สินค้าที่วางโชว์: {products}",
+    "evening.tonight": "คืนนี้: {name}",
+    "evening.new_tonight": "มาใหม่คืนนี้: {items}",
     "evening.open": "เปิดร้าน  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "ทหารดีบุก",
     "product.tin_soldier.hint.1": "พี่ชายฉันมีทหารทั้งกรม",
     "product.tin_soldier.hint.2": "ขาดไปตัวหนึ่งเสมอ ตัวมือกลอง",
+    "product.ship_in_bottle.name": "เรือในขวด",
+    "product.ship_in_bottle.hint.1": "ฉันอยากกุมทะเลไว้ในมืออีกสักครั้ง",
+    "product.ship_in_bottle.hint.2": "เรือของฉัน … ตอนสุดท้ายเธอดูเล็กเหลือเกิน",
+    "product.brass_compass.name": "เข็มทิศทองเหลือง",
+    "product.brass_compass.hint.1": "บ้านไปทางไหนนะ? ฉันจำไม่ได้แล้ว",
+    "product.brass_compass.hint.2": "อะไรสักอย่างที่ชี้ไปทางเหนือเสมอ",
+    "product.fish_bone.name": "ก้างปลา",
+    "product.fish_bone.hint.1": "เมี้ยววว อะไรสักอย่างที่มีกลิ่นท่าเรือ",
+    "product.fish_bone.hint.2": "ครืออ … ไอ้ชิ้นกรุบกรอบที่มีแต่ก้างน่ะ",
+    "product.ball_of_yarn.name": "ก้อนไหมพรม",
+    "product.ball_of_yarn.hint.1": "เหมียว! ไอ้ของกลมๆ ที่กลิ้งหนีไปน่ะ!",
+    "product.ball_of_yarn.hint.2": "อะไรนุ่มๆ ไว้ไล่ตะปบใต้เตียง",
+    "product.polishing_cloth.name": "ผ้าขัดเงา",
+    "product.polishing_cloth.hint.1": "ชุดเกราะของข้าหมดความเงางามแล้ว อัศวินต้องเปล่งประกาย!",
+    "product.polishing_cloth.hint.2": "สนิม มีแต่สนิมไปหมด เจ้ามีอะไรไว้ขัดมันออกไหม?",
+    "product.hair_ribbon.name": "ริบบิ้นผ้าไหมผูกผม",
+    "product.hair_ribbon.hint.1": "อะไรสักอย่างไว้มัดผมขึ้นไปเต้นรำ",
+    "product.hair_ribbon.hint.2": "สีฟ้า เหมือนท้องฟ้าในวันแต่งงาน",
+    "product.wedding_veil.name": "ผ้าคลุมหน้าลูกไม้",
+    "product.wedding_veil.hint.1": "ฉันไม่เคยได้สวมมันเลย สักครั้งก็ไม่เคย",
+    "product.wedding_veil.hint.2": "อะไรสักอย่างที่ขาวและบางเบา ไว้เดินเข้าพิธีวิวาห์",
+    "product.pressed_flower.name": "ดอกไม้ทับแห้ง",
+    "product.pressed_flower.hint.1": "ครั้งหนึ่งเขาเคยให้ดอกไม้ฉัน ฉันเก็บมันไว้ในหนังสือ",
+    "product.pressed_flower.hint.2": "ดอกไม้ที่จะไม่มีวันเหี่ยวเฉา",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "ผีขี้อาย",
@@ -190,6 +216,14 @@
     "ghost.child.the": "ผีเด็ก",
     "ghost.edwin.name": "เอ็ดวิน",
     "ghost.edwin.the": "เอ็ดวิน",
+    "ghost.cat.name": "ผีแมว",
+    "ghost.cat.the": "ผีแมว",
+    "ghost.sailor.name": "ผีกะลาสีจมน้ำ",
+    "ghost.sailor.the": "ผีกะลาสีจมน้ำ",
+    "ghost.knight.name": "ผีอัศวินไร้หัว",
+    "ghost.knight.the": "ผีอัศวินไร้หัว",
+    "ghost.bride.name": "ผีเจ้าสาว",
+    "ghost.bride.the": "ผีเจ้าสาว",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "ชั้นวาง",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "ผ้าห่มถัก",
     "decor.wedding_photo.name": "รูปงานแต่งงาน",
     "decor.pocket_lantern.name": "ตะเกียงของเอ็ดวิน",
+    "decor.oil_lamp.name": "ตะเกียงน้ำมัน",
+    "decor.fern.name": "เฟิร์นในกระถาง",
+    "decor.gramophone.name": "หีบเสียง",
+    "decor.stove.name": "เตาไฟใบน้อย",
+    "decor.vanity.name": "โต๊ะเครื่องแป้ง",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "เอ็ดวิน",
@@ -218,6 +257,18 @@
     "story.5.intro": "ผมไม่เคยบอกเธอเลยว่าผมขอโทษที่จากไปก่อน คุณมีกระดาษไหม? ผมว่าถึงเวลาที่ผมจะเขียนถึงเธอแล้ว",
     "story.5.thanks": "มาร์กาเร็ตที่รัก … ใช่ ใช่ แบบนี้แหละ ขอบคุณนะ เจ้าของร้าน จุดตะเกียงไว้ให้คนต่อไปที่หลงทางด้วย",
     "story.ending": "เอ็ดวินพับจดหมาย สอดไว้ในเสื้อโค้ท แล้วเดินเข้าสู่แสงสว่าง ชั่วขณะหนึ่ง ทั้งร้านอบอวลไปด้วยกลิ่นฝน",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "จุดเริ่มต้นอันเงียบสงบ",
+    "event.first_night.text": "ร้านของคุณยังแทบไม่มีใครรู้จัก คืนนี้จะมีวิญญาณเพียงไม่กี่ตนที่หาประตูร้านเจอ",
+    "event.fog.name": "หมอกเหนือสายน้ำ",
+    "event.fog.text": "หมอกหนากลืนกินแสงไฟ ร้านมืดลง และวิญญาณขี้อายก็ลอยมาจากแม่น้ำ",
+    "event.harvest_moon.name": "จันทร์เก็บเกี่ยว",
+    "event.harvest_moon.text": "พระจันทร์สีทองดวงมหึมาทำให้วิญญาณทุกตนใจกว้าง: ของทุกอย่างขายได้ราคาสูงขึ้น",
+    "event.storm.name": "พายุ",
+    "event.storm.text": "ลมหวีดหวิวรอบร้าน คนแจวเรือนำลังมาได้น้อยลงหนึ่งลัง อากาศหนาวขึ้น และพวกกะลาสีก็มาหาที่หลบภัย",
+    "event.all_souls.name": "คืนแห่งวิญญาณ",
+    "event.all_souls.text": "คืนที่คึกคักที่สุดของปี วิญญาณเบียดเสียดกันเต็มถนน – และจ่ายเงินอย่างงาม",
 
     // Tips during the first night.
     "tip.order": "ทุกหัวค่ำ คนแจวเรือจะนำลังมาส่งได้ไม่เกินสี่ลัง สั่งสินค้าสักสองสามอย่างทางขวา – จ่ายด้วยเงินในลิ้นชัก",

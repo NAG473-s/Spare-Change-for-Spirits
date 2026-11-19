@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "المخزن فارغ. اطلب شيئًا من الملّاح.",
     "evening.atmosphere": "الأجواء",
     "evening.display_summary": "الرفوف: {shelves} · المنتجات المعروضة: {products}",
+    "evening.tonight": "الليلة: {name}",
+    "evening.new_tonight": "جديد الليلة: {items}",
     "evening.open": "افتح المتجر  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "جندي من الصفيح",
     "product.tin_soldier.hint.1": "كان لدى أخي فوج كامل.",
     "product.tin_soldier.hint.2": "كان واحد ناقصًا دائمًا. قارع الطبل.",
+    "product.ship_in_bottle.name": "سفينة في زجاجة",
+    "product.ship_in_bottle.hint.1": "أريد أن أحمل البحر بين يديّ من جديد.",
+    "product.ship_in_bottle.hint.2": "سفينتي … كم كانت صغيرة في النهاية.",
+    "product.brass_compass.name": "بوصلة نحاسية",
+    "product.brass_compass.hint.1": "أين طريق البيت؟ لا أستطيع أن أتذكّر.",
+    "product.brass_compass.hint.2": "شيء يشير إلى الشمال دائمًا.",
+    "product.fish_bone.name": "عظمة سمكة",
+    "product.fish_bone.hint.1": "مياااو. شيء تفوح منه رائحة الميناء.",
+    "product.fish_bone.hint.2": "خرررر … ذلك الشيء المقرمش المليء بالعظام.",
+    "product.ball_of_yarn.name": "كُبّة صوف",
+    "product.ball_of_yarn.hint.1": "مررر! الشيء المستدير الذي يتدحرج بعيدًا!",
+    "product.ball_of_yarn.hint.2": "شيء ناعم أطارده تحت السرير.",
+    "product.polishing_cloth.name": "قماشة تلميع",
+    "product.polishing_cloth.hint.1": "فقد درعي بريقه. على الفارس أن يتلألأ!",
+    "product.polishing_cloth.hint.2": "صدأ، صدأ في كل مكان. هل لديك شيء يزيله؟",
+    "product.hair_ribbon.name": "شريط شعر حريري",
+    "product.hair_ribbon.hint.1": "شيء أرفع به شعري من أجل الرقصة.",
+    "product.hair_ribbon.hint.2": "أزرق، كسماء يوم الزفاف.",
+    "product.wedding_veil.name": "طرحة من الدانتيل",
+    "product.wedding_veil.hint.1": "لم تُتح لي فرصة ارتدائها قط. ولا مرة واحدة.",
+    "product.wedding_veil.hint.2": "شيء أبيض وخفيف، أمشي به في زفّتي.",
+    "product.pressed_flower.name": "زهرة مجففة",
+    "product.pressed_flower.hint.1": "أهداني زهرة ذات مرة. احتفظتُ بها بين صفحات كتاب.",
+    "product.pressed_flower.hint.2": "زهرة لن تذبل أبدًا.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "الشبح الخجول",
@@ -190,6 +216,14 @@
     "ghost.child.the": "الشبح الطفل",
     "ghost.edwin.name": "إدوين",
     "ghost.edwin.the": "إدوين",
+    "ghost.cat.name": "القط الشبح",
+    "ghost.cat.the": "القط الشبح",
+    "ghost.sailor.name": "البحّار الغريق",
+    "ghost.sailor.the": "البحّار الغريق",
+    "ghost.knight.name": "الفارس مقطوع الرأس",
+    "ghost.knight.the": "الفارس مقطوع الرأس",
+    "ghost.bride.name": "شبح العروس",
+    "ghost.bride.the": "شبح العروس",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "رف",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "بطانية محبوكة",
     "decor.wedding_photo.name": "صورة الزفاف",
     "decor.pocket_lantern.name": "فانوس إدوين",
+    "decor.oil_lamp.name": "مصباح زيت",
+    "decor.fern.name": "سرخس في أصيص",
+    "decor.gramophone.name": "غرامافون",
+    "decor.stove.name": "موقد صغير",
+    "decor.vanity.name": "طاولة زينة",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "إدوين",
@@ -218,6 +257,18 @@
     "story.5.intro": "لم أقل لها قط إنني آسف لأنني رحلتُ أولًا. هل لديك ورق؟ أظن أن الوقت قد حان لأكتب لها.",
     "story.5.thanks": "عزيزتي مارغريت … نعم. نعم، هذا يكفي. شكرًا لك يا صاحب المتجر. أبقِ الفانوس مضاءً لمن يضلّ الطريق بعدي.",
     "story.ending": "يطوي إدوين الرسالة ويدسّها في معطفه ثم يمضي نحو النور. للحظة، تفوح رائحة المطر في أرجاء المتجر كله.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "بداية هادئة",
+    "event.first_night.text": "بالكاد انتشر خبر متجرك. لن يجد الباب الليلة سوى قليل من الأرواح.",
+    "event.fog.name": "ضباب فوق النهر",
+    "event.fog.text": "ضباب كثيف يبتلع الضوء. المتجر أكثر عتمة، والأرواح الخجولة تتهادى إليه من النهر.",
+    "event.harvest_moon.name": "قمر الحصاد",
+    "event.harvest_moon.text": "قمر ذهبي هائل يملأ كل روح بالكرم: كل شيء يُباع بسعر أعلى.",
+    "event.storm.name": "العاصفة",
+    "event.storm.text": "تعوي الريح حول المتجر. يُحضر الملّاح صندوقًا أقل، والجو أبرد، والبحّارة يبحثون عن ملجأ.",
+    "event.all_souls.name": "ليلة الأرواح",
+    "event.all_souls.text": "أكثر ليالي السنة ازدحامًا. تتزاحم الأرواح في الشارع – وتدفع بسخاء.",
 
     // Tips during the first night.
     "tip.order": "في كل مساء يُحضر الملّاح ما يصل إلى أربعة صناديق. اطلب بعض المنتجات من اليمين – تدفع ثمنها من درج النقود.",

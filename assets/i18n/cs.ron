@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Sklad je prázdný. Objednej si něco od převozníka.",
     "evening.atmosphere": "Atmosféra",
     "evening.display_summary": "Police: {shelves} · vystavené zboží: {products}",
+    "evening.tonight": "Dnes v noci: {name}",
+    "evening.new_tonight": "Dnes v noci nově: {items}",
     "evening.open": "Otevřít obchod  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Cínový vojáček",
     "product.tin_soldier.hint.1": "Bratr měl celý pluk.",
     "product.tin_soldier.hint.2": "Vždycky jeden chyběl. Bubeník.",
+    "product.ship_in_bottle.name": "Loď v láhvi",
+    "product.ship_in_bottle.hint.1": "Chci zase držet moře v dlaních.",
+    "product.ship_in_bottle.hint.2": "Moje loď … nakonec byla tak maličká.",
+    "product.brass_compass.name": "Mosazný kompas",
+    "product.brass_compass.hint.1": "Kudy je domů? Nevzpomenu si.",
+    "product.brass_compass.hint.2": "Něco, co vždycky ukazuje na sever.",
+    "product.fish_bone.name": "Rybí kost",
+    "product.fish_bone.hint.1": "Mňauu. Něco, co voní přístavem.",
+    "product.fish_bone.hint.2": "Prrr … ta kostnatá, křupavá věc.",
+    "product.ball_of_yarn.name": "Klubko vlny",
+    "product.ball_of_yarn.hint.1": "Mrrp! Ta kulatá věc, co se kutálí pryč!",
+    "product.ball_of_yarn.hint.2": "Něco měkkého na honění pod postelí.",
+    "product.polishing_cloth.name": "Leštící hadřík",
+    "product.polishing_cloth.hint.1": "Moje zbroj ztratila lesk. Rytíř se musí třpytit!",
+    "product.polishing_cloth.hint.2": "Rez, všude rez. Máte něco, čím by se dala vydrhnout?",
+    "product.hair_ribbon.name": "Hedvábná stuha do vlasů",
+    "product.hair_ribbon.hint.1": "Něco, čím si na tanec sepnu vlasy.",
+    "product.hair_ribbon.hint.2": "Modrá jako nebe v den svatby.",
+    "product.wedding_veil.name": "Krajkový závoj",
+    "product.wedding_veil.hint.1": "Nikdy mi nebylo dopřáno ho nosit. Ani jednou.",
+    "product.wedding_veil.hint.2": "Něco bílého a lehkého na cestu k oltáři.",
+    "product.pressed_flower.name": "Lisovaná květina",
+    "product.pressed_flower.hint.1": "Jednou mi dal květinu. Dodnes leží v mé knize.",
+    "product.pressed_flower.hint.2": "Květ, který nikdy nezvadne.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Plachý duch",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Dětský duch",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Kočičí duch",
+    "ghost.cat.the": "Kočičí duch",
+    "ghost.sailor.name": "Utonulý námořník",
+    "ghost.sailor.the": "Utonulý námořník",
+    "ghost.knight.name": "Bezhlavý rytíř",
+    "ghost.knight.the": "Bezhlavý rytíř",
+    "ghost.bride.name": "Duch nevěsty",
+    "ghost.bride.the": "Duch nevěsty",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Police",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Pletená deka",
     "decor.wedding_photo.name": "Svatební fotka",
     "decor.pocket_lantern.name": "Edwinova lucerna",
+    "decor.oil_lamp.name": "Petrolejová lampa",
+    "decor.fern.name": "Kapradina v květináči",
+    "decor.gramophone.name": "Gramofon",
+    "decor.stove.name": "Malá kamínka",
+    "decor.vanity.name": "Toaletní stolek",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Nikdy jsem jí neřekl, že mě mrzí, že jsem odešel první. Máte papír? Myslím, že je čas jí napsat.",
     "story.5.thanks": "Drahá Margaret … ano. Ano, takhle to bude dobré. Děkuji vám. Nechte lucernu svítit pro dalšího, kdo zabloudí.",
     "story.ending": "Edwin složí dopis, zastrčí ho do kabátu a vejde do světla. Na okamžik celý obchod voní deštěm.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Tichý začátek",
+    "event.first_night.text": "Zpráva o tvém obchodě se sotva začala šířit. Dnes v noci najde dveře jen pár duchů.",
+    "event.fog.name": "Mlha nad řekou",
+    "event.fog.text": "Hustá mlha pohlcuje světlo. V obchodě je tmavěji a od řeky se dovnitř vznášejí plaší duchové.",
+    "event.harvest_moon.name": "Sklizňový úplněk",
+    "event.harvest_moon.text": "Obrovský zlatý měsíc naladí všechny duchy štědře: všechno se prodává dráž.",
+    "event.storm.name": "Bouře",
+    "event.storm.text": "Kolem obchodu skučí vítr. Převozník přiveze o jednu bednu méně, je chladněji a námořníci hledají úkryt.",
+    "event.all_souls.name": "Dušičková noc",
+    "event.all_souls.text": "Nejrušnější noc v roce. Duchové se tlačí na ulici – a dobře platí.",
 
     // Tips during the first night.
     "tip.order": "Každý večer ti převozník přiveze až čtyři bedny. Objednej si vpravo pár druhů zboží – platíš z pokladny.",

@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "仓库空空如也。向摆渡人订点货吧。",
     "evening.atmosphere": "氛围",
     "evening.display_summary": "货架：{shelves} · 陈列商品：{products}",
+    "evening.tonight": "今夜：{name}",
+    "evening.new_tonight": "今夜新登场：{items}",
     "evening.open": "开门营业  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "锡兵",
     "product.tin_soldier.hint.1": "我哥哥有一整个军团。",
     "product.tin_soldier.hint.2": "总是少一个。就是那个鼓手。",
+    "product.ship_in_bottle.name": "瓶中船",
+    "product.ship_in_bottle.hint.1": "我想再一次把大海捧在手心里。",
+    "product.ship_in_bottle.hint.2": "我的船……到最后，它显得那么小。",
+    "product.brass_compass.name": "黄铜罗盘",
+    "product.brass_compass.hint.1": "家在哪个方向？我想不起来了。",
+    "product.brass_compass.hint.2": "一个永远指向北方的东西。",
+    "product.fish_bone.name": "鱼骨头",
+    "product.fish_bone.hint.1": "喵呜。要闻起来像港口的东西。",
+    "product.fish_bone.hint.2": "呼噜……那个骨头多多、嘎嘣脆的东西。",
+    "product.ball_of_yarn.name": "毛线球",
+    "product.ball_of_yarn.hint.1": "喵！那个会滚走的圆东西！",
+    "product.ball_of_yarn.hint.2": "软软的、能追到床底下的东西。",
+    "product.polishing_cloth.name": "抛光布",
+    "product.polishing_cloth.hint.1": "我的盔甲失去了光泽。骑士必须闪闪发亮！",
+    "product.polishing_cloth.hint.2": "锈，到处都是锈。你有能把它擦掉的东西吗？",
+    "product.hair_ribbon.name": "丝绸发带",
+    "product.hair_ribbon.hint.1": "想要个东西，把头发扎起来去跳舞。",
+    "product.hair_ribbon.hint.2": "蓝色的，就像婚礼那天的天空。",
+    "product.wedding_veil.name": "蕾丝头纱",
+    "product.wedding_veil.hint.1": "我一次都没能戴上它。一次都没有。",
+    "product.wedding_veil.hint.2": "白色的、轻盈的东西，好让我走过红毯。",
+    "product.pressed_flower.name": "压花",
+    "product.pressed_flower.hint.1": "他曾经送过我一朵花。我把它夹在了书里。",
+    "product.pressed_flower.hint.2": "一朵永不凋谢的花。",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "害羞的幽灵",
@@ -190,6 +216,14 @@
     "ghost.child.the": "幽灵小孩",
     "ghost.edwin.name": "艾德温",
     "ghost.edwin.the": "艾德温",
+    "ghost.cat.name": "幽灵猫",
+    "ghost.cat.the": "幽灵猫",
+    "ghost.sailor.name": "溺水的水手",
+    "ghost.sailor.the": "溺水的水手",
+    "ghost.knight.name": "无头骑士",
+    "ghost.knight.the": "无头骑士",
+    "ghost.bride.name": "幽灵新娘",
+    "ghost.bride.the": "幽灵新娘",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "货架",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "手织毛毯",
     "decor.wedding_photo.name": "结婚照",
     "decor.pocket_lantern.name": "艾德温的提灯",
+    "decor.oil_lamp.name": "油灯",
+    "decor.fern.name": "蕨类盆栽",
+    "decor.gramophone.name": "留声机",
+    "decor.stove.name": "小火炉",
+    "decor.vanity.name": "梳妆台",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "艾德温",
@@ -218,6 +257,18 @@
     "story.5.intro": "我一直没告诉她：对不起，我先走了。你有纸吗？我想是时候给她写封信了。",
     "story.5.thanks": "亲爱的玛格丽特……嗯。嗯，这样就好。谢谢你，店主。为下一个迷路的人，让提灯一直亮着吧。",
     "story.ending": "艾德温把信折好，塞进外套，走进了光里。有那么一瞬间，整个小店都弥漫着雨的气味。",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "平静的开端",
+    "event.first_night.text": "你的小店还没什么名气。今晚只有寥寥几个幽灵能找到门。",
+    "event.fog.name": "河上起雾",
+    "event.fog.text": "浓雾吞没了光亮。店里更暗了，害羞的幽灵从河边飘了进来。",
+    "event.harvest_moon.name": "丰收月",
+    "event.harvest_moon.text": "一轮巨大的金色月亮让每个幽灵都慷慨起来：所有商品都能卖出更高的价钱。",
+    "event.storm.name": "暴风雨",
+    "event.storm.text": "狂风在小店四周呼啸。摆渡人少送一箱货，天气更冷，水手们纷纷前来避风。",
+    "event.all_souls.name": "万灵节之夜",
+    "event.all_souls.text": "一年中最热闹的一夜。幽灵挤满了街道 – 而且出手很大方。",
 
     // Tips during the first night.
     "tip.order": "每天傍晚，摆渡人最多会送来四箱货。在右侧订购一些商品 – 货款从钱箱里支付。",

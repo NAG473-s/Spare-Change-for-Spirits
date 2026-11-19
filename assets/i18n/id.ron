@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Gudang kosong. Pesan sesuatu dari tukang perahu.",
     "evening.atmosphere": "Suasana",
     "evening.display_summary": "Rak: {shelves} · barang dipajang: {products}",
+    "evening.tonight": "Malam ini: {name}",
+    "evening.new_tonight": "Baru malam ini: {items}",
     "evening.open": "Buka toko  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Prajurit Timah",
     "product.tin_soldier.hint.1": "Kakakku punya satu resimen penuh.",
     "product.tin_soldier.hint.2": "Selalu ada satu yang hilang. Si penabuh genderang.",
+    "product.ship_in_bottle.name": "Kapal dalam Botol",
+    "product.ship_in_bottle.hint.1": "Aku ingin menggenggam laut di tanganku sekali lagi.",
+    "product.ship_in_bottle.hint.2": "Kapalku … pada akhirnya ia begitu kecil.",
+    "product.brass_compass.name": "Kompas Kuningan",
+    "product.brass_compass.hint.1": "Ke mana arah pulang? Aku tak ingat.",
+    "product.brass_compass.hint.2": "Sesuatu yang selalu menunjuk ke utara.",
+    "product.fish_bone.name": "Tulang Ikan",
+    "product.fish_bone.hint.1": "Meooong. Sesuatu yang berbau pelabuhan.",
+    "product.fish_bone.hint.2": "Prrr … benda bertulang yang renyah itu.",
+    "product.ball_of_yarn.name": "Gulungan Benang Wol",
+    "product.ball_of_yarn.hint.1": "Mrrp! Benda bulat yang menggelinding pergi!",
+    "product.ball_of_yarn.hint.2": "Sesuatu yang lembut untuk dikejar di kolong ranjang.",
+    "product.polishing_cloth.name": "Kain Pengilap",
+    "product.polishing_cloth.hint.1": "Baju zirahku sudah kehilangan kilaunya. Seorang ksatria harus berkilau!",
+    "product.polishing_cloth.hint.2": "Karat, di mana-mana karat. Kamu punya sesuatu untuk menggosoknya sampai hilang?",
+    "product.hair_ribbon.name": "Pita Rambut Sutra",
+    "product.hair_ribbon.hint.1": "Sesuatu untuk mengikat rambutku saat berdansa.",
+    "product.hair_ribbon.hint.2": "Biru, seperti langit di hari pernikahan.",
+    "product.wedding_veil.name": "Kerudung Renda",
+    "product.wedding_veil.hint.1": "Aku tak pernah sempat memakainya. Sekali pun tidak.",
+    "product.wedding_veil.hint.2": "Sesuatu yang putih dan ringan, untuk berjalan menuju pelaminan.",
+    "product.pressed_flower.name": "Bunga Kering",
+    "product.pressed_flower.hint.1": "Dia pernah memberiku setangkai bunga. Kusimpan di dalam buku.",
+    "product.pressed_flower.hint.2": "Bunga yang tak akan pernah layu.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Hantu Pemalu",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Hantu Anak",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Kucing Hantu",
+    "ghost.cat.the": "Kucing Hantu",
+    "ghost.sailor.name": "Pelaut Tenggelam",
+    "ghost.sailor.the": "Pelaut Tenggelam",
+    "ghost.knight.name": "Ksatria Tanpa Kepala",
+    "ghost.knight.the": "Ksatria Tanpa Kepala",
+    "ghost.bride.name": "Pengantin Hantu",
+    "ghost.bride.the": "Pengantin Hantu",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Rak",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Selimut Rajut",
     "decor.wedding_photo.name": "Foto Pernikahan",
     "decor.pocket_lantern.name": "Lentera Edwin",
+    "decor.oil_lamp.name": "Lampu Minyak",
+    "decor.fern.name": "Pakis dalam Pot",
+    "decor.gramophone.name": "Gramofon",
+    "decor.stove.name": "Tungku Mungil",
+    "decor.vanity.name": "Meja Rias",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Aku tak pernah bilang padanya bahwa aku menyesal pergi lebih dulu. Kamu punya kertas? Kurasa sudah waktunya aku menulis surat untuknya.",
     "story.5.thanks": "Margaret tersayang … ya. Ya, begini sudah cukup. Terima kasih, pemilik toko. Biarkan lentera itu tetap menyala untuk siapa pun yang tersesat berikutnya.",
     "story.ending": "Edwin melipat suratnya, menyelipkannya ke dalam mantel, lalu berjalan menuju cahaya. Sesaat, seluruh toko beraroma hujan.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Awal yang Tenang",
+    "event.first_night.text": "Kabar tentang tokomu baru sedikit tersebar. Malam ini hanya segelintir arwah yang akan menemukan pintunya.",
+    "event.fog.name": "Kabut di Atas Sungai",
+    "event.fog.text": "Kabut tebal menelan cahaya. Toko jadi lebih gelap, dan arwah-arwah pemalu melayang masuk dari sungai.",
+    "event.harvest_moon.name": "Bulan Panen",
+    "event.harvest_moon.text": "Bulan keemasan yang besar sekali membuat setiap arwah murah hati: semua barang terjual lebih mahal.",
+    "event.storm.name": "Badai",
+    "event.storm.text": "Angin melolong di sekeliling toko. Tukang perahu membawa satu peti lebih sedikit, udara lebih dingin, dan para pelaut mencari tempat berteduh.",
+    "event.all_souls.name": "Malam Para Arwah",
+    "event.all_souls.text": "Malam tersibuk dalam setahun. Para arwah memadati jalan – dan mereka membayar dengan murah hati.",
 
     // Tips during the first night.
     "tip.order": "Setiap petang, tukang perahu membawa paling banyak empat peti. Pesan beberapa barang di sebelah kanan – kamu membayarnya dari laci kasir.",

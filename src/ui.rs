@@ -5,7 +5,8 @@
 
 use std::collections::VecDeque;
 
-use bevy::picking::hover::Hovered;
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
+use bevy::picking::hover::{HoverMap, Hovered};
 use bevy::prelude::*;
 use bevy::ui::InteractionDisabled;
 use bevy::ui_widgets::{Activate, Button};
@@ -42,6 +43,11 @@ impl Plugin for UiPlugin {
             // Before Update, so every rebuild this frame already uses the new font.
             .add_systems(PreUpdate, apply_language.run_if(resource_changed::<Lang>))
             .add_observer(on_activate)
+            .add_observer(on_scroll)
+            .add_systems(
+                StateTransition,
+                scroll_panel_to_top.run_if(state_changed::<Phase>),
+            )
             .add_systems(OnEnter(Phase::Morning), build_morning_panel)
             .add_systems(OnEnter(Phase::Menu), clear_for_menu)
             .add_systems(OnEnter(Phase::DemoEnd), build_demo_end_panel)
@@ -49,6 +55,7 @@ impl Plugin for UiPlugin {
                 Update,
                 (
                     update_hud,
+                    send_scroll_events,
                     update_log.run_if(resource_changed::<GameLog>),
                     refresh_static_fonts.run_if(resource_changed::<UiFont>),
                     build_morning_panel
@@ -64,6 +71,7 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<ShopLayout>)
                                 .or_else(resource_changed::<Drawer>)
                                 .or_else(resource_changed::<Keepsakes>)
+                                .or_else(resource_changed::<Progress>)
                                 .or_else(resource_changed::<UiFont>),
                         ),
                     ),
@@ -219,6 +227,68 @@ struct LogText;
 #[derive(Component)]
 struct SidePanel;
 
+/// The two parts of the side panel.
+#[derive(Resource, Clone, Copy)]
+pub(crate) struct SidePanelParts {
+    body: Entity,
+    footer: Entity,
+}
+
+const SCROLL_LINE: f32 = 24.0;
+
+/// Mouse wheel scrolls whatever scrollable UI node is under the pointer.
+fn send_scroll_events(
+    mut wheel: MessageReader<MouseWheel>,
+    hover_map: Res<HoverMap>,
+    mut commands: Commands,
+) {
+    for event in wheel.read() {
+        let mut delta = -Vec2::new(event.x, event.y);
+        if event.unit == MouseScrollUnit::Line {
+            delta *= SCROLL_LINE;
+        }
+        for pointer_map in hover_map.values() {
+            for entity in pointer_map.keys().copied() {
+                commands.trigger(Scroll { entity, delta });
+            }
+        }
+    }
+}
+
+#[derive(EntityEvent, Debug)]
+#[entity_event(propagate, auto_propagate)]
+struct Scroll {
+    entity: Entity,
+    delta: Vec2,
+}
+
+fn on_scroll(
+    mut scroll: On<Scroll>,
+    mut nodes: Query<(&mut ScrollPosition, &Node, &ComputedNode)>,
+) {
+    let Ok((mut position, node, computed)) = nodes.get_mut(scroll.entity) else {
+        return;
+    };
+    if node.overflow.y != OverflowAxis::Scroll || scroll.delta.y == 0.0 {
+        return;
+    }
+    let max = ((computed.content_size() - computed.size()) * computed.inverse_scale_factor()).y;
+    position.y = (position.y + scroll.delta.y).clamp(0.0, max.max(0.0));
+    scroll.propagate(false);
+}
+
+/// A new phase starts at the top of the side panel.
+fn scroll_panel_to_top(
+    parts: Option<Res<SidePanelParts>>,
+    mut positions: Query<&mut ScrollPosition>,
+) {
+    if let Some(parts) = parts
+        && let Ok(mut p) = positions.get_mut(parts.body)
+    {
+        p.y = 0.0;
+    }
+}
+
 fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
     // Top bar
     commands.spawn((
@@ -242,23 +312,46 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
         )],
     ));
 
-    // Side panel – its content is rebuilt per phase.
-    commands.spawn((
-        SidePanel,
-        Node {
-            position_type: PositionType::Absolute,
-            right: px(0),
-            top: px(40),
-            bottom: px(0),
-            width: px(PANEL_WIDTH),
-            padding: UiRect::all(px(14)),
+    // Side panel: a scrolling body (rebuilt per phase) and a fixed footer for
+    // the main button, so it can never be pushed off screen.
+    let body = commands
+        .spawn((
+            Node {
+                flex_grow: 1.0,
+                min_height: px(0),
+                flex_direction: FlexDirection::Column,
+                row_gap: px(6),
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            ScrollPosition::default(),
+        ))
+        .id();
+    let footer = commands
+        .spawn(Node {
             flex_direction: FlexDirection::Column,
             row_gap: px(6),
-            overflow: Overflow::clip_y(),
+            padding: UiRect::top(px(8)),
             ..default()
-        },
-        BackgroundColor(BG_PANEL),
-    ));
+        })
+        .id();
+    commands
+        .spawn((
+            SidePanel,
+            Node {
+                position_type: PositionType::Absolute,
+                right: px(0),
+                top: px(40),
+                bottom: px(0),
+                width: px(PANEL_WIDTH),
+                padding: UiRect::all(px(14)),
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            BackgroundColor(BG_PANEL),
+        ))
+        .add_children(&[body, footer]);
+    commands.insert_resource(SidePanelParts { body, footer });
 
     // Message log
     commands.spawn((
@@ -343,12 +436,15 @@ fn update_hud(
 }
 
 /// The menu starts from a clean screen: no side panel, no old messages.
+/// (Runs once before Startup too, when the panel does not exist yet.)
 fn clear_for_menu(
     mut commands: Commands,
-    panel: Single<Entity, With<SidePanel>>,
+    parts: Option<Res<SidePanelParts>>,
     mut log: ResMut<GameLog>,
 ) {
-    commands.entity(*panel).despawn_related::<Children>();
+    let Some(parts) = parts else { return };
+    commands.entity(parts.body).despawn_related::<Children>();
+    commands.entity(parts.footer).despawn_related::<Children>();
     log.clear();
 }
 
@@ -371,7 +467,7 @@ fn ghost_state_changed(ghosts: Query<&Ghost>, mut last: Local<Vec<GhostState>>) 
 
 fn build_evening_panel(
     mut commands: Commands,
-    panel: Single<Entity, With<SidePanel>>,
+    parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     data: Res<GameData>,
@@ -380,17 +476,40 @@ fn build_evening_panel(
     tool: Res<Tool>,
     layout: Res<ShopLayout>,
     keepsakes: Res<Keepsakes>,
+    progress: Res<Progress>,
 ) {
-    let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
+    let night = progress.night;
+    let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("evening.title"));
 
+    if let Some(event) = data.event(night) {
+        ui.section(&lang.f(
+            "evening.tonight",
+            &[("name", &lang.t(&format!("event.{}.name", event.id)))],
+        ));
+        ui.dim(&lang.t(&format!("event.{}.text", event.id)));
+    }
+    if night > 1 {
+        let (products, decor, ghosts) = data.unlocked_on(night);
+        let names: Vec<String> = ghosts
+            .iter()
+            .map(|g| lang.ghost(g))
+            .chain(products.iter().map(|p| lang.product(p)))
+            .chain(decor.iter().map(|d| lang.decor(d)))
+            .collect();
+        if !names.is_empty() {
+            ui.dim(&lang.f("evening.new_tonight", &[("items", &lang.join(&names))]));
+        }
+    }
+
+    let max_crates = data.crates_tonight(night);
     ui.section(&lang.f(
         "evening.ferryman",
-        &[("count", &crates.0), ("max", &data.config.crates_per_night)],
+        &[("count", &crates.0), ("max", &max_crates)],
     ));
     let row = ui.row();
-    let boat_full = crates.0 >= data.config.crates_per_night;
-    for p in &data.products {
+    let boat_full = crates.0 >= max_crates;
+    for p in data.products.iter().filter(|p| p.unlock_night <= night) {
         let label = lang.f(
             "evening.order_button",
             &[
@@ -404,7 +523,11 @@ fn build_evening_panel(
 
     ui.section(&lang.t("evening.furnish"));
     let row = ui.row();
-    for d in data.decor.iter().filter(|d| !d.keepsake) {
+    for d in data
+        .decor
+        .iter()
+        .filter(|d| !d.keepsake && d.unlock_night <= night)
+    {
         let selected = *tool == Tool::Place(d.id.clone());
         let label = lang.f(
             "evening.decor_button",
@@ -461,7 +584,7 @@ fn build_evening_panel(
     }
 
     ui.section(&lang.t("evening.atmosphere"));
-    ui.text(&layout.atmosphere(&data).describe(&lang));
+    ui.text(&layout.atmosphere(&data, night).describe(&lang));
     ui.dim(&lang.f(
         "evening.display_summary",
         &[
@@ -476,7 +599,7 @@ fn build_evening_panel(
 
 fn build_night_panel(
     mut commands: Commands,
-    panel: Single<Entity, With<SidePanel>>,
+    parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     data: Res<GameData>,
@@ -487,7 +610,7 @@ fn build_night_panel(
     drawer: Res<Drawer>,
     ghosts: Query<&Ghost>,
 ) {
-    let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
+    let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("night.title"));
 
     if let Some(sale) = &register.sale {
@@ -605,14 +728,14 @@ fn build_night_panel(
 
 fn build_morning_panel(
     mut commands: Commands,
-    panel: Single<Entity, With<SidePanel>>,
+    parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     data: Res<GameData>,
     report: Res<NightReport>,
     progress: Res<Progress>,
 ) {
-    let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
+    let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("morning.title"));
     ui.text(&lang.f(
         "morning.sales",
@@ -703,13 +826,13 @@ fn build_morning_panel(
 
 fn build_demo_end_panel(
     mut commands: Commands,
-    panel: Single<Entity, With<SidePanel>>,
+    parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     data: Res<GameData>,
     progress: Res<Progress>,
 ) {
-    let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
+    let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("end.title"));
     ui.text(&lang.f("end.reputation", &[("reputation", &progress.reputation)]));
     let chapters = data.story.chapters.len();
@@ -759,6 +882,8 @@ pub fn text_font(font: &FontSource, size: f32) -> TextFont {
 pub(crate) struct PanelBuilder<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
     root: Entity,
+    /// Where `primary` buttons go (the side panel's fixed footer, or `root`).
+    footer: Entity,
     font: &'a UiFont,
 }
 
@@ -769,6 +894,20 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         Self {
             commands,
             root,
+            footer: root,
+            font,
+        }
+    }
+
+    /// Clears the side panel: content goes into the scrolling body,
+    /// primary buttons into the fixed footer.
+    fn side(commands: &'a mut Commands<'w, 's>, parts: SidePanelParts, font: &'a UiFont) -> Self {
+        commands.entity(parts.body).despawn_related::<Children>();
+        commands.entity(parts.footer).despawn_related::<Children>();
+        Self {
+            commands,
+            root: parts.body,
+            footer: parts.footer,
             font,
         }
     }
@@ -863,7 +1002,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     pub(crate) fn primary(&mut self, label: &str, action: Action) {
-        self.spawn_button(self.root, label, action, BTN_PRIMARY, true, 16.0);
+        self.spawn_button(self.footer, label, action, BTN_PRIMARY, true, 16.0);
     }
 
     pub(crate) fn spawn_button(

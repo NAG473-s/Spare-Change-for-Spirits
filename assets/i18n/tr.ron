@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Depo boş. Kayıkçıdan bir şeyler sipariş et.",
     "evening.atmosphere": "Atmosfer",
     "evening.display_summary": "Raf: {shelves} · sergilenen ürün: {products}",
+    "evening.tonight": "Bu gece: {name}",
+    "evening.new_tonight": "Bu gece yeni: {items}",
     "evening.open": "Dükkânı aç  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Kurşun Asker",
     "product.tin_soldier.hint.1": "Ağabeyimin koca bir alayı vardı.",
     "product.tin_soldier.hint.2": "Biri hep eksikti. Davulcu.",
+    "product.ship_in_bottle.name": "Şişede Gemi",
+    "product.ship_in_bottle.hint.1": "Denizi yeniden avuçlarımda tutmak istiyorum.",
+    "product.ship_in_bottle.hint.2": "Gemim … sonunda öyle küçüktü ki.",
+    "product.brass_compass.name": "Pirinç Pusula",
+    "product.brass_compass.hint.1": "Ev ne tarafta? Hatırlayamıyorum.",
+    "product.brass_compass.hint.2": "Hep kuzeyi gösteren bir şey.",
+    "product.fish_bone.name": "Balık Kılçığı",
+    "product.fish_bone.hint.1": "Miyaaav. Liman kokan bir şey.",
+    "product.fish_bone.hint.2": "Mrrr … o kılçıklı, çıtır çıtır şey.",
+    "product.ball_of_yarn.name": "Yün Yumağı",
+    "product.ball_of_yarn.hint.1": "Mırrp! Yuvarlanıp kaçan o yuvarlak şey!",
+    "product.ball_of_yarn.hint.2": "Yatağın altında kovalanacak yumuşak bir şey.",
+    "product.polishing_cloth.name": "Parlatma Bezi",
+    "product.polishing_cloth.hint.1": "Zırhım parlaklığını yitirdi. Bir şövalye ışıl ışıl parlamalı!",
+    "product.polishing_cloth.hint.2": "Pas, her yer pas. Bunu silip çıkaracak bir şeyin var mı?",
+    "product.hair_ribbon.name": "İpek Saç Kurdelesi",
+    "product.hair_ribbon.hint.1": "Dans için saçlarımı toplayacak bir şey.",
+    "product.hair_ribbon.hint.2": "Mavi, düğün günündeki gökyüzü gibi.",
+    "product.wedding_veil.name": "Dantel Duvak",
+    "product.wedding_veil.hint.1": "Onu hiç takamadım. Bir kez bile.",
+    "product.wedding_veil.hint.2": "Beyaz ve hafif bir şey; nikâh masasına yürürken takmak için.",
+    "product.pressed_flower.name": "Kurutulmuş Çiçek",
+    "product.pressed_flower.hint.1": "Bir keresinde bana bir çiçek vermişti. Onu bir kitabın arasında sakladım.",
+    "product.pressed_flower.hint.2": "Hiç solmayacak bir çiçek.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Utangaç Hayalet",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Çocuk Hayalet",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Hayalet Kedi",
+    "ghost.cat.the": "Hayalet Kedi",
+    "ghost.sailor.name": "Boğulmuş Denizci",
+    "ghost.sailor.the": "Boğulmuş Denizci",
+    "ghost.knight.name": "Başsız Şövalye",
+    "ghost.knight.the": "Başsız Şövalye",
+    "ghost.bride.name": "Hayalet Gelin",
+    "ghost.bride.the": "Hayalet Gelin",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Raf",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Örgü Battaniye",
     "decor.wedding_photo.name": "Düğün Fotoğrafı",
     "decor.pocket_lantern.name": "Edwin'in Feneri",
+    "decor.oil_lamp.name": "Gaz Lambası",
+    "decor.fern.name": "Saksıda Eğrelti Otu",
+    "decor.gramophone.name": "Gramofon",
+    "decor.stove.name": "Küçük Soba",
+    "decor.vanity.name": "Makyaj Masası",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Ondan önce gittiğim için üzgün olduğumu ona hiç söylemedim. Kâğıdın var mı? Sanırım ona yazmanın vakti geldi.",
     "story.5.thanks": "Sevgili Margaret … evet. Evet, bu olur. Teşekkürler, dükkâncı. Feneri yanık tut; kaybolan bir sonraki kişi için.",
     "story.ending": "Edwin mektubu katlıyor, paltosunun içine sokuyor ve ışığa doğru yürüyor. Bir an için bütün dükkân yağmur kokuyor.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Sessiz Bir Başlangıç",
+    "event.first_night.text": "Dükkânının adı henüz pek duyulmadı. Bu gece kapıyı yalnızca birkaç ruh bulacak.",
+    "event.fog.name": "Nehrin Üstünde Sis",
+    "event.fog.text": "Yoğun sis ışığı yutuyor. Dükkân daha karanlık ve utangaç ruhlar nehirden süzülüp geliyor.",
+    "event.harvest_moon.name": "Hasat Ayı",
+    "event.harvest_moon.text": "Kocaman, altın rengi bir ay her ruhu cömert bir havaya sokuyor: her şey daha pahalıya satılıyor.",
+    "event.storm.name": "Fırtına",
+    "event.storm.text": "Rüzgâr dükkânın çevresinde uğulduyor. Kayıkçı bir sandık eksik getirebiliyor, hava daha soğuk ve denizciler sığınacak yer arıyor.",
+    "event.all_souls.name": "Tüm Ruhlar Gecesi",
+    "event.all_souls.text": "Yılın en kalabalık gecesi. Ruhlar sokağı dolduruyor – ve cömertçe ödüyorlar.",
 
     // Tips during the first night.
     "tip.order": "Kayıkçı her akşam en fazla dört sandık getirir. Sağdan birkaç ürün sipariş et – parasını kasa çekmecesinden ödersin.",

@@ -77,6 +77,10 @@ Keep the same body shape for all of them and vary colour, face and one accessory
 | `forgetful` | A forgetful old ghost, faded beige glow, puzzled expression, a knot tied in a wispy finger, spectacles pushed up on its forehead. |
 | `child` | A small child ghost, mint green glow, round and bouncy, missing front tooth grin, holding a paper pinwheel. |
 | `edwin` | Edwin, an elderly gentleman ghost, warm pale-yellow glow, kind tired eyes, neat moustache, flat cap and a long coat, holding his hat to his chest. |
+| `cat` | A small ghost cat, pale lavender glow, round and fluffy with a wispy tail instead of legs, big curious eyes, one paw raised. |
+| `sailor` | A drowned sailor ghost, sea-green glow, striped shirt and a knitted cap, a little seaweed in his beard, holding a coil of rope, wistful smile. |
+| `knight` | A friendly headless knight ghost, silver-blue glow, slightly rusty armour, carrying his smiling helmeted head under one arm. |
+| `bride` | A ghostly bride, pearly white glow, old-fashioned lace dress, no veil, a small bouquet held close, hopeful but sad eyes. |
 
 ## Decor – canvas 1024 × 1024 (square)
 
@@ -117,6 +121,14 @@ Products are shown as small icons on the shelves, so keep the silhouette simple 
 | `powder_compact` | A round silver powder compact, slightly open, with a tiny puff. |
 | `lavender` | A small bundle of dried lavender tied with twine. |
 | `tin_soldier` | A small painted tin toy soldier with a drum. |
+| `ship_in_bottle` | A tiny sailing ship inside a corked glass bottle. |
+| `brass_compass` | An open round brass compass with a needle pointing north. |
+| `fish_bone` | A cartoonish fish skeleton, head, spine and tail. |
+| `ball_of_yarn` | A loose ball of soft blue yarn with a strand hanging out. |
+| `polishing_cloth` | A folded soft cloth with a little tin of metal polish. |
+| `hair_ribbon` | A light blue silk ribbon tied in a bow. |
+| `wedding_veil` | A folded white lace veil with a small pearl comb. |
+| `pressed_flower` | A pressed pink flower between two pages of an open old book. |
 
 ## Shop
 

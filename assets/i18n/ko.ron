@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "창고가 비었어요. 뱃사공에게 뭔가 주문해 보세요.",
     "evening.atmosphere": "분위기",
     "evening.display_summary": "선반: {shelves} · 진열된 상품: {products}",
+    "evening.tonight": "오늘 밤: {name}",
+    "evening.new_tonight": "오늘 밤 새로 등장: {items}",
     "evening.open": "가게 열기  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "주석 병정",
     "product.tin_soldier.hint.1": "형은 병정을 한 연대나 갖고 있었어.",
     "product.tin_soldier.hint.2": "꼭 하나가 모자랐지. 북 치는 병정이.",
+    "product.ship_in_bottle.name": "병 속의 배",
+    "product.ship_in_bottle.hint.1": "다시 한번 바다를 두 손에 담고 싶어.",
+    "product.ship_in_bottle.hint.2": "내 배… 마지막엔 그렇게나 작았지.",
+    "product.brass_compass.name": "놋쇠 나침반",
+    "product.brass_compass.hint.1": "집은 어느 쪽이지? 기억이 안 나.",
+    "product.brass_compass.hint.2": "언제나 북쪽을 가리키는 것.",
+    "product.fish_bone.name": "생선 뼈",
+    "product.fish_bone.hint.1": "냐아옹. 항구 냄새가 나는 거.",
+    "product.fish_bone.hint.2": "그르릉… 뼈가 많고 오도독한 그거.",
+    "product.ball_of_yarn.name": "털실 뭉치",
+    "product.ball_of_yarn.hint.1": "냥! 데굴데굴 굴러가는 동그란 거!",
+    "product.ball_of_yarn.hint.2": "침대 밑으로 쫓아갈 부드러운 무언가.",
+    "product.polishing_cloth.name": "광내기 천",
+    "product.polishing_cloth.hint.1": "갑옷이 광채를 잃었도다. 기사라면 마땅히 빛나야 하거늘!",
+    "product.polishing_cloth.hint.2": "녹, 온통 녹이로다. 이걸 문질러 없앨 것이 있는가?",
+    "product.hair_ribbon.name": "비단 머리 리본",
+    "product.hair_ribbon.hint.1": "춤출 때 머리를 묶을 무언가를.",
+    "product.hair_ribbon.hint.2": "파란색. 결혼식 날의 하늘처럼.",
+    "product.wedding_veil.name": "레이스 면사포",
+    "product.wedding_veil.hint.1": "한 번도 써 보지 못했어. 단 한 번도.",
+    "product.wedding_veil.hint.2": "새하얗고 가벼운 것. 버진 로드를 걸을 수 있게.",
+    "product.pressed_flower.name": "눌러 말린 꽃",
+    "product.pressed_flower.hint.1": "그이가 꽃을 한 송이 준 적이 있어. 책 사이에 끼워 두었지.",
+    "product.pressed_flower.hint.2": "영원히 시들지 않는 꽃.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "수줍은 유령",
@@ -190,6 +216,14 @@
     "ghost.child.the": "꼬마 유령",
     "ghost.edwin.name": "에드윈",
     "ghost.edwin.the": "에드윈",
+    "ghost.cat.name": "유령 고양이",
+    "ghost.cat.the": "유령 고양이",
+    "ghost.sailor.name": "물에 빠진 선원",
+    "ghost.sailor.the": "물에 빠진 선원",
+    "ghost.knight.name": "머리 없는 기사",
+    "ghost.knight.the": "머리 없는 기사",
+    "ghost.bride.name": "유령 신부",
+    "ghost.bride.the": "유령 신부",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "선반",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "손뜨개 담요",
     "decor.wedding_photo.name": "결혼사진",
     "decor.pocket_lantern.name": "에드윈의 랜턴",
+    "decor.oil_lamp.name": "기름 램프",
+    "decor.fern.name": "고사리 화분",
+    "decor.gramophone.name": "축음기",
+    "decor.stove.name": "작은 난로",
+    "decor.vanity.name": "화장대",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "에드윈",
@@ -218,6 +257,18 @@
     "story.5.intro": "먼저 떠나서 미안하다고, 끝내 말하지 못했네. 종이 있나? 이제 그 사람에게 편지를 쓸 때가 된 것 같아.",
     "story.5.thanks": "사랑하는 마거릿에게… 그래. 그래, 이거면 됐어. 고맙네, 주인장. 다음에 길 잃은 이를 위해 랜턴을 켜 두게.",
     "story.ending": "에드윈은 편지를 접어 외투 안에 넣고 빛 속으로 걸어간다. 잠시 동안, 가게 안 가득 비 냄새가 퍼진다.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "조용한 시작",
+    "event.first_night.text": "가게 소문이 아직 거의 퍼지지 않았다. 오늘 밤 문을 찾아오는 유령은 몇 안 된다.",
+    "event.fog.name": "강 위의 안개",
+    "event.fog.text": "짙은 안개가 빛을 삼킨다. 가게는 더 어두워지고, 수줍은 유령들이 강에서 스르르 들어온다.",
+    "event.harvest_moon.name": "수확의 보름달",
+    "event.harvest_moon.text": "커다란 황금빛 달에 모든 유령이 너그러워진다. 무엇이든 더 비싸게 팔린다.",
+    "event.storm.name": "폭풍우",
+    "event.storm.text": "가게 주위로 바람이 울부짖는다. 뱃사공이 가져오는 상자가 하나 줄고, 날씨는 더 추워지며, 선원들이 피할 곳을 찾아온다.",
+    "event.all_souls.name": "위령의 밤",
+    "event.all_souls.text": "일 년 중 가장 붐비는 밤. 유령들이 거리를 가득 메운다 – 게다가 돈도 후하게 낸다.",
 
     // Tips during the first night.
     "tip.order": "매일 저녁 뱃사공이 상자를 최대 네 개까지 가져다줘요. 오른쪽에서 상품을 몇 개 주문하세요 – 대금은 돈통에서 나가요.",

@@ -137,19 +137,23 @@ fn spawn_ghosts(
     // Good reputation = more customers.
     let (min, max) = data.config.spawn_interval_secs;
     let rep_factor = (1.0 - progress.reputation as f32 * 0.02).clamp(0.5, 1.5);
-    timer.0 = rng.range(min, max) * rep_factor;
+    let night = progress.night;
+    timer.0 = rng.range(min, max) * rep_factor * data.spawn_factor(night);
 
     if ghosts.iter().count() >= data.config.max_ghosts_in_shop {
         return;
     }
 
-    let atmosphere = layout.atmosphere(&data);
+    let atmosphere = layout.atmosphere(&data, night);
     let weights: Vec<f32> = data
         .ghosts
         .iter()
         .map(|g| {
+            if g.unlock_night > night {
+                return 0.0;
+            }
             let fits = g.unmet_need(&atmosphere).is_none();
-            g.spawn_weight * if fits { 1.0 } else { 0.35 }
+            g.spawn_weight * if fits { 1.0 } else { 0.35 } * data.ghost_weight_factor(night, &g.id)
         })
         .collect();
     let Some(def_idx) = rng.weighted(&weights) else {
@@ -157,7 +161,13 @@ fn spawn_ghosts(
     };
     let def = &data.ghosts[def_idx];
 
-    let wish = def.wishes[rng.index(def.wishes.len())].clone();
+    // Only wish for what the ferryman already sells.
+    let wishes: Vec<&String> = def
+        .wishes
+        .iter()
+        .filter(|w| data.product(w).is_some_and(|p| p.unlock_night <= night))
+        .collect();
+    let wish = wishes[rng.index(wishes.len())].clone();
     let hints = lang.count(&format!("product.{wish}.hint."));
     let hint = format!("product.{wish}.hint.{}", rng.index(hints) + 1);
 
@@ -354,7 +364,7 @@ fn ghost_ai(
                 let quirks = &data.ghosts[g.def].quirks;
                 let calm = quirks
                     .calm_with
-                    .is_some_and(|n| n.is_met(&layout.atmosphere(&data)));
+                    .is_some_and(|n| n.is_met(&layout.atmosphere(&data, progress.night)));
                 if !calm
                     && rng.chance(quirks.knock_chance)
                     && let Some(product) =

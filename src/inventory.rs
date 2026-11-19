@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use bevy::prelude::*;
 
 use crate::data::GameData;
-use crate::day_cycle::Phase;
+use crate::day_cycle::{Phase, Progress};
 use crate::economy::Drawer;
 use crate::i18n::Lang;
 use crate::ui::{Action, GameLog};
@@ -95,13 +95,14 @@ fn handle_orders(
     mut crates: ResMut<CratesOrdered>,
     mut log: ResMut<GameLog>,
     lang: Res<Lang>,
+    progress: Res<Progress>,
 ) {
     for action in actions.read() {
         let Action::Order(id) = action else { continue };
         let Some(product) = data.product(id) else {
             continue;
         };
-        if crates.0 >= data.config.crates_per_night {
+        if crates.0 >= data.crates_tonight(progress.night) {
             log.push(lang.t("log.boat_full"));
             continue;
         }

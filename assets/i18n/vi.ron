@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Kho trống trơn. Hãy đặt hàng từ người lái đò.",
     "evening.atmosphere": "Không khí",
     "evening.display_summary": "Kệ: {shelves} · hàng đang bày: {products}",
+    "evening.tonight": "Đêm nay: {name}",
+    "evening.new_tonight": "Mới đêm nay: {items}",
     "evening.open": "Mở cửa tiệm  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Lính chì",
     "product.tin_soldier.hint.1": "Anh trai tôi có cả một trung đoàn.",
     "product.tin_soldier.hint.2": "Lúc nào cũng thiếu một chú. Chú lính đánh trống.",
+    "product.ship_in_bottle.name": "Thuyền trong chai",
+    "product.ship_in_bottle.hint.1": "Tôi muốn được ôm cả biển khơi trong tay thêm lần nữa.",
+    "product.ship_in_bottle.hint.2": "Con tàu của tôi … lúc cuối nó thật nhỏ bé.",
+    "product.brass_compass.name": "La bàn đồng",
+    "product.brass_compass.hint.1": "Đường về nhà ở hướng nào? Tôi không nhớ nổi.",
+    "product.brass_compass.hint.2": "Thứ gì đó luôn chỉ về hướng bắc.",
+    "product.fish_bone.name": "Xương cá",
+    "product.fish_bone.hint.1": "Meooo. Thứ gì đó có mùi bến cảng.",
+    "product.fish_bone.hint.2": "Rừ rừ … cái thứ nhiều xương, giòn giòn ấy.",
+    "product.ball_of_yarn.name": "Cuộn len",
+    "product.ball_of_yarn.hint.1": "Mrừ! Cái thứ tròn tròn lăn đi mất ấy!",
+    "product.ball_of_yarn.hint.2": "Thứ gì đó mềm mềm để đuổi bắt dưới gầm giường.",
+    "product.polishing_cloth.name": "Khăn đánh bóng",
+    "product.polishing_cloth.hint.1": "Bộ giáp của ta đã mất hết vẻ sáng bóng. Hiệp sĩ thì phải sáng loáng!",
+    "product.polishing_cloth.hint.2": "Gỉ sét, chỗ nào cũng gỉ sét. Có thứ gì chà sạch nó đi không?",
+    "product.hair_ribbon.name": "Ruy băng lụa buộc tóc",
+    "product.hair_ribbon.hint.1": "Thứ gì đó để búi tóc lên cho buổi khiêu vũ.",
+    "product.hair_ribbon.hint.2": "Màu xanh, như bầu trời hôm đám cưới.",
+    "product.wedding_veil.name": "Khăn voan ren",
+    "product.wedding_veil.hint.1": "Tôi chưa bao giờ được đội nó. Dù chỉ một lần.",
+    "product.wedding_veil.hint.2": "Thứ gì đó trắng và nhẹ, để bước vào lễ đường.",
+    "product.pressed_flower.name": "Hoa ép khô",
+    "product.pressed_flower.hint.1": "Anh ấy từng tặng tôi một bông hoa. Tôi đã ép nó trong một cuốn sách.",
+    "product.pressed_flower.hint.2": "Một đóa hoa sẽ không bao giờ héo.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Hồn ma nhút nhát",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Hồn ma bé con",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Mèo ma",
+    "ghost.cat.the": "Mèo ma",
+    "ghost.sailor.name": "Thủy thủ chết đuối",
+    "ghost.sailor.the": "Thủy thủ chết đuối",
+    "ghost.knight.name": "Hiệp sĩ không đầu",
+    "ghost.knight.the": "Hiệp sĩ không đầu",
+    "ghost.bride.name": "Cô dâu ma",
+    "ghost.bride.the": "Cô dâu ma",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Kệ",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Chăn len đan",
     "decor.wedding_photo.name": "Ảnh cưới",
     "decor.pocket_lantern.name": "Đèn lồng của Edwin",
+    "decor.oil_lamp.name": "Đèn dầu",
+    "decor.fern.name": "Chậu dương xỉ",
+    "decor.gramophone.name": "Máy hát quay tay",
+    "decor.stove.name": "Bếp lò nhỏ",
+    "decor.vanity.name": "Bàn trang điểm",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Ông chưa bao giờ nói với bà rằng ông xin lỗi vì đã ra đi trước. Cháu có giấy không? Ông nghĩ đã đến lúc ông viết thư cho bà.",
     "story.5.thanks": "Margaret thân yêu … phải. Phải, thế là được rồi. Cảm ơn cháu, chủ tiệm. Hãy giữ ngọn đèn cháy sáng cho người kế tiếp bị lạc đường.",
     "story.ending": "Edwin gấp lá thư, nhét vào trong áo khoác rồi bước vào ánh sáng. Trong một khoảnh khắc, cả cửa tiệm thoảng mùi mưa.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Khởi đầu lặng lẽ",
+    "event.first_night.text": "Tiếng tăm cửa tiệm của bạn hầu như chưa lan xa. Đêm nay chỉ vài linh hồn tìm được đến cửa.",
+    "event.fog.name": "Sương mù trên sông",
+    "event.fog.text": "Sương mù dày đặc nuốt chửng ánh sáng. Cửa tiệm tối hơn, và những linh hồn nhút nhát trôi vào từ phía dòng sông.",
+    "event.harvest_moon.name": "Trăng mùa gặt",
+    "event.harvest_moon.text": "Vầng trăng vàng khổng lồ khiến mọi linh hồn trở nên hào phóng: món nào cũng bán được giá hơn.",
+    "event.storm.name": "Bão",
+    "event.storm.text": "Gió gào thét quanh cửa tiệm. Người lái đò mang được ít đi một thùng, trời lạnh hơn, và các thủy thủ tìm chốn trú ẩn.",
+    "event.all_souls.name": "Đêm các linh hồn",
+    "event.all_souls.text": "Đêm đông đúc nhất trong năm. Các linh hồn chen chúc khắp phố – và họ trả tiền rất hậu.",
 
     // Tips during the first night.
     "tip.order": "Mỗi tối, người lái đò mang đến tối đa bốn thùng hàng. Hãy đặt vài món ở bên phải – tiền lấy từ ngăn kéo thu ngân.",

@@ -22,6 +22,17 @@ pub struct ProductDef {
     pub crate_size: u32,
     /// After this many nights in the shop the item fades away.
     pub fade_after: u32,
+    /// First night the ferryman offers it.
+    #[serde(default = "one")]
+    pub unlock_night: u32,
+}
+
+fn one() -> u32 {
+    1
+}
+
+fn one_f() -> f32 {
+    1.0
 }
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -121,6 +132,9 @@ pub struct GhostDef {
     pub pays_with: Vec<Coin>,
     #[serde(default)]
     pub quirks: Quirks,
+    /// First night this ghost can appear.
+    #[serde(default = "one")]
+    pub unlock_night: u32,
 }
 
 /// Special behaviour of a ghost type. All chances are 0..1.
@@ -162,6 +176,31 @@ pub struct DecorDef {
     /// Height of the light source for decor with a light effect.
     #[serde(default = "default_light_height")]
     pub light_height: f32,
+    /// First night it can be bought.
+    #[serde(default = "one")]
+    pub unlock_night: u32,
+}
+
+/// Something special about one night (fog, storm, …).
+#[derive(Deserialize, Clone, Debug)]
+pub struct NightEvent {
+    pub id: String,
+    pub night: u32,
+    /// Multiplies the time between ghosts (above 1 = fewer customers).
+    #[serde(default = "one_f")]
+    pub spawn_factor: f32,
+    /// Multiplies what ghosts pay.
+    #[serde(default = "one_f")]
+    pub price_factor: f32,
+    /// Extra (or fewer) crates from the ferryman.
+    #[serde(default)]
+    pub crate_bonus: i32,
+    /// Added to the shop's atmosphere.
+    #[serde(default)]
+    pub atmosphere: Atmosphere,
+    /// (ghost id, factor) for how often a ghost comes.
+    #[serde(default)]
+    pub ghost_weights: Vec<(String, f32)>,
 }
 
 fn default_size() -> (f32, f32, f32) {
@@ -214,6 +253,7 @@ pub struct GameData {
     pub ghosts: Vec<GhostDef>,
     pub decor: Vec<DecorDef>,
     pub story: StoryDef,
+    pub events: Vec<NightEvent>,
 }
 
 impl GameData {
@@ -225,6 +265,7 @@ impl GameData {
             ghosts: load_ron("data/ghosts.ron"),
             decor: load_ron("data/decor.ron"),
             story: load_ron("data/story.ron"),
+            events: load_ron("data/events.ron"),
         };
         data.validate();
         data
@@ -233,6 +274,13 @@ impl GameData {
     fn validate(&self) {
         for g in &self.ghosts {
             assert!(!g.wishes.is_empty(), "ghost '{}' has no wishes", g.id);
+            assert!(
+                g.wishes.iter().any(|w| self
+                    .product(w)
+                    .is_some_and(|p| p.unlock_night <= g.unlock_night)),
+                "ghost '{}' wishes only for products unlocked after it appears",
+                g.id
+            );
             for w in &g.wishes {
                 assert!(
                     self.product(w).is_some(),
@@ -247,6 +295,16 @@ impl GameData {
             "story ghost '{}' is not in ghosts.ron",
             self.story.ghost
         );
+        for e in &self.events {
+            for (g, _) in &e.ghost_weights {
+                assert!(
+                    self.ghost_index(g).is_some(),
+                    "event '{}' names unknown ghost '{}'",
+                    e.id,
+                    g
+                );
+            }
+        }
         for (i, c) in self.story.chapters.iter().enumerate() {
             assert!(
                 self.product(&c.wish).is_some(),
@@ -263,6 +321,51 @@ impl GameData {
                 );
             }
         }
+    }
+
+    pub fn event(&self, night: u32) -> Option<&NightEvent> {
+        self.events.iter().find(|e| e.night == night)
+    }
+
+    /// Crates the ferryman brings tonight (at least one).
+    pub fn crates_tonight(&self, night: u32) -> u32 {
+        let bonus = self.event(night).map_or(0, |e| e.crate_bonus);
+        (self.config.crates_per_night as i32 + bonus).max(1) as u32
+    }
+
+    /// How much more (or less) often a ghost comes tonight.
+    pub fn ghost_weight_factor(&self, night: u32, ghost: &str) -> f32 {
+        self.event(night)
+            .and_then(|e| e.ghost_weights.iter().find(|(id, _)| id == ghost))
+            .map_or(1.0, |(_, f)| *f)
+    }
+
+    pub fn price_factor(&self, night: u32) -> f32 {
+        self.event(night).map_or(1.0, |e| e.price_factor)
+    }
+
+    pub fn spawn_factor(&self, night: u32) -> f32 {
+        self.event(night).map_or(1.0, |e| e.spawn_factor)
+    }
+
+    /// Ids of products, decor and ghosts that become available on this night.
+    pub fn unlocked_on(&self, night: u32) -> (Vec<&str>, Vec<&str>, Vec<&str>) {
+        let products = self
+            .products
+            .iter()
+            .filter(|p| p.unlock_night == night)
+            .map(|p| p.id.as_str());
+        let decor = self
+            .decor
+            .iter()
+            .filter(|d| d.unlock_night == night)
+            .map(|d| d.id.as_str());
+        let ghosts = self
+            .ghosts
+            .iter()
+            .filter(|g| g.unlock_night == night)
+            .map(|g| g.id.as_str());
+        (products.collect(), decor.collect(), ghosts.collect())
     }
 
     pub fn ghost_index(&self, id: &str) -> Option<usize> {
@@ -313,6 +416,37 @@ pub fn rgb((r, g, b): (f32, f32, f32)) -> Color {
 mod tests {
     use super::*;
 
+    #[test]
+    fn night_events_change_the_night() {
+        let data = GameData::load();
+        let base = data.config.crates_per_night;
+        let storm = data
+            .events
+            .iter()
+            .find(|e| e.crate_bonus < 0)
+            .expect("a night with fewer crates");
+        assert!(data.crates_tonight(storm.night) < base);
+        assert!(data.crates_tonight(storm.night) >= 1);
+        // A night without an event changes nothing.
+        let quiet = 1000;
+        assert_eq!(data.crates_tonight(quiet), base);
+        assert_eq!(data.price_factor(quiet), 1.0);
+        assert_eq!(data.ghost_weight_factor(quiet, "shy"), 1.0);
+        // Every night of the demo has an event, and every later ghost unlocks within the demo.
+        for night in 1..=data.config.nights_in_demo {
+            assert!(data.event(night).is_some(), "night {night} has no event");
+        }
+        for g in &data.ghosts {
+            assert!(
+                g.unlock_night <= data.config.nights_in_demo,
+                "{} never appears",
+                g.id
+            );
+        }
+        let (products, _, ghosts) = data.unlocked_on(2);
+        assert!(!products.is_empty() && !ghosts.is_empty());
+    }
+
     /// Loads the real data files, so a broken RON file fails `cargo test`.
     #[test]
     fn data_files_are_valid() {
@@ -349,6 +483,13 @@ mod tests {
             );
         }
         assert!(lang.count("tell.genuine.") > 0 && lang.count("tell.fake.") > 0);
+        for e in &data.events {
+            assert!(
+                has(format!("event.{}.name", e.id)) && has(format!("event.{}.text", e.id)),
+                "event {}",
+                e.id
+            );
+        }
         assert!(!data.products.is_empty());
         // Every product is wished for by some ghost or the story.
         for p in &data.products {

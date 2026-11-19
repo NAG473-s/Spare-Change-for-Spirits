@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "A raktár üres. Rendelj valamit a révésztől.",
     "evening.atmosphere": "Hangulat",
     "evening.display_summary": "Polcok: {shelves} · kirakott termékek: {products}",
+    "evening.tonight": "Ma éjjel: {name}",
+    "evening.new_tonight": "Új ma éjjel: {items}",
     "evening.open": "Nyisd ki a boltot  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Ólomkatona",
     "product.tin_soldier.hint.1": "A bátyámnak egy egész ezrede volt.",
     "product.tin_soldier.hint.2": "Mindig hiányzott egy. A dobos.",
+    "product.ship_in_bottle.name": "Palackba zárt hajó",
+    "product.ship_in_bottle.hint.1": "Újra a kezemben akarom tartani a tengert.",
+    "product.ship_in_bottle.hint.2": "A hajóm … a végén olyan kicsi volt.",
+    "product.brass_compass.name": "Sárgaréz iránytű",
+    "product.brass_compass.hint.1": "Merre van hazafelé? Nem emlékszem.",
+    "product.brass_compass.hint.2": "Valami, ami mindig északra mutat.",
+    "product.fish_bone.name": "Halszálka",
+    "product.fish_bone.hint.1": "Miaúú. Valami, aminek kikötőszaga van.",
+    "product.fish_bone.hint.2": "Prrr … az a szálkás, ropogós valami.",
+    "product.ball_of_yarn.name": "Fonalgombolyag",
+    "product.ball_of_yarn.hint.1": "Mrrp! Az a gömbölyű, ami elgurul!",
+    "product.ball_of_yarn.hint.2": "Valami puhát, amit az ágy alatt kergethetek.",
+    "product.polishing_cloth.name": "Polírozókendő",
+    "product.polishing_cloth.hint.1": "A páncélom elvesztette a fényét. Egy lovagnak ragyognia kell!",
+    "product.polishing_cloth.hint.2": "Rozsda, mindenütt rozsda. Van valamid, amivel ledörzsölhetem?",
+    "product.hair_ribbon.name": "Selyem hajszalag",
+    "product.hair_ribbon.hint.1": "Valamit, amivel feltűzhetem a hajam a tánchoz.",
+    "product.hair_ribbon.hint.2": "Kék, mint az ég az esküvő napján.",
+    "product.wedding_veil.name": "Csipkefátyol",
+    "product.wedding_veil.hint.1": "Sosem viselhettem. Egyszer sem.",
+    "product.wedding_veil.hint.2": "Valami fehéret és könnyűt, hogy az oltár elé léphessek.",
+    "product.pressed_flower.name": "Préselt virág",
+    "product.pressed_flower.hint.1": "Egyszer adott nekem egy virágot. Egy könyvben őriztem.",
+    "product.pressed_flower.hint.2": "Egy virág, amely sosem hervad el.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Félénk szellem",
@@ -190,6 +216,14 @@
     "ghost.child.the": "A gyerekszellem",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Szellemmacska",
+    "ghost.cat.the": "A szellemmacska",
+    "ghost.sailor.name": "Vízbe fúlt matróz",
+    "ghost.sailor.the": "A vízbe fúlt matróz",
+    "ghost.knight.name": "Fejetlen lovag",
+    "ghost.knight.the": "A fejetlen lovag",
+    "ghost.bride.name": "Szellemmenyasszony",
+    "ghost.bride.the": "A szellemmenyasszony",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Polc",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Kötött takaró",
     "decor.wedding_photo.name": "Esküvői fotó",
     "decor.pocket_lantern.name": "Edwin lámpása",
+    "decor.oil_lamp.name": "Olajlámpa",
+    "decor.fern.name": "Cserepes páfrány",
+    "decor.gramophone.name": "Gramofon",
+    "decor.stove.name": "Kis kályha",
+    "decor.vanity.name": "Fésülködőasztal",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Sosem mondtam neki, hogy sajnálom, amiért én mentem el előbb. Van papírod? Azt hiszem, ideje írnom neki.",
     "story.5.thanks": "Drága Margaret … igen. Igen, így jó lesz. Köszönöm, kedves boltos. Tartsd égve a lámpást a következőnek, aki eltéved.",
     "story.ending": "Edwin összehajtja a levelet, a kabátjába dugja, és besétál a fénybe. Egy pillanatra az egész boltot betölti az eső illata.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Csendes kezdet",
+    "event.first_night.text": "A boltod híre még alig terjedt el. Ma éjjel csak néhány szellem talál rá az ajtóra.",
+    "event.fog.name": "Köd a folyó fölött",
+    "event.fog.text": "Sűrű köd nyeli el a fényt. Sötétebb van a boltban, és félénk szellemek úsznak be a folyó felől.",
+    "event.harvest_moon.name": "Szüreti telihold",
+    "event.harvest_moon.text": "A hatalmas, aranyló hold minden szellemet bőkezű hangulatba hoz: mindent drágábban lehet eladni.",
+    "event.storm.name": "Vihar",
+    "event.storm.text": "Süvít a szél a bolt körül. A révész eggyel kevesebb ládát hozhat, hidegebb van, és a matrózok menedéket keresnek.",
+    "event.all_souls.name": "Halottak éjszakája",
+    "event.all_souls.text": "Az év legforgalmasabb éjszakája. Szellemek tolonganak az utcán – és jól fizetnek.",
 
     // Tips during the first night.
     "tip.order": "A révész minden este legfeljebb négy ládát hoz. Rendelj néhány terméket a jobb oldalon – a kasszából fizetsz.",

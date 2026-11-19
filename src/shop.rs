@@ -148,8 +148,12 @@ impl ShopLayout {
         out
     }
 
-    pub fn atmosphere(&self, data: &GameData) -> Atmosphere {
+    /// Atmosphere tonight: base, every decor item and the night's event.
+    pub fn atmosphere(&self, data: &GameData, night: u32) -> Atmosphere {
         let mut a = data.config.base_atmosphere;
+        if let Some(e) = data.event(night) {
+            a.add(&e.atmosphere);
+        }
         for c in &self.cells {
             if let Some(d) = c.decor.as_deref().and_then(|d| data.decor(d)) {
                 a.add(&d.effect);

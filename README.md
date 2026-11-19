@@ -63,6 +63,11 @@ If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost
 door. Served correctly **and** given exact change → the ghost passes into the light and your
 reputation rises. Better reputation = more customers.
 
+**Five demo nights, each different:** every night has an event (`assets/data/events.ron`) –
+a quiet first night, fog (darker, more shy ghosts), a harvest moon (higher prices), a storm (one
+crate less, colder, sailors) and All Souls' Night (crowds, good prices). New products, decor and
+ghosts unlock on later nights (`unlock_night`); the evening panel lists what is new.
+
 Special customers:
 
 - **Poltergeist** – knocks items off the shelf it browses unless the shop is quiet enough
@@ -96,7 +101,7 @@ src/
   i18n.rs        language catalogs, placeholders, language detection
   rng.rs         small random number generator
 assets/
-  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron
+  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md
@@ -119,6 +124,9 @@ language, else the system language, else shows the language menu on first start.
 - Placeholders such as `{who}` and `{item}` must stay in every translation; sentences may be
   rearranged. Coin amounts are shown as "silver spoon ×2" to avoid plural rules.
 - `cargo test` checks that every language has every key with the same placeholders.
+- New keys: add them to `en.ron`, translate them into a `<code>.json` per language and merge with
+  `python3 tools/i18n_sync.py --add <folder>` (keeps every catalog in en.ron's order;
+  `--missing` lists gaps).
 - Chinese, Japanese, Korean, Thai and Arabic use Noto fonts reduced to the characters actually
   used. After changing any translation run `python3 tools/subset_fonts.py` (check with `--check`).
 

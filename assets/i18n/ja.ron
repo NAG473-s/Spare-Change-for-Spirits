@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "倉庫は空っぽ。渡し守に何か注文しよう。",
     "evening.atmosphere": "雰囲気",
     "evening.display_summary": "棚：{shelves} · 陳列中の商品：{products}",
+    "evening.tonight": "今夜：{name}",
+    "evening.new_tonight": "今夜初登場：{items}",
     "evening.open": "開店する  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "ブリキの兵隊",
     "product.tin_soldier.hint.1": "兄さんは兵隊を一個連隊ぶん持っていた。",
     "product.tin_soldier.hint.2": "いつも一人足りなかった。太鼓たたきが。",
+    "product.ship_in_bottle.name": "ボトルシップ",
+    "product.ship_in_bottle.hint.1": "もう一度、この手に海を抱きたい。",
+    "product.ship_in_bottle.hint.2": "俺の船……最後には、あんなに小さく見えた。",
+    "product.brass_compass.name": "真鍮のコンパス",
+    "product.brass_compass.hint.1": "家はどっちだ？思い出せない。",
+    "product.brass_compass.hint.2": "いつも北を指すものを。",
+    "product.fish_bone.name": "魚の骨",
+    "product.fish_bone.hint.1": "ニャーオ。港のにおいがするものを。",
+    "product.fish_bone.hint.2": "ゴロゴロ……骨っぽくて、カリカリのやつ。",
+    "product.ball_of_yarn.name": "毛糸玉",
+    "product.ball_of_yarn.hint.1": "ニャッ！コロコロ転がっていく丸いやつ！",
+    "product.ball_of_yarn.hint.2": "ベッドの下まで追いかけられる、やわらかいもの。",
+    "product.polishing_cloth.name": "磨き布",
+    "product.polishing_cloth.hint.1": "鎧の輝きが失われてしまった。騎士たる者、光り輝かねば！",
+    "product.polishing_cloth.hint.2": "錆だ、どこもかしこも錆だらけ。これを落とせるものはないか？",
+    "product.hair_ribbon.name": "絹のヘアリボン",
+    "product.hair_ribbon.hint.1": "ダンスのために、髪を結ぶものを。",
+    "product.hair_ribbon.hint.2": "青いのを。結婚式の日の空みたいな。",
+    "product.wedding_veil.name": "レースのベール",
+    "product.wedding_veil.hint.1": "一度も着けられなかったの。ただの一度も。",
+    "product.wedding_veil.hint.2": "白くて軽いものを。バージンロードを歩くために。",
+    "product.pressed_flower.name": "押し花",
+    "product.pressed_flower.hint.1": "あの人が一度、花をくれたの。本にはさんでとっておいたわ。",
+    "product.pressed_flower.hint.2": "決してしおれない花を。",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "内気な幽霊",
@@ -190,6 +216,14 @@
     "ghost.child.the": "子どもの幽霊",
     "ghost.edwin.name": "エドウィン",
     "ghost.edwin.the": "エドウィン",
+    "ghost.cat.name": "ねこの幽霊",
+    "ghost.cat.the": "ねこの幽霊",
+    "ghost.sailor.name": "溺れた船乗り",
+    "ghost.sailor.the": "溺れた船乗り",
+    "ghost.knight.name": "首なし騎士",
+    "ghost.knight.the": "首なし騎士",
+    "ghost.bride.name": "花嫁の幽霊",
+    "ghost.bride.the": "花嫁の幽霊",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "棚",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "手編みのブランケット",
     "decor.wedding_photo.name": "結婚写真",
     "decor.pocket_lantern.name": "エドウィンのランタン",
+    "decor.oil_lamp.name": "オイルランプ",
+    "decor.fern.name": "鉢植えのシダ",
+    "decor.gramophone.name": "蓄音機",
+    "decor.stove.name": "小さなストーブ",
+    "decor.vanity.name": "鏡台",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "エドウィン",
@@ -218,6 +257,18 @@
     "story.5.intro": "先に逝ってすまなかったと、彼女に言えずじまいでね。紙はあるかね？そろそろ彼女に手紙を書く時だと思うんだ。",
     "story.5.thanks": "親愛なるマーガレット……うん。うん、これでいい。ありがとう、店主さん。次に迷う誰かのために、ランタンを灯しておいてくれ。",
     "story.ending": "エドウィンは手紙をたたんでコートの内側にしまい、光の中へ歩いていった。ほんのひととき、店じゅうが雨の香りに包まれた。",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "静かな始まり",
+    "event.first_night.text": "お店のうわさはまだほとんど広まっていない。今夜ドアを見つけるのは、ほんの数人の幽霊だけ。",
+    "event.fog.name": "川霧",
+    "event.fog.text": "濃い霧が明かりをのみ込む。店は暗くなり、川から内気な幽霊たちが漂ってくる。",
+    "event.harvest_moon.name": "収穫の満月",
+    "event.harvest_moon.text": "大きな金色の月に、幽霊たちはみな気前がよくなる。何でもいつもより高く売れる。",
+    "event.storm.name": "嵐",
+    "event.storm.text": "店のまわりで風がうなる。渡し守が運べる木箱は1つ少なく、いつもより寒い。船乗りたちが嵐をしのぎにやってくる。",
+    "event.all_souls.name": "万霊節の夜",
+    "event.all_souls.text": "一年でいちばんにぎやかな夜。通りは幽霊であふれ – しかも気前よく払ってくれる。",
 
     // Tips during the first night.
     "tip.order": "毎日夕方になると、渡し守が木箱を最大4つまで運んできます。右側で商品をいくつか注文しましょう。代金はレジから支払います。",

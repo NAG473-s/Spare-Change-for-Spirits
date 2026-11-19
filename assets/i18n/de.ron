@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Das Lager ist leer. Bestell etwas beim Fährmann.",
     "evening.atmosphere": "Atmosphäre",
     "evening.display_summary": "Regale: {shelves} · Waren in der Auslage: {products}",
+    "evening.tonight": "Heute Nacht: {name}",
+    "evening.new_tonight": "Neu heute Nacht: {items}",
     "evening.open": "Laden öffnen  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Zinnsoldat",
     "product.tin_soldier.hint.1": "Mein Bruder hatte ein ganzes Regiment.",
     "product.tin_soldier.hint.2": "Einer fehlte immer. Der Trommler.",
+    "product.ship_in_bottle.name": "Buddelschiff",
+    "product.ship_in_bottle.hint.1": "Ich möchte das Meer noch einmal in meinen Händen halten.",
+    "product.ship_in_bottle.hint.2": "Mein Schiff … am Ende war es so klein.",
+    "product.brass_compass.name": "Messingkompass",
+    "product.brass_compass.hint.1": "Wo geht es nach Hause? Ich weiß es nicht mehr.",
+    "product.brass_compass.hint.2": "Etwas, das immer nach Norden zeigt.",
+    "product.fish_bone.name": "Fischgräte",
+    "product.fish_bone.hint.1": "Mrrrau. Etwas, das nach Hafen riecht.",
+    "product.fish_bone.hint.2": "Prrr … das knochige, knusprige Ding.",
+    "product.ball_of_yarn.name": "Wollknäuel",
+    "product.ball_of_yarn.hint.1": "Mrrp! Das runde Ding, das davonrollt!",
+    "product.ball_of_yarn.hint.2": "Etwas Weiches zum Jagen unterm Bett.",
+    "product.polishing_cloth.name": "Poliertuch",
+    "product.polishing_cloth.hint.1": "Meine Rüstung hat ihren Glanz verloren. Ein Ritter muss glänzen!",
+    "product.polishing_cloth.hint.2": "Rost, überall Rost. Habt Ihr etwas, um ihn fortzureiben?",
+    "product.hair_ribbon.name": "Seidenes Haarband",
+    "product.hair_ribbon.hint.1": "Etwas, um mir für den Tanz das Haar hochzubinden.",
+    "product.hair_ribbon.hint.2": "Blau, wie der Himmel am Tag der Hochzeit.",
+    "product.wedding_veil.name": "Spitzenschleier",
+    "product.wedding_veil.hint.1": "Ich durfte ihn nie tragen. Kein einziges Mal.",
+    "product.wedding_veil.hint.2": "Etwas Weißes, Leichtes, um damit zum Altar zu schreiten.",
+    "product.pressed_flower.name": "Gepresste Blume",
+    "product.pressed_flower.hint.1": "Er hat mir einmal eine Blume geschenkt. Ich habe sie in einem Buch aufbewahrt.",
+    "product.pressed_flower.hint.2": "Eine Blüte, die niemals welkt.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Scheuer Geist",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Das Geisterkind",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Geisterkatze",
+    "ghost.cat.the": "Die Geisterkatze",
+    "ghost.sailor.name": "Ertrunkener Matrose",
+    "ghost.sailor.the": "Der ertrunkene Matrose",
+    "ghost.knight.name": "Kopfloser Ritter",
+    "ghost.knight.the": "Der kopflose Ritter",
+    "ghost.bride.name": "Geisterbraut",
+    "ghost.bride.the": "Die Geisterbraut",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Regal",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Gestrickte Decke",
     "decor.wedding_photo.name": "Hochzeitsfoto",
     "decor.pocket_lantern.name": "Edwins Laterne",
+    "decor.oil_lamp.name": "Öllampe",
+    "decor.fern.name": "Farn im Topf",
+    "decor.gramophone.name": "Grammophon",
+    "decor.stove.name": "Kleiner Ofen",
+    "decor.vanity.name": "Frisiertisch",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Ich habe ihr nie gesagt, dass es mir leidtut, als Erster gegangen zu sein. Haben Sie Papier? Ich glaube, es ist Zeit, ihr zu schreiben.",
     "story.5.thanks": "Liebe Margaret … ja. Ja, so ist es gut. Ich danke Ihnen. Lassen Sie die Laterne brennen, für den Nächsten, der sich verirrt.",
     "story.ending": "Edwin faltet den Brief, steckt ihn in seinen Mantel und geht ins Licht. Für einen Moment duftet der ganze Laden nach Regen.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Ein stiller Anfang",
+    "event.first_night.text": "Von deinem Laden hat sich noch kaum etwas herumgesprochen. Heute Nacht finden nur wenige Geister die Tür.",
+    "event.fog.name": "Nebel über dem Fluss",
+    "event.fog.text": "Dichter Nebel verschluckt das Licht. Im Laden ist es dunkler, und scheue Geister schweben vom Fluss herein.",
+    "event.harvest_moon.name": "Erntemond",
+    "event.harvest_moon.text": "Ein riesiger goldener Mond stimmt alle Geister großzügig: Alles verkauft sich teurer.",
+    "event.storm.name": "Sturm",
+    "event.storm.text": "Der Wind heult um den Laden. Der Fährmann kann eine Kiste weniger bringen, es ist kälter, und Seeleute suchen Schutz.",
+    "event.all_souls.name": "Allerseelennacht",
+    "event.all_souls.text": "Die geschäftigste Nacht des Jahres. Auf der Straße drängen sich die Geister – und sie zahlen gut.",
 
     // Tips during the first night.
     "tip.order": "Jeden Abend bringt der Fährmann bis zu vier Kisten. Bestell rechts ein paar Waren – bezahlt wird aus der Kasse.",

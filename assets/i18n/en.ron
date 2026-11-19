@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "The storeroom is empty. Order something from the ferryman.",
     "evening.atmosphere": "Atmosphere",
     "evening.display_summary": "Shelves: {shelves} · products on display: {products}",
+    "evening.tonight": "Tonight: {name}",
+    "evening.new_tonight": "New tonight: {items}",
     "evening.open": "Open the shop  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Tin Soldier",
     "product.tin_soldier.hint.1": "My brother had a whole regiment.",
     "product.tin_soldier.hint.2": "One was always missing. The drummer.",
+    "product.ship_in_bottle.name": "Ship in a Bottle",
+    "product.ship_in_bottle.hint.1": "I want to hold the sea in my hands again.",
+    "product.ship_in_bottle.hint.2": "My ship … she was so small at the end.",
+    "product.brass_compass.name": "Brass Compass",
+    "product.brass_compass.hint.1": "Which way is home? I can't remember.",
+    "product.brass_compass.hint.2": "Something that always points north.",
+    "product.fish_bone.name": "Fish Bone",
+    "product.fish_bone.hint.1": "Mrrrow. Something that smells of the harbour.",
+    "product.fish_bone.hint.2": "Prrr … the bony, crunchy thing.",
+    "product.ball_of_yarn.name": "Ball of Yarn",
+    "product.ball_of_yarn.hint.1": "Mrrp! The round thing that rolls away!",
+    "product.ball_of_yarn.hint.2": "Something soft to chase under the bed.",
+    "product.polishing_cloth.name": "Polishing Cloth",
+    "product.polishing_cloth.hint.1": "My armour has lost its shine. A knight must gleam!",
+    "product.polishing_cloth.hint.2": "Rust, everywhere rust. Have you something to rub it away?",
+    "product.hair_ribbon.name": "Silk Hair Ribbon",
+    "product.hair_ribbon.hint.1": "Something to tie my hair up for the dance.",
+    "product.hair_ribbon.hint.2": "Blue, like the sky on the day of the wedding.",
+    "product.wedding_veil.name": "Lace Veil",
+    "product.wedding_veil.hint.1": "I never got to wear it. Not once.",
+    "product.wedding_veil.hint.2": "Something white and light, to walk down the aisle.",
+    "product.pressed_flower.name": "Pressed Flower",
+    "product.pressed_flower.hint.1": "He gave me a flower once. I kept it in a book.",
+    "product.pressed_flower.hint.2": "A blossom that will never wilt.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Shy Ghost",
@@ -190,6 +216,14 @@
     "ghost.child.the": "The Child Ghost",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Ghost Cat",
+    "ghost.cat.the": "The Ghost Cat",
+    "ghost.sailor.name": "Drowned Sailor",
+    "ghost.sailor.the": "The Drowned Sailor",
+    "ghost.knight.name": "Headless Knight",
+    "ghost.knight.the": "The Headless Knight",
+    "ghost.bride.name": "Ghostly Bride",
+    "ghost.bride.the": "The Ghostly Bride",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Shelf",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Knitted Blanket",
     "decor.wedding_photo.name": "Wedding Photo",
     "decor.pocket_lantern.name": "Edwin's Lantern",
+    "decor.oil_lamp.name": "Oil Lamp",
+    "decor.fern.name": "Potted Fern",
+    "decor.gramophone.name": "Gramophone",
+    "decor.stove.name": "Little Stove",
+    "decor.vanity.name": "Vanity Table",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "I never told her I was sorry for leaving first. Do you have paper? I think it's time I wrote to her.",
     "story.5.thanks": "Dear Margaret … yes. Yes, that will do. Thank you, shopkeeper. Keep the lantern lit for the next one who gets lost.",
     "story.ending": "Edwin folds the letter, tucks it into his coat and walks into the light. For a moment the whole shop smells of rain.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "A Quiet Beginning",
+    "event.first_night.text": "Word of your shop has barely spread. Only a few spirits will find the door tonight.",
+    "event.fog.name": "Fog over the River",
+    "event.fog.text": "Thick fog swallows the light. The shop is darker, and shy spirits drift in from the river.",
+    "event.harvest_moon.name": "Harvest Moon",
+    "event.harvest_moon.text": "A huge golden moon puts every spirit in a generous mood: everything sells for more.",
+    "event.storm.name": "Storm",
+    "event.storm.text": "Wind howls around the shop. The ferryman can bring one crate less, it is colder, and sailors seek shelter.",
+    "event.all_souls.name": "All Souls' Night",
+    "event.all_souls.text": "The busiest night of the year. Spirits crowd the street – and they pay well.",
 
     // Tips during the first night.
     "tip.order": "Every evening the ferryman brings up to four crates. Order a few products on the right – you pay from the cash drawer.",

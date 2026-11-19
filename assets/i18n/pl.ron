@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Magazyn jest pusty. Zamów coś u przewoźnika.",
     "evening.atmosphere": "Atmosfera",
     "evening.display_summary": "Półki: {shelves} · towary na wystawie: {products}",
+    "evening.tonight": "Tej nocy: {name}",
+    "evening.new_tonight": "Nowe tej nocy: {items}",
     "evening.open": "Otwórz sklep  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Cynowy żołnierzyk",
     "product.tin_soldier.hint.1": "Mój brat miał cały pułk.",
     "product.tin_soldier.hint.2": "Zawsze jednego brakowało. Dobosza.",
+    "product.ship_in_bottle.name": "Statek w butelce",
+    "product.ship_in_bottle.hint.1": "Chcę znów trzymać morze w dłoniach.",
+    "product.ship_in_bottle.hint.2": "Moja łajba … pod koniec była taka maleńka.",
+    "product.brass_compass.name": "Mosiężny kompas",
+    "product.brass_compass.hint.1": "W którą stronę jest dom? Nie pamiętam.",
+    "product.brass_compass.hint.2": "Coś, co zawsze wskazuje północ.",
+    "product.fish_bone.name": "Rybia ość",
+    "product.fish_bone.hint.1": "Miauuu. Coś, co pachnie portem.",
+    "product.fish_bone.hint.2": "Mrrr … to kościste, chrupiące coś.",
+    "product.ball_of_yarn.name": "Kłębek włóczki",
+    "product.ball_of_yarn.hint.1": "Mrrp! To okrągłe, co się odtacza!",
+    "product.ball_of_yarn.hint.2": "Coś miękkiego do gonienia pod łóżkiem.",
+    "product.polishing_cloth.name": "Ściereczka do polerowania",
+    "product.polishing_cloth.hint.1": "Moja zbroja straciła blask. Rycerz musi lśnić!",
+    "product.polishing_cloth.hint.2": "Rdza, wszędzie rdza. Masz coś, czym można ją zetrzeć?",
+    "product.hair_ribbon.name": "Jedwabna wstążka do włosów",
+    "product.hair_ribbon.hint.1": "Coś, czym zwiążę włosy do tańca.",
+    "product.hair_ribbon.hint.2": "Błękitna jak niebo w dniu ślubu.",
+    "product.wedding_veil.name": "Koronkowy welon",
+    "product.wedding_veil.hint.1": "Nie było mi dane go założyć. Ani razu.",
+    "product.wedding_veil.hint.2": "Coś białego i lekkiego, by pójść do ołtarza.",
+    "product.pressed_flower.name": "Zasuszony kwiat",
+    "product.pressed_flower.hint.1": "Kiedyś dał mi kwiat. Do dziś leży w mojej książce.",
+    "product.pressed_flower.hint.2": "Kwiat, który nigdy nie zwiędnie.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Nieśmiały duch",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Duch dziecka",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Duch kota",
+    "ghost.cat.the": "Duch kota",
+    "ghost.sailor.name": "Utopiony marynarz",
+    "ghost.sailor.the": "Utopiony marynarz",
+    "ghost.knight.name": "Bezgłowy rycerz",
+    "ghost.knight.the": "Bezgłowy rycerz",
+    "ghost.bride.name": "Duch panny młodej",
+    "ghost.bride.the": "Duch panny młodej",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Półka",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Dziergany koc",
     "decor.wedding_photo.name": "Zdjęcie ślubne",
     "decor.pocket_lantern.name": "Latarenka Edwina",
+    "decor.oil_lamp.name": "Lampa naftowa",
+    "decor.fern.name": "Paproć w doniczce",
+    "decor.gramophone.name": "Gramofon",
+    "decor.stove.name": "Mały piecyk",
+    "decor.vanity.name": "Toaletka",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Nigdy jej nie powiedziałem, jak mi przykro, że odszedłem pierwszy. Masz papier? Chyba czas, żebym do niej napisał.",
     "story.5.thanks": "Najdroższa Margaret … tak. Tak, to wystarczy. Dziękuję ci. Niech latarenka świeci dla następnego, kto zabłądzi.",
     "story.ending": "Edwin składa list, chowa go pod płaszcz i odchodzi w światło. Przez chwilę cały sklep pachnie deszczem.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Spokojny początek",
+    "event.first_night.text": "Wieść o twoim sklepie dopiero zaczyna się rozchodzić. Dziś w nocy drzwi znajdzie tylko kilka duchów.",
+    "event.fog.name": "Mgła nad rzeką",
+    "event.fog.text": "Gęsta mgła połyka światło. W sklepie jest ciemniej, a znad rzeki wpływają nieśmiałe duchy.",
+    "event.harvest_moon.name": "Księżyc żniwiarzy",
+    "event.harvest_moon.text": "Ogromny złoty księżyc wprawia każdego ducha w hojny nastrój: wszystko sprzedaje się drożej.",
+    "event.storm.name": "Burza",
+    "event.storm.text": "Wiatr wyje wokół sklepu. Przewoźnik przywiezie o jedną skrzynię mniej, jest zimniej, a marynarze szukają schronienia.",
+    "event.all_souls.name": "Noc zaduszkowa",
+    "event.all_souls.text": "Najbardziej ruchliwa noc w roku. Duchy tłoczą się na ulicy – i dobrze płacą.",
 
     // Tips during the first night.
     "tip.order": "Co wieczór przewoźnik przywozi do czterech skrzyń. Zamów kilka towarów po prawej – płacisz z kasy.",

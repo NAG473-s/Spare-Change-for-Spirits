@@ -1,0 +1,12 @@
+// One event per night. Texts: assets/i18n/<language>.ron (event.<id>.name, event.<id>.text).
+// spawn_factor: multiplies the time between ghosts (above 1 = fewer customers).
+// price_factor: multiplies what ghosts pay. crate_bonus: extra crates from the ferryman.
+// atmosphere: added to the shop's atmosphere. ghost_weights: (ghost id, factor) for how often it comes.
+[
+    (id: "first_night", night: 1, spawn_factor: 1.3),
+    (id: "fog", night: 2, atmosphere: (light: -1), ghost_weights: [("shy", 2.0), ("sailor", 1.5)]),
+    (id: "harvest_moon", night: 3, price_factor: 1.25, ghost_weights: [("vain", 1.5)]),
+    (id: "storm", night: 4, spawn_factor: 0.9, crate_bonus: -1, atmosphere: (warmth: -1),
+     ghost_weights: [("sailor", 3.0)]),
+    (id: "all_souls", night: 5, spawn_factor: 0.7, price_factor: 1.5),
+]

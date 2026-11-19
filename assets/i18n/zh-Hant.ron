@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "倉庫空空的。跟擺渡人訂點貨吧。",
     "evening.atmosphere": "氛圍",
     "evening.display_summary": "貨架：{shelves} · 陳列商品：{products}",
+    "evening.tonight": "今晚：{name}",
+    "evening.new_tonight": "今晚新登場：{items}",
     "evening.open": "開門營業  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "錫兵",
     "product.tin_soldier.hint.1": "我哥有一整支軍團。",
     "product.tin_soldier.hint.2": "每次都少一個。就是那個鼓手。",
+    "product.ship_in_bottle.name": "瓶中船",
+    "product.ship_in_bottle.hint.1": "我想再一次把大海捧在手心裡。",
+    "product.ship_in_bottle.hint.2": "我的船……到最後，看起來好小好小。",
+    "product.brass_compass.name": "黃銅羅盤",
+    "product.brass_compass.hint.1": "家在哪個方向？我想不起來了。",
+    "product.brass_compass.hint.2": "一個永遠指著北方的東西。",
+    "product.fish_bone.name": "魚骨頭",
+    "product.fish_bone.hint.1": "喵嗚。有港口味道的東西。",
+    "product.fish_bone.hint.2": "呼嚕……那個骨頭多多、喀滋喀滋的東西。",
+    "product.ball_of_yarn.name": "毛線球",
+    "product.ball_of_yarn.hint.1": "喵！那個會滾走的圓圓的東西！",
+    "product.ball_of_yarn.hint.2": "軟軟的、可以追到床底下的東西。",
+    "product.polishing_cloth.name": "拋光布",
+    "product.polishing_cloth.hint.1": "我的盔甲失去光澤了。騎士就該閃閃發亮！",
+    "product.polishing_cloth.hint.2": "鏽，到處都是鏽。你有東西能把它擦掉嗎？",
+    "product.hair_ribbon.name": "絲質髮帶",
+    "product.hair_ribbon.hint.1": "想要個東西，把頭髮綁起來去跳舞。",
+    "product.hair_ribbon.hint.2": "藍色的，就像婚禮那天的天空。",
+    "product.wedding_veil.name": "蕾絲頭紗",
+    "product.wedding_veil.hint.1": "我從來沒機會戴上它。一次也沒有。",
+    "product.wedding_veil.hint.2": "白白的、輕輕的東西，讓我走過紅毯。",
+    "product.pressed_flower.name": "壓花",
+    "product.pressed_flower.hint.1": "他曾經送我一朵花。我把它夾在書裡。",
+    "product.pressed_flower.hint.2": "一朵永遠不會凋謝的花。",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "害羞的幽靈",
@@ -190,6 +216,14 @@
     "ghost.child.the": "幽靈小孩",
     "ghost.edwin.name": "艾德溫",
     "ghost.edwin.the": "艾德溫",
+    "ghost.cat.name": "幽靈貓",
+    "ghost.cat.the": "幽靈貓",
+    "ghost.sailor.name": "溺水的水手",
+    "ghost.sailor.the": "溺水的水手",
+    "ghost.knight.name": "無頭騎士",
+    "ghost.knight.the": "無頭騎士",
+    "ghost.bride.name": "幽靈新娘",
+    "ghost.bride.the": "幽靈新娘",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "貨架",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "手織毛毯",
     "decor.wedding_photo.name": "結婚照",
     "decor.pocket_lantern.name": "艾德溫的提燈",
+    "decor.oil_lamp.name": "油燈",
+    "decor.fern.name": "蕨類盆栽",
+    "decor.gramophone.name": "留聲機",
+    "decor.stove.name": "小火爐",
+    "decor.vanity.name": "梳妝台",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "艾德溫",
@@ -218,6 +257,18 @@
     "story.5.intro": "我一直沒跟她說：對不起，我先走了一步。你有紙嗎？我想，是時候寫信給她了。",
     "story.5.thanks": "親愛的瑪格麗特……嗯。嗯，這樣就可以了。謝謝你，老闆。為了下一個迷路的人，讓提燈一直亮著吧。",
     "story.ending": "艾德溫把信摺好，收進外套裡，走進了光中。那一瞬間，整間店都飄著雨的味道。",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "安靜的開始",
+    "event.first_night.text": "你的小店才剛開始有人知道。今晚只有少數幾個幽靈會找到門口。",
+    "event.fog.name": "河上起霧",
+    "event.fog.text": "濃霧吞沒了光線。店裡變得更暗，害羞的幽靈從河邊飄了進來。",
+    "event.harvest_moon.name": "豐收之月",
+    "event.harvest_moon.text": "一輪巨大的金色月亮讓每個幽靈都大方起來：所有東西都能賣得更貴。",
+    "event.storm.name": "暴風雨",
+    "event.storm.text": "狂風在店外呼嘯。擺渡人少送一箱貨，天氣更冷，水手們紛紛上門避風。",
+    "event.all_souls.name": "萬靈節之夜",
+    "event.all_souls.text": "一年中最熱鬧的一晚。幽靈擠滿了街道 – 而且出手很闊綽。",
 
     // Tips during the first night.
     "tip.order": "每天傍晚，擺渡人最多會送來四箱貨。在右邊訂購一些商品 – 貨款從錢箱裡付。",

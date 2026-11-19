@@ -91,6 +91,8 @@
     "evening.storeroom_empty": "Magazia e goală. Comandă ceva de la luntraș.",
     "evening.atmosphere": "Atmosferă",
     "evening.display_summary": "Rafturi: {shelves} · produse expuse: {products}",
+    "evening.tonight": "În noaptea asta: {name}",
+    "evening.new_tonight": "Nou în noaptea asta: {items}",
     "evening.open": "Deschide magazinul  →",
 
     // Night panel.
@@ -176,6 +178,30 @@
     "product.tin_soldier.name": "Soldățel de plumb",
     "product.tin_soldier.hint.1": "Fratele meu avea un regiment întreg.",
     "product.tin_soldier.hint.2": "Mereu lipsea unul. Toboșarul.",
+    "product.ship_in_bottle.name": "Corabie în sticlă",
+    "product.ship_in_bottle.hint.1": "Vreau să țin din nou marea în mâini.",
+    "product.ship_in_bottle.hint.2": "Corabia mea… la sfârșit era atât de mică.",
+    "product.brass_compass.name": "Busolă de alamă",
+    "product.brass_compass.hint.1": "Încotro e acasă? Nu-mi mai amintesc.",
+    "product.brass_compass.hint.2": "Ceva ce arată mereu spre nord.",
+    "product.fish_bone.name": "Os de pește",
+    "product.fish_bone.hint.1": "Mrrrau. Ceva ce miroase a port.",
+    "product.fish_bone.hint.2": "Prrr… chestia aia osoasă și crocantă.",
+    "product.ball_of_yarn.name": "Ghem de lână",
+    "product.ball_of_yarn.hint.1": "Mrrp! Chestia rotundă care fuge de-a rostogolul!",
+    "product.ball_of_yarn.hint.2": "Ceva moale de gonit pe sub pat.",
+    "product.polishing_cloth.name": "Cârpă de lustruit",
+    "product.polishing_cloth.hint.1": "Armura mea și-a pierdut strălucirea. Un cavaler trebuie să lucească!",
+    "product.polishing_cloth.hint.2": "Rugină, peste tot rugină. Aveți ceva cu care s-o șterg?",
+    "product.hair_ribbon.name": "Panglică de mătase",
+    "product.hair_ribbon.hint.1": "Ceva cu care să-mi prind părul pentru dans.",
+    "product.hair_ribbon.hint.2": "Albastră, ca cerul în ziua nunții.",
+    "product.wedding_veil.name": "Voal de dantelă",
+    "product.wedding_veil.hint.1": "N-am apucat să-l port niciodată. Nici măcar o dată.",
+    "product.wedding_veil.hint.2": "Ceva alb și ușor, pentru drumul spre altar.",
+    "product.pressed_flower.name": "Floare presată",
+    "product.pressed_flower.hint.1": "Mi-a dăruit odată o floare. Am păstrat-o într-o carte.",
+    "product.pressed_flower.hint.2": "O floare care nu se va ofili niciodată.",
 
     // Ghosts. ".the" is the name as the subject at the start of a sentence (with article where the language needs one).
     "ghost.shy.name": "Fantomă timidă",
@@ -190,6 +216,14 @@
     "ghost.child.the": "Fantomița",
     "ghost.edwin.name": "Edwin",
     "ghost.edwin.the": "Edwin",
+    "ghost.cat.name": "Pisică-fantomă",
+    "ghost.cat.the": "Pisica-fantomă",
+    "ghost.sailor.name": "Marinar înecat",
+    "ghost.sailor.the": "Marinarul înecat",
+    "ghost.knight.name": "Cavaler fără cap",
+    "ghost.knight.the": "Cavalerul fără cap",
+    "ghost.bride.name": "Mireasă fantomatică",
+    "ghost.bride.the": "Mireasa fantomatică",
 
     // Decor and keepsakes (ids from data/decor.ron).
     "decor.shelf.name": "Raft",
@@ -203,6 +237,11 @@
     "decor.blanket.name": "Pătură tricotată",
     "decor.wedding_photo.name": "Fotografie de nuntă",
     "decor.pocket_lantern.name": "Felinarul lui Edwin",
+    "decor.oil_lamp.name": "Lampă cu petrol",
+    "decor.fern.name": "Ferigă în ghiveci",
+    "decor.gramophone.name": "Gramofon",
+    "decor.stove.name": "Sobiță",
+    "decor.vanity.name": "Măsuță de toaletă",
 
     // Edwin's story, one intro and thanks per chapter (chapters from data/story.ron).
     "story.name": "Edwin",
@@ -218,6 +257,18 @@
     "story.5.intro": "Nu i-am spus niciodată că-mi pare rău că am plecat primul. Aveți hârtie? Cred că e timpul să-i scriu.",
     "story.5.thanks": "Dragă Margaret… da. Da, așa e bine. Mulțumesc, negustorule. Țineți felinarul aprins pentru următorul care se rătăcește.",
     "story.ending": "Edwin împăturește scrisoarea, o strecoară în buzunarul paltonului și pășește în lumină. Pentru o clipă, tot magazinul miroase a ploaie.",
+
+    // Night events (one per night, see data/events.ron).
+    "event.first_night.name": "Un început liniștit",
+    "event.first_night.text": "Vestea despre magazinul tău abia a început să se răspândească. În noaptea asta, doar câteva spirite vor găsi ușa.",
+    "event.fog.name": "Ceață peste râu",
+    "event.fog.text": "O ceață deasă înghite lumina. Magazinul e mai întunecat, iar spiritele timide vin plutind dinspre râu.",
+    "event.harvest_moon.name": "Luna plină a recoltei",
+    "event.harvest_moon.text": "O lună uriașă și aurie le face pe toate spiritele darnice: totul se vinde mai scump.",
+    "event.storm.name": "Furtună",
+    "event.storm.text": "Vântul urlă în jurul magazinului. Luntrașul poate aduce cu o ladă mai puțin, e mai frig, iar marinarii caută adăpost.",
+    "event.all_souls.name": "Noaptea tuturor sufletelor",
+    "event.all_souls.text": "Cea mai aglomerată noapte a anului. Spiritele se îmbulzesc pe stradă – și plătesc bine.",
 
     // Tips during the first night.
     "tip.order": "În fiecare seară, luntrașul aduce până la patru lăzi. Comandă câteva produse din dreapta – plătești din sertarul casei.",

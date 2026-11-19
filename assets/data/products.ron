@@ -1,5 +1,6 @@
 // Products. price/crate_cost in button units. fade_after = nights until the item fades.
 // Names and hints: assets/i18n/<language>.ron (product.<id>.name, product.<id>.hint.N).
+// unlock_night (optional, default 1): first night this product is available.
 // Images (optional): assets/sprites/products/<id>.png
 [
     (id: "rain_jar", price: 6, crate_cost: 14, crate_size: 4, fade_after: 3),
@@ -14,4 +15,14 @@
     (id: "powder_compact", price: 16, crate_cost: 28, crate_size: 2, fade_after: 4),
     (id: "lavender", price: 4, crate_cost: 9, crate_size: 5, fade_after: 2),
     (id: "tin_soldier", price: 7, crate_cost: 15, crate_size: 3, fade_after: 5),
+
+    // Unlocked later (unlock_night: the first night the ferryman offers it).
+    (id: "ship_in_bottle", price: 14, crate_cost: 26, crate_size: 2, fade_after: 5, unlock_night: 2),
+    (id: "brass_compass", price: 11, crate_cost: 22, crate_size: 2, fade_after: 5, unlock_night: 2),
+    (id: "fish_bone", price: 2, crate_cost: 6, crate_size: 6, fade_after: 2, unlock_night: 2),
+    (id: "ball_of_yarn", price: 4, crate_cost: 9, crate_size: 5, fade_after: 4, unlock_night: 2),
+    (id: "polishing_cloth", price: 5, crate_cost: 11, crate_size: 4, fade_after: 5, unlock_night: 3),
+    (id: "hair_ribbon", price: 6, crate_cost: 13, crate_size: 4, fade_after: 4, unlock_night: 4),
+    (id: "wedding_veil", price: 20, crate_cost: 34, crate_size: 2, fade_after: 4, unlock_night: 4),
+    (id: "pressed_flower", price: 7, crate_cost: 15, crate_size: 3, fade_after: 3, unlock_night: 4),
 ]

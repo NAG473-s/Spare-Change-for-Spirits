@@ -49,6 +49,11 @@ origin, front facing -Y, Z up, 1 unit = 1 metre.
 | `incense` | 0.4 × 0.8 × 0.4 | A small wooden pedestal with a round brass incense burner on top, a thin curl of purple smoke made of a few soft low-poly ribbons. |
 | `rug` | 0.95 × 0.03 × 0.95 | A round woven rug, dusty rose and indigo pattern, slightly irregular edge. |
 | `grandfather_clock` | 0.6 × 2.1 × 0.4 | A tall narrow grandfather clock in dark wood, round clock face (no numbers, just tick marks), brass pendulum behind a small glass door. |
+| `oil_lamp` | 0.35 × 1.3 × 0.35 | A slender standing oil lamp on a wooden post, glass chimney with a warm emissive flame at about 1.2 m height. |
+| `fern` | 0.5 × 0.9 × 0.5 | A lush fern in a round terracotta pot, drooping fronds. |
+| `gramophone` | 0.6 × 1.1 × 0.6 | A small wooden cabinet with an old gramophone on top, big brass horn, a record on the turntable. |
+| `stove` | 0.7 × 1.1 × 0.6 | A little round cast-iron stove on four feet with a short chimney pipe; the small door glows warm orange (emissive) at about 0.5 m height. |
+| `vanity` | 0.9 × 1.5 × 0.5 | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
 
 ## Keepsakes (gifts from Edwin) – `assets/models/decor/<id>.glb`
 
@@ -79,6 +84,14 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 | `powder_compact` | A round silver powder compact, slightly open, with a tiny puff. |
 | `lavender` | A small bundle of dried lavender tied with twine, lying on its side. |
 | `tin_soldier` | A small painted tin toy soldier with a drum, standing on a round base. |
+| `ship_in_bottle` | A tiny sailing ship inside a corked glass bottle lying on a small wooden stand. |
+| `brass_compass` | An open round brass compass, lid up, needle pointing north. |
+| `fish_bone` | A cartoonish fish skeleton (head, spine, tail) on a small plate. |
+| `ball_of_yarn` | A loose ball of soft blue yarn with a strand hanging out. |
+| `polishing_cloth` | A folded soft cloth with a small round tin of metal polish on top. |
+| `hair_ribbon` | A light blue silk ribbon tied in a bow, lying flat. |
+| `wedding_veil` | A folded white lace veil with a small pearl comb on top. |
+| `pressed_flower` | An open old book with a pressed pink flower between the pages. |
 
 ## Shop – `assets/models/shop/<id>.glb`
 

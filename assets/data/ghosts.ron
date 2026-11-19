@@ -2,6 +2,7 @@
 // needs: conditions on the atmosphere – AtLeast(Stat, value) / AtMost(Stat, value)
 //        Stat = Light | Warmth | Silence | Reflection. Not met -> the ghost flees.
 // pays_with: allowed coins (Button, Candle, Spoon). Empty/omitted = all.
+// unlock_night (optional, default 1): first night this ghost can appear.
 // Images (optional): assets/sprites/ghosts/<id>.png
 [
     (id: "shy", color: (0.65, 0.8, 1.0),
@@ -35,4 +36,24 @@
      spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0,
      needs: [],
      wishes: ["rain_jar", "tea_tin", "wool_scarf", "music_box", "letter_paper"]),
+
+    // Customers who first appear on later nights (unlock_night).
+    (id: "cat", color: (0.8, 0.85, 0.95), unlock_night: 2,
+     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 12.0,
+     needs: [AtLeast(Warmth, 3)],
+     wishes: ["fish_bone", "ball_of_yarn", "marbles"],
+     pays_with: [Button]),
+    (id: "sailor", color: (0.5, 0.75, 0.8), unlock_night: 2,
+     spawn_weight: 2.0, pay_multiplier: 1.2, patience_secs: 30.0,
+     needs: [AtMost(Warmth, 4)],
+     wishes: ["ship_in_bottle", "brass_compass", "rain_jar", "rusty_key"]),
+    (id: "knight", color: (0.7, 0.72, 0.8), unlock_night: 3,
+     spawn_weight: 1.5, pay_multiplier: 1.4, patience_secs: 22.0,
+     needs: [AtLeast(Light, 3)],
+     wishes: ["polishing_cloth", "tin_soldier", "pocket_watch"],
+     pays_with: [Candle, Spoon]),
+    (id: "bride", color: (0.95, 0.92, 1.0), unlock_night: 4,
+     spawn_weight: 1.5, pay_multiplier: 1.6, patience_secs: 20.0,
+     needs: [AtLeast(Reflection, 2), AtLeast(Warmth, 2)],
+     wishes: ["wedding_veil", "pressed_flower", "hair_ribbon", "powder_compact"]),
 ]
