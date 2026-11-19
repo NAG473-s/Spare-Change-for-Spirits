@@ -19,13 +19,13 @@ use crate::data::{Exchange, GameData, Ware, asset_exists, rgb};
 use crate::day_cycle::{NightBonus, Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse};
 use crate::fx::Cue;
-use crate::harbor::spawn_wayfinder;
 use crate::harbor::{Location, repeating};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::scene::{LABEL_WIDTH, WorldLabel, billboard_material, billboard_mesh};
 use crate::shop::{Storeroom, model_or_box, product_model};
+use crate::sign::return_post;
 use crate::tooltip::{HoverTip, TipKind};
 use crate::ui::{Action, BG_PANEL, GameLog, Icons, PANEL_EDGE, TEXT, UiFont, UiTheme, text_font};
 use crate::upgrades::Upgrades;
@@ -70,7 +70,7 @@ const HOURGLASS_BONUS: f32 = 1.25;
 /// The raven keeps this many buttons when he changes a coin.
 const CHANGE_FEE: u32 = 1;
 /// Where the signpost back to the shop stands (local).
-const SIGNPOST: Vec3 = Vec3::new(-4.3, 0.0, 3.0);
+const SIGNPOST: Vec3 = Vec3::new(-3.40, 0.0, 4.65);
 /// Where a trader stands: beside the stall's table, so the awning does not
 /// hide them (the raven sits on a perch on the other side).
 const TRADER_SPOT: Vec3 = Vec3::new(-1.15, 0.0, 0.05);
@@ -227,8 +227,6 @@ impl Kit<'_, '_, '_> {
 fn spawn_market(
     commands: Commands,
     data: Res<GameData>,
-    font: Res<UiFont>,
-    lang: Res<Lang>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -331,31 +329,18 @@ fn spawn_market(
     }
 
     // The way back to the shop.
-    let sign = k.node(Some(root), Transform::from_translation(SIGNPOST));
-    if !k.model(sign, "models/harbor/signpost.glb", Transform::default()) {
-        k.part(
-            sign,
-            Cylinder::new(0.06, 1.9),
-            Color::srgb(0.4, 0.28, 0.18),
-            Transform::from_xyz(0.0, 0.95, 0.0),
-        );
-        k.part(
-            sign,
-            Cuboid::new(0.8, 0.22, 0.05),
-            Color::srgb(0.4, 0.28, 0.18),
-            Transform::from_xyz(0.25, 1.6, 0.05),
-        );
-    }
-    k.commands.entity(sign).observe(on_signpost_click);
-    spawn_wayfinder(
+    let sign = return_post(
         &mut k.commands,
-        &font,
-        &lang,
+        k.asset_server,
+        k.meshes,
+        k.materials,
+        SIGNPOST,
         "market.back",
-        Action::EndDay,
-        sign,
-        Vec3::Y * 2.3,
     );
+    k.commands
+        .entity(sign)
+        .insert(ChildOf(root))
+        .observe(on_signpost_click);
 
     // The stalls and their traders.
     for (i, v) in data.vendors.iter().enumerate() {
@@ -1087,11 +1072,16 @@ fn ware_tooltip(
     stock: Res<Stock>,
     day: Res<MarketDay>,
     mut tip: ResMut<HoverTip>,
+    mut shown: Local<bool>,
 ) {
     let Some(item) = hovered.0.and_then(|e| items.get(e).ok()) else {
-        HoverTip::hide(&mut tip);
+        if *shown {
+            HoverTip::hide(&mut tip);
+            *shown = false;
+        }
         return;
     };
+    *shown = true;
     let mut t = HoverTip::default();
     let cost = price(&data, &item.kind);
     match &item.kind {
