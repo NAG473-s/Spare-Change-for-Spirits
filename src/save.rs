@@ -74,12 +74,18 @@ pub struct Settings {
     /// window height (1 = normal).
     pub ui_size: f32,
     pub fullscreen: bool,
+    /// Assist: ghosts wait at the counter as long as it takes.
+    pub patient_ghosts: bool,
+    /// Assist: the register shows how much change is due.
+    pub change_hint: bool,
 }
 
 /// Steps and limits of the adjustable settings.
 pub const VOLUME_STEP: f32 = 0.1;
 pub const UI_SIZE_STEP: f32 = 0.1;
-pub const UI_SIZE_RANGE: (f32, f32) = (0.7, 1.6);
+/// Up to twice the normal size: body text then reaches Steam's
+/// recommended 38 pixels at 1080p.
+pub const UI_SIZE_RANGE: (f32, f32) = (0.7, 2.0);
 
 /// A setting the player turns up or down in the settings menu.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -118,6 +124,8 @@ impl Default for Settings {
             effects: 1.0,
             ui_size: 1.0,
             fullscreen: false,
+            patient_ghosts: false,
+            change_hint: false,
         }
     }
 }
@@ -374,6 +382,8 @@ mod tests {
             effects: 0.6,
             ui_size: 1.2,
             fullscreen: true,
+            patient_ghosts: true,
+            change_hint: true,
         };
         settings.store();
         assert_eq!(Settings::load(), settings);

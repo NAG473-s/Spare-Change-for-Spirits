@@ -305,8 +305,6 @@ pub struct Config {
     /// the end of the demo continues in the full game with the night after.
     pub demo_nights: u32,
     pub base_atmosphere: Atmosphere,
-    /// Assist mode: shows the change due at the register.
-    pub show_change_due: bool,
     /// What the ferryman lends a shop that cannot afford a single crate.
     pub ferryman_loan: crate::loan::LoanTerms,
 }

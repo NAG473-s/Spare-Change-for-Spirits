@@ -390,6 +390,7 @@ fn ghost_ai(
     mut rng: ResMut<Rng>,
     mut ghosts: Query<(Entity, &mut Ghost)>,
     lang: Res<Lang>,
+    settings: Res<crate::save::Settings>,
 ) {
     let dt = time.delta_secs();
     for (entity, mut g) in &mut ghosts {
@@ -435,7 +436,10 @@ fn ghost_ai(
                 g.state = GhostState::Waiting;
             }
             GhostState::Waiting => {
-                g.patience -= dt;
+                // Assist setting: patient ghosts never give up.
+                if !settings.patient_ghosts {
+                    g.patience -= dt;
+                }
                 if g.patience <= 0.0 {
                     let who = lang.ghost_the(&data.ghosts[g.def].id);
                     log.push(lang.f("log.waited_too_long", &[("who", &who)]));

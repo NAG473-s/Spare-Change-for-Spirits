@@ -139,6 +139,7 @@ fn title_layout(
             Node {
                 width: px(width),
                 max_width: percent(100),
+                min_height: px(0),
                 flex_direction: FlexDirection::Column,
                 border_radius: BorderRadius::all(px(6)),
                 ..default()
@@ -148,6 +149,7 @@ fn title_layout(
         ))
         .id();
     let panel = theme.panel_body(commands, frame, 0.37, 25.0, 8.0);
+    crate::ui::scroll_y(commands, panel);
     (layer, panel, has_logo)
 }
 
@@ -301,6 +303,8 @@ fn toggle_tips(
             Action::ToggleTips => settings.tips = !settings.tips,
             Action::ToggleSound => settings.sound = !settings.sound,
             Action::ToggleFullscreen => settings.fullscreen = !settings.fullscreen,
+            Action::TogglePatientGhosts => settings.patient_ghosts = !settings.patient_ghosts,
+            Action::ToggleChangeHint => settings.change_hint = !settings.change_hint,
             Action::Adjust(knob, up) => settings.adjust(*knob, *up),
             Action::OpenSettings => {
                 menu.0 = true;
@@ -316,7 +320,8 @@ fn toggle_tips(
     }
 }
 
-/// The settings page: tips and sound, volumes, interface size, fullscreen.
+/// The settings page: tips and sound, volumes, interface size, fullscreen
+/// and the assists.
 fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
     ui.heading(&lang.t("settings.title"));
     let root = ui.root();
@@ -375,6 +380,29 @@ fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
         Action::ToggleFullscreen,
         settings.fullscreen,
     );
+
+    // Assists: play without time pressure, or with help at the register.
+    ui.section(&lang.t("settings.assists"));
+    let assists = ui.row();
+    let (patient, hint) = (settings.patient_ghosts, settings.change_hint);
+    let patient_key = if patient {
+        "settings.patient_on"
+    } else {
+        "settings.patient_off"
+    };
+    let hint_key = if hint {
+        "settings.change_hint_on"
+    } else {
+        "settings.change_hint_off"
+    };
+    ui.menu_option(
+        assists,
+        &lang.t(patient_key),
+        Action::TogglePatientGhosts,
+        patient,
+    );
+    ui.menu_option(assists, &lang.t(hint_key), Action::ToggleChangeHint, hint);
+    ui.dim(&lang.t("settings.assists_hint"));
     ui.menu_option(root, &lang.t("menu.back"), Action::CloseSettings, false);
 }
 
@@ -419,6 +447,10 @@ fn pause_actions(
         let quit_to_menu = match action {
             Action::Resume => {
                 paused.0 = false;
+                continue;
+            }
+            Action::Pause => {
+                paused.0 = true;
                 continue;
             }
             Action::QuitToMenu => true,

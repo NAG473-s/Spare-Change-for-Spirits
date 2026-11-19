@@ -93,6 +93,7 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<Register>)
                                 .or_else(resource_changed::<Queue>)
                                 .or_else(resource_changed::<UiFont>)
+                                .or_else(resource_changed::<crate::save::Settings>)
                                 .or_else(ghost_state_changed),
                         ),
                     ),
@@ -125,6 +126,8 @@ pub enum Action {
     EndDay,
     NewGame,
     Continue,
+    /// The menu button in the top bar: pause without the keyboard.
+    Pause,
     Resume,
     QuitToMenu,
     QuitGame,
@@ -136,6 +139,8 @@ pub enum Action {
     /// Turn a setting one step up (`true`) or down.
     Adjust(Knob, bool),
     ToggleFullscreen,
+    TogglePatientGhosts,
+    ToggleChangeHint,
     OpenLanguages,
     CloseLanguages,
     SetLanguage(String),
@@ -398,6 +403,10 @@ impl GameLog {
 #[derive(Component)]
 struct HudText;
 
+/// Text of the menu button in the top bar.
+#[derive(Component)]
+struct MenuButtonLabel;
+
 #[derive(Component)]
 struct LogText;
 
@@ -468,35 +477,63 @@ fn scroll_panel_to_top(
 
 fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme: Res<UiTheme>) {
     // Top bar
-    commands.spawn((
-        Node {
-            position_type: PositionType::Absolute,
-            left: px(0),
-            right: px(0),
-            top: px(0),
-            height: px(40),
-            padding: UiRect::horizontal(px(16)),
-            border: UiRect::bottom(px(1)),
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        finish(Color::srgb_u8(51, 36, 42), Color::srgb_u8(28, 21, 29)),
-        BorderColor::all(PANEL_EDGE),
-        children![
-            (
-                HudText,
-                StaticText { bold: true },
-                Text::new(""),
-                text_font(&font.bold, 15.0),
-                TextColor(TEXT),
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: px(0),
+                right: px(0),
+                top: px(0),
+                height: px(40),
+                padding: UiRect::horizontal(px(16)),
+                border: UiRect::bottom(px(1)),
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            finish(Color::srgb_u8(51, 36, 42), Color::srgb_u8(28, 21, 29)),
+            BorderColor::all(PANEL_EDGE),
+            children![
+                (
+                    HudText,
+                    StaticText { bold: true },
+                    Text::new(""),
+                    text_font(&font.bold, 15.0),
+                    TextColor(TEXT),
+                    Node {
+                        flex_grow: 1.0,
+                        ..default()
+                    },
+                ),
+                coin_bar(&font, &icons),
+            ],
+        ))
+        .with_children(|bar| {
+            // Pauses with the mouse alone (Esc does the same).
+            let (surface, trim) = ButtonTone::Walnut.paint(false);
+            bar.spawn((
+                Button,
+                Hovered::default(),
+                ActionButton(Action::Pause),
+                ButtonTone::Walnut,
                 Node {
-                    flex_grow: 1.0,
+                    margin: UiRect::left(px(12)),
+                    padding: UiRect::axes(px(10), px(4)),
+                    border: UiRect::all(px(1)),
+                    border_radius: BorderRadius::all(px(3)),
                     ..default()
                 },
-            ),
-            coin_bar(&font, &icons),
-        ],
-    ));
+                surface,
+                trim,
+                children![(
+                    MenuButtonLabel,
+                    StaticText { bold: false },
+                    Text::new(""),
+                    text_font(&font.regular, 13.0),
+                    TextColor(TEXT),
+                    Pickable::IGNORE,
+                )],
+            ));
+        });
 
     // Side panel: a scrolling body (rebuilt per phase) and a fixed footer for
     // the main button, so it can never be pushed off screen.
@@ -596,7 +633,12 @@ fn update_hud(
     progress: Res<Progress>,
     clock: Res<NightClock>,
     mut hud: Single<&mut Text, With<HudText>>,
+    mut menu: Single<&mut Text, (With<MenuButtonLabel>, Without<HudText>)>,
 ) {
+    let label = lang.t("hud.menu");
+    if menu.0 != label {
+        menu.0 = label;
+    }
     if *phase.get() == Phase::Menu {
         hud.0.clear();
         return;
@@ -980,6 +1022,7 @@ fn build_night_panel(
     layout: Res<ShopLayout>,
     drawer: Res<Drawer>,
     icons: Res<Icons>,
+    settings: Res<crate::save::Settings>,
     ghosts: Query<&Ghost>,
 ) {
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
@@ -1010,7 +1053,7 @@ fn build_night_panel(
                 !c.checked,
             );
         }
-        if data.config.show_change_due {
+        if settings.change_hint {
             ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
         }
         ui.text(&lang.f(
@@ -1227,7 +1270,21 @@ pub(crate) fn overlay(
         ))
         .id();
     let panel = theme.panel_body(commands, frame, 0.36, 24.0, 10.0);
+    scroll_y(commands, panel);
     (layer, panel)
+}
+
+/// Lets a panel body scroll when it is taller than the window (a large
+/// interface size on a small screen), so every button stays reachable.
+pub(crate) fn scroll_y(commands: &mut Commands, panel: Entity) {
+    commands
+        .entity(panel)
+        .insert(ScrollPosition::default())
+        .queue(|mut entity: EntityWorldMut| {
+            if let Some(mut node) = entity.get_mut::<Node>() {
+                node.overflow = Overflow::scroll_y();
+            }
+        });
 }
 
 pub(crate) struct PanelBuilder<'a, 'w, 's> {

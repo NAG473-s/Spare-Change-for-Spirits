@@ -59,6 +59,10 @@
   owner changes this line), saves must carry over from the demo (`--features demo`) to the full
   game: never break the format again; give new `SaveGame` fields `#[serde(default)]` instead of
   bumping `SAVE_VERSION`.
+- Accessibility: the features declared on the Steam store page are listed in
+  `docs/ACCESSIBILITY.md`; follow its "Rules for new content" (no colour-only information,
+  every camera/screen motion can be turned off, mouse-only play, nothing timed when *Patient
+  ghosts* is on) and update that file when a change affects a feature.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.
 - The project is proprietary (`LICENSE`, all rights reserved). After adding or updating a
   dependency, run `python3 tools/third_party_licenses.py` and commit `THIRD_PARTY_LICENSES.txt`.

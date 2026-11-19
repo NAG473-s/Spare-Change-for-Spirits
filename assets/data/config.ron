@@ -24,9 +24,6 @@
     // Atmosphere of the empty shop. Decor is added on top.
     base_atmosphere: (light: 0, warmth: 0, silence: 1, reflection: 0),
 
-    // Assist mode: shows the change due at the register.
-    show_change_due: false,
-
     // Bankruptcy rule: when the drawer and all wares (at tonight's prices) cannot pay for the
     // cheapest crate, the ferryman lends `amount` in the evening and takes it back plus the
     // surcharge out of the drawer at dawn; what the drawer cannot cover is taken at the next dawn.
