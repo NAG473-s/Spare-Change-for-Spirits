@@ -3,11 +3,12 @@
 
 use bevy::prelude::*;
 
-use crate::data::{Config, GameData};
+use crate::data::GameData;
 use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse, ghost_payment};
 use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
+use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::shop::Keepsakes;
@@ -32,7 +33,8 @@ impl Plugin for RegisterPlugin {
 #[derive(Clone, Debug)]
 pub struct PaidCoin {
     pub coin: Coin,
-    /// How the coin looks or feels – counterfeits give themselves away here.
+    /// Catalog key of how the coin looks or feels – counterfeits give
+    /// themselves away here.
     pub tell: String,
     pub fake: bool,
     /// The player has already inspected this coin.
@@ -93,19 +95,15 @@ impl Register {
 
 /// Lays the coins of a payment out on the counter, one by one, each with a
 /// description. With `counterfeit`, one of them is fake.
-pub fn paid_coins(
-    purse: &Purse,
-    counterfeit: bool,
-    config: &Config,
-    rng: &mut Rng,
-) -> Vec<PaidCoin> {
+pub fn paid_coins(purse: &Purse, counterfeit: bool, lang: &Lang, rng: &mut Rng) -> Vec<PaidCoin> {
+    let genuine = lang.count("tell.genuine.");
+    let fakes = lang.count("tell.fake.");
     let mut coins = Vec::new();
     for coin in Coin::DESCENDING {
         for _ in 0..purse.get(coin) {
-            let tells = &config.coin_tells_genuine;
             coins.push(PaidCoin {
                 coin,
-                tell: tells[rng.index(tells.len())].clone(),
+                tell: format!("tell.genuine.{}", rng.index(genuine) + 1),
                 fake: false,
                 checked: false,
             });
@@ -113,9 +111,8 @@ pub fn paid_coins(
     }
     if counterfeit && !coins.is_empty() {
         let i = rng.index(coins.len());
-        let tells = &config.coin_tells_fake;
         coins[i].fake = true;
-        coins[i].tell = tells[rng.index(tells.len())].clone();
+        coins[i].tell = format!("tell.fake.{}", rng.index(fakes) + 1);
     }
     coins
 }
@@ -134,6 +131,7 @@ fn serve_front_ghost(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
+    lang: Res<Lang>,
 ) {
     for action in actions.read() {
         if register.is_busy() {
@@ -154,10 +152,7 @@ fn serve_front_ghost(
                     continue;
                 }
                 if *product != ghost.wish {
-                    log.push(format!(
-                        "\"That … is not it.\" {} drifts away, disappointed.",
-                        def.the_cap()
-                    ));
+                    log.push(lang.f("log.wrong_item", &[("who", &lang.ghost_the(&def.id))]));
                     ghost.state = GhostState::Leaving;
                     queue.remove(front);
                     progress.reputation -= 1;
@@ -169,15 +164,17 @@ fn serve_front_ghost(
                 let price = ((base as f32 * def.pay_multiplier).round() as u32).max(1);
                 let purse = ghost_payment(price, &def.pays_with, &mut rng);
                 let counterfeit = rng.chance(def.quirks.counterfeit_chance);
-                let coins = paid_coins(&purse, counterfeit, &data.config, &mut rng);
+                let coins = paid_coins(&purse, counterfeit, &lang, &mut rng);
                 // Payment goes straight into the drawer – change is taken from there too.
                 drawer.merge(&purse);
                 cues.write(Cue::Paid);
                 ghost.state = GhostState::AtRegister;
-                log.push(format!(
-                    "{} places {} on the counter.",
-                    def.the_cap(),
-                    purse.describe()
+                log.push(lang.f(
+                    "log.paid",
+                    &[
+                        ("who", &lang.ghost_the(&def.id)),
+                        ("coins", &purse.describe(&lang)),
+                    ],
                 ));
                 register.sale = Some(Sale {
                     ghost: front,
@@ -189,10 +186,7 @@ fn serve_front_ghost(
                 });
             }
             Action::Decline => {
-                log.push(format!(
-                    "You apologise. {} nods silently and leaves.",
-                    def.the_cap()
-                ));
+                log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
                 ghost.state = GhostState::Leaving;
                 queue.remove(front);
             }
@@ -216,6 +210,7 @@ fn make_change(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
+    lang: Res<Lang>,
 ) {
     for action in actions.read() {
         let Some(sale) = register.sale.as_mut() else {
@@ -232,23 +227,23 @@ fn make_change(
                 paid.checked = true;
                 let name = ghosts
                     .get(sale.ghost)
-                    .map(|g| data.ghosts[g.def].the_cap())
+                    .map(|g| lang.ghost_the(&data.ghosts[g.def].id))
                     .unwrap_or_default();
                 if paid.fake {
                     // The ghost swaps it for a genuine one of the same kind,
                     // so the drawer total stays as it is.
                     paid.fake = false;
-                    paid.tell = "genuine (swapped)".into();
+                    paid.tell = "register.swapped".into();
                     report.counterfeits_caught += 1;
-                    log.push(format!(
-                        "You hold the {} up to the candle – a fake! {name} cackles and swaps it.",
-                        paid.coin.name(1)
+                    log.push(lang.f(
+                        "log.fake_caught",
+                        &[("coin", &paid.coin.name(&lang)), ("who", &name)],
                     ));
                 } else {
                     progress.reputation -= 1;
-                    log.push(format!(
-                        "The {} is genuine. {name} looks deeply offended.",
-                        paid.coin.name(1)
+                    log.push(lang.f(
+                        "log.genuine_doubted",
+                        &[("coin", &paid.coin.name(&lang)), ("who", &name)],
                     ));
                 }
             }
@@ -275,7 +270,7 @@ fn make_change(
                     continue;
                 };
                 let def = &data.ghosts[ghost.def];
-                let name = def.the_cap();
+                let name = lang.ghost_the(&def.id);
                 let correct = given == due;
                 if given > 0 {
                     cues.write(Cue::ChangeGiven);
@@ -285,13 +280,15 @@ fn make_change(
                     report.change_wrong += 1;
                     progress.reputation -= 2;
                     cues.write(Cue::Disappointed);
-                    log.push(format!(
-                        "Too little change ({given} instead of {due}). {name} feels cheated."
+                    log.push(lang.f(
+                        "log.too_little",
+                        &[("given", &given), ("due", &due), ("who", &name)],
                     ));
                 } else if given > due {
                     report.change_wrong += 1;
-                    log.push(format!(
-                        "Too much change ({given} instead of {due}). {name} giggles softly."
+                    log.push(lang.f(
+                        "log.too_much",
+                        &[("given", &given), ("due", &due), ("who", &name)],
                     ));
                 } else {
                     report.change_correct += 1;
@@ -302,16 +299,20 @@ fn make_change(
                     // The story ghost got what he needed, whatever the change.
                     let story = &data.story;
                     let c = &story.chapters[chapter];
-                    log.push(format!("{}: \"{}\"", story.name, c.thanks));
-                    report.story_line = Some(c.thanks.clone());
+                    let thanks = format!("story.{}.thanks", chapter + 1);
+                    log.push(lang.f(
+                        "log.story_says",
+                        &[("name", &lang.t("story.name")), ("text", &lang.t(&thanks))],
+                    ));
+                    report.story_line = Some(thanks);
                     if let Some(k) = &c.keepsake {
                         keepsakes.give(k);
                         report.keepsakes.push(k.clone());
                     }
                     progress.story_chapter = chapter + 1;
                     if progress.story_chapter >= story.chapters.len() {
-                        log.push(story.ending.clone());
-                        report.redeemed.push(story.name.clone());
+                        log.push(lang.t("story.ending"));
+                        report.redeemed.push(story.ghost.clone());
                         cues.write(Cue::Ascend(ghost.pos));
                         ghost.state = GhostState::Ascending;
                         ghost.timer = 0.0;
@@ -321,10 +322,7 @@ fn make_change(
                 } else if !correct {
                     ghost.state = GhostState::Leaving;
                 } else if rng.chance(def.quirks.double_pay_chance) {
-                    log.push(format!(
-                        "{name} blinks. \"Oh – did I pay already? Here …\" It holds out {} again.",
-                        sale.price
-                    ));
+                    log.push(lang.f("log.double_pay", &[("who", &name), ("amount", &sale.price)]));
                     register.question = Some(DoublePay {
                         ghost: sale.ghost,
                         amount: sale.price,
@@ -333,10 +331,10 @@ fn make_change(
                     cues.write(Cue::Ascend(ghost.pos));
                     ghost.state = GhostState::Ascending;
                     ghost.timer = 0.0;
-                    report.redeemed.push(def.name.clone());
-                    log.push(format!(
-                        "Exactly right! {name} clutches the {} and dissolves into warm light.",
-                        data.product_name(&sale.product)
+                    report.redeemed.push(def.id.clone());
+                    log.push(lang.f(
+                        "log.ascend",
+                        &[("who", &name), ("item", &lang.product(&sale.product))],
                     ));
                 }
                 // A ghost that wants to pay again keeps its place at the counter.
@@ -361,6 +359,7 @@ fn answer_double_pay(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
+    lang: Res<Lang>,
 ) {
     for action in actions.read() {
         let keep = match action {
@@ -376,26 +375,22 @@ fn answer_double_pay(
             continue;
         };
         let def = &data.ghosts[ghost.def];
-        let name = def.the_cap();
+        let name = lang.ghost_the(&def.id);
         if keep {
             drawer.merge(&Purse::greedy(question.amount));
             cues.write(Cue::Paid);
             progress.reputation -= 1;
             report.dishonest += 1;
             ghost.state = GhostState::Leaving;
-            log.push(format!(
-                "You pocket the second payment. {name} drifts off, still confused."
-            ));
+            log.push(lang.f("log.kept_payment", &[("who", &name)]));
         } else {
             progress.reputation += 2;
             report.honest += 1;
             cues.write(Cue::Ascend(ghost.pos));
-            report.redeemed.push(def.name.clone());
+            report.redeemed.push(def.id.clone());
             ghost.state = GhostState::Ascending;
             ghost.timer = 0.0;
-            log.push(format!(
-                "\"You already paid.\" {name} smiles, relieved, and dissolves into warm light."
-            ));
+            log.push(lang.f("log.refused_payment", &[("who", &name)]));
         }
     }
 }
@@ -404,13 +399,13 @@ fn answer_double_pay(
 mod tests {
     use super::*;
 
-    fn config() -> Config {
-        crate::data::GameData::load().config
+    fn lang() -> Lang {
+        Lang::load("en")
     }
 
     #[test]
     fn paid_coins_keep_the_payment_and_fake_at_most_one() {
-        let config = config();
+        let lang = lang();
         let mut rng = Rng::new(7);
         let purse = Purse {
             buttons: 2,
@@ -418,7 +413,7 @@ mod tests {
             spoons: 1,
         };
         for counterfeit in [false, true] {
-            let coins = paid_coins(&purse, counterfeit, &config, &mut rng);
+            let coins = paid_coins(&purse, counterfeit, &lang, &mut rng);
             assert_eq!(coins.len(), 4);
             let mut total = Purse::default();
             for c in &coins {
@@ -428,7 +423,8 @@ mod tests {
             let fakes: Vec<_> = coins.iter().filter(|c| c.fake).collect();
             assert_eq!(fakes.len(), usize::from(counterfeit));
             for f in fakes {
-                assert!(config.coin_tells_fake.contains(&f.tell));
+                assert!(f.tell.starts_with("tell.fake."));
+                assert_ne!(lang.t(&f.tell), f.tell, "tell has a text");
             }
         }
     }
@@ -444,7 +440,7 @@ mod tests {
             ghost: Entity::PLACEHOLDER,
             product: "x".into(),
             price: 7,
-            coins: paid_coins(&spoon, true, &config(), &mut Rng::new(1)),
+            coins: paid_coins(&spoon, true, &lang(), &mut Rng::new(1)),
             given: Purse::default(),
             chapter: None,
         };

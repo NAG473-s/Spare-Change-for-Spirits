@@ -15,6 +15,7 @@ mod day_cycle;
 mod economy;
 mod fx;
 mod ghosts;
+mod i18n;
 mod inventory;
 mod menu;
 mod register;
@@ -31,6 +32,11 @@ use economy::Drawer;
 
 fn main() {
     let data = GameData::load();
+    // The saved language, else the system's, else English.
+    let code = save::Settings::load()
+        .language
+        .or_else(|| i18n::detect(&i18n::languages()))
+        .unwrap_or_else(|| i18n::SOURCE.to_string());
 
     App::new()
         .add_plugins(
@@ -54,6 +60,7 @@ fn main() {
         })
         .insert_resource(rng::Rng::from_time())
         .insert_resource(data)
+        .insert_resource(i18n::Lang::load(&code))
         .add_plugins((
             ui::UiPlugin,
             day_cycle::DayCyclePlugin,

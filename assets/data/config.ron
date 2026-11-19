@@ -23,9 +23,4 @@
 
     // Assist mode: shows the change due at the register.
     show_change_due: false,
-
-    // How coins are described at the register. Counterfeits give themselves
-    // away through one of the "fake" descriptions – the player has to notice.
-    coin_tells_genuine: ["worn", "polished", "tarnished", "slightly dented", "cold", "smooth"],
-    coin_tells_fake: ["too light", "oddly warm", "smells of paint", "sticky", "rings dully"],
 )

@@ -11,6 +11,7 @@ use crate::data::{Atmosphere, GameData, asset_exists, rgb};
 use crate::day_cycle::Phase;
 use crate::economy::Drawer;
 use crate::fx::{GlowTexture, Z_GLOW, glow};
+use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::ui::{Action, GameLog, UiFont};
 
@@ -36,8 +37,12 @@ impl Plugin for ShopPlugin {
                 Update,
                 (
                     select_tool.run_if(in_state(Phase::Evening)),
-                    sync_cell_visuals
-                        .run_if(resource_changed::<ShopLayout>.or_else(resource_changed::<Stock>)),
+                    sync_cell_visuals.run_if(
+                        resource_changed::<ShopLayout>
+                            .or_else(resource_changed::<Stock>)
+                            .or_else(resource_changed::<UiFont>),
+                    ),
+                    translate_counter.run_if(resource_changed::<UiFont>),
                 ),
             );
     }
@@ -190,6 +195,7 @@ pub struct GridCell(pub usize);
 
 fn spawn_shop(
     mut commands: Commands,
+    lang: Res<Lang>,
     data: Res<GameData>,
     font: Res<UiFont>,
     asset_server: Res<AssetServer>,
@@ -257,7 +263,8 @@ fn spawn_shop(
         Transform::from_translation(counter.extend(0.0)),
     ));
     commands.spawn((
-        Text2d::new("Counter"),
+        CounterLabel,
+        Text2d::new(lang.t("shop.counter")),
         small_font(&font, 12.0),
         TextColor(Color::srgb(0.8, 0.75, 0.6)),
         Transform::from_translation(
@@ -268,9 +275,22 @@ fn spawn_shop(
     commands.insert_resource(layout);
 }
 
+#[derive(Component)]
+struct CounterLabel;
+
+/// The counter label follows the language (and its font).
+fn translate_counter(
+    lang: Res<Lang>,
+    font: Res<UiFont>,
+    mut label: Single<(&mut Text2d, &mut TextFont), With<CounterLabel>>,
+) {
+    label.0.0 = lang.t("shop.counter");
+    *label.1 = small_font(&font, 12.0);
+}
+
 pub fn small_font(font: &UiFont, size: f32) -> TextFont {
     TextFont {
-        font: font.regular.clone().into(),
+        font: font.regular.clone(),
         font_size: FontSize::Px(size),
         ..default()
     }
@@ -287,6 +307,7 @@ fn on_cell_click(
     mut drawer: ResMut<Drawer>,
     mut keepsakes: ResMut<Keepsakes>,
     mut log: ResMut<GameLog>,
+    lang: Res<Lang>,
 ) {
     if *phase.get() != Phase::Evening {
         return;
@@ -307,13 +328,13 @@ fn on_cell_click(
             }
             if def.keepsake {
                 if !keepsakes.take(id) {
-                    log.push(format!("{} is already in the shop.", def.name));
+                    log.push(lang.f("log.keepsake_placed", &[("item", &lang.decor(id))]));
                     return;
                 }
             } else if !drawer.pay(def.cost) {
-                log.push(format!(
-                    "{} costs {} – not enough in the drawer.",
-                    def.name, def.cost
+                log.push(lang.f(
+                    "log.decor_too_expensive",
+                    &[("item", &lang.decor(id)), ("cost", &def.cost)],
                 ));
                 return;
             }
@@ -330,11 +351,11 @@ fn on_cell_click(
                 .and_then(|d| data.decor(d))
                 .is_some_and(|d| d.is_shelf);
             if !is_shelf {
-                log.push("Products belong on a shelf.");
+                log.push(lang.t("log.products_on_shelf"));
                 return;
             }
             if stock.count(product) == 0 {
-                log.push(format!("No {} left in stock.", data.product_name(product)));
+                log.push(lang.f("log.out_of_stock", &[("item", &lang.product(product))]));
                 return;
             }
             layout.cells[idx].product = Some(product.clone());
@@ -363,6 +384,7 @@ fn sync_cell_visuals(
     font: Res<UiFont>,
     asset_server: Res<AssetServer>,
     stock: Res<Stock>,
+    lang: Res<Lang>,
     glow_texture: Res<GlowTexture>,
     cells: Query<(Entity, &GridCell)>,
 ) {
@@ -380,8 +402,11 @@ fn sync_cell_visuals(
             Vec2::splat(CELL - 12.0),
         );
         let label = match content.product.as_deref() {
-            Some(p) => format!("{} ×{}", data.product_name(p), stock.count(p)),
-            None => def.name.clone(),
+            Some(p) => lang.f(
+                "evening.stock_button",
+                &[("item", &lang.product(p)), ("count", &stock.count(p))],
+            ),
+            None => lang.decor(&def.id),
         };
         let mut children = vec![
             commands

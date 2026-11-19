@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use crate::data::GameData;
 use crate::day_cycle::Phase;
 use crate::economy::Drawer;
+use crate::i18n::Lang;
 use crate::ui::{Action, GameLog};
 
 pub struct InventoryPlugin;
@@ -93,6 +94,7 @@ fn handle_orders(
     mut drawer: ResMut<Drawer>,
     mut crates: ResMut<CratesOrdered>,
     mut log: ResMut<GameLog>,
+    lang: Res<Lang>,
 ) {
     for action in actions.read() {
         let Action::Order(id) = action else { continue };
@@ -100,21 +102,21 @@ fn handle_orders(
             continue;
         };
         if crates.0 >= data.config.crates_per_night {
-            log.push("The ferryman shakes his head: his boat is full.");
+            log.push(lang.t("log.boat_full"));
             continue;
         }
         if !drawer.pay(product.crate_cost) {
-            log.push(format!(
-                "Not enough in the drawer for {} ({}).",
-                product.name, product.crate_cost
+            log.push(lang.f(
+                "log.crate_too_expensive",
+                &[("item", &lang.product(id)), ("cost", &product.crate_cost)],
             ));
             continue;
         }
         crates.0 += 1;
         stock.add(id, product.crate_size);
-        log.push(format!(
-            "The ferryman brings {}× {}.",
-            product.crate_size, product.name
+        log.push(lang.f(
+            "log.ferry_brings",
+            &[("count", &product.crate_size), ("item", &lang.product(id))],
         ));
     }
 }

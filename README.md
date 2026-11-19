@@ -35,7 +35,7 @@ folder, e.g. for test runs:
 SCFS_SAVE_DIR=/tmp/scfs-test cargo run
 ```
 
-During the first night a tips box explains each step (texts in `assets/data/tips.ron`).
+During the first night a tips box explains each step (texts `tip.*` in the language catalogs).
 
 ## Windows build
 
@@ -92,20 +92,39 @@ src/
   fx.rs          glow, night shade, particles, the Cue message
   save.rs        saving, loading, new game
   data.rs        loading the RON files
+  i18n.rs        language catalogs, placeholders, language detection
   rng.rs         small random number generator
 assets/
-  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, tips.ron
-  fonts/         Inter (SIL Open Font License, see Inter-LICENSE.txt)
+  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron
+  i18n/          languages.ron and one text catalog per language (en.ron is the source)
+  fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   sprites/       your own images (optional, see below)
 ```
 
 Buttons carry an `Action`. A global observer forwards it as a message, and every plugin reads
 the actions it cares about. New button = new variant in `ui::Action` + handling in the right plugin.
 
+## Languages
+
+All player-facing text lives in `assets/i18n/<code>.ron`, one catalog per language; `en.ron` is the
+source and defines the keys. 31 languages are listed in `assets/i18n/languages.ron` (the Steam
+languages), each with its name in its own language for the language menu. The game picks the saved
+language, else the system language, else shows the language menu on first start.
+
+- Data files (`assets/data/*.ron`) hold only ids and numbers. Texts for an id use keys like
+  `product.<id>.name`, `product.<id>.hint.1`, `ghost.<id>.name`, `ghost.<id>.the` (the subject at
+  the start of a sentence, with article), `decor.<id>.name`, `story.<n>.intro`.
+- Placeholders such as `{who}` and `{item}` must stay in every translation; sentences may be
+  rearranged. Coin amounts are shown as "silver spoon ×2" to avoid plural rules.
+- `cargo test` checks that every language has every key with the same placeholders.
+- Chinese, Japanese, Korean, Thai and Arabic use Noto fonts reduced to the characters actually
+  used. After changing any translation run `python3 tools/subset_fonts.py` (check with `--check`).
+
 ## Content and balancing
 
-All content lives in `assets/data/*.ron` – restarting the game is enough, no recompiling.
-Add new products, ghosts or decor as new entries. On startup the game checks that every ghost
+All content lives in `assets/data/*.ron` (numbers) and `assets/i18n/*.ron` (texts) – restarting
+the game is enough, no recompiling. Add new products, ghosts or decor as new entries, with their
+texts in `en.ron` and every other language. On startup the game checks that every ghost
 only wishes for products that exist.
 
 `show_change_due: true` in `config.ron` shows the change due (assist mode).
@@ -155,4 +174,4 @@ light and items crashing off shelves. Gameplay triggers sounds and effects throu
 - [x] Sound: shop bell, coins, chime, music box, night ambience
 - [x] Particles when passing into the light, candle glow, night shade
 - [ ] Ghost animations (sprite sheets)
-- [ ] Localisation (e.g. German)
+- [x] Localisation into the 31 Steam languages

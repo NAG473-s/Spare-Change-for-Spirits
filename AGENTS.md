@@ -18,11 +18,16 @@
 
 - Reply to the user in **German**.
 - Everything in the repository is **English**: code, comments, identifiers, README,
-  data files, in-game text, progress reports and commit messages.
+  data files, the source text catalog `assets/i18n/en.ron`, progress reports and commit
+  messages. Only the other catalogs in `assets/i18n/` are in their own languages.
 
 ## Project
 
 - Rust + Bevy 0.20. Check the actual Bevy 0.20 API (examples ship with the crate in
   `~/.cargo/registry/src/*/bevy-0.20.1/examples`) instead of relying on older Bevy versions.
 - Content and balancing live in `assets/data/*.ron`; prefer adding content there over hardcoding.
+- Player-facing text never goes into code or data files: add a key to `assets/i18n/en.ron` and
+  translate it into **every** language in `assets/i18n/` in the same change (keep placeholders,
+  match each catalog's style). Then run `python3 tools/subset_fonts.py` so the CJK, Thai and
+  Arabic fonts contain the new characters. `cargo test` fails on missing keys.
 - Run `cargo test` before committing; keep `cargo build` free of warnings.

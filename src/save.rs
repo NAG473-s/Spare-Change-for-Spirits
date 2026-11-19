@@ -56,6 +56,8 @@ pub struct Settings {
     pub tips: bool,
     /// Play music and sound effects.
     pub sound: bool,
+    /// Chosen language code; `None` until the player picks one.
+    pub language: Option<String>,
 }
 
 impl Default for Settings {
@@ -63,6 +65,7 @@ impl Default for Settings {
         Self {
             tips: true,
             sound: true,
+            language: None,
         }
     }
 }
@@ -259,6 +262,7 @@ mod tests {
         let settings = Settings {
             tips: false,
             sound: false,
+            language: Some("de".into()),
         };
         settings.store();
         assert_eq!(Settings::load(), settings);

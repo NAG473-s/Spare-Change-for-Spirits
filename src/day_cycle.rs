@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use crate::data::GameData;
 use crate::economy::{Coin, Drawer, Purse};
 use crate::ghosts::{Ghost, GhostState, Queue};
+use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::register::Register;
 use crate::ui::{Action, GameLog};
@@ -20,13 +21,14 @@ pub enum Phase {
 }
 
 impl Phase {
-    pub fn label(self) -> &'static str {
+    /// Catalog key of the phase name.
+    pub fn key(self) -> &'static str {
         match self {
-            Phase::Menu => "Menu",
-            Phase::Evening => "Evening",
-            Phase::Night => "Open",
-            Phase::Morning => "Dawn",
-            Phase::DemoEnd => "End of demo",
+            Phase::Menu => "phase.menu",
+            Phase::Evening => "phase.evening",
+            Phase::Night => "phase.night",
+            Phase::Morning => "phase.morning",
+            Phase::DemoEnd => "phase.demo_end",
         }
     }
 }
@@ -92,6 +94,7 @@ pub struct NightReport {
     pub redeemed: Vec<String>,
     pub faded: Vec<(String, u32)>,
     pub reputation_start: i32,
+    /// Ids of ghosts that passed into the light tonight are in `redeemed`.
     /// Items the poltergeist knocked off the shelves (product ids).
     pub knocked: Vec<String>,
     /// Counterfeit coins spotted at the register.
@@ -105,7 +108,7 @@ pub struct NightReport {
     pub dishonest: u32,
     /// The story ghost has come tonight.
     pub story_arrived: bool,
-    /// What the story ghost said tonight when served.
+    /// Catalog key of what the story ghost said tonight when served.
     pub story_line: Option<String>,
     /// Keepsakes received tonight (decor ids).
     pub keepsakes: Vec<String>,
@@ -123,6 +126,7 @@ fn start_night(
     mut clock: ResMut<NightClock>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
+    lang: Res<Lang>,
 ) {
     *clock = NightClock {
         elapsed: 0.0,
@@ -132,7 +136,7 @@ fn start_night(
         reputation_start: progress.reputation,
         ..default()
     };
-    log.push("Midnight. The shop bell rings, though no one touched the door.");
+    log.push(lang.t("log.midnight"));
 }
 
 fn tick_clock(time: Res<Time>, mut clock: ResMut<NightClock>) {

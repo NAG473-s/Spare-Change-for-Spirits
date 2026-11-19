@@ -1,30 +1,14 @@
-// Edwin's story: one chapter per night. If he is not served correctly,
-// the chapter repeats the next night.
+// Edwin's story: one chapter per night. If he is not served correctly, the
+// chapter repeats the next night. Texts: assets/i18n/<language>.ron
+// (story.name, story.arrives, story.N.intro, story.N.thanks, story.ending).
 (
     ghost: "edwin",
-    name: "Edwin",
     arrive_at: 0.3,
     chapters: [
-        (wish: "rain_jar",
-         intro: "Evening, shopkeeper. It never rains here. Margaret and I used to sit on the porch whenever it rained … could you find me a little of that?",
-         thanks: "Ah. Wet stones and lilacs. Just like that porch. Keep my umbrella – I won't be needing it.",
-         keepsake: Some("umbrella")),
-        (wish: "tea_tin",
-         intro: "Margaret made tea every morning. The tin always rattled before the kettle sang. I'd like to hear that rattle again.",
-         thanks: "Rattle, rattle … there she is in the kitchen. Here, her old cup. Mind the chip.",
-         keepsake: Some("teacup")),
-        (wish: "wool_scarf",
-         intro: "It gets so cold between the nights. She used to knit for me, you know. Badly. I wore everything.",
-         thanks: "Warm. Crooked stitches would have been better, but it's warm. Take her blanket – it's warmer with someone using it.",
-         keepsake: Some("blanket")),
-        (wish: "music_box",
-         intro: "There was a tune at our wedding. I can almost remember it … something small that plays a melody?",
-         thanks: "That's the one. That's the one! I danced terribly. She laughed all evening. Here – our wedding photo.",
-         keepsake: Some("wedding_photo")),
-        (wish: "letter_paper",
-         intro: "I never told her I was sorry for leaving first. Do you have paper? I think it's time I wrote to her.",
-         thanks: "Dear Margaret … yes. Yes, that will do. Thank you, shopkeeper. Keep the lantern lit for the next one who gets lost.",
-         keepsake: Some("pocket_lantern")),
+        (wish: "rain_jar", keepsake: Some("umbrella")),
+        (wish: "tea_tin", keepsake: Some("teacup")),
+        (wish: "wool_scarf", keepsake: Some("blanket")),
+        (wish: "music_box", keepsake: Some("wedding_photo")),
+        (wish: "letter_paper", keepsake: Some("pocket_lantern")),
     ],
-    ending: "Edwin folds the letter, tucks it into his coat and walks into the light. For a moment the whole shop smells of rain.",
 )

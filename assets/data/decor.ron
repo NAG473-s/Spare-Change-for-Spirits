@@ -1,29 +1,30 @@
-// Decor. effect is added to the shop's atmosphere.
+// Decor. Names: assets/i18n/<language>.ron (decor.<id>.name).
+// effect is added to the shop's atmosphere.
 // is_shelf: true -> products can be displayed here.
 // Images (optional): assets/sprites/decor/<id>.png
 [
-    (id: "shelf", name: "Shelf", cost: 8, is_shelf: true,
+    (id: "shelf", cost: 8, is_shelf: true,
      effect: (silence: 1), color: (0.45, 0.32, 0.22)),
-    (id: "candle", name: "Candle", cost: 2,
+    (id: "candle", cost: 2,
      effect: (light: 2, warmth: 1), color: (1.0, 0.85, 0.4)),
-    (id: "mirror", name: "Mirror", cost: 12,
+    (id: "mirror", cost: 12,
      effect: (reflection: 2, light: 1), color: (0.72, 0.84, 0.92)),
-    (id: "incense", name: "Incense", cost: 5,
+    (id: "incense", cost: 5,
      effect: (warmth: 1, silence: 1), color: (0.6, 0.5, 0.72)),
-    (id: "rug", name: "Rug", cost: 6,
+    (id: "rug", cost: 6,
      effect: (warmth: 2, silence: 1), color: (0.55, 0.2, 0.25)),
-    (id: "grandfather_clock", name: "Grandfather Clock", cost: 15,
+    (id: "grandfather_clock", cost: 15,
      effect: (warmth: 1, silence: -2), color: (0.35, 0.25, 0.18)),
 
     // Keepsakes: not for sale, left behind by Edwin (story.ron).
-    (id: "umbrella", name: "Edwin's Umbrella", cost: 0, keepsake: true,
+    (id: "umbrella", cost: 0, keepsake: true,
      effect: (silence: 1), color: (0.3, 0.35, 0.5)),
-    (id: "teacup", name: "Chipped Teacup", cost: 0, keepsake: true,
+    (id: "teacup", cost: 0, keepsake: true,
      effect: (warmth: 1), color: (0.85, 0.85, 0.8)),
-    (id: "blanket", name: "Knitted Blanket", cost: 0, keepsake: true,
+    (id: "blanket", cost: 0, keepsake: true,
      effect: (warmth: 2), color: (0.7, 0.45, 0.35)),
-    (id: "wedding_photo", name: "Wedding Photo", cost: 0, keepsake: true,
+    (id: "wedding_photo", cost: 0, keepsake: true,
      effect: (warmth: 1, reflection: 1), color: (0.8, 0.75, 0.55)),
-    (id: "pocket_lantern", name: "Edwin's Lantern", cost: 0, keepsake: true,
+    (id: "pocket_lantern", cost: 0, keepsake: true,
      effect: (light: 1, warmth: 1), color: (1.0, 0.75, 0.35)),
 ]

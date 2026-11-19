@@ -9,11 +9,11 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 use crate::economy::{Coin, Purse};
+use crate::i18n::Lang;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct ProductDef {
     pub id: String,
-    pub name: String,
     /// Base price in button units.
     pub price: u32,
     /// Price of one crate from the ferryman.
@@ -22,8 +22,6 @@ pub struct ProductDef {
     pub crate_size: u32,
     /// After this many nights in the shop the item fades away.
     pub fade_after: u32,
-    /// Hints ghosts use when asking for this product.
-    pub hints: Vec<String>,
 }
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,10 +58,15 @@ impl Atmosphere {
         self.reflection += other.reflection;
     }
 
-    pub fn describe(&self) -> String {
-        format!(
-            "Light {} · Warmth {} · Silence {} · Reflection {}",
-            self.light, self.warmth, self.silence, self.reflection
+    pub fn describe(&self, lang: &Lang) -> String {
+        lang.f(
+            "atmosphere",
+            &[
+                ("light", &self.light),
+                ("warmth", &self.warmth),
+                ("silence", &self.silence),
+                ("reflection", &self.reflection),
+            ],
         )
     }
 }
@@ -84,24 +87,24 @@ impl Need {
     }
 
     /// What the ghost complains about when the condition is not met.
-    pub fn complaint(&self) -> &'static str {
-        match *self {
-            Need::AtMost(Stat::Light, _) => "too bright",
-            Need::AtLeast(Stat::Light, _) => "too dark",
-            Need::AtMost(Stat::Warmth, _) => "too warm",
-            Need::AtLeast(Stat::Warmth, _) => "too cold",
-            Need::AtMost(Stat::Silence, _) => "too quiet",
-            Need::AtLeast(Stat::Silence, _) => "too noisy",
-            Need::AtMost(Stat::Reflection, _) => "too many mirrors",
-            Need::AtLeast(Stat::Reflection, _) => "no mirror",
-        }
+    pub fn complaint(&self, lang: &Lang) -> String {
+        let (stat, bound) = match *self {
+            Need::AtLeast(s, _) => (s, "at_least"),
+            Need::AtMost(s, _) => (s, "at_most"),
+        };
+        let stat = match stat {
+            Stat::Light => "light",
+            Stat::Warmth => "warmth",
+            Stat::Silence => "silence",
+            Stat::Reflection => "reflection",
+        };
+        lang.t(&format!("need.{stat}.{bound}"))
     }
 }
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct GhostDef {
     pub id: String,
-    pub name: String,
     /// Placeholder colour until there is an image.
     pub color: (f32, f32, f32),
     pub spawn_weight: f32,
@@ -118,9 +121,6 @@ pub struct GhostDef {
     pub pays_with: Vec<Coin>,
     #[serde(default)]
     pub quirks: Quirks,
-    /// `name` is a proper name ("Edwin"), so texts use it without "the".
-    #[serde(default)]
-    pub proper_name: bool,
 }
 
 /// Special behaviour of a ghost type. All chances are 0..1.
@@ -138,15 +138,6 @@ pub struct Quirks {
 }
 
 impl GhostDef {
-    /// Name for the start of a sentence: "The Shy Ghost" or "Edwin".
-    pub fn the_cap(&self) -> String {
-        if self.proper_name {
-            self.name.clone()
-        } else {
-            format!("The {}", self.name)
-        }
-    }
-
     /// First unmet condition, if any.
     pub fn unmet_need(&self, a: &Atmosphere) -> Option<Need> {
         self.needs.iter().copied().find(|n| !n.is_met(a))
@@ -156,7 +147,6 @@ impl GhostDef {
 #[derive(Deserialize, Clone, Debug)]
 pub struct DecorDef {
     pub id: String,
-    pub name: String,
     pub cost: u32,
     #[serde(default)]
     pub is_shelf: bool,
@@ -173,23 +163,15 @@ pub struct DecorDef {
 pub struct StoryDef {
     /// Ghost id from ghosts.ron (usually with spawn_weight 0).
     pub ghost: String,
-    /// Display name used in texts, e.g. "Edwin".
-    pub name: String,
     /// When the ghost arrives, as a fraction of the night (0..1).
     pub arrive_at: f32,
     pub chapters: Vec<ChapterDef>,
-    /// Shown when the last chapter is completed.
-    pub ending: String,
 }
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct ChapterDef {
     /// Product the ghost needs in this chapter.
     pub wish: String,
-    /// What the ghost says at the counter (replaces the product hint).
-    pub intro: String,
-    /// What the ghost says when served correctly.
-    pub thanks: String,
     /// Decor id of the keepsake left behind.
     #[serde(default)]
     pub keepsake: Option<String>,
@@ -209,24 +191,6 @@ pub struct Config {
     pub base_atmosphere: Atmosphere,
     /// Assist mode: shows the change due at the register.
     pub show_change_due: bool,
-    /// Descriptions of genuine coins at the register.
-    pub coin_tells_genuine: Vec<String>,
-    /// Descriptions that give a counterfeit coin away.
-    pub coin_tells_fake: Vec<String>,
-}
-
-/// Tips for the first night, one per situation.
-#[derive(Deserialize, Clone, Debug)]
-pub struct TipsDef {
-    pub order: String,
-    pub shelve: String,
-    pub open: String,
-    pub browse: String,
-    pub whisper: String,
-    pub change: String,
-    pub double_pay: String,
-    pub first_sale: String,
-    pub morning: String,
 }
 
 #[derive(Resource)]
@@ -236,7 +200,6 @@ pub struct GameData {
     pub ghosts: Vec<GhostDef>,
     pub decor: Vec<DecorDef>,
     pub story: StoryDef,
-    pub tips: TipsDef,
 }
 
 impl GameData {
@@ -248,7 +211,6 @@ impl GameData {
             ghosts: load_ron("data/ghosts.ron"),
             decor: load_ron("data/decor.ron"),
             story: load_ron("data/story.ron"),
-            tips: load_ron("data/tips.ron"),
         };
         data.validate();
         data
@@ -265,9 +227,6 @@ impl GameData {
                     w
                 );
             }
-        }
-        for p in &self.products {
-            assert!(!p.hints.is_empty(), "product '{}' has no hints", p.id);
         }
         assert!(
             self.ghost_index(&self.story.ghost).is_some(),
@@ -290,10 +249,6 @@ impl GameData {
                 );
             }
         }
-        assert!(
-            !self.config.coin_tells_genuine.is_empty() && !self.config.coin_tells_fake.is_empty(),
-            "config.ron needs coin_tells_genuine and coin_tells_fake"
-        );
     }
 
     pub fn ghost_index(&self, id: &str) -> Option<usize> {
@@ -302,10 +257,6 @@ impl GameData {
 
     pub fn product(&self, id: &str) -> Option<&ProductDef> {
         self.products.iter().find(|p| p.id == id)
-    }
-
-    pub fn product_name<'a>(&'a self, id: &'a str) -> &'a str {
-        self.product(id).map(|p| p.name.as_str()).unwrap_or(id)
     }
 
     pub fn decor(&self, id: &str) -> Option<&DecorDef> {
@@ -352,6 +303,38 @@ mod tests {
     #[test]
     fn data_files_are_valid() {
         let data = GameData::load();
+        // Every id has its texts in the English catalog.
+        let lang = Lang::load("en");
+        let has = |key: String| lang.t(&key) != key;
+        for p in &data.products {
+            assert!(
+                has(format!("product.{}.name", p.id)),
+                "no name for {}",
+                p.id
+            );
+            assert!(
+                lang.count(&format!("product.{}.hint.", p.id)) > 0,
+                "no hints for {}",
+                p.id
+            );
+        }
+        for g in &data.ghosts {
+            assert!(
+                has(format!("ghost.{}.name", g.id)) && has(format!("ghost.{}.the", g.id)),
+                "texts for {}",
+                g.id
+            );
+        }
+        for d in &data.decor {
+            assert!(has(format!("decor.{}.name", d.id)), "no name for {}", d.id);
+        }
+        for n in 1..=data.story.chapters.len() {
+            assert!(
+                has(format!("story.{n}.intro")) && has(format!("story.{n}.thanks")),
+                "story {n}"
+            );
+        }
+        assert!(lang.count("tell.genuine.") > 0 && lang.count("tell.fake.") > 0);
         assert!(!data.products.is_empty());
         // Every product is wished for by some ghost or the story.
         for p in &data.products {

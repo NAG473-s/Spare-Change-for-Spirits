@@ -10,11 +10,12 @@ use bevy::prelude::*;
 use bevy::ui::InteractionDisabled;
 use bevy::ui_widgets::{Activate, Button};
 
-use crate::data::GameData;
+use crate::data::{GameData, asset_exists};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
 use crate::economy::{Coin, Drawer};
 use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
+use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::register::Register;
 use crate::shop::{Keepsakes, ShopLayout, Tool};
@@ -38,6 +39,8 @@ impl Plugin for UiPlugin {
             .init_resource::<UiFont>()
             .init_resource::<GameLog>()
             .add_systems(Startup, spawn_ui)
+            // Before Update, so every rebuild this frame already uses the new font.
+            .add_systems(PreUpdate, apply_language.run_if(resource_changed::<Lang>))
             .add_observer(on_activate)
             .add_systems(OnEnter(Phase::Morning), build_morning_panel)
             .add_systems(OnEnter(Phase::Menu), clear_for_menu)
@@ -47,6 +50,11 @@ impl Plugin for UiPlugin {
                 (
                     update_hud,
                     update_log.run_if(resource_changed::<GameLog>),
+                    refresh_static_fonts.run_if(resource_changed::<UiFont>),
+                    build_morning_panel
+                        .run_if(in_state(Phase::Morning).and_then(resource_changed::<UiFont>)),
+                    build_demo_end_panel
+                        .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
                     build_evening_panel.run_if(
                         in_state(Phase::Evening).and_then(
@@ -55,7 +63,8 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<Tool>)
                                 .or_else(resource_changed::<ShopLayout>)
                                 .or_else(resource_changed::<Drawer>)
-                                .or_else(resource_changed::<Keepsakes>),
+                                .or_else(resource_changed::<Keepsakes>)
+                                .or_else(resource_changed::<UiFont>),
                         ),
                     ),
                     build_night_panel.run_if(
@@ -63,6 +72,7 @@ impl Plugin for UiPlugin {
                             state_changed::<Phase>
                                 .or_else(resource_changed::<Register>)
                                 .or_else(resource_changed::<Queue>)
+                                .or_else(resource_changed::<UiFont>)
                                 .or_else(ghost_state_changed),
                         ),
                     ),
@@ -96,6 +106,9 @@ pub enum Action {
     QuitGame,
     ToggleTips,
     ToggleSound,
+    OpenLanguages,
+    CloseLanguages,
+    SetLanguage(String),
 }
 
 #[derive(Component, Clone)]
@@ -104,19 +117,75 @@ pub struct ActionButton(pub Action);
 #[derive(Component, Clone, Copy)]
 struct ButtonColor(Color);
 
+/// Fonts for the current language: Inter first, then the language's own
+/// script font (CJK, Thai, Arabic), then every other script font, so that
+/// any character – e.g. language names in the language menu – can be drawn.
 #[derive(Resource)]
 pub struct UiFont {
-    pub regular: Handle<Font>,
-    pub bold: Handle<Font>,
+    pub regular: FontSource,
+    pub bold: FontSource,
+    inter: Handle<Font>,
+    inter_bold: Handle<Font>,
+    /// (language code, script font)
+    extras: Vec<(String, Handle<Font>)>,
 }
 
 impl FromWorld for UiFont {
     fn from_world(world: &mut World) -> Self {
+        let code = world.resource::<Lang>().code.clone();
+        let languages = world.resource::<Lang>().languages.clone();
         let assets = world.resource::<AssetServer>();
-        Self {
-            regular: assets.load("fonts/Inter-Regular.otf"),
-            bold: assets.load("fonts/Inter-SemiBold.otf"),
-        }
+        let extras = languages
+            .iter()
+            .filter_map(|l| {
+                let file = format!("fonts/{}", l.font.as_ref()?);
+                asset_exists(&file).then(|| (l.code.clone(), assets.load(file)))
+            })
+            .collect();
+        let mut font = Self {
+            regular: FontSource::default(),
+            bold: FontSource::default(),
+            inter: assets.load("fonts/Inter-Regular.otf"),
+            inter_bold: assets.load("fonts/Inter-SemiBold.otf"),
+            extras,
+        };
+        font.set_language(&code);
+        font
+    }
+}
+
+impl UiFont {
+    fn chain(&self, base: &Handle<Font>, code: &str) -> FontSource {
+        let own = self.extras.iter().filter(|(c, _)| c == code);
+        let others = self.extras.iter().filter(|(c, _)| c != code);
+        FontSource::list(
+            std::iter::once(base.clone()).chain(own.chain(others).map(|(_, h)| h.clone())),
+        )
+    }
+
+    pub fn set_language(&mut self, code: &str) {
+        self.regular = self.chain(&self.inter, code);
+        self.bold = self.chain(&self.inter_bold, code);
+    }
+}
+
+fn apply_language(lang: Res<Lang>, mut font: ResMut<UiFont>) {
+    font.set_language(&lang.code);
+}
+
+/// Texts that are not rebuilt with the panels and need the new font.
+#[derive(Component)]
+struct StaticText {
+    bold: bool,
+}
+
+fn refresh_static_fonts(font: Res<UiFont>, mut texts: Query<(&StaticText, &mut TextFont)>) {
+    for (st, mut tf) in &mut texts {
+        tf.font = if st.bold {
+            font.bold.clone()
+        } else {
+            font.regular.clone()
+        };
     }
 }
 
@@ -166,6 +235,7 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
         BackgroundColor(BG_PANEL),
         children![(
             HudText,
+            StaticText { bold: true },
             Text::new(""),
             text_font(&font.bold, 15.0),
             TextColor(TEXT)
@@ -193,6 +263,7 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>) {
     // Message log
     commands.spawn((
         LogText,
+        StaticText { bold: false },
         Text::new(""),
         text_font(&font.regular, 14.0),
         TextColor(TEXT_DIM),
@@ -240,6 +311,7 @@ fn button_hover(
 }
 
 fn update_hud(
+    lang: Res<Lang>,
     phase: Res<State<Phase>>,
     data: Res<GameData>,
     progress: Res<Progress>,
@@ -256,15 +328,17 @@ fn update_hud(
     } else {
         String::new()
     };
-    hud.0 = format!(
-        "Night {}/{}  ·  {}{}  ·  Drawer: {} (= {})  ·  Reputation {}",
-        progress.night,
-        data.config.nights_in_demo,
-        phase.get().label(),
-        time,
-        drawer.describe(),
-        drawer.total(),
-        progress.reputation
+    hud.0 = lang.f(
+        "hud",
+        &[
+            ("night", &progress.night),
+            ("nights", &data.config.nights_in_demo),
+            ("phase", &lang.t(phase.get().key())),
+            ("time", &time),
+            ("drawer", &drawer.describe(&lang)),
+            ("total", &drawer.total()),
+            ("reputation", &progress.reputation),
+        ],
     );
 }
 
@@ -299,6 +373,7 @@ fn build_evening_panel(
     mut commands: Commands,
     panel: Single<Entity, With<SidePanel>>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     data: Res<GameData>,
     stock: Res<Stock>,
     crates: Res<CratesOrdered>,
@@ -307,34 +382,39 @@ fn build_evening_panel(
     keepsakes: Res<Keepsakes>,
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
-    ui.heading("Evening – Preparation");
+    ui.heading(&lang.t("evening.title"));
 
-    ui.section(&format!(
-        "Ferryman · crates {}/{}",
-        crates.0, data.config.crates_per_night
+    ui.section(&lang.f(
+        "evening.ferryman",
+        &[("count", &crates.0), ("max", &data.config.crates_per_night)],
     ));
     let row = ui.row();
     let boat_full = crates.0 >= data.config.crates_per_night;
     for p in &data.products {
-        let label = format!("{} ({}× · {})", p.name, p.crate_size, p.crate_cost);
+        let label = lang.f(
+            "evening.order_button",
+            &[
+                ("item", &lang.product(&p.id)),
+                ("size", &p.crate_size),
+                ("cost", &p.crate_cost),
+            ],
+        );
         ui.button_in(row, &label, Action::Order(p.id.clone()), false, !boat_full);
     }
 
-    ui.section("Furnish (pick a tool, then click a cell)");
+    ui.section(&lang.t("evening.furnish"));
     let row = ui.row();
     for d in data.decor.iter().filter(|d| !d.keepsake) {
         let selected = *tool == Tool::Place(d.id.clone());
-        ui.button_in(
-            row,
-            &format!("{} ({})", d.name, d.cost),
-            Action::ToolPlace(d.id.clone()),
-            selected,
-            true,
+        let label = lang.f(
+            "evening.decor_button",
+            &[("item", &lang.decor(&d.id)), ("cost", &d.cost)],
         );
+        ui.button_in(row, &label, Action::ToolPlace(d.id.clone()), selected, true);
     }
     ui.button_in(
         row,
-        "Remove",
+        &lang.t("evening.remove"),
         Action::ToolRemove,
         *tool == Tool::Remove,
         true,
@@ -346,13 +426,13 @@ fn build_evening_panel(
         .filter(|d| d.keepsake && keepsakes.count(&d.id) > 0)
         .collect();
     if !owned.is_empty() {
-        ui.section("Keepsakes (free to place)");
+        ui.section(&lang.t("evening.keepsakes"));
         let row = ui.row();
         for d in owned {
             let selected = *tool == Tool::Place(d.id.clone());
             ui.button_in(
                 row,
-                &d.name,
+                &lang.decor(&d.id),
                 Action::ToolPlace(d.id.clone()),
                 selected,
                 true,
@@ -360,7 +440,7 @@ fn build_evening_panel(
         }
     }
 
-    ui.section("Put products on shelves");
+    ui.section(&lang.t("evening.shelve"));
     let row = ui.row();
     let mut any = false;
     for p in &data.products {
@@ -370,35 +450,35 @@ fn build_evening_panel(
         }
         any = true;
         let selected = *tool == Tool::Stock(p.id.clone());
-        ui.button_in(
-            row,
-            &format!("{} ×{}", p.name, n),
-            Action::ToolStock(p.id.clone()),
-            selected,
-            true,
+        let label = lang.f(
+            "evening.stock_button",
+            &[("item", &lang.product(&p.id)), ("count", &n)],
         );
+        ui.button_in(row, &label, Action::ToolStock(p.id.clone()), selected, true);
     }
     if !any {
-        ui.dim("The storeroom is empty. Order something from the ferryman.");
+        ui.dim(&lang.t("evening.storeroom_empty"));
     }
 
-    ui.section("Atmosphere");
-    ui.text(&layout.atmosphere(&data).describe());
-    let displayed = layout.displayed_products();
-    ui.dim(&format!(
-        "{} shelf/shelves, {} different products on display.",
-        layout.shelf_cells(&data).len(),
-        displayed.len()
+    ui.section(&lang.t("evening.atmosphere"));
+    ui.text(&layout.atmosphere(&data).describe(&lang));
+    ui.dim(&lang.f(
+        "evening.display_summary",
+        &[
+            ("shelves", &layout.shelf_cells(&data).len()),
+            ("products", &layout.displayed_products().len()),
+        ],
     ));
 
     ui.spacer();
-    ui.primary("Open the shop  →", Action::StartNight);
+    ui.primary(&lang.t("evening.open"), Action::StartNight);
 }
 
 fn build_night_panel(
     mut commands: Commands,
     panel: Single<Entity, With<SidePanel>>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     data: Res<GameData>,
     stock: Res<Stock>,
     register: Res<Register>,
@@ -408,70 +488,79 @@ fn build_night_panel(
     ghosts: Query<&Ghost>,
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
-    ui.heading("Night – open");
+    ui.heading(&lang.t("night.title"));
 
     if let Some(sale) = &register.sale {
-        ui.section("Register");
-        ui.text(&format!("Item: {}", data.product_name(&sale.product)));
-        ui.text(&format!("Price: {}", sale.price));
+        ui.section(&lang.t("night.register"));
+        ui.text(&lang.f("night.item", &[("item", &lang.product(&sale.product))]));
+        ui.text(&lang.f("night.price", &[("price", &sale.price)]));
         let paid = sale.paid();
-        ui.text(&format!("Paid: {} (= {})", paid.describe(), paid.total()));
-        ui.dim("Click a coin to inspect it. Doubting a genuine coin offends the customer.");
+        ui.text(&lang.f(
+            "night.paid",
+            &[("coins", &paid.describe(&lang)), ("total", &paid.total())],
+        ));
+        ui.dim(&lang.t("night.inspect_hint"));
         let row = ui.row();
         for (i, c) in sale.coins.iter().enumerate() {
-            ui.button_in(
-                row,
-                &format!("{} · {}", c.coin.name(1), c.tell),
-                Action::CheckCoin(i),
-                false,
-                !c.checked,
+            let label = lang.f(
+                "night.coin_chip",
+                &[("coin", &c.coin.name(&lang)), ("tell", &lang.t(&c.tell))],
             );
+            ui.button_in(row, &label, Action::CheckCoin(i), false, !c.checked);
         }
         if data.config.show_change_due {
-            ui.dim(&format!("Change due: {}", sale.change_due()));
+            ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
         }
-        ui.text(&format!(
-            "Counted out: {} (= {})",
-            sale.given.describe(),
-            sale.given.total()
+        ui.text(&lang.f(
+            "night.counted",
+            &[
+                ("coins", &sale.given.describe(&lang)),
+                ("total", &sale.given.total()),
+            ],
         ));
         let row = ui.row();
         for coin in Coin::ASCENDING {
             let left = drawer.get(coin) - sale.given.get(coin);
-            ui.button_in(
-                row,
-                &format!("+ {} ({}) · {} in drawer", coin.name(1), coin.value(), left),
-                Action::AddChange(coin),
-                false,
-                left > 0,
+            let label = lang.f(
+                "night.add_coin",
+                &[
+                    ("coin", &coin.name(&lang)),
+                    ("value", &coin.value()),
+                    ("left", &left),
+                ],
             );
+            ui.button_in(row, &label, Action::AddChange(coin), false, left > 0);
         }
         let row = ui.row();
-        ui.button_in(row, "Put back", Action::ResetChange, false, true);
+        ui.button_in(
+            row,
+            &lang.t("night.put_back"),
+            Action::ResetChange,
+            false,
+            true,
+        );
         ui.spacer();
-        ui.primary("Hand over", Action::GiveChange);
+        ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
         return;
     }
 
     if let Some(question) = &register.question {
-        let name = ghosts
+        let who = ghosts
             .get(question.ghost)
-            .map(|g| data.ghosts[g.def].the_cap())
+            .map(|g| lang.ghost_the(&data.ghosts[g.def].id))
             .unwrap_or_default();
-        ui.section(&format!("{name} wants to pay again"));
-        ui.text(&format!(
-            "It has already paid, but it holds out {} once more.",
-            question.amount
-        ));
+        ui.section(&lang.f("night.pay_again_title", &[("who", &who)]));
+        ui.text(&lang.f("night.pay_again_text", &[("amount", &question.amount)]));
         ui.spacer();
+        let root = ui.root();
         ui.button_in(
-            ui.root(),
-            "Keep the second payment",
+            root,
+            &lang.t("night.keep_payment"),
             Action::KeepSecondPayment,
             false,
             true,
         );
-        ui.primary("Tell it the truth", Action::RefuseSecondPayment);
+        ui.primary(&lang.t("night.tell_truth"), Action::RefuseSecondPayment);
         return;
     }
 
@@ -480,12 +569,12 @@ fn build_night_panel(
         Some(ghost) if ghost.state == GhostState::Waiting => {
             let def = &data.ghosts[ghost.def];
             if ghost.chapter.is_some() {
-                ui.section(&format!("{} says:", data.story.name));
+                ui.section(&lang.f("night.story_says", &[("name", &lang.t("story.name"))]));
             } else {
-                ui.section(&format!("{} whispers:", def.the_cap()));
+                ui.section(&lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))]));
             }
-            ui.text(&format!("\u{201c}{}\u{201d}", ghost.hint));
-            ui.section("What do you hand over?");
+            ui.text(&lang.f("quote", &[("text", &lang.t(&ghost.hint))]));
+            ui.section(&lang.t("night.what_hand_over"));
             let row = ui.row();
             let mut any = false;
             for id in layout.displayed_products() {
@@ -494,29 +583,22 @@ fn build_night_panel(
                     continue;
                 }
                 any = true;
-                ui.button_in(
-                    row,
-                    &format!("{} ×{}", data.product_name(&id), n),
-                    Action::Offer(id.clone()),
-                    false,
-                    true,
+                let label = lang.f(
+                    "evening.stock_button",
+                    &[("item", &lang.product(&id)), ("count", &n)],
                 );
+                ui.button_in(row, &label, Action::Offer(id.clone()), false, true);
             }
             if !any {
-                ui.dim("Nothing on the shelves …");
+                ui.dim(&lang.t("night.nothing_on_shelves"));
             }
             ui.spacer();
-            ui.button_in(
-                ui.root(),
-                "Apologise (decline)",
-                Action::Decline,
-                false,
-                true,
-            );
+            let root = ui.root();
+            ui.button_in(root, &lang.t("night.decline"), Action::Decline, false, true);
         }
         _ => {
-            ui.dim("The shop is quiet. Candles flicker.");
-            ui.dim(&format!("Ghosts in line: {}", queue.0.len()));
+            ui.dim(&lang.t("night.quiet"));
+            ui.dim(&lang.f("night.in_line", &[("count", &queue.0.len())]));
         }
     }
 }
@@ -525,123 +607,130 @@ fn build_morning_panel(
     mut commands: Commands,
     panel: Single<Entity, With<SidePanel>>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     data: Res<GameData>,
     report: Res<NightReport>,
     progress: Res<Progress>,
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
-    ui.heading("Dawn – Accounts");
-    ui.text(&format!(
-        "Sales: {} · Revenue: {}",
-        report.sales, report.revenue
+    ui.heading(&lang.t("morning.title"));
+    ui.text(&lang.f(
+        "morning.sales",
+        &[("sales", &report.sales), ("revenue", &report.revenue)],
     ));
-    ui.text(&format!(
-        "Change correct: {} · wrong: {}",
-        report.change_correct, report.change_wrong
+    ui.text(&lang.f(
+        "morning.change",
+        &[
+            ("correct", &report.change_correct),
+            ("wrong", &report.change_wrong),
+        ],
     ));
-    ui.text(&format!(
-        "Left unhappy: {} · Fled: {}",
-        report.unhappy, report.fled
+    ui.text(&lang.f(
+        "morning.unhappy",
+        &[("unhappy", &report.unhappy), ("fled", &report.fled)],
     ));
-    ui.text(&format!(
-        "Reputation: {} → {}",
-        report.reputation_start, progress.reputation
+    ui.text(&lang.f(
+        "morning.reputation",
+        &[
+            ("from", &report.reputation_start),
+            ("to", &progress.reputation),
+        ],
     ));
 
     if let Some(line) = &report.story_line {
-        ui.section(&data.story.name);
-        ui.dim(&format!("\u{201c}{line}\u{201d}"));
+        ui.section(&lang.t("story.name"));
+        ui.dim(&lang.f("quote", &[("text", &lang.t(line))]));
     }
     if !report.keepsakes.is_empty() {
-        let names: Vec<&str> = report
-            .keepsakes
-            .iter()
-            .map(|k| data.decor(k).map_or(k.as_str(), |d| d.name.as_str()))
-            .collect();
-        ui.dim(&format!("Keepsake received: {}", names.join(", ")));
+        let names: Vec<String> = report.keepsakes.iter().map(|k| lang.decor(k)).collect();
+        ui.dim(&lang.f("morning.keepsake", &[("items", &lang.join(&names))]));
     }
     if report.honest + report.dishonest > 0 {
-        ui.text(&format!(
-            "Second payments refused: {} · kept: {}",
-            report.honest, report.dishonest
+        ui.text(&lang.f(
+            "morning.second_payments",
+            &[("refused", &report.honest), ("kept", &report.dishonest)],
         ));
     }
     if report.counterfeits_caught > 0 {
-        ui.text(&format!(
-            "Counterfeits spotted: {}",
-            report.counterfeits_caught
+        ui.text(&lang.f(
+            "morning.counterfeits_spotted",
+            &[("count", &report.counterfeits_caught)],
         ));
     }
     if !report.counterfeits_found.is_empty() {
-        ui.text(&format!(
-            "Counterfeits found in the drawer: {} (−{})",
-            report.counterfeits_found.describe(),
-            report.counterfeits_found.total()
+        ui.text(&lang.f(
+            "morning.counterfeits_found",
+            &[
+                ("coins", &report.counterfeits_found.describe(&lang)),
+                ("total", &report.counterfeits_found.total()),
+            ],
         ));
     }
     if !report.knocked.is_empty() {
-        ui.text(&format!(
-            "Knocked off the shelves: {}",
-            count_list(&report.knocked, |p| data.product_name(p))
+        ui.text(&lang.f(
+            "morning.knocked",
+            &[(
+                "items",
+                &count_list(&lang, &report.knocked, |p| lang.product(p)),
+            )],
         ));
     }
 
     if !report.redeemed.is_empty() {
-        ui.section("Passed into the light");
-        ui.dim(&report.redeemed.join(", "));
+        ui.section(&lang.t("morning.redeemed"));
+        let names: Vec<String> = report.redeemed.iter().map(|g| lang.ghost(g)).collect();
+        ui.dim(&lang.join(&names));
     }
     if !report.faded.is_empty() {
-        ui.section("Faded items");
+        ui.section(&lang.t("morning.faded"));
         let lines: Vec<String> = report
             .faded
             .iter()
-            .map(|(id, n)| format!("{n}× {}", data.product_name(id)))
+            .map(|(id, n)| lang.f("count.entry", &[("count", n), ("item", &lang.product(id))]))
             .collect();
-        ui.dim(&lines.join(", "));
+        ui.dim(&lang.join(&lines));
     }
 
     ui.spacer();
     let last = progress.night >= data.config.nights_in_demo;
-    ui.primary(
-        if last {
-            "To the end of the demo  →"
-        } else {
-            "Next evening  →"
-        },
-        Action::NextEvening,
-    );
+    let label = if last {
+        "morning.to_end"
+    } else {
+        "morning.next"
+    };
+    ui.primary(&lang.t(label), Action::NextEvening);
 }
 
 fn build_demo_end_panel(
     mut commands: Commands,
     panel: Single<Entity, With<SidePanel>>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     data: Res<GameData>,
     progress: Res<Progress>,
 ) {
     let mut ui = PanelBuilder::new(&mut commands, *panel, &font);
-    ui.heading("End of the demo");
-    ui.text(&format!(
-        "Your reputation among the spirits: {}",
-        progress.reputation
-    ));
-    let story = &data.story;
-    if progress.story_chapter >= story.chapters.len() {
-        ui.dim(&story.ending);
+    ui.heading(&lang.t("end.title"));
+    ui.text(&lang.f("end.reputation", &[("reputation", &progress.reputation)]));
+    let chapters = data.story.chapters.len();
+    if progress.story_chapter >= chapters {
+        ui.dim(&lang.t("story.ending"));
     } else {
-        ui.dim(&format!(
-            "{} still has {} wish(es) left. Perhaps next time.",
-            story.name,
-            story.chapters.len() - progress.story_chapter
+        ui.dim(&lang.f(
+            "end.wishes_left",
+            &[
+                ("name", &lang.t("story.name")),
+                ("count", &(chapters - progress.story_chapter)),
+            ],
         ));
     }
-    ui.dim("Thanks for playing! Wishlist Spare Change for Spirits on Steam.");
+    ui.dim(&lang.t("end.thanks"));
     ui.spacer();
-    ui.primary("Back to the menu", Action::QuitToMenu);
+    ui.primary(&lang.t("end.back"), Action::QuitToMenu);
 }
 
 /// "3× Glass Marbles, 1× Rusty Key" – in order of first appearance.
-fn count_list<'a>(ids: &'a [String], name: impl Fn(&'a str) -> &'a str) -> String {
+fn count_list(lang: &Lang, ids: &[String], name: impl Fn(&str) -> String) -> String {
     let mut counts: Vec<(&str, u32)> = Vec::new();
     for id in ids {
         match counts.iter_mut().find(|(i, _)| *i == id.as_str()) {
@@ -649,19 +738,19 @@ fn count_list<'a>(ids: &'a [String], name: impl Fn(&'a str) -> &'a str) -> Strin
             None => counts.push((id.as_str(), 1)),
         }
     }
-    counts
+    let entries: Vec<String> = counts
         .iter()
-        .map(|(id, n)| format!("{n}× {}", name(id)))
-        .collect::<Vec<_>>()
-        .join(", ")
+        .map(|(id, n)| lang.f("count.entry", &[("count", n), ("item", &name(id))]))
+        .collect();
+    lang.join(&entries)
 }
 
 // ---------------------------------------------------------------------------
 // Small toolkit for panel content
 
-pub fn text_font(font: &Handle<Font>, size: f32) -> TextFont {
+pub fn text_font(font: &FontSource, size: f32) -> TextFont {
     TextFont {
-        font: font.clone().into(),
+        font: font.clone(),
         font_size: FontSize::Px(size),
         ..default()
     }
@@ -822,6 +911,7 @@ mod tests {
     #[test]
     fn count_list_groups_in_order() {
         let ids: Vec<String> = ["a", "b", "a", "a"].iter().map(|s| s.to_string()).collect();
-        assert_eq!(count_list(&ids, |s| s), "3× a, 1× b");
+        let lang = Lang::load("en");
+        assert_eq!(count_list(&lang, &ids, |s| s.to_string()), "3× a, 1× b");
     }
 }

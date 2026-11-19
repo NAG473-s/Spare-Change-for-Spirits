@@ -9,6 +9,7 @@ use bevy::prelude::*;
 use crate::data::{GameData, GhostDef, rgb};
 use crate::day_cycle::{NightClock, NightReport, Phase, Progress};
 use crate::fx::Cue;
+use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::shop::{ShopLayout, small_font, sprite_for};
@@ -65,6 +66,7 @@ pub struct Ghost {
     /// Index in `GameData::ghosts`.
     pub def: usize,
     pub wish: String,
+    /// Catalog key of what the ghost whispers (a product hint or a story intro).
     pub hint: String,
     pub state: GhostState,
     pub pos: Vec2,
@@ -110,6 +112,7 @@ fn spawn_ghosts(
     clock: Res<NightClock>,
     progress: Res<Progress>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     asset_server: Res<AssetServer>,
     mut timer: ResMut<SpawnTimer>,
     mut rng: ResMut<Rng>,
@@ -147,15 +150,17 @@ fn spawn_ghosts(
     let def = &data.ghosts[def_idx];
 
     let wish = def.wishes[rng.index(def.wishes.len())].clone();
-    let product = data.product(&wish).expect("checked in GameData::validate");
-    let hint = product.hints[rng.index(product.hints.len())].clone();
+    let hints = lang.count(&format!("product.{wish}.hint."));
+    let hint = format!("product.{wish}.hint.{}", rng.index(hints) + 1);
 
     let unmet = def.unmet_need(&atmosphere);
     if let Some(need) = unmet {
-        log.push(format!(
-            "{} hesitates at the door – {}.",
-            def.the_cap(),
-            need.complaint()
+        log.push(lang.f(
+            "log.hesitates",
+            &[
+                ("who", &lang.ghost_the(&def.id)),
+                ("reason", &need.complaint(&lang)),
+            ],
         ));
         report.fled += 1;
     }
@@ -171,6 +176,7 @@ fn spawn_ghosts(
         &data,
         &layout,
         &font,
+        &lang,
         &asset_server,
         &mut rng,
         visit,
@@ -192,6 +198,7 @@ fn spawn_ghost(
     data: &GameData,
     layout: &ShopLayout,
     font: &UiFont,
+    lang: &Lang,
     asset_server: &AssetServer,
     rng: &mut Rng,
     visit: Visit,
@@ -239,7 +246,7 @@ fn spawn_ghost(
         Transform::from_translation(start.extend(5.0)),
         DespawnOnExit(Phase::Night),
         children![(
-            Text2d::new(def.name.clone()),
+            Text2d::new(lang.ghost(&def.id)),
             small_font(font, 10.0),
             TextColor(Color::srgba(0.9, 0.9, 1.0, 0.8)),
             Transform::from_xyz(0.0, GHOST_SIZE.y / 2.0 + 10.0, 1.0),
@@ -255,6 +262,7 @@ fn spawn_story_ghost(
     clock: Res<NightClock>,
     progress: Res<Progress>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     asset_server: Res<AssetServer>,
     mut rng: ResMut<Rng>,
     mut report: ResMut<NightReport>,
@@ -274,14 +282,11 @@ fn spawn_story_ghost(
     };
     report.story_arrived = true;
     let c = &story.chapters[chapter];
-    log.push(format!(
-        "{} shuffles in, shaking imaginary rain off his coat.",
-        story.name
-    ));
+    log.push(lang.t("story.arrives"));
     let visit = Visit {
         def_idx,
         wish: c.wish.clone(),
-        hint: c.intro.clone(),
+        hint: format!("story.{}.intro", chapter + 1),
         chapter: Some(chapter),
         flees: false,
     };
@@ -290,6 +295,7 @@ fn spawn_story_ghost(
         &data,
         &layout,
         &font,
+        &lang,
         &asset_server,
         &mut rng,
         visit,
@@ -310,6 +316,7 @@ fn ghost_ai(
     mut cues: MessageWriter<Cue>,
     mut rng: ResMut<Rng>,
     mut ghosts: Query<(Entity, &mut Ghost)>,
+    lang: Res<Lang>,
 ) {
     let dt = time.delta_secs();
     for (entity, mut g) in &mut ghosts {
@@ -327,10 +334,12 @@ fn ghost_ai(
                         g.browse_cell.and_then(|c| layout.cells[c].product.clone())
                     && stock.take_one(&product)
                 {
-                    log.push(format!(
-                        "Crash! {} sends the {} flying off the shelf.",
-                        data.ghosts[g.def].the_cap(),
-                        data.product_name(&product)
+                    log.push(lang.f(
+                        "log.knock",
+                        &[
+                            ("who", &lang.ghost_the(&data.ghosts[g.def].id)),
+                            ("item", &lang.product(&product)),
+                        ],
                     ));
                     if let Some(cell) = g.browse_cell {
                         cues.write(Cue::Knock(layout.cell_pos(cell)));
@@ -353,10 +362,8 @@ fn ghost_ai(
             GhostState::Waiting => {
                 g.patience -= dt;
                 if g.patience <= 0.0 {
-                    let name = data.ghosts[g.def].the_cap();
-                    log.push(format!(
-                        "{name} has waited long enough and fades away, grumbling."
-                    ));
+                    let who = lang.ghost_the(&data.ghosts[g.def].id);
+                    log.push(lang.f("log.waited_too_long", &[("who", &who)]));
                     g.state = GhostState::Leaving;
                     queue.remove(entity);
                     progress.reputation -= 1;

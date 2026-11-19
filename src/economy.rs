@@ -5,6 +5,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::Lang;
 use crate::rng::Rng;
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -27,15 +28,12 @@ impl Coin {
         }
     }
 
-    pub fn name(self, count: u32) -> &'static str {
-        match (self, count == 1) {
-            (Coin::Button, true) => "button",
-            (Coin::Button, false) => "buttons",
-            (Coin::Candle, true) => "candle stub",
-            (Coin::Candle, false) => "candle stubs",
-            (Coin::Spoon, true) => "silver spoon",
-            (Coin::Spoon, false) => "silver spoons",
-        }
+    pub fn name(self, lang: &Lang) -> String {
+        lang.t(match self {
+            Coin::Button => "coin.button",
+            Coin::Candle => "coin.candle",
+            Coin::Spoon => "coin.spoon",
+        })
     }
 }
 
@@ -147,17 +145,23 @@ impl Purse {
         true
     }
 
-    /// Human-readable description, e.g. "2 silver spoons, 1 button".
-    pub fn describe(&self) -> String {
+    /// Human-readable description, e.g. "silver spoon ×2, button ×1". The
+    /// "×" form avoids plurals, which differ wildly between languages.
+    pub fn describe(&self, lang: &Lang) -> String {
         let parts: Vec<String> = Coin::DESCENDING
             .iter()
             .filter(|c| self.get(**c) > 0)
-            .map(|c| format!("{} {}", self.get(*c), c.name(self.get(*c))))
+            .map(|c| {
+                lang.f(
+                    "purse.entry",
+                    &[("coin", &c.name(lang)), ("count", &self.get(*c))],
+                )
+            })
             .collect();
         if parts.is_empty() {
-            "nothing".into()
+            lang.t("purse.nothing")
         } else {
-            parts.join(", ")
+            lang.join(&parts)
         }
     }
 }

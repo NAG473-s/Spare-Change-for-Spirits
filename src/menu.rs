@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use crate::data::GameData;
 use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::ghosts::{Ghost, GhostState, Queue};
+use crate::i18n::Lang;
 use crate::inventory::CratesOrdered;
 use crate::register::Register;
 use crate::save::{GameState, Settings, read_save, write_save};
@@ -16,23 +17,36 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Paused>()
+            .init_resource::<LanguageMenu>()
             .add_systems(Startup, spawn_tip_box)
             .add_systems(OnEnter(Phase::Menu), (leave_pause, build_main_menu).chain())
             .add_systems(
                 Update,
                 (
-                    build_main_menu
-                        .run_if(in_state(Phase::Menu).and_then(resource_changed::<Settings>)),
+                    build_main_menu.run_if(
+                        in_state(Phase::Menu).and_then(
+                            resource_changed::<Settings>
+                                .or_else(resource_changed::<UiFont>)
+                                .or_else(resource_changed::<LanguageMenu>),
+                        ),
+                    ),
                     main_menu_actions.run_if(in_state(Phase::Menu)),
                     (toggle_pause, pause_actions).run_if(not(in_state(Phase::Menu))),
                     toggle_tips,
-                    sync_pause
-                        .run_if(resource_changed::<Paused>.or_else(resource_changed::<Settings>)),
+                    sync_pause.run_if(
+                        resource_changed::<Paused>
+                            .or_else(resource_changed::<Settings>)
+                            .or_else(resource_changed::<UiFont>),
+                    ),
                     update_tips,
                 ),
             );
     }
 }
+
+/// The language list is open in the main menu.
+#[derive(Resource, Default)]
+pub struct LanguageMenu(pub bool);
 
 /// The game is paused and the pause menu is open.
 #[derive(Resource, Default)]
@@ -49,7 +63,7 @@ struct TipBox;
 
 /// Full-screen dimmed layer with a centred panel on top of everything.
 /// Returns (layer, panel).
-fn overlay(commands: &mut Commands, dim: f32) -> (Entity, Entity) {
+fn overlay(commands: &mut Commands, dim: f32, width: f32) -> (Entity, Entity) {
     let layer = commands
         .spawn((
             Node {
@@ -69,7 +83,7 @@ fn overlay(commands: &mut Commands, dim: f32) -> (Entity, Entity) {
     let panel = commands
         .spawn((
             Node {
-                width: px(420),
+                width: px(width),
                 padding: UiRect::all(px(24)),
                 flex_direction: FlexDirection::Column,
                 row_gap: px(10),
@@ -85,59 +99,103 @@ fn overlay(commands: &mut Commands, dim: f32) -> (Entity, Entity) {
     (layer, panel)
 }
 
-fn sound_label(settings: &Settings) -> &'static str {
-    if settings.sound {
-        "Sound: on"
+fn sound_label(settings: &Settings, lang: &Lang) -> String {
+    lang.t(if settings.sound {
+        "settings.sound_on"
     } else {
-        "Sound: off"
-    }
+        "settings.sound_off"
+    })
 }
 
-fn tips_label(settings: &Settings) -> &'static str {
-    if settings.tips {
-        "Tips: on"
+fn tips_label(settings: &Settings, lang: &Lang) -> String {
+    lang.t(if settings.tips {
+        "settings.tips_on"
     } else {
-        "Tips: off"
-    }
+        "settings.tips_off"
+    })
 }
 
 fn build_main_menu(
     mut commands: Commands,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     settings: Res<Settings>,
+    language_menu: Res<LanguageMenu>,
     existing: Query<Entity, With<MenuRoot>>,
 ) {
     for e in &existing {
         commands.entity(e).despawn();
     }
-    let (layer, panel) = overlay(&mut commands, 0.97);
+    // First start: let the player pick a language before anything else.
+    let choose_language = language_menu.0 || settings.language.is_none();
+    let width = if choose_language { 560.0 } else { 420.0 };
+    let (layer, panel) = overlay(&mut commands, 0.97, width);
     commands
         .entity(layer)
         .insert((MenuRoot, DespawnOnExit(Phase::Menu)));
-
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
-    ui.heading("Spare Change for Spirits");
-    ui.dim(&format!("Demo · version {}", env!("CARGO_PKG_VERSION")));
-    ui.text("A little shop that only opens between midnight and dawn.");
     let root = ui.root();
+
+    if choose_language {
+        ui.heading(&lang.t("menu.choose_language"));
+        let row = ui.row();
+        for l in &lang.languages {
+            let selected = l.code == lang.code;
+            ui.button_in(
+                row,
+                &l.name,
+                Action::SetLanguage(l.code.clone()),
+                selected,
+                true,
+            );
+        }
+        if settings.language.is_some() {
+            ui.button_in(
+                root,
+                &lang.t("menu.back"),
+                Action::CloseLanguages,
+                false,
+                true,
+            );
+        }
+        return;
+    }
+
+    ui.heading(&lang.t("game.title"));
+    ui.dim(&lang.f("menu.version", &[("version", &env!("CARGO_PKG_VERSION"))]));
+    ui.text(&lang.t("menu.tagline"));
     if let Some(save) = read_save().filter(|s| !s.finished) {
         ui.primary(
-            &format!("Continue – night {}", save.night),
+            &lang.f("menu.continue", &[("night", &save.night)]),
             Action::Continue,
         );
-        ui.button_in(root, "New game", Action::NewGame, false, true);
+        ui.button_in(root, &lang.t("menu.new_game"), Action::NewGame, false, true);
     } else {
-        ui.primary("New game", Action::NewGame);
+        ui.primary(&lang.t("menu.new_game"), Action::NewGame);
     }
-    ui.button_in(root, tips_label(&settings), Action::ToggleTips, false, true);
+    let language = lang.def().map(|l| l.name.clone()).unwrap_or_default();
     ui.button_in(
         root,
-        sound_label(&settings),
+        &lang.f("menu.language", &[("language", &language)]),
+        Action::OpenLanguages,
+        false,
+        true,
+    );
+    ui.button_in(
+        root,
+        &tips_label(&settings, &lang),
+        Action::ToggleTips,
+        false,
+        true,
+    );
+    ui.button_in(
+        root,
+        &sound_label(&settings, &lang),
         Action::ToggleSound,
         false,
         true,
     );
-    ui.button_in(root, "Quit", Action::QuitGame, false, true);
+    ui.button_in(root, &lang.t("menu.quit"), Action::QuitGame, false, true);
 }
 
 fn leave_pause(mut paused: ResMut<Paused>, mut time: ResMut<Time<Virtual>>) {
@@ -148,6 +206,9 @@ fn leave_pause(mut paused: ResMut<Paused>, mut time: ResMut<Time<Virtual>>) {
 fn main_menu_actions(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
+    mut lang: ResMut<Lang>,
+    mut settings: ResMut<Settings>,
+    mut language_menu: ResMut<LanguageMenu>,
     mut state: GameState,
     mut log: ResMut<GameLog>,
     mut next: ResMut<NextState<Phase>>,
@@ -164,12 +225,20 @@ fn main_menu_actions(
                 if let Some(save) = read_save() {
                     state.apply(&save, &data);
                     log.clear();
-                    log.push(format!("Welcome back. Evening of night {}.", save.night));
+                    log.push(lang.f("menu.welcome_back", &[("night", &save.night)]));
                     next.set(Phase::Evening);
                 }
             }
             Action::QuitGame => {
                 exit.write(AppExit::Success);
+            }
+            Action::OpenLanguages => language_menu.0 = true,
+            Action::CloseLanguages => language_menu.0 = false,
+            Action::SetLanguage(code) => {
+                *lang = Lang::load(code);
+                settings.language = Some(lang.code.clone());
+                settings.store();
+                language_menu.0 = false;
             }
             _ => {}
         }
@@ -231,6 +300,7 @@ fn sync_pause(
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
     font: Res<UiFont>,
+    lang: Res<Lang>,
     existing: Query<Entity, With<PauseRoot>>,
     mut time: ResMut<Time<Virtual>>,
 ) {
@@ -242,27 +312,39 @@ fn sync_pause(
         return;
     }
     time.pause();
-    let (layer, panel) = overlay(&mut commands, 0.6);
+    let (layer, panel) = overlay(&mut commands, 0.6, 420.0);
     commands.entity(layer).insert(PauseRoot);
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
-    ui.heading("Paused");
-    ui.primary("Resume", Action::Resume);
+    ui.heading(&lang.t("pause.title"));
+    ui.primary(&lang.t("pause.resume"), Action::Resume);
     let root = ui.root();
     let quit_label = match phase.get() {
-        Phase::Night => "Quit to menu (this night restarts)",
-        _ => "Save and quit to menu",
+        Phase::Night => "pause.quit_night",
+        _ => "pause.save_quit",
     };
-    ui.button_in(root, quit_label, Action::QuitToMenu, false, true);
-    ui.button_in(root, tips_label(&settings), Action::ToggleTips, false, true);
+    ui.button_in(root, &lang.t(quit_label), Action::QuitToMenu, false, true);
     ui.button_in(
         root,
-        sound_label(&settings),
+        &tips_label(&settings, &lang),
+        Action::ToggleTips,
+        false,
+        true,
+    );
+    ui.button_in(
+        root,
+        &sound_label(&settings, &lang),
         Action::ToggleSound,
         false,
         true,
     );
-    ui.button_in(root, "Quit game", Action::QuitGame, false, true);
-    ui.dim("Press Esc to resume.");
+    ui.button_in(
+        root,
+        &lang.t("pause.quit_game"),
+        Action::QuitGame,
+        false,
+        true,
+    );
+    ui.dim(&lang.t("pause.hint"));
 }
 
 fn spawn_tip_box(mut commands: Commands) {
@@ -286,37 +368,34 @@ fn spawn_tip_box(mut commands: Commands) {
     ));
 }
 
-/// Which tip fits the current situation, if any.
-fn current_tip<'a>(
-    data: &'a GameData,
+/// Catalog key of the tip that fits the current situation, if any.
+fn current_tip(
     phase: Phase,
     crates: &CratesOrdered,
     layout: &ShopLayout,
     register: &Register,
     front_waiting: bool,
     report: &NightReport,
-) -> Option<&'a str> {
-    let tips = &data.tips;
-    let tip = match phase {
-        Phase::Evening if crates.0 == 0 => &tips.order,
-        Phase::Evening if layout.displayed_products().is_empty() => &tips.shelve,
-        Phase::Evening => &tips.open,
-        Phase::Night if register.question.is_some() => &tips.double_pay,
-        Phase::Night if register.sale.is_some() => &tips.change,
-        Phase::Night if front_waiting => &tips.whisper,
-        Phase::Night if report.sales == 0 => &tips.browse,
-        Phase::Night => &tips.first_sale,
-        Phase::Morning => &tips.morning,
+) -> Option<&'static str> {
+    Some(match phase {
+        Phase::Evening if crates.0 == 0 => "tip.order",
+        Phase::Evening if layout.displayed_products().is_empty() => "tip.shelve",
+        Phase::Evening => "tip.open",
+        Phase::Night if register.question.is_some() => "tip.double_pay",
+        Phase::Night if register.sale.is_some() => "tip.change",
+        Phase::Night if front_waiting => "tip.whisper",
+        Phase::Night if report.sales == 0 => "tip.browse",
+        Phase::Night => "tip.first_sale",
+        Phase::Morning => "tip.morning",
         Phase::Menu | Phase::DemoEnd => return None,
-    };
-    Some(tip.as_str())
+    })
 }
 
 fn update_tips(
     mut commands: Commands,
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
-    data: Res<GameData>,
+    lang: Res<Lang>,
     progress: Res<Progress>,
     crates: Res<CratesOrdered>,
     layout: Res<ShopLayout>,
@@ -335,7 +414,6 @@ fn update_tips(
     let tip = (settings.tips && progress.night == 1)
         .then(|| {
             current_tip(
-                &data,
                 *phase.get(),
                 &crates,
                 &layout,
@@ -345,7 +423,7 @@ fn update_tips(
             )
         })
         .flatten()
-        .map(str::to_string);
+        .map(|key| lang.t(key));
     if *shown == tip {
         return;
     }
@@ -360,5 +438,5 @@ fn update_tips(
     let mut ui = PanelBuilder::new(&mut commands, entity, &font);
     ui.text(&text);
     let root = ui.root();
-    ui.button_in(root, "Hide tips", Action::ToggleTips, false, true);
+    ui.button_in(root, &lang.t("tips.hide"), Action::ToggleTips, false, true);
 }
