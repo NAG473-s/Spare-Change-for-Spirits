@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Vylovil jsem z řeky knoflík.",
+    "intro.story.2": "Ve tvém krámku čekal duch.",
+    "intro.story.3": "„Ten mi přišila máma,“ zašeptal.",
     "menu.version": "Demo · verze {version}",
     "menu.version_full": "Verze {version}",
     "menu.tagline": "Malý obchůdek, který má otevřeno jen mezi půlnocí a úsvitem.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Smazat a začít novou hru",
     "menu.language": "Jazyk: {language}",
     "menu.choose_language": "Vyber si jazyk",
+    "menu.language_auto": "Automaticky",
     "menu.back": "Zpět",
     "menu.settings": "Nastavení",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Nastavení",
     "settings.music": "Hudba: {percent} %",
     "settings.effects": "Zvukové efekty: {percent} %",
+    "settings.narration": "Hlas vypravěče: {percent} %",
     "settings.ui_size": "Velikost rozhraní: {percent} %",
     "settings.fullscreen_on": "Celá obrazovka: zapnuto",
     "settings.fullscreen_off": "Celá obrazovka: vypnuto",
