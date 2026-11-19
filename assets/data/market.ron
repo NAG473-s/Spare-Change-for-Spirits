@@ -10,15 +10,15 @@
 //   RarePieces(n)   n single pieces of different products, a new choice every day
 //   Upgrade("<id>") a shop improvement from upgrades.ron, bought once
 [
-    // The rear row leaves a clear sightline above the front awnings.
-    (id: "carpenter", pos: (-5.0, -3.35), turn: 12.0, color: (0.6, 0.45, 0.28),
+    // Three traders share the western cobbled bay. The cart lane passes east of the herbalist.
+    (id: "carpenter", pos: (-5.65, -3.18), turn: 10.0, color: (0.6, 0.45, 0.28),
      wares: [Decor("small_shelf"), Decor("shelf"), Decor("display_table"),
              Decor("tall_bookcase"), Decor("glass_cabinet"),
              Upgrade("clear_corner"), Upgrade("back_room"), Upgrade("knock_through"),
              Upgrade("waiting_bench")]),
-    (id: "candlemaker", pos: (-1.7, -3.65), color: (0.95, 0.75, 0.35),
+    (id: "candlemaker", pos: (-2.85, -3.40), color: (0.95, 0.75, 0.35),
      wares: [Decor("candle"), Decor("oil_lamp"), Decor("stove"), Upgrade("door_lantern")]),
-    (id: "herbalist", pos: (1.6, -3.65), color: (0.4, 0.6, 0.4),
+    (id: "herbalist", pos: (-0.10, -3.32), turn: 4.0, color: (0.4, 0.6, 0.4),
      wares: [Decor("incense"), Decor("fern"), Upgrade("herb_sachets")]),
     (id: "glazier", pos: (4.9, -3.35), turn: -12.0, color: (0.55, 0.15, 0.2),
      wares: [Decor("mirror"), Decor("vanity")]),
