@@ -13,7 +13,7 @@ mod intro;
 
 pub struct TitlePlugin;
 
-/// Present until the first crossing ends. The language picker opens afterwards.
+/// Present until the first crossing ends and the main menu can open.
 #[derive(Resource, Default)]
 pub(crate) struct Opening {
     pictures: Vec<Handle<Image>>,
