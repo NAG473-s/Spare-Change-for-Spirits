@@ -302,6 +302,11 @@ def main():
         for item in expected[folder]:
             icon = ROOT / "assets" / "sprites" / folder / f"{item}.png"
             print(("  ok       " if icon.is_file() else "  no icon  ") + f"sprites/{folder}/{item}.png")
+    for ext in ("png", "icns", "ico"):
+        icon = ROOT / "art" / "icons" / f"spare-change-for-spirits.{ext}"
+        present = icon.is_file()
+        print(("  ok       " if present else "  no icon  ") + str(icon.relative_to(ROOT)))
+        failures += not present
     return 1 if failures else 0
 
 
