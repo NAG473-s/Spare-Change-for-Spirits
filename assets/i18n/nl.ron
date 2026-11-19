@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "Ik viste een knoop uit de rivier.",
+    "intro.story.2": "In je winkel stond een geest te wachten.",
+    "intro.story.3": "‘Mijn moeder heeft hem eraan genaaid,’ fluisterde hij.",
     "menu.version": "Demo · versie {version}",
     "menu.version_full": "Versie {version}",
     "menu.tagline": "Een winkeltje dat alleen open is tussen middernacht en zonsopgang.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "Wissen en nieuw spel starten",
     "menu.language": "Taal: {language}",
     "menu.choose_language": "Kies je taal",
+    "menu.language_auto": "Automatisch",
     "menu.back": "Terug",
     "menu.settings": "Instellingen",
     "hud.menu": "Menu",
@@ -31,6 +35,7 @@
     "settings.title": "Instellingen",
     "settings.music": "Muziek: {percent}%",
     "settings.effects": "Geluidseffecten: {percent}%",
+    "settings.narration": "Vertelstem: {percent}%",
     "settings.ui_size": "Interfacegrootte: {percent}%",
     "settings.fullscreen_on": "Volledig scherm: aan",
     "settings.fullscreen_off": "Volledig scherm: uit",
