@@ -59,6 +59,7 @@ impl Plugin for GhostPlugin {
                     ghost_murmurs,
                     ghost_tooltip,
                     mute_browsing_names,
+                    show_carried_wares,
                     move_ghosts,
                     fade_ghosts,
                     animate_ghosts,
@@ -110,6 +111,9 @@ pub struct Ghost {
     pub chapter: Option<usize>,
     /// Shelf cell the ghost browses, if any.
     browse_cell: Option<usize>,
+    /// The ware it took from the shelf and brings to the counter (its wish
+    /// was on display); `None` if it has to whisper its wish instead.
+    pub carrying: Option<String>,
     bob_offset: f32,
 }
 
@@ -347,7 +351,12 @@ fn ghost_tooltip(
     };
     t.line(kind, mood);
     let at_counter = matches!(g.state, GhostState::Waiting | GhostState::AtRegister);
-    if at_counter && queue.front() == Some(entity) {
+    if let Some(ware) = &g.carrying {
+        t.line(
+            TipKind::Good,
+            lang.f("ghost_tip.carries", &[("item", &lang.product(ware))]),
+        );
+    } else if at_counter && queue.front() == Some(entity) {
         t.line(
             TipKind::Text,
             lang.f(
@@ -430,8 +439,14 @@ fn spawn_ghost(
     visit: Visit,
 ) {
     let def: &GhostDef = &data.ghosts[visit.def_idx];
+    // A ghost goes straight to the shelf that shows its wish; otherwise it
+    // looks around a shelf at random.
     let shelves = layout.shelf_cells(data);
-    let browse_cell = (!shelves.is_empty()).then(|| shelves[rng.index(shelves.len())]);
+    let browse_cell = layout
+        .cells
+        .iter()
+        .position(|c| c.products.contains(&visit.wish))
+        .or_else(|| (!shelves.is_empty()).then(|| shelves[rng.index(shelves.len())]));
     let (state, target) = if visit.flees {
         (GhostState::Fleeing, layout.door_pos() + Vec2::new(1.0, 0.0))
     } else {
@@ -476,6 +491,7 @@ fn spawn_ghost(
                 age: 0.0,
                 chapter: visit.chapter,
                 browse_cell,
+                carrying: None,
                 bob_offset: rng.range(0.0, std::f32::consts::TAU),
             },
             Billboard,
@@ -537,6 +553,45 @@ fn spawn_ghost(
         ))
         .id();
     commands.entity(ghost).insert(GhostLabel(label));
+}
+
+/// A ghost that already shows the ware it carries.
+#[derive(Component)]
+struct ShowsCarried;
+
+/// Where a carried ware floats beside the ghost, and its size.
+const CARRY_SPOT: Vec3 = Vec3::new(0.42, 0.6, 0.15);
+const CARRY_SCALE: f32 = 0.85;
+
+/// A ghost that took its wish from a shelf holds it beside itself.
+fn show_carried_wares(
+    mut commands: Commands,
+    ghosts: Query<(Entity, &Ghost), Without<ShowsCarried>>,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (entity, ghost) in &ghosts {
+        let Some(ware) = &ghost.carrying else {
+            continue;
+        };
+        let visual = crate::shop::product_model(
+            &mut commands,
+            &asset_server,
+            &mut meshes,
+            &mut materials,
+            ware,
+            CARRY_SPOT,
+        );
+        commands.entity(visual).insert(ChildOf(entity));
+        commands
+            .entity(visual)
+            .entry::<Transform>()
+            .and_modify(|mut t| {
+                t.scale *= CARRY_SCALE;
+            });
+        commands.entity(entity).insert(ShowsCarried);
+    }
 }
 
 /// The name label of a ghost.
@@ -664,6 +719,20 @@ fn ghost_ai(
             GhostState::Browsing => {
                 g.timer -= dt;
                 if g.timer <= 0.0 {
+                    // Its wish is on this shelf: it takes it to the counter.
+                    let on_shelf = g
+                        .browse_cell
+                        .is_some_and(|c| layout.cells[c].products.contains(&g.wish));
+                    if on_shelf && stock.count(&g.wish) > 0 && g.chapter.is_none() {
+                        g.carrying = Some(g.wish.clone());
+                        log.push(lang.f(
+                            "log.takes_from_shelf",
+                            &[
+                                ("who", &lang.ghost_the(&data.ghosts[g.def].id)),
+                                ("item", &lang.product(&g.wish)),
+                            ],
+                        ));
+                    }
                     g.state = GhostState::ToCounter;
                     if !queue.0.contains(&entity) {
                         queue.0.push(entity);
@@ -672,8 +741,9 @@ fn ghost_ai(
             }
             GhostState::ToCounter if g.arrived() => {
                 g.state = GhostState::Waiting;
-                // At the front of the line it whispers what it is looking for.
-                if queue.front() == Some(entity) {
+                // At the front of the line it whispers what it is looking for
+                // (unless it brings the ware itself).
+                if queue.front() == Some(entity) && g.carrying.is_none() {
                     cues.write(Cue::GhostVoice(Voice::Whisper, data.ghosts[g.def].voice));
                 }
             }

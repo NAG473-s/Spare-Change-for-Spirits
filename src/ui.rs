@@ -1277,7 +1277,16 @@ fn build_night_panel(
             ui.section(&lang.t("night.what_hand_over"));
             let row = ui.row();
             let mut any = false;
-            for id in layout.displayed_products() {
+            // Its wish was not on display (or it would have brought it), so
+            // everything in the storeroom is offered: the wares on display
+            // first, then the rest.
+            let mut wares = layout.displayed_products();
+            for id in stock.units().keys() {
+                if !wares.contains(id) {
+                    wares.push(id.clone());
+                }
+            }
+            for id in wares {
                 let n = stock.count(&id);
                 if n == 0 {
                     continue;
@@ -1296,7 +1305,9 @@ fn build_night_panel(
                     true,
                 );
             }
-            if !any {
+            if any {
+                ui.dim(&lang.t("night.storeroom_hint"));
+            } else {
                 ui.dim(&lang.t("night.nothing_on_shelves"));
             }
             ui.spacer();

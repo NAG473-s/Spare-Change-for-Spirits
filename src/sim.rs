@@ -27,6 +27,8 @@ use crate::upgrades::Upgrades;
 const TO_COUNTER_SECS: f32 = 6.0;
 /// Seconds the player needs at the register per sale.
 const SERVICE_SECS: f32 = 9.0;
+/// Extra seconds to fetch a ware from the storeroom.
+const FETCH_SECS: f32 = 4.0;
 /// Seconds to turn a ghost away whose wish is not in stock.
 const DECLINE_SECS: f32 = 3.0;
 /// Chance that the player spots a counterfeit coin.
@@ -366,13 +368,6 @@ impl<'a> Game<'a> {
             stats.loans = 1.0;
         }
         let demand = self.expected_demand();
-        // Only what fits on the shelves can be sold: order for those.
-        let shelf: Vec<&str> = self
-            .ranked()
-            .into_iter()
-            .take(self.slots())
-            .map(|(id, _)| id)
-            .collect();
         let limit = self.upgrades.crates_tonight(data, self.night);
         let mut ordered = 0;
         while ordered < limit {
@@ -386,7 +381,6 @@ impl<'a> Game<'a> {
                 | Strategy::DemandDecor
                 | Strategy::Improvements
                 | Strategy::Eager => affordable
-                    .filter(|p| shelf.contains(&p.id.as_str()))
                     .map(|p| {
                         // Demand until the ware fades or the game ends.
                         let nights_left = data.config.final_night() + 1 - self.night;
@@ -500,14 +494,17 @@ impl<'a> Game<'a> {
                 leaving.push(at_counter + patience);
                 continue;
             }
-            if !self.displayed.iter().any(|d| d == wish) || !self.stock.take_one(wish) {
+            // On display: the ghost brings it. Otherwise the player fetches
+            // it from the storeroom (a little slower, no reputation).
+            let on_shelf = self.displayed.iter().any(|d| d == wish);
+            if !self.stock.take_one(wish) {
                 // "Sorry, we have none" is quick.
                 register_free = start + DECLINE_SECS;
                 leaving.push(register_free);
                 stats.missed += 1.0;
                 continue;
             }
-            register_free = start + SERVICE_SECS;
+            register_free = start + SERVICE_SECS + if on_shelf { 0.0 } else { FETCH_SECS };
             leaving.push(register_free);
             let base = data.product(wish).map_or(1, |p| p.price);
             let factor = def.pay_multiplier * data.price_factor(self.night);
@@ -523,7 +520,9 @@ impl<'a> Game<'a> {
                 self.reputation += 2;
             }
             self.drawer += paid;
-            self.reputation += 1;
+            if on_shelf {
+                self.reputation += 1;
+            }
             stats.sales += 1.0;
             stats.revenue += paid as f64;
         }

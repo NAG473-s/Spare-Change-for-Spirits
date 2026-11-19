@@ -11,6 +11,7 @@ use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
+use crate::shop::ShopLayout;
 use crate::shop::Storeroom;
 use crate::ui::{Action, GameLog};
 
@@ -24,7 +25,14 @@ impl Plugin for RegisterPlugin {
             })
             .add_systems(
                 Update,
-                (serve_front_ghost, make_change, answer_double_pay).run_if(in_state(Phase::Night)),
+                (
+                    bring_carried_ware,
+                    serve_front_ghost,
+                    make_change,
+                    answer_double_pay,
+                )
+                    .chain()
+                    .run_if(in_state(Phase::Night)),
             );
     }
 }
@@ -53,6 +61,9 @@ pub struct Sale {
     pub given: Purse,
     /// Story chapter this sale completes, if it is the story ghost.
     pub chapter: Option<usize>,
+    /// Fetched from the storeroom, not found on the shelves: correct change
+    /// earns no reputation then.
+    pub from_storeroom: bool,
 }
 
 impl Sale {
@@ -118,6 +129,34 @@ pub fn paid_coins(purse: &Purse, counterfeit: bool, lang: &Lang, rng: &mut Rng) 
 }
 
 /// The player hands an item to the ghost at the front – or declines.
+/// A ghost at the front that brings a ware from the shelf puts it on the
+/// counter: the sale starts by itself. If the last one was sold meanwhile,
+/// it whispers its wish like any other ghost.
+fn bring_carried_ware(
+    register: Res<Register>,
+    queue: Res<Queue>,
+    stock: Res<Stock>,
+    mut ghosts: Query<&mut Ghost>,
+    mut actions: MessageWriter<Action>,
+) {
+    if register.is_busy() {
+        return;
+    }
+    let Some(mut ghost) = queue.front().and_then(|e| ghosts.get_mut(e).ok()) else {
+        return;
+    };
+    if ghost.state != GhostState::Waiting {
+        return;
+    }
+    if let Some(ware) = ghost.carrying.clone() {
+        if stock.count(&ware) > 0 {
+            actions.write(Action::Offer(ware));
+        } else {
+            ghost.carrying = None;
+        }
+    }
+}
+
 fn serve_front_ghost(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
@@ -132,6 +171,7 @@ fn serve_front_ghost(
     mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
     lang: Res<Lang>,
+    layout: Res<ShopLayout>,
 ) {
     for action in actions.read() {
         if register.is_busy() {
@@ -185,6 +225,8 @@ fn serve_front_ghost(
                     coins,
                     given: Purse::default(),
                     chapter: ghost.chapter,
+                    from_storeroom: ghost.carrying.is_none()
+                        && !layout.displayed_products().contains(product),
                 });
             }
             Action::Decline => {
@@ -297,7 +339,10 @@ fn make_change(
                     ));
                 } else {
                     report.change_correct += 1;
-                    progress.reputation += 1;
+                    // Found on the shelves: the ghost leaves happier.
+                    if !sale.from_storeroom {
+                        progress.reputation += 1;
+                    }
                 }
 
                 if let Some(chapter) = sale.chapter {
@@ -449,6 +494,7 @@ mod tests {
             coins: paid_coins(&spoon, true, &lang(), &mut Rng::new(1)),
             given: Purse::default(),
             chapter: None,
+            from_storeroom: false,
         };
         assert_eq!(sale.change_due(), 18);
     }
