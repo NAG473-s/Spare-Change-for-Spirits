@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "川でボタンをひとつ、すくい上げた。",
+    "intro.story.2": "あんたの店では、ひとりの幽霊が待っていた。",
+    "intro.story.3": "「母さんが縫いつけてくれたんだ」と、そっとつぶやいた。",
     "menu.version": "体験版 · バージョン {version}",
     "menu.version_full": "バージョン {version}",
     "menu.tagline": "真夜中から夜明けまでしか開かない、小さなお店。",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "削除してはじめから",
     "menu.language": "言語：{language}",
     "menu.choose_language": "言語を選んでください",
+    "menu.language_auto": "自動",
     "menu.back": "戻る",
     "menu.settings": "設定",
     "hud.menu": "メニュー",
@@ -31,6 +35,7 @@
     "settings.title": "設定",
     "settings.music": "音楽：{percent}%",
     "settings.effects": "効果音：{percent}%",
+    "settings.narration": "語りの音量：{percent}%",
     "settings.ui_size": "画面表示の大きさ：{percent}%",
     "settings.fullscreen_on": "フルスクリーン：オン",
     "settings.fullscreen_off": "フルスクリーン：オフ",
