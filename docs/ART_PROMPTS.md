@@ -8,7 +8,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
   panel (ordering, furnishing, stocking shelves, handing over). A product picture is also shown
   on the shelf while the product has no 3D model yet.
 - **The floor texture.**
-- **The title screen** – background picture and logo (for now taken from the Steam art).
+- **The title screen** – a dedicated Full HD background and the game logo.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
 The furniture and keepsake pictures of the old 2D version are reused as icons; the originals and
@@ -24,7 +24,6 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
-| *(optional)* Animation sheets for `cat` and `sailor` (the other eight are done) | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
 | *(optional)* Models for the harbour (boat, crate, ferryman) and the wall clock | [MODEL_PROMPTS.md](MODEL_PROMPTS.md#the-harbour--assetsmodelsshopidglb-optional) |
 | *(optional)* Painted coin icons | [Coins](#coins-optional--canvas-1024--1024) |
 
@@ -102,15 +101,16 @@ All ten sprites are included in `assets/sprites/ghosts/`. The prompts below can 
 | `child` | A small child ghost, mint green glow, round and bouncy, missing front tooth grin, holding a paper pinwheel. |
 | `edwin` | Edwin, an elderly gentleman ghost, warm pale-yellow glow, kind tired eyes, neat moustache, flat cap and a long coat, holding his hat to his chest. |
 
-## Ghost animation sheets (optional) – canvas 1024 × 1536
+## Ghost animation sheets – canvas 1024 × 1536
 
 The game already animates every ghost (bobbing, breathing, swaying, leaning into its movement,
 trembling when worried, stretching as it passes into the light). A sheet adds a hand-drawn idle
 loop on top: if `assets/sprites/ghosts/<id>_sheet.png` exists, it replaces `<id>.png` and plays
 at 8 frames per second.
 
-Ask for a **2 × 2 grid** on one 1024 × 1536 canvas – four frames, read left to right, top to
-bottom – with the existing sprite attached as reference:
+All ten ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
+1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
+attached as reference:
 
 ```
 Four frames of a looping idle animation of this ghost, arranged as a 2 x 2
@@ -136,12 +136,12 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 
 The title screen shows `assets/sprites/title/background.png` scaled to cover the window, the logo
 `assets/sprites/title/logo.png` and the main menu on the **left third**, which the game darkens.
-The background is a full-HD painting; the logo comes from the Steam art
+The background is a dedicated Full HD illustration. The logo comes from the Steam library art
 (`art/steam/library_logo.png`, trimmed). The game adds flickering light on the candle, the hanging
 lamp and the window (`GLOWS` in `src/title.rs` – adjust the positions for a new picture), drifting
 dust and a ghost floating past.
 
-Prompt (kept for redoing it):
+Use the prompt below to redraw the background.
 
 ```
 The inside of the ghost shop at night, wide 16:9 scene, 1920 x 1080. Edwin,

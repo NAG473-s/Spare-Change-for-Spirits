@@ -42,11 +42,11 @@ const DEFAULT_ASPECT: f32 = 16.0 / 9.0;
 /// width and height), radius (fraction of the image's width), strength.
 const GLOWS: [(Vec2, f32, f32); 3] = [
     // Candle on the counter.
-    (Vec2::new(0.527, 0.652), 0.09, 0.34),
+    (Vec2::new(0.528, 0.661), 0.09, 0.34),
     // Hanging lamp.
-    (Vec2::new(0.648, 0.176), 0.11, 0.28),
+    (Vec2::new(0.648, 0.204), 0.11, 0.28),
     // Moonlit window.
-    (Vec2::new(0.844, 0.167), 0.08, 0.10),
+    (Vec2::new(0.846, 0.167), 0.08, 0.10),
 ];
 const MOTES: usize = 28;
 const GHOST_SIZE: Vec2 = Vec2::new(84.0, 126.0);
