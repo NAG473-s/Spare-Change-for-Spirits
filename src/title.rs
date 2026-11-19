@@ -38,15 +38,38 @@ const BACKGROUND: &str = "sprites/title/background.png";
 pub const LOGO: &str = "sprites/title/logo.png";
 /// Width / height of the background until its image has loaded.
 const DEFAULT_ASPECT: f32 = 16.0 / 9.0;
-/// Light sources in the background art: centre (fraction of the image's
-/// width and height), radius (fraction of the image's width), strength.
-const GLOWS: [(Vec2, f32, f32); 3] = [
-    // Candle on the counter.
-    (Vec2::new(0.528, 0.661), 0.09, 0.34),
-    // Hanging lamp.
-    (Vec2::new(0.648, 0.204), 0.11, 0.28),
-    // Moonlit window.
-    (Vec2::new(0.846, 0.167), 0.08, 0.10),
+/// Anchors in the painted image, including when the window crops the artwork.
+const GLOWS: [(Vec2, f32, Glow); 3] = [
+    (
+        Vec2::new(0.528, 0.661),
+        0.075,
+        Glow {
+            tint: Color::srgb(1.0, 0.66, 0.31),
+            strength: 0.41,
+            flutter: 0.19,
+            speed: 7.3,
+        },
+    ),
+    (
+        Vec2::new(0.648, 0.204),
+        0.125,
+        Glow {
+            tint: Color::srgb(1.0, 0.79, 0.50),
+            strength: 0.25,
+            flutter: 0.06,
+            speed: 3.1,
+        },
+    ),
+    (
+        Vec2::new(0.832, 0.205),
+        0.132,
+        Glow {
+            tint: Color::srgb(0.57, 0.73, 1.0),
+            strength: 0.16,
+            flutter: 0.025,
+            speed: 0.42,
+        },
+    ),
 ];
 const MOTES: usize = 28;
 const GHOST_SIZE: Vec2 = Vec2::new(84.0, 126.0);
@@ -62,9 +85,10 @@ struct TitleBackground(Handle<Image>);
 
 #[derive(Component)]
 struct Glow {
+    tint: Color,
     strength: f32,
-    warm: bool,
-    seed: f32,
+    flutter: f32,
+    speed: f32,
 }
 
 #[derive(Component)]
@@ -130,17 +154,23 @@ fn spawn_title(mut commands: Commands, asset_server: Res<AssetServer>, mut rng: 
             ChildOf(root),
         ))
         .id();
-    for (i, (centre, radius, strength)) in GLOWS.into_iter().enumerate() {
+    for (centre, radius, glow) in GLOWS {
         // Percentages of the background node: left/width relative to its
         // width, top/height relative to its height.
         let w = radius * 2.0;
         let h = w * DEFAULT_ASPECT;
         commands.spawn((
-            Glow {
-                strength,
-                warm: i < 2,
-                seed: i as f32 * 17.3,
-            },
+            BackgroundGradient(vec![
+                RadialGradient {
+                    shape: RadialGradientShape::ClosestSide,
+                    stops: [0.0, 23.0, 57.0, 100.0]
+                        .map(|p| ColorStop::new(glow.tint, percent(p)))
+                        .to_vec(),
+                    ..default()
+                }
+                .into(),
+            ]),
+            glow,
             Node {
                 position_type: PositionType::Absolute,
                 left: percent((centre.x - w / 2.0) * 100.0),
@@ -149,7 +179,6 @@ fn spawn_title(mut commands: Commands, asset_server: Res<AssetServer>, mut rng: 
                 height: percent(h * 100.0),
                 ..default()
             },
-            BackgroundGradient::default(),
             Pickable::IGNORE,
             ChildOf(background),
         ));
@@ -283,32 +312,14 @@ fn breathe_background(
 fn flicker_glows(time: Res<Time>, mut glows: Query<(&Glow, &mut BackgroundGradient)>) {
     let t = time.elapsed_secs();
     for (glow, mut gradient) in &mut glows {
-        let s = glow.seed;
-        let flicker = if glow.warm {
-            0.82 + 0.1 * (t * 7.3 + s).sin()
-                + 0.06 * (t * 13.1 + s * 2.0).sin()
-                + 0.04 * (t * 2.1 + s).sin()
-        } else {
-            0.85 + 0.15 * (t * 0.5 + s).sin()
-        };
-        let a = glow.strength * flicker;
-        let color = if glow.warm {
-            Color::srgba(1.0, 0.72, 0.35, a)
-        } else {
-            Color::srgba(0.6, 0.72, 1.0, a)
-        };
-        gradient.0 = vec![
-            RadialGradient {
-                shape: RadialGradientShape::ClosestSide,
-                stops: vec![
-                    ColorStop::new(color, percent(0)),
-                    ColorStop::new(color.with_alpha(a * 0.35), percent(45)),
-                    ColorStop::new(color.with_alpha(0.0), percent(100)),
-                ],
-                ..default()
+        let phase = t * glow.speed;
+        let pulse = 0.64 * phase.sin() + 0.36 * (phase * 1.79 + 0.7).sin();
+        let alpha = glow.strength * (1.0 + glow.flutter * pulse);
+        if let [Gradient::Radial(radial)] = gradient.0.as_mut_slice() {
+            for (stop, weight) in radial.stops.iter_mut().zip([1.0, 0.60, 0.12, 0.0]) {
+                stop.color.set_alpha(alpha * weight);
             }
-            .into(),
-        ];
+        }
     }
 }
 
