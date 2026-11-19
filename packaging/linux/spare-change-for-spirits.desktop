@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Spare Change for Spirits
+Exec=spare_change_for_spirits
+Icon=spare-change-for-spirits
+StartupWMClass=spare-change-for-spirits
+Terminal=false
+Categories=Game;Simulation;
