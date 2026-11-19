@@ -9,13 +9,9 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- The shop: `way_board` (section *Shop* below).
-- Shop improvements: `junk_1`, `junk_2`, `junk_3`, `waiting_bench`, `door_lantern`,
-  `herb_sachets`, `ferry_contract` (section *Shop improvements* below).
-- The village market: `plan` (section *The village market* below).
-
-Everything else – the ferry containers and lids, village houses, shop and harbour props,
-furniture, animals, market stalls, traders and hourglass – is in `assets/models/`.
+There are no open model orders. The shop's three junk piles, waiting bench, door lantern,
+herb sachets, ferry contract and wooden way board are in `assets/models/shop/`.
+The carpenter's rolled building plan is in `assets/models/market/plan.glb`.
 
 To check a fresh checkout, pull `main` and run `python3 tools/check_models.py`. A `missing` line
 identifies an absent asset. The sections below retain the dimensions, pivots and prompts for
