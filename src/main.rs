@@ -23,6 +23,7 @@ mod rng;
 mod save;
 mod scene;
 mod shop;
+mod title;
 mod ui;
 
 use bevy::prelude::*;
@@ -72,6 +73,7 @@ fn main() {
             fx::FxPlugin,
             audio::SoundPlugin,
             scene::ScenePlugin,
+            title::TitlePlugin,
         ))
         .run();
 }

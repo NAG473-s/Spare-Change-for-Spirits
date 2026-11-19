@@ -24,7 +24,8 @@ cargo test
 
 tests the game logic and loads every data file.
 
-The game starts in the main menu. **Esc** pauses (resume, save and quit to menu, tips on/off,
+The game starts on the title screen: its own painted background with flickering lamp light,
+drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, tips on/off,
 quit). The game autosaves at the start of every evening and night and at dawn; a save always
 continues at an evening (a night in progress restarts). Saves and settings live in
 `%APPDATA%\SpareChangeForSpirits` (Windows), `~/Library/Application Support/SpareChangeForSpirits`
@@ -94,6 +95,7 @@ src/
   economy.rs     coins, purses, paying and change logic (+ tests)
   ui.rs          top bar, side panel per phase, message log, buttons → actions
   menu.rs        main menu, pause menu, tips box
+  title.rs       title screen behind the main menu (background, glow, dust, ghosts)
   audio.rs       sound effects and music
   fx.rs          flickering lights, particles, the Cue message
   save.rs        saving, loading, new game
@@ -105,7 +107,7 @@ assets/
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md
-  sprites/       ghost, product and floor images
+  sprites/       ghost, product, floor and title screen images
 ```
 
 Buttons carry an `Action`. A global observer forwards it as a message, and every plugin reads

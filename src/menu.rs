@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::data::GameData;
+use crate::data::{GameData, asset_exists};
 use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
@@ -10,6 +10,7 @@ use crate::inventory::CratesOrdered;
 use crate::register::Register;
 use crate::save::{GameState, Settings, read_save, write_save};
 use crate::shop::ShopLayout;
+use crate::title::{LOGO, TitleLogo};
 use crate::ui::{Action, BG_PANEL, GameLog, PanelBuilder, TEXT_DIM, UiFont};
 
 pub struct MenuPlugin;
@@ -99,6 +100,85 @@ fn overlay(commands: &mut Commands, dim: f32, width: f32) -> (Entity, Entity) {
     (layer, panel)
 }
 
+/// Main menu on the title screen: the logo with a panel below it, on the
+/// left side of the screen. Returns (layer, panel).
+fn title_layout(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    width: f32,
+) -> (Entity, Entity, bool) {
+    let layer = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: px(0),
+                right: px(0),
+                top: px(0),
+                bottom: px(0),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            GlobalZIndex(100),
+            Pickable::IGNORE,
+        ))
+        .id();
+    // The column sits in the left part of the screen, centred under the logo.
+    let column = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: percent(5),
+                top: px(0),
+                bottom: px(0),
+                width: px(width.max(LOGO_WIDTH)),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                row_gap: px(14),
+                ..default()
+            },
+            Pickable::IGNORE,
+            ChildOf(layer),
+        ))
+        .id();
+    let has_logo = asset_exists(LOGO);
+    if has_logo {
+        commands.spawn((
+            TitleLogo,
+            ImageNode::new(asset_server.load(LOGO)),
+            Node {
+                width: px(LOGO_WIDTH),
+                ..default()
+            },
+            UiTransform::IDENTITY,
+            Pickable::IGNORE,
+            ChildOf(column),
+        ));
+    }
+    let panel = commands
+        .spawn((
+            Node {
+                width: px(width),
+                padding: UiRect::all(px(20)),
+                flex_direction: FlexDirection::Column,
+                row_gap: px(10),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(8)),
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.05, 0.05, 0.09, 0.8)),
+            BorderColor::all(Color::srgba(1.0, 0.85, 0.55, 0.18)),
+            ChildOf(column),
+        ))
+        .id();
+    (layer, panel, has_logo)
+}
+
+/// Width of the logo above the main menu.
+const LOGO_WIDTH: f32 = 400.0;
+
 fn sound_label(settings: &Settings, lang: &Lang) -> String {
     lang.t(if settings.sound {
         "settings.sound_on"
@@ -117,6 +197,7 @@ fn tips_label(settings: &Settings, lang: &Lang) -> String {
 
 fn build_main_menu(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     settings: Res<Settings>,
@@ -128,8 +209,8 @@ fn build_main_menu(
     }
     // First start: let the player pick a language before anything else.
     let choose_language = language_menu.0 || settings.language.is_none();
-    let width = if choose_language { 560.0 } else { 420.0 };
-    let (layer, panel) = overlay(&mut commands, 0.97, width);
+    let width = if choose_language { 560.0 } else { 360.0 };
+    let (layer, panel, has_logo) = title_layout(&mut commands, &asset_server, width);
     commands
         .entity(layer)
         .insert((MenuRoot, DespawnOnExit(Phase::Menu)));
@@ -161,8 +242,9 @@ fn build_main_menu(
         return;
     }
 
-    ui.heading(&lang.t("game.title"));
-    ui.dim(&lang.f("menu.version", &[("version", &env!("CARGO_PKG_VERSION"))]));
+    if !has_logo {
+        ui.heading(&lang.t("game.title"));
+    }
     ui.text(&lang.t("menu.tagline"));
     if let Some(save) = read_save().filter(|s| !s.finished) {
         ui.primary(
@@ -196,6 +278,7 @@ fn build_main_menu(
         true,
     );
     ui.button_in(root, &lang.t("menu.quit"), Action::QuitGame, false, true);
+    ui.dim(&lang.f("menu.version", &[("version", &env!("CARGO_PKG_VERSION"))]));
 }
 
 fn leave_pause(mut paused: ResMut<Paused>, mut time: ResMut<Time<Virtual>>) {

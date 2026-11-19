@@ -7,6 +7,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 - **Product pictures** – the existing ones are shown on the shelves while a product has no 3D
   model yet. New products get 3D models only, no pictures.
 - **The floor texture.**
+- **The title screen** – background picture and logo (for now taken from the Steam art).
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
 Images from the old 2D version (furniture, keepsakes, door, counter, back wall) are no longer used
@@ -23,6 +24,7 @@ python3 tools/check_models.py
 | What | Prompts |
 |---|---|
 | *(optional)* Animation sheets for the ghosts | [Ghost animation sheets](#ghost-animation-sheets-optional--canvas-1024--1536) |
+| *(optional)* A title screen background in full HD | [Title screen](#title-screen-optional--canvas-1920--1080) |
 
 ## Workflow
 
@@ -125,6 +127,30 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
+
+## Title screen (optional) – canvas 1920 × 1080
+
+The title screen shows `assets/sprites/title/background.png` scaled to cover the window, the logo
+`assets/sprites/title/logo.png` and the main menu on the **left third**, which the game darkens.
+Both files currently come from the Steam art (`art/steam/artwork/main_capsule.png` and
+`art/steam/library_logo.png`, trimmed). The game adds flickering light on the candle, the hanging
+lamp and the window (`GLOWS` in `src/title.rs` – adjust the positions for a new picture), drifting
+dust and a ghost floating past.
+
+A sharper full-HD picture can replace the background:
+
+```
+The inside of the ghost shop at night, wide 16:9 scene, 1920 x 1080. Edwin,
+the elderly gentleman ghost, stands behind the wooden counter on the right,
+holding his flat cap to his chest; a shy blue ghost peeks out from behind a
+shelf. A candle on the counter, a hanging lamp and a tall moonlit window give
+warm and cool light. The left third is calm, dark patterned wallpaper with a
+few wisps of mist (the logo and the menu go there). Same style as the
+reference, no text, not transparent.
+```
+
+Prepare it with `python3 tools/prepare_sprite.py ~/Downloads/image.png background --out
+assets/sprites/title/background.png` and deliver it as `Add title background [skip ci]`.
 
 ## Products (done)
 
