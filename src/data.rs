@@ -804,4 +804,52 @@ mod tests {
             assert!(wished, "nobody ever asks for '{}'", p.id);
         }
     }
+
+    /// Largest number of decor items the satisfiability search below combines.
+    const MAX_DECOR_COMBINATION: usize = 4;
+
+    /// Is there a combination of up to `left` more items from `decor[start..]` (repeats
+    /// allowed) that, added to `a`, meets every need?
+    fn can_meet(
+        needs: &[Need],
+        decor: &[&DecorDef],
+        start: usize,
+        a: Atmosphere,
+        left: usize,
+    ) -> bool {
+        if needs.iter().all(|n| n.is_met(&a)) {
+            return true;
+        }
+        left > 0
+            && (start..decor.len()).any(|i| {
+                let mut next = a;
+                next.add(&decor[i].effect);
+                can_meet(needs, decor, i, next, left - 1)
+            })
+    }
+
+    /// Every ghost can be made to stay on every night it can appear: some combination
+    /// of decor that can be bought by then meets all its needs, including the night's event.
+    #[test]
+    fn every_ghost_can_be_satisfied() {
+        let data = GameData::load();
+        for g in &data.ghosts {
+            for night in g.unlock_night..=data.config.last_night {
+                let decor: Vec<&DecorDef> = data
+                    .decor
+                    .iter()
+                    .filter(|d| !d.keepsake && d.unlock_night <= night)
+                    .collect();
+                let mut a = data.config.base_atmosphere;
+                if let Some(e) = data.event(night) {
+                    a.add(&e.atmosphere);
+                }
+                assert!(
+                    can_meet(&g.needs, &decor, 0, a, MAX_DECOR_COMBINATION),
+                    "no decor of night {night} satisfies '{}'",
+                    g.id
+                );
+            }
+        }
+    }
 }
