@@ -3,6 +3,9 @@
 {
     // Menus. Keep button texts short.
     "game.title": "Spare Change for Spirits",
+    "intro.story.1": "انتشلت زرًا من النهر.",
+    "intro.story.2": "كان شبح ينتظر في متجرك.",
+    "intro.story.3": "همس: «أمي هي من خاطته لي».",
     "menu.version": "نسخة تجريبية · الإصدار {version}",
     "menu.version_full": "الإصدار {version}",
     "menu.tagline": "متجر صغير لا يفتح أبوابه إلا بين منتصف الليل والفجر.",
@@ -19,6 +22,7 @@
     "menu.overwrite_confirm": "حذف وبدء لعبة جديدة",
     "menu.language": "اللغة: {language}",
     "menu.choose_language": "اختر لغتك",
+    "menu.language_auto": "تلقائي",
     "menu.back": "رجوع",
     "menu.settings": "الإعدادات",
     "hud.menu": "القائمة",
@@ -31,6 +35,7 @@
     "settings.title": "الإعدادات",
     "settings.music": "الموسيقى: {percent}%",
     "settings.effects": "المؤثرات الصوتية: {percent}%",
+    "settings.narration": "صوت الراوي: {percent}%",
     "settings.ui_size": "حجم الواجهة: {percent}%",
     "settings.fullscreen_on": "ملء الشاشة: مُفعَّل",
     "settings.fullscreen_off": "ملء الشاشة: مُعطَّل",
