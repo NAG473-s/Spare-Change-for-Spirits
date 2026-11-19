@@ -11,6 +11,7 @@
 
 mod accounts;
 mod audio;
+mod critters;
 mod data;
 mod day_cycle;
 mod economy;
@@ -21,6 +22,7 @@ mod harbor;
 mod i18n;
 mod inventory;
 mod menu;
+mod props;
 mod register;
 mod rng;
 mod save;
@@ -82,6 +84,10 @@ fn main() {
             harbor::HarborPlugin,
             accounts::AccountsPlugin,
         ))
-        .add_plugins(sign::SignPlugin)
+        .add_plugins((
+            sign::SignPlugin,
+            props::PropsPlugin,
+            critters::CrittersPlugin,
+        ))
         .run();
 }

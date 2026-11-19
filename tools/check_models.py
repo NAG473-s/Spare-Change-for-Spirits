@@ -22,7 +22,35 @@ MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
 SHOP_SIZES = {"counter": (4.5, 1.0, 0.8), "door": (1.1, 2.3, 0.2)}
-TRIANGLE_BUDGET = {"products": 1000, "decor": 3500, "shop": 8000, "harbor": 6000}
+TRIANGLE_BUDGET = {
+    "products": 1000,
+    "decor": 3500,
+    "shop": 8000,
+    "harbor": 6000,
+    "props": 3000,
+    "critters": 2000,
+}
+# Containers on the ferryman's boat besides the crate (src/ferry.rs, CONTAINER_SPECS).
+CONTAINER_SIZES = {
+    "chest": (0.5, 0.28, 0.36),
+    "chest_lid": (0.52, 0.06, 0.38),
+    "basket": (0.44, 0.24, 0.44),
+    "basket_lid": (0.46, 0.05, 0.46),
+    "keg": (0.38, 0.34, 0.38),
+    "keg_lid": (0.4, 0.04, 0.4),
+}
+# Animals (src/critters.rs); moving parts have their pivot as origin.
+CRITTER_SIZES = {
+    "cat_sleeping": (0.42, 0.2, 0.32),
+    "cat_sitting": (0.28, 0.42, 0.26),
+    "cat_tail": (0.06, 0.32, 0.08),
+    "seagull": (0.22, 0.3, 0.36),
+    "owl_body": (0.24, 0.3, 0.22),
+    "owl_head": (0.2, 0.18, 0.18),
+    "bat_body": (0.07, 0.06, 0.12),
+    "bat_wing": (0.12, 0.02, 0.08),
+    "fish": (0.08, 0.1, 0.26),
+}
 # The harbour scene (docs/MODEL_PROMPTS.md).
 HARBOR_SIZES = {
     "harbour_hut": (2.6, 2.9, 2.1),
@@ -38,6 +66,11 @@ HARBOR_SIZES = {
     "rowboat": (0.8, 0.45, 2.0),
     "jetty": (1.1, 0.7, 3.8),
     "paper_lantern": (0.26, 0.34, 0.26),
+    # Four different houses for the village; `village_house` is the shared fallback.
+    "village_house_1": (2.2, 2.4, 1.8),
+    "village_house_2": (2.2, 2.4, 1.8),
+    "village_house_3": (2.2, 2.4, 1.8),
+    "village_house_4": (2.2, 2.4, 1.8),
 }
 
 # Bounds that meet the origin in glTF coordinates. None denotes an anchor
@@ -49,12 +82,28 @@ ORIGIN_AXES = {
     "shop_sign": ("centre", None, "centre"),
     "ferry_boat": ("centre", None, "centre"),
     "crate_lid": ("centre", None, "minimum"),
+    "chest_lid": ("centre", None, "minimum"),
+    "basket_lid": ("centre", None, "minimum"),
+    "keg_lid": ("centre", None, "minimum"),
+    "cat_tail": ("centre", "maximum", "centre"),
+    "bat_body": ("centre", "centre", "centre"),
+    "bat_wing": ("minimum", "centre", "centre"),
+    "fish": ("centre", "centre", "centre"),
     "bell_post": (None, "minimum", "centre"),
     "ferry_bell": ("centre", "maximum", "centre"),
     "hand_cart": (None, "minimum", "centre"),
     "signpost": (None, "minimum", "centre"),
     "jetty": ("centre", "maximum", "centre"),
 }
+
+
+def prop_sizes():
+    """Every model id in assets/data/props.ron with its size (first entry wins)."""
+    text = (ROOT / "assets/data/props.ron").read_text(encoding="utf-8")
+    sizes = {}
+    for m in re.finditer(r'id: "([^"]+)".*?size: \(([^)]*)\)', text, re.S):
+        sizes.setdefault(m.group(1), tuple(float(v) for v in m.group(2).split(",")))
+    return sizes
 
 
 def ids(path, pattern):
@@ -189,8 +238,11 @@ def main():
             crate_lid=(0.52, 0.05, 0.44),
             wall_clock=(0.78, 0.78, 0.08),
             shop_sign=(1.0, 0.75, 0.05),
+            **CONTAINER_SIZES,
         ),
         "harbor": HARBOR_SIZES,
+        "props": prop_sizes(),
+        "critters": CRITTER_SIZES,
     }
     failures = 0
     for folder, targets in expected.items():

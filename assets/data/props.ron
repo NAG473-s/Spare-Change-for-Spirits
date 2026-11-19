@@ -1,0 +1,72 @@
+// Decoration that only adds atmosphere: on the counter, on the shop walls, on the harbour quay.
+// A model at assets/models/props/<id>.glb replaces the placeholder (a box or cylinder of `size`,
+// in `color`); several entries may use the same model. See docs/MODEL_PROMPTS.md ("Props").
+//
+// scene: Shop (the shop's metres) or Harbor (the harbour's own metres, see src/harbor.rs).
+// pos: (x, y, z) of the model's origin, its bottom centre; y = the surface it stands on
+//      (0 = floor or quay, 1.0 = counter top). +x right, +z towards the camera.
+// turn: degrees about the vertical axis. light: (height above the origin, strength) of a
+//      flickering warm light.
+[
+    // --- On the counter (top at y = 1.0, it runs along z at x = 6.3) ---
+    (id: "counter_candle", scene: Shop, pos: (6.2, 1.0, 1.15), size: (0.14, 0.26, 0.14),
+        color: (0.92, 0.86, 0.7), shape: Cylinder, light: Some((0.28, 50000.0))),
+    (id: "ledger_book", scene: Shop, pos: (6.3, 1.0, 0.45), turn: -15.0, size: (0.4, 0.06, 0.3),
+        color: (0.35, 0.16, 0.12)),
+    (id: "button_jar", scene: Shop, pos: (6.25, 1.0, -0.35), size: (0.16, 0.22, 0.16),
+        color: (0.75, 0.85, 0.9), shape: Cylinder),
+    (id: "brass_scale", scene: Shop, pos: (6.3, 1.0, -1.15), size: (0.4, 0.32, 0.22),
+        color: (0.72, 0.56, 0.28)),
+    (id: "potted_succulent", scene: Shop, pos: (6.25, 1.0, 1.85), size: (0.18, 0.22, 0.18),
+        color: (0.45, 0.6, 0.4), shape: Cylinder),
+
+    // --- On the back wall of the shop (wall face at z = -3.0) ---
+    (id: "wall_shelf", scene: Shop, pos: (3.7, 1.7, -2.86), size: (1.4, 0.3, 0.26),
+        color: (0.36, 0.24, 0.15)),
+    (id: "glass_jar", scene: Shop, pos: (3.2, 1.75, -2.84), size: (0.16, 0.24, 0.16),
+        color: (0.6, 0.75, 0.7), shape: Cylinder),
+    (id: "glass_jar", scene: Shop, pos: (3.6, 1.75, -2.84), turn: 40.0, size: (0.16, 0.24, 0.16),
+        color: (0.75, 0.62, 0.8), shape: Cylinder),
+    (id: "potion_bottles", scene: Shop, pos: (4.15, 1.75, -2.84), size: (0.35, 0.28, 0.14),
+        color: (0.4, 0.5, 0.7)),
+    (id: "picture_frame", scene: Shop, pos: (-5.4, 1.45, -2.97), size: (0.62, 0.76, 0.05),
+        color: (0.55, 0.42, 0.22)),
+    (id: "picture_frame_small", scene: Shop, pos: (2.15, 1.95, -2.97), size: (0.42, 0.5, 0.05),
+        color: (0.55, 0.42, 0.22)),
+    (id: "herb_bundle", scene: Shop, pos: (-1.5, 2.35, -2.92), size: (0.26, 0.5, 0.14),
+        color: (0.5, 0.55, 0.35)),
+    (id: "herb_bundle", scene: Shop, pos: (-1.0, 2.4, -2.92), turn: 20.0, size: (0.26, 0.5, 0.14),
+        color: (0.58, 0.45, 0.5)),
+
+    // --- On the shop floor, outside the grid ---
+    (id: "button_sack", scene: Shop, pos: (5.3, 0.0, -2.55), size: (0.5, 0.55, 0.45),
+        color: (0.6, 0.5, 0.36)),
+    (id: "stacked_boxes", scene: Shop, pos: (6.75, 0.0, -2.55), size: (0.7, 0.85, 0.55),
+        color: (0.45, 0.32, 0.2)),
+    (id: "potted_palm", scene: Shop, pos: (-3.2, 0.0, -2.6), size: (0.6, 1.0, 0.6),
+        color: (0.35, 0.5, 0.35), shape: Cylinder),
+    (id: "coat_stand", scene: Shop, pos: (-6.4, 0.0, -2.2), size: (0.5, 1.8, 0.5),
+        color: (0.3, 0.2, 0.13), shape: Cylinder),
+    (id: "broom", scene: Shop, pos: (6.85, 0.0, -1.6), turn: -10.0, size: (0.3, 1.4, 0.2),
+        color: (0.6, 0.48, 0.3)),
+
+    // --- On the harbour quay (edge at z = -0.7) ---
+    (id: "crate_stack", scene: Harbor, pos: (-4.0, 0.0, -2.6), turn: 8.0, size: (0.95, 0.95, 0.7),
+        color: (0.45, 0.32, 0.2)),
+    (id: "fishing_net", scene: Harbor, pos: (-0.4, 0.0, -2.65), size: (1.3, 1.2, 0.4),
+        color: (0.42, 0.45, 0.4)),
+    (id: "lobster_trap", scene: Harbor, pos: (6.6, 0.0, -1.55), turn: 15.0, size: (0.6, 0.4, 0.45),
+        color: (0.5, 0.4, 0.28)),
+    (id: "lobster_trap", scene: Harbor, pos: (6.15, 0.0, -1.2), turn: -30.0, size: (0.6, 0.4, 0.45),
+        color: (0.5, 0.4, 0.28)),
+    (id: "anchor", scene: Harbor, pos: (1.55, 0.0, -2.05), turn: 20.0, size: (0.7, 1.0, 0.3),
+        color: (0.25, 0.25, 0.28)),
+    (id: "oars", scene: Harbor, pos: (4.5, 0.0, -1.75), size: (0.3, 1.6, 0.15),
+        color: (0.5, 0.38, 0.25)),
+    (id: "fish_basket", scene: Harbor, pos: (-1.6, 0.0, -1.35), size: (0.5, 0.35, 0.5),
+        color: (0.62, 0.5, 0.32), shape: Cylinder),
+    (id: "rope_pile", scene: Harbor, pos: (-3.3, 0.0, -1.3), size: (0.6, 0.22, 0.6),
+        color: (0.6, 0.52, 0.36), shape: Cylinder),
+    (id: "bench", scene: Harbor, pos: (6.3, 0.0, -3.05), turn: -10.0, size: (1.3, 0.5, 0.45),
+        color: (0.35, 0.25, 0.17)),
+]

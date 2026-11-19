@@ -22,7 +22,10 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open illustration orders.
+| What | Prompts |
+|---|---|
+| Painted water and lamp glow for the harbour | [Water and light](#water-and-light--canvas-1024--1024) |
+| 43 new 3D models (containers, houses, props, animals) | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
 
 ## Workflow
 
@@ -200,6 +203,19 @@ and deliver one commit per image, `Add <coin> coin icon [skip ci]`.
 `assets/sprites/ui/ledger_frame.png`: a square painted walnut frame with worn brass leaf corners,
 a straight border on each side and a quiet dark plum centre. Keep the area outside the frame
 transparent. The game stretches the centre and edges around the corner paintings.
+
+## Water and light – canvas 1024 × 1024
+
+The harbour water and the halos around its lamps. Without these images the game uses a plain
+dark surface with computed waves and a soft computed glow. No preparation needed: save each
+image as a 1024 × 1024 PNG (the glow 512 × 512) directly at its path and deliver one commit per
+image, `Add <id> texture [skip ci]`.
+
+| File | Prompt |
+|---|---|
+| `assets/sprites/harbor/water.png` | Seamless tileable texture of calm dark water at night seen from above, deep indigo and teal with soft painted ripple strokes and a few tiny silver glints, painterly, no objects, no reflections of anything specific. Must tile without visible seams. Not transparent. |
+| `assets/sprites/harbor/water_normal.png` | *(optional)* The matching tangent-space normal map of the same ripples (purple-blue normal map colours), seamless. |
+| `assets/sprites/fx/glow.png` | A soft round glow on a transparent background: white in the middle, fading smoothly to fully transparent at the edge, no rays, no hard ring. Used, tinted, as the halo around lamps. 512 × 512 is enough. |
 
 ## Floor – canvas 1024 × 1024 (done)
 

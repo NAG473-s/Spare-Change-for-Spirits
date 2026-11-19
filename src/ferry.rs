@@ -101,6 +101,8 @@ struct SwingingLantern;
 #[derive(Component)]
 struct Crate {
     id: String,
+    /// Height of the container's rim, where the product sits.
+    top: f32,
     /// Hinge of the lid (rotates about x).
     lid: Entity,
     /// The product shown in the crate.
@@ -114,6 +116,8 @@ struct Crate {
 /// A bought crate on its way from the boat into the shop.
 #[derive(Component)]
 struct FlyingCrate {
+    /// Which container it is (crate, chest, basket, keg).
+    container: String,
     from: Vec3,
     to: Vec3,
     age: f32,
@@ -136,6 +140,60 @@ const BOAT_SIZE: Vec3 = Vec3::new(7.4, 0.45, 1.7);
 const DECK_Y: f32 = 0.05;
 const CRATE_SIZE: Vec3 = Vec3::new(0.5, 0.3, 0.42);
 const LID_THICKNESS: f32 = 0.05;
+
+/// Look of a container the ferryman ships products in (`data::CONTAINERS`):
+/// its size, whether it is round, and the placeholder colours.
+struct ContainerSpec {
+    id: &'static str,
+    size: Vec3,
+    round: bool,
+    body: Color,
+    lid: Color,
+    /// Bands or hoops on the placeholder (brass or iron).
+    trim: Option<Color>,
+}
+
+const CONTAINER_SPECS: [ContainerSpec; 4] = [
+    ContainerSpec {
+        id: "crate",
+        size: CRATE_SIZE,
+        round: false,
+        body: Color::srgb(0.5, 0.36, 0.22),
+        lid: Color::srgb(0.44, 0.31, 0.19),
+        trim: None,
+    },
+    ContainerSpec {
+        id: "chest",
+        size: Vec3::new(0.5, 0.28, 0.36),
+        round: false,
+        body: Color::srgb(0.38, 0.17, 0.13),
+        lid: Color::srgb(0.32, 0.14, 0.11),
+        trim: Some(Color::srgb(0.75, 0.6, 0.3)),
+    },
+    ContainerSpec {
+        id: "basket",
+        size: Vec3::new(0.44, 0.24, 0.44),
+        round: true,
+        body: Color::srgb(0.72, 0.56, 0.32),
+        lid: Color::srgb(0.66, 0.5, 0.28),
+        trim: None,
+    },
+    ContainerSpec {
+        id: "keg",
+        size: Vec3::new(0.38, 0.34, 0.38),
+        round: true,
+        body: Color::srgb(0.45, 0.3, 0.18),
+        lid: Color::srgb(0.4, 0.27, 0.16),
+        trim: Some(Color::srgb(0.25, 0.25, 0.27)),
+    },
+];
+
+fn container_spec(id: &str) -> &'static ContainerSpec {
+    CONTAINER_SPECS
+        .iter()
+        .find(|c| c.id == id)
+        .unwrap_or(&CONTAINER_SPECS[0])
+}
 /// Lid angles (radians, 0 = shut): waiting, hovered.
 const LID_AJAR: f32 = 1.2;
 const LID_WIDE: f32 = 1.95;
@@ -249,44 +307,71 @@ impl Builder<'_, '_, '_> {
     }
 
     /// A crate: body and a lid on a hinge at the back. Returns (crate, lid hinge).
-    fn crate_box(&mut self, parent: Entity, at: Transform) -> (Entity, Entity) {
+    /// A container (crate, chest, basket or keg): its body and a lid on a
+    /// hinge at the back. Returns (container, lid hinge).
+    fn crate_box(&mut self, parent: Entity, at: Transform, container: &str) -> (Entity, Entity) {
+        let spec = container_spec(container);
+        let size = spec.size;
         let root = self
             .commands
             .spawn((at, Visibility::default(), ChildOf(parent)))
             .id();
-        let wood = Color::srgb(0.5, 0.36, 0.22);
-        if self.model(root, "crate", Transform::default()).is_none() {
+        if self.model(root, spec.id, Transform::default()).is_none() {
+            let body: Mesh = if spec.round {
+                Cylinder::new(size.x / 2.0, size.y).into()
+            } else {
+                Cuboid::from_size(size).into()
+            };
             self.part(
                 root,
-                Cuboid::from_size(CRATE_SIZE).into(),
-                wood,
-                Transform::from_xyz(0.0, CRATE_SIZE.y / 2.0, 0.0),
+                body,
+                spec.body,
+                Transform::from_xyz(0.0, size.y / 2.0, 0.0),
             );
+            if let Some(trim) = spec.trim {
+                // Two bands or hoops round the body.
+                for y in [0.25, 0.75] {
+                    let band: Mesh = if spec.round {
+                        Cylinder::new(size.x / 2.0 + 0.008, 0.025).into()
+                    } else {
+                        Cuboid::new(size.x + 0.012, 0.025, size.z + 0.012).into()
+                    };
+                    self.part(root, band, trim, Transform::from_xyz(0.0, size.y * y, 0.0));
+                }
+            }
             // Straw on top of the goods.
+            let straw: Mesh = if spec.round {
+                Cylinder::new(size.x / 2.0 - 0.03, 0.02).into()
+            } else {
+                Cuboid::new(size.x - 0.06, 0.02, size.z - 0.06).into()
+            };
             self.part(
                 root,
-                Cuboid::new(CRATE_SIZE.x - 0.06, 0.02, CRATE_SIZE.z - 0.06).into(),
+                straw,
                 Color::srgb(0.72, 0.6, 0.35),
-                Transform::from_xyz(0.0, CRATE_SIZE.y + 0.005, 0.0),
+                Transform::from_xyz(0.0, size.y + 0.005, 0.0),
             );
         }
         let hinge = self
             .commands
             .spawn((
-                Transform::from_xyz(0.0, CRATE_SIZE.y, -CRATE_SIZE.z / 2.0),
+                Transform::from_xyz(0.0, size.y, -size.z / 2.0),
                 Visibility::default(),
                 ChildOf(root),
             ))
             .id();
-        if self
-            .model(hinge, "crate_lid", Transform::default())
-            .is_none()
-        {
+        let lid_id = format!("{}_lid", spec.id);
+        if self.model(hinge, &lid_id, Transform::default()).is_none() {
+            let lid: Mesh = if spec.round {
+                Cylinder::new(size.x / 2.0 + 0.01, LID_THICKNESS).into()
+            } else {
+                Cuboid::new(size.x + 0.02, LID_THICKNESS, size.z + 0.02).into()
+            };
             self.part(
                 hinge,
-                Cuboid::new(CRATE_SIZE.x + 0.02, LID_THICKNESS, CRATE_SIZE.z + 0.02).into(),
-                Color::srgb(0.44, 0.31, 0.19),
-                Transform::from_xyz(0.0, LID_THICKNESS / 2.0, CRATE_SIZE.z / 2.0),
+                lid,
+                spec.lid,
+                Transform::from_xyz(0.0, LID_THICKNESS / 2.0, size.z / 2.0),
             );
         }
         (root, hinge)
@@ -407,20 +492,22 @@ fn spawn_boat(
     for (i, p) in offer.into_iter().enumerate() {
         let (row, col) = (i / per_row, i % per_row);
         let at = Transform::from_xyz(first_x + col as f32 * step, DECK_Y, ROWS_Z[row]);
-        let (item, lid) = b.crate_box(boat, at);
+        let (item, lid) = b.crate_box(boat, at, &p.container);
+        let top = container_spec(&p.container).size.y;
         let product = product_model(
             &mut b.commands,
             b.asset_server,
             b.meshes,
             b.materials,
             &p.id,
-            Vec3::Y * CRATE_SIZE.y,
+            Vec3::Y * top,
         );
         b.commands.entity(product).insert(ChildOf(item));
         b.commands
             .entity(item)
             .insert(Crate {
                 id: p.id.clone(),
+                top,
                 lid,
                 item: product,
                 lid_angle: 0.0,
@@ -729,6 +816,7 @@ fn on_crate_click(
                 // A full crate is lifted onto the hand cart.
                 commands.spawn((
                     FlyingCrate {
+                        container: p.container.clone(),
                         from: global.translation(),
                         to: HARBOR + CART + Vec3::Y * 0.5,
                         age: 0.0,
@@ -799,7 +887,7 @@ fn animate_crates(
             hinge.rotation = Quat::from_rotation_x(-item.lid_angle);
         }
         if let Ok(mut product) = parts.get_mut(item.item) {
-            product.translation.y = CRATE_SIZE.y + item.lift;
+            product.translation.y = item.top + item.lift;
         }
         // A hop when hovered, a bounce after a sale.
         let bounce = (item.bump * 12.0).sin().abs() * item.bump * 0.12;
@@ -830,7 +918,7 @@ fn fly_crates(
                 meshes: &mut meshes,
                 materials: &mut materials,
             };
-            b.crate_box(entity, Transform::default());
+            b.crate_box(entity, Transform::default(), &flight.container);
         }
         flight.age += dt;
         let k = (flight.age / FLIGHT_SECS).min(1.0);

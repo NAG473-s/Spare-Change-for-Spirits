@@ -103,6 +103,8 @@ src/
   harbor.rs      the harbour behind the shop (quay, lighthouse, boats, mist) and walking there
   ferry.rs       the ferryman's boat: crates to buy, tooltip, his arrival and departure
   accounts.rs    the day's cash ledger and the morning accounts screen
+  props.rs       decoration from assets/data/props.ron (counter, walls, quay)
+  critters.rs    animals: shop cat, harbour cat, gull, owl, bats, fish, moths
   sign.rs        the closed/open sign in the window and opening the shop at midnight
   audio.rs       sound effects and music
   fx.rs          flickering lights, particles, the Cue message
@@ -111,7 +113,8 @@ src/
   i18n.rs        language catalogs, placeholders, language detection
   rng.rs         small random number generator
 assets/
-  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron
+  data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
+                 props.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md

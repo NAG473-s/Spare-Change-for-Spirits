@@ -9,8 +9,16 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-The shop clock, hanging sign, ferryman's equipment and harbour models are in the game.
-Run `python3 tools/check_models.py` to review their dimensions, origins and triangle counts.
+`python3 tools/check_models.py` lists every missing model. Each one replaces a placeholder as soon
+as it is pushed.
+
+| Where | Models |
+|---|---|
+| [Containers](#containers-on-the-boat--assetsmodelsshopidglb) | `chest`, `chest_lid`, `basket`, `basket_lid`, `keg`, `keg_lid` |
+| [Village houses](#village-houses--assetsmodelsharboridglb) | `village_house_1`, `village_house_2`, `village_house_3`, `village_house_4` |
+| [Props in the shop](#props-in-the-shop--assetsmodelspropsidglb) | `counter_candle`, `ledger_book`, `button_jar`, `brass_scale`, `potted_succulent`, `wall_shelf`, `glass_jar`, `potion_bottles`, `picture_frame`, `picture_frame_small`, `herb_bundle`, `button_sack`, `stacked_boxes`, `potted_palm`, `coat_stand`, `broom` |
+| [Props at the harbour](#props-at-the-harbour--assetsmodelspropsidglb) | `crate_stack`, `fishing_net`, `lobster_trap`, `anchor`, `oars`, `fish_basket`, `rope_pile`, `bench` |
+| [Animals](#animals--assetsmodelscrittersidglb) | `cat_sleeping`, `cat_sitting`, `cat_tail`, `seagull`, `owl_body`, `owl_head`, `bat_body`, `bat_wing`, `fish` |
 
 ## Technical rules (all models)
 
@@ -158,6 +166,92 @@ glowing glass and windows are just emissive materials.
 | `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along the Y axis (front to back), two seats, a pair of oars resting inside. |
 | `jetty` | 1.1 × 0.7 × 3.8 | A narrow wooden jetty: a deck of planks running along the Y axis (3.8 m long, 1.0 m wide) on four posts. Origin at the **centre of the deck surface**; the posts reach about 0.6 m below it. |
 | `paper_lantern` | 0.26 × 0.34 × 0.26 | A small floating paper lantern on a tiny round wooden raft: a box of warm paper glowing amber (emissive). |
+
+## Containers on the boat – `assets/models/shop/<id>.glb`
+
+The ferryman ships every product in one of four containers (`container` in
+`assets/data/products.ron`). Each container is two models: the body, **open at the top and filled
+with straw almost to the rim**, and its lid. The game opens and shuts the lid, so the lid's origin
+is the **middle of its back edge** (the hinge) and the lid extends forwards (−Y in Blender), lying
+flat. Origin of the body: bottom centre.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `chest` | 0.5 × 0.28 × 0.36 | A small wooden treasure-style chest of dark red-brown wood with brass corner fittings and two brass bands, a little brass lock plate on the front. |
+| `chest_lid` | 0.52 × 0.06 × 0.38 | The matching flat lid with brass edges and two brass bands. |
+| `basket` | 0.44 × 0.24 × 0.44 | A round woven wicker basket, honey coloured, with two small handles. |
+| `basket_lid` | 0.46 × 0.05 × 0.46 | Its round, slightly domed woven lid. |
+| `keg` | 0.38 × 0.34 × 0.38 | A small wooden keg standing upright, dark iron hoops. |
+| `keg_lid` | 0.4 × 0.04 × 0.4 | Its round wooden lid of three planks. |
+
+## Village houses – `assets/models/harbor/<id>.glb`
+
+Four different houses for the village behind the harbour, each **2.2 × 2.4 × 1.8 m** (the game
+scales them a little), seen from afar at night; keep them simple, with one or two small windows
+glowing amber (emissive) on the front.
+
+| id | Prompt |
+|---|---|
+| `village_house_1` | A crooked fisherman's cottage of grey stone with a steep slate roof, a crooked chimney and a round window. |
+| `village_house_2` | A tall, narrow timber-framed house leaning slightly, white plaster between dark beams, a small balcony. |
+| `village_house_3` | A little bakery with a striped awning over the door and a hanging sign without lettering, a big lit window. |
+| `village_house_4` | A small chapel-like house with a pointed bell tower and a tiny bell, a round stained-glass window glowing softly. |
+
+## Props in the shop – `assets/models/props/<id>.glb`
+
+Decoration only; the positions are in `assets/data/props.ron` (several entries can use one model).
+Origin at the **bottom centre**, front facing −Y. Items on the counter or a shelf stand on that
+surface; items on the wall hang with their back against it (back at +Y in Blender).
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `counter_candle` | 0.14 × 0.26 × 0.14 | A thick cream candle in a brass holder with a finger loop, wax drips, the flame glowing (emissive) at about 0.26 m. |
+| `ledger_book` | 0.4 × 0.06 × 0.3 | An open old ledger book with yellowed pages and a red ribbon bookmark, a quill pen in a tiny inkwell beside it. |
+| `button_jar` | 0.16 × 0.22 × 0.16 | A glass jar full of colourful old buttons, cork lid. |
+| `brass_scale` | 0.4 × 0.32 × 0.22 | An old brass balance scale with two small pans. |
+| `potted_succulent` | 0.18 × 0.22 × 0.18 | A tiny succulent in a chipped teacup used as a pot. |
+| `wall_shelf` | 1.4 × 0.3 × 0.26 | A short wooden wall shelf on two carved brackets (it hangs on the wall; the items on it are separate). |
+| `glass_jar` | 0.16 × 0.24 × 0.16 | An apothecary glass jar with a ground-glass stopper and a blank paper label, filled with dried petals. |
+| `potion_bottles` | 0.35 × 0.28 × 0.14 | Three small odd-shaped glass bottles with corks, softly coloured liquids (one faintly glowing). |
+| `picture_frame` | 0.62 × 0.76 × 0.05 | A gilded oval frame with a faded painted portrait of a lady in an old-fashioned dress. |
+| `picture_frame_small` | 0.42 × 0.5 × 0.05 | A small dark wooden frame with a painted landscape of a moonlit lake. |
+| `herb_bundle` | 0.26 × 0.5 × 0.14 | A bundle of dried herbs and flowers hanging upside down from a nail with a string. |
+| `button_sack` | 0.5 × 0.55 × 0.45 | A bulging burlap sack, slightly open, buttons spilling from the top. |
+| `stacked_boxes` | 0.7 × 0.85 × 0.55 | Two old cardboard and wooden boxes stacked, a ribbon and some paper sticking out. |
+| `potted_palm` | 0.6 × 1.0 × 0.6 | A slightly drooping parlour palm in a big brass pot. |
+| `coat_stand` | 0.5 × 1.8 × 0.5 | A bentwood coat stand with a long scarf and a bowler hat hanging on it. |
+| `broom` | 0.3 × 1.4 × 0.2 | An old straw broom leaning back a little. |
+
+## Props at the harbour – `assets/models/props/<id>.glb`
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `crate_stack` | 0.95 × 0.95 × 0.7 | Three weathered wooden crates stacked unevenly, one with a rope around it. |
+| `fishing_net` | 1.3 × 1.2 × 0.4 | A fishing net draped over a simple wooden drying frame, a few cork floats hanging from it. |
+| `lobster_trap` | 0.6 × 0.4 × 0.45 | A wooden lobster pot with a rounded top of slats and netting. |
+| `anchor` | 0.7 × 1.0 × 0.3 | An old rusty iron anchor leaning on its side, a bit of chain. |
+| `oars` | 0.3 × 1.6 × 0.15 | A pair of wooden oars leaning upright side by side. |
+| `fish_basket` | 0.5 × 0.35 × 0.5 | A round wicker basket with a few silvery fish inside. |
+| `rope_pile` | 0.6 × 0.22 × 0.6 | A thick coil of ship's rope lying flat. |
+| `bench` | 1.3 × 0.5 × 0.45 | A worn wooden harbour bench with a backrest. |
+
+## Animals – `assets/models/critters/<id>.glb`
+
+The game moves the animals (breathing, tail, head turns, flying, jumping), so moving parts are
+separate models whose **origin is the pivot**. Bodies: origin at the bottom centre unless noted.
+Night colours, cute and simple, no rigs or animations.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `cat_sleeping` | 0.42 × 0.2 × 0.32 | A ginger cat curled up asleep, tail wrapped round, eyes closed. |
+| `cat_sitting` | 0.28 × 0.42 × 0.26 | A black cat sitting upright, front facing −Y, green-yellow eyes glowing faintly (emissive), **without its tail**. |
+| `cat_tail` | 0.06 × 0.32 × 0.08 | The black cat's tail, hanging down with a slight curl at the tip. Origin at its **root (top end)**. |
+| `seagull` | 0.22 × 0.3 × 0.36 | A plump grey-and-white seagull standing, yellow beak, front facing −Y. |
+| `owl_body` | 0.24 × 0.3 × 0.22 | A small brown owl's body sitting, **without its head**, feet at the bottom. |
+| `owl_head` | 0.2 × 0.18 × 0.18 | The owl's round head with ear tufts and big amber eyes (emissive), facing −Y. Origin at the **neck (bottom centre)**. |
+| `bat_body` | 0.07 × 0.06 × 0.12 | A tiny dark bat's body with ears, **without wings**, head towards −Y. Origin at the **centre**. |
+| `bat_wing` | 0.12 × 0.02 × 0.08 | One bat wing, spread flat out to the right (+X). Origin at the **shoulder (its left end)**; the game mirrors it for the other side. |
+| `fish` | 0.08 × 0.1 × 0.26 | A small silvery fish, length along the Y axis, head towards −Y. Origin at the **centre**. |
 
 ## Delivery: push every model on its own
 

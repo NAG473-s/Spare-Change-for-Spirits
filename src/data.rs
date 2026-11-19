@@ -25,6 +25,54 @@ pub struct ProductDef {
     /// First night the ferryman offers it.
     #[serde(default = "one")]
     pub unlock_night: u32,
+    /// What it comes in on the ferryman's boat: one of `CONTAINERS`.
+    #[serde(default = "default_container")]
+    pub container: String,
+}
+
+/// Containers the ferryman ships products in (each a model and a lid,
+/// `assets/models/shop/<id>.glb` and `<id>_lid.glb`).
+pub const CONTAINERS: [&str; 4] = ["crate", "chest", "basket", "keg"];
+
+fn default_container() -> String {
+    "crate".to_string()
+}
+
+/// Which diorama a prop stands in.
+#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Scene {
+    Shop,
+    Harbor,
+}
+
+/// Placeholder shape of a prop until its model exists.
+#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Shape {
+    #[default]
+    Box,
+    Cylinder,
+}
+
+/// A piece of decoration that only adds atmosphere (`props.ron`).
+#[derive(Deserialize, Clone, Debug)]
+pub struct PropDef {
+    /// Model id: `assets/models/props/<id>.glb`. Several props may share one.
+    pub id: String,
+    pub scene: Scene,
+    /// Where its origin (bottom centre) stands, in the scene's metres.
+    pub pos: (f32, f32, f32),
+    /// Turn about the vertical axis, in degrees.
+    #[serde(default)]
+    pub turn: f32,
+    /// Size of the model and of the placeholder (w, h, d).
+    pub size: (f32, f32, f32),
+    pub color: (f32, f32, f32),
+    #[serde(default)]
+    pub shape: Shape,
+    /// A flickering warm light at this height above the origin, and its
+    /// strength.
+    #[serde(default)]
+    pub light: Option<(f32, f32)>,
 }
 
 fn one() -> u32 {
@@ -269,6 +317,7 @@ pub struct GameData {
     pub decor: Vec<DecorDef>,
     pub story: StoryDef,
     pub events: Vec<NightEvent>,
+    pub props: Vec<PropDef>,
 }
 
 impl GameData {
@@ -281,12 +330,22 @@ impl GameData {
             decor: load_ron("data/decor.ron"),
             story: load_ron("data/story.ron"),
             events: load_ron("data/events.ron"),
+            props: load_ron("data/props.ron"),
         };
         data.validate();
         data
     }
 
     fn validate(&self) {
+        for p in &self.products {
+            assert!(
+                CONTAINERS.contains(&p.container.as_str()),
+                "product '{}' comes in an unknown container '{}' (known: {:?})",
+                p.id,
+                p.container,
+                CONTAINERS
+            );
+        }
         for g in &self.ghosts {
             assert!(!g.wishes.is_empty(), "ghost '{}' has no wishes", g.id);
             assert!(

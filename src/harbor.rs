@@ -10,6 +10,7 @@
 //! rings spreading around whatever floats there.
 
 use bevy::asset::RenderAssetUsages;
+use bevy::image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor};
 use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
@@ -44,6 +45,7 @@ impl Plugin for HarborPlugin {
                     spread_ripples,
                     ring_bell,
                     bob_rowboats,
+                    move_waves,
                     sweep_beam,
                 ),
             );
@@ -93,7 +95,7 @@ struct Rowboat {
 
 /// Pivot of the lighthouse beam; it turns slowly.
 #[derive(Component)]
-struct LighthouseBeam;
+struct LighthouseBeam(Handle<StandardMaterial>);
 
 #[derive(Component)]
 struct Lantern {
@@ -221,15 +223,39 @@ fn spawn_harbor(
     mut images: ResMut<Assets<Image>>,
     mut rng: ResMut<Rng>,
 ) {
-    // Water: dark and glossy, so the moon and the lamps glint in it.
-    let water = meshes.add(Plane3d::default().mesh().size(44.0, 16.0));
+    // Water: dark and glossy, with small waves (a scrolling normal map) so
+    // the moon and the lamps break into glints on it.
+    let water = Plane3d::default()
+        .mesh()
+        .size(44.0, 16.0)
+        .build()
+        .with_generated_tangents()
+        .expect("a plane has normals and UVs");
+    let water = meshes.add(water);
+    // A painted texture (`sprites/harbor/water.png`, and optionally its
+    // normal map `water_normal.png`) or a calm dark surface with computed
+    // waves; either drifts slowly (`move_waves`).
+    let painted =
+        asset_exists(WATER_TEXTURE).then(|| repeating(&asset_server, WATER_TEXTURE, true));
+    let normals = if asset_exists(WATER_NORMALS) {
+        repeating(&asset_server, WATER_NORMALS, false)
+    } else {
+        images.add(wave_normals(128))
+    };
     commands.spawn((
         Mesh3d(water),
+        Water,
         MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.03, 0.06, 0.09),
-            // Glossy, but not so smooth that the moon becomes a glaring spot.
-            perceptual_roughness: 0.38,
-            reflectance: 0.3,
+            base_color: if painted.is_some() {
+                Color::WHITE
+            } else {
+                Color::srgb(0.035, 0.07, 0.11)
+            },
+            base_color_texture: painted,
+            perceptual_roughness: 0.55,
+            reflectance: 0.2,
+            normal_map_texture: Some(normals),
+            uv_transform: water_uv(0.0),
             ..default()
         })),
         Transform::from_translation(HARBOR + Vec3::new(1.0, WATER_Y, QUAY_EDGE + 8.0)),
@@ -271,14 +297,22 @@ fn spawn_harbor(
     );
 
     // The village behind the harbour: dark houses with a few lit windows.
-    for (x, z, w, h, lit) in [
+    for (i, (x, z, w, h, lit)) in [
         (-3.8, -7.6, 2.0, 1.7, true),
         (-1.3, -8.0, 1.7, 2.1, false),
         (1.0, -7.7, 2.2, 1.6, true),
         (3.6, -8.2, 1.8, 2.0, true),
-    ] {
+    ]
+    .into_iter()
+    .enumerate()
+    {
         let size = Transform::from_xyz(x, 0.0, z).with_scale(Vec3::new(w / 2.2, h / 2.4, 1.0));
-        if kit.model("village_house", size).is_some() {
+        // Each house its own model if there is one, else the shared one.
+        if kit
+            .model(&format!("village_house_{}", i + 1), size)
+            .is_some()
+            || kit.model("village_house", size).is_some()
+        {
             continue;
         }
         let wall = Color::srgb(0.14, 0.13, 0.17);
@@ -430,7 +464,6 @@ fn spawn_harbor(
     let beam_pivot = kit
         .commands
         .spawn((
-            LighthouseBeam,
             Transform::from_translation(HARBOR + tower + Vec3::Y * 3.62),
             Visibility::default(),
         ))
@@ -446,12 +479,15 @@ fn spawn_harbor(
         .translated_by(Vec3::Y * -4.5),
     );
     let beam_mat = kit.materials.add(StandardMaterial {
-        base_color: Color::srgba(1.0, 0.95, 0.7, 0.07),
+        base_color: Color::srgba(1.0, 0.95, 0.7, BEAM_ALPHA),
         alpha_mode: AlphaMode::Add,
         unlit: true,
         cull_mode: None,
         ..default()
     });
+    kit.commands
+        .entity(beam_pivot)
+        .insert(LighthouseBeam(beam_mat.clone()));
     kit.commands.spawn((
         Mesh3d(beam_mesh),
         MeshMaterial3d(beam_mat),
@@ -748,6 +784,36 @@ fn spawn_harbor(
         ));
     }
 
+    // Soft halos around the lamps, so the light seems to hang in the mist.
+    let glow = if asset_exists(GLOW_TEXTURE) {
+        asset_server.load(GLOW_TEXTURE)
+    } else {
+        images.add(soft_puff(64))
+    };
+    let lamp_post = Vec3::new(0.6, 2.45, QUAY_EDGE - 0.55);
+    let hut_lamp = Vec3::new(2.9, 1.75, -1.6);
+    let lighthouse_lamp = Vec3::new(-6.0, 3.62, -3.6);
+    for (pos, size, color) in [
+        (lamp_post, 1.6, Color::srgba(1.0, 0.7, 0.35, 0.35)),
+        (hut_lamp, 0.9, Color::srgba(1.0, 0.7, 0.35, 0.3)),
+        (lighthouse_lamp, 2.4, Color::srgba(1.0, 0.92, 0.65, 0.3)),
+    ] {
+        commands.spawn((
+            Mesh3d(meshes.add(Rectangle::new(size, size))),
+            MeshMaterial3d(materials.add(StandardMaterial {
+                base_color: color,
+                base_color_texture: Some(glow.clone()),
+                alpha_mode: AlphaMode::Add,
+                unlit: true,
+                ..default()
+            })),
+            Transform::from_translation(HARBOR + pos),
+            Billboard,
+            NotShadowCaster,
+            Pickable::IGNORE,
+        ));
+    }
+
     commands.insert_resource(RippleMesh(meshes.add(Annulus::new(0.92, 1.0))));
 }
 
@@ -859,6 +925,106 @@ fn move_camera(
     *first = true;
 }
 
+const WATER_TEXTURE: &str = "sprites/harbor/water.png";
+const WATER_NORMALS: &str = "sprites/harbor/water_normal.png";
+/// Soft glow around lamps (a painted one, or a computed soft disc).
+const GLOW_TEXTURE: &str = "sprites/fx/glow.png";
+
+/// An image that tiles (repeats) across a surface.
+fn repeating(asset_server: &AssetServer, path: &str, srgb: bool) -> Handle<Image> {
+    asset_server
+        .load_builder()
+        .with_settings(move |s: &mut bevy::image::ImageLoaderSettings| {
+            s.is_srgb = srgb;
+            s.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+                address_mode_u: ImageAddressMode::Repeat,
+                address_mode_v: ImageAddressMode::Repeat,
+                ..ImageSamplerDescriptor::linear()
+            });
+        })
+        .load(path.to_string())
+}
+
+/// The harbour water; its waves drift.
+#[derive(Component)]
+struct Water;
+
+/// How often the wave texture repeats across the water (x, z).
+const WAVE_TILES: Vec2 = Vec2::new(7.0, 2.6);
+
+fn water_uv(t: f32) -> bevy::math::Affine2 {
+    bevy::math::Affine2::from_scale_angle_translation(
+        WAVE_TILES,
+        0.0,
+        Vec2::new(t * 0.018, t * 0.011),
+    )
+}
+
+/// A seamless normal map of small overlapping waves.
+fn wave_normals(size: u32) -> Image {
+    // Many small waves in different directions; whole-number frequencies
+    // keep the texture seamless.
+    let waves = [
+        (Vec2::new(1.0, 2.0), 1.0, 0.3),
+        (Vec2::new(3.0, -1.0), 0.7, 1.7),
+        (Vec2::new(-2.0, 3.0), 0.6, 4.1),
+        (Vec2::new(4.0, 3.0), 0.45, 2.2),
+        (Vec2::new(-5.0, -2.0), 0.35, 5.3),
+        (Vec2::new(2.0, -6.0), 0.3, 0.9),
+        (Vec2::new(-7.0, 4.0), 0.22, 3.4),
+        (Vec2::new(8.0, 5.0), 0.18, 1.1),
+        (Vec2::new(-3.0, -9.0), 0.15, 2.8),
+        (Vec2::new(11.0, -4.0), 0.12, 4.6),
+        (Vec2::new(-10.0, 9.0), 0.1, 0.4),
+        (Vec2::new(13.0, 7.0), 0.08, 3.9),
+    ];
+    let strength = 0.004;
+    let mut data = Vec::with_capacity((size * size * 4) as usize);
+    for y in 0..size {
+        for x in 0..size {
+            let p = Vec2::new(x as f32, y as f32) / size as f32;
+            // Gradient of the summed sines.
+            let mut grad = Vec2::ZERO;
+            for (k, amp, phase) in waves {
+                let a = std::f32::consts::TAU * k.dot(p) + phase;
+                grad += k * std::f32::consts::TAU * amp * a.cos();
+            }
+            let n = Vec3::new(-grad.x * strength, -grad.y * strength, 1.0).normalize();
+            let byte = |v: f32| ((v * 0.5 + 0.5) * 255.0).round() as u8;
+            data.extend_from_slice(&[byte(n.x), byte(n.y), byte(n.z), 255]);
+        }
+    }
+    let mut image = Image::new(
+        Extent3d {
+            width: size,
+            height: size,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        data,
+        TextureFormat::Rgba8Unorm,
+        RenderAssetUsages::RENDER_WORLD,
+    );
+    image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: ImageAddressMode::Repeat,
+        address_mode_v: ImageAddressMode::Repeat,
+        ..ImageSamplerDescriptor::linear()
+    });
+    image
+}
+
+fn move_waves(
+    time: Res<Time>,
+    water: Query<&MeshMaterial3d<StandardMaterial>, With<Water>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for material in &water {
+        if let Some(mut m) = materials.get_mut(&material.0) {
+            m.uv_transform = water_uv(time.elapsed_secs());
+        }
+    }
+}
+
 /// A white disc that fades out towards its edge.
 fn soft_puff(size: u32) -> Image {
     let mut data = Vec::with_capacity((size * size * 4) as usize);
@@ -931,9 +1097,24 @@ fn bob_rowboats(time: Res<Time>, mut boats: Query<(&Rowboat, &mut Transform)>) {
 }
 
 /// The lighthouse beam sweeps round and round.
-fn sweep_beam(time: Res<Time>, mut beams: Query<&mut Transform, With<LighthouseBeam>>) {
-    for mut beam in &mut beams {
-        beam.rotation = Quat::from_rotation_y(time.elapsed_secs() * 0.6);
+/// Brightness of the visible beam cone (it is drawn additively).
+const BEAM_ALPHA: f32 = 0.06;
+
+/// The lighthouse beam sweeps round and round. Pointing at the camera the
+/// cone would show as a big pale disc, so it fades out there.
+fn sweep_beam(
+    time: Res<Time>,
+    mut beams: Query<(&LighthouseBeam, &mut Transform)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (beam, mut transform) in &mut beams {
+        transform.rotation = Quat::from_rotation_y(time.elapsed_secs() * 0.6);
+        // The cone points along local +x; the camera looks from +z.
+        let towards_camera = (transform.rotation * Vec3::X).z.max(0.0);
+        if let Some(mut m) = materials.get_mut(&beam.0) {
+            m.base_color
+                .set_alpha(BEAM_ALPHA * (1.0 - towards_camera).powi(2));
+        }
     }
 }
 
