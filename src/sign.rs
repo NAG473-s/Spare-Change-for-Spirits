@@ -7,6 +7,7 @@ use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 
+use crate::data::asset_exists;
 use crate::day_cycle::Phase;
 use crate::fx::Cue;
 use crate::harbor::Location;
@@ -59,6 +60,7 @@ struct SignLabel;
 
 /// Hangs inside the arched window of the back wall.
 const SIGN_POS: Vec3 = Vec3::new(-3.2, 1.45, ROOM_BACK_Z + 0.2);
+const SIGN_MODEL: &str = "models/shop/shop_sign.glb";
 const BOARD: Vec3 = Vec3::new(0.98, 0.44, 0.03);
 /// The sign flips during the first part of the opening ...
 const FLIP_SECS: f32 = 0.6;
@@ -70,6 +72,7 @@ const OPEN_AT: f32 = CLOCK_FROM + CLOCK_SECS + 1.2;
 
 fn spawn_sign(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -85,46 +88,56 @@ fn spawn_sign(
         .observe(|_: On<PointerOver>, mut hovered: ResMut<SignHovered>| hovered.0 = true)
         .observe(|_: On<PointerOut>, mut hovered: ResMut<SignHovered>| hovered.0 = false)
         .id();
-    let board = meshes.add(Cuboid::from_size(BOARD));
-    let frame = meshes.add(Cuboid::new(BOARD.x + 0.05, BOARD.y + 0.05, BOARD.z * 0.8));
-    // A faint glow keeps the painted board readable against the dark window.
-    let mut paint = |color: Color, glow: f32| {
-        materials.add(StandardMaterial {
-            base_color: color,
-            emissive: color.to_linear() * glow,
-            perceptual_roughness: 0.8,
-            ..default()
-        })
-    };
-    let wood = paint(Color::srgb(0.42, 0.29, 0.18), 0.1);
-    let closed = paint(Color::srgb(0.62, 0.18, 0.15), 0.35);
-    let open = paint(Color::srgb(0.24, 0.52, 0.32), 0.35);
-    let cord = paint(Color::srgb(0.5, 0.42, 0.3), 0.0);
-    commands.spawn((
-        Mesh3d(frame),
-        MeshMaterial3d(wood),
-        Transform::default(),
-        ChildOf(sign),
-    ));
-    // "Closed" faces the room at first, "open" is painted on the back.
-    for (z, material) in [(BOARD.z * 0.5, closed), (-BOARD.z * 0.5, open)] {
+    // A model (`models/shop/shop_sign.glb`: "closed" side to the front,
+    // "open" on the back, no lettering) or a painted board on two cords.
+    if asset_exists(SIGN_MODEL) {
         commands.spawn((
-            Mesh3d(board.clone()),
-            MeshMaterial3d(material),
-            Transform::from_xyz(0.0, 0.0, z).with_scale(Vec3::new(1.0, 1.0, 0.2)),
+            WorldAssetRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(SIGN_MODEL))),
+            Transform::default(),
             ChildOf(sign),
         ));
-    }
-    let cord_mesh = meshes.add(Cylinder::new(0.008, 0.5));
-    for x in [-0.25, 0.25] {
+    } else {
+        let board = meshes.add(Cuboid::from_size(BOARD));
+        let frame = meshes.add(Cuboid::new(BOARD.x + 0.05, BOARD.y + 0.05, BOARD.z * 0.8));
+        // A faint glow keeps the painted board readable against the dark window.
+        let mut paint = |color: Color, glow: f32| {
+            materials.add(StandardMaterial {
+                base_color: color,
+                emissive: color.to_linear() * glow,
+                perceptual_roughness: 0.8,
+                ..default()
+            })
+        };
+        let wood = paint(Color::srgb(0.42, 0.29, 0.18), 0.1);
+        let closed = paint(Color::srgb(0.62, 0.18, 0.15), 0.35);
+        let open = paint(Color::srgb(0.24, 0.52, 0.32), 0.35);
+        let cord = paint(Color::srgb(0.5, 0.42, 0.3), 0.0);
         commands.spawn((
-            Mesh3d(cord_mesh.clone()),
-            MeshMaterial3d(cord.clone()),
-            Transform::from_xyz(x * 0.6, BOARD.y / 2.0 + 0.2, 0.0)
-                .with_rotation(Quat::from_rotation_z(x * 0.7)),
-            NotShadowCaster,
+            Mesh3d(frame),
+            MeshMaterial3d(wood),
+            Transform::default(),
             ChildOf(sign),
         ));
+        // "Closed" faces the room at first, "open" is painted on the back.
+        for (z, material) in [(BOARD.z * 0.5, closed), (-BOARD.z * 0.5, open)] {
+            commands.spawn((
+                Mesh3d(board.clone()),
+                MeshMaterial3d(material),
+                Transform::from_xyz(0.0, 0.0, z).with_scale(Vec3::new(1.0, 1.0, 0.2)),
+                ChildOf(sign),
+            ));
+        }
+        let cord_mesh = meshes.add(Cylinder::new(0.008, 0.5));
+        for x in [-0.25, 0.25] {
+            commands.spawn((
+                Mesh3d(cord_mesh.clone()),
+                MeshMaterial3d(cord.clone()),
+                Transform::from_xyz(x * 0.6, BOARD.y / 2.0 + 0.2, 0.0)
+                    .with_rotation(Quat::from_rotation_z(x * 0.7)),
+                NotShadowCaster,
+                ChildOf(sign),
+            ));
+        }
     }
     commands.spawn((
         SignLabel,

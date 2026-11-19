@@ -22,7 +22,24 @@ MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
 SHOP_SIZES = {"counter": (4.5, 1.0, 0.8), "door": (1.1, 2.3, 0.2)}
-TRIANGLE_BUDGET = {"products": 1000, "decor": 3500, "shop": 8000}
+TRIANGLE_BUDGET = {"products": 1000, "decor": 3500, "shop": 8000, "harbor": 6000}
+# The harbour scene (docs/MODEL_PROMPTS.md). None: origin not at the bottom
+# centre, so only scenes and triangles are checked.
+HARBOR_SIZES = {
+    "harbour_hut": (2.6, 2.9, 2.1),
+    "lighthouse": (1.2, 4.3, 1.2),
+    "lamp_post": (0.4, 2.7, 0.4),
+    "village_house": (2.2, 2.4, 1.8),
+    "barrel": (0.6, 0.72, 0.6),
+    "mooring_post": (0.3, 0.6, 0.3),
+    "bell_post": (0.6, 1.95, 0.2),
+    "ferry_bell": None,
+    "hand_cart": (2.0, 0.75, 1.0),
+    "signpost": (0.95, 1.95, 0.2),
+    "rowboat": (0.8, 0.45, 2.0),
+    "jetty": None,
+    "paper_lantern": (0.26, 0.34, 0.26),
+}
 
 
 def ids(path, pattern):
@@ -155,7 +172,9 @@ def main():
             ferry_boat=None,
             crate_lid=None,
             wall_clock=None,
+            shop_sign=None,
         ),
+        "harbor": HARBOR_SIZES,
     }
     failures = 0
     for folder, targets in expected.items():

@@ -7,6 +7,17 @@ game shows a simple coloured placeholder, so models can be added one by one.
 Hand this whole file to ChatGPT (or another tool that builds models in Blender). Start with the
 **technical rules** and the **style block**, then go through the lists.
 
+## Open orders
+
+These models are still missing (`python3 tools/check_models.py` lists them). Each one replaces a
+placeholder as soon as it is pushed.
+
+| Where | Models |
+|---|---|
+| [Shop](#shop--assetsmodelsshopidglb) | `wall_clock`, `shop_sign` |
+| [The ferryman](#the-ferryman--assetsmodelsshopidglb) | `ferry_boat`, `crate`, `crate_lid`, `ferryman` |
+| [The harbour](#the-harbour--assetsmodelsharboridglb) | `harbour_hut`, `lighthouse`, `lamp_post`, `village_house`, `barrel`, `mooring_post`, `bell_post`, `ferry_bell`, `hand_cart`, `signpost`, `rowboat`, `jetty`, `paper_lantern` |
+
 ## Technical rules (all models)
 
 - **Format:** glTF binary, one `.glb` file per model, file name = the id in the tables below.
@@ -104,19 +115,8 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 | `counter` | 4.5 × 1.0 × 0.8 | A long wooden shop counter (front = customer side facing −Y): panelled front with a carved ghost emblem in the middle, a polished top, a small brass bell and an old brass cash register near the right end. The game turns it so it runs along the right side of the shop. |
 | `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
-| `wall_clock` | 0.78 × 0.78 × 0.08 | *(optional)* A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
-
-## The harbour – `assets/models/shop/<id>.glb` *(optional)*
-
-In the evening the player walks out to the harbour, where the ferryman sells crates from his boat.
-The game builds everything from simple shapes until these models exist.
-
-| id | Size (w × h × d, m) | Prompt |
-|---|---|---|
-| `ferry_boat` | 7.4 × 0.6 × 1.7 | A long, low, flat-bottomed wooden ferry boat, dark weathered planks, a raised curved bow and stern, a narrow rim along both sides, an empty flat deck (crates, the ferryman and his lantern are added by the game). Origin at the **centre of the deck surface**; the hull reaches about 0.4 m below it. |
-| `crate` | 0.5 × 0.3 × 0.42 | A small wooden crate **without a lid**, open at the top, filled with straw almost to the rim, rope handles on the sides. |
-| `crate_lid` | 0.52 × 0.05 × 0.44 | The matching flat lid of planks with two battens. Origin at the **middle of its back edge** (the hinge); the lid extends forwards (−Y in Blender), so the game can swing it open. |
-| `ferryman` | 0.7 × 1.45 × 0.6 | A tall, gaunt ferryman in a long hooded dark cloak, slightly stooped, the face hidden in shadow except for two pale, softly glowing eyes (emissive), hands folded in front. **No pole** (the game adds it). |
+| `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
+| `shop_sign` | 1.0 × 0.75 × 0.05 | The hanging "closed / open" sign for the shop window: a painted wooden board 0.98 × 0.44 m in a thin frame, hanging from two cords that meet 0.3 m above it. The **front (−Y) is painted dark red**, the **back (+Y) green**, both with a thin cream border and **no lettering** (the game writes "closed"/"open" in the player's language). Origin at the **centre of the board**. The game flips it round. |
 
 **Room layout** (only if you make `room.glb`; Blender coordinates, Z up, origin at 0,0,0, do not
 apply an offset): the floor is **not** part of the room model (the game draws the floor grid).
@@ -128,6 +128,41 @@ apply an offset): the floor is **not** part of the room model (the game draws th
   with frame and emissive moonlit glass; dark wallpaper with a faded pattern, wooden wainscot up
   to 0.9 m, a few cobwebs in the upper corners.
 - Leave the right side and the front open (the camera looks in from the front).
+
+## The ferryman – `assets/models/shop/<id>.glb`
+
+In the evening the player walks out to the harbour, where the ferryman sells crates from his boat.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `ferry_boat` | 7.4 × 0.6 × 1.7 | A long, low, flat-bottomed wooden ferry boat, dark weathered planks, a raised curved bow and stern, a narrow rim along both sides, an empty flat deck (crates, the ferryman and his lantern are added by the game). Origin at the **centre of the deck surface**; the hull reaches about 0.4 m below it. |
+| `crate` | 0.5 × 0.3 × 0.42 | A small wooden crate **without a lid**, open at the top, filled with straw almost to the rim, rope handles on the sides. |
+| `crate_lid` | 0.52 × 0.05 × 0.44 | The matching flat lid of planks with two battens. Origin at the **middle of its back edge** (the hinge); the lid extends forwards (−Y in Blender), so the game can swing it open. |
+| `ferryman` | 0.7 × 1.45 × 0.6 | A tall, gaunt ferryman in a long hooded dark cloak, slightly stooped, the face hidden in shadow except for two pale, softly glowing eyes (emissive), hands folded in front. **No pole** (the game adds it). |
+
+## The harbour – `assets/models/harbor/<id>.glb`
+
+The harbour behind the shop, where the ferryman moors: a stone quay with a wooden boardwalk (drawn
+by the game), the harbour master's hut, a lighthouse, a lamp post, a jetty with rowboats, the
+village behind. The game adds all lights, the lighthouse beam and every movement (bobbing boats,
+the swinging bell, drifting lanterns), so the models stay still and contain **no light sources** –
+glowing glass and windows are just emissive materials.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `harbour_hut` | 2.6 × 2.9 × 2.1 | The harbour master's small wooden hut: dark weathered planks, a steep shingled roof, a plank door on the left of the front, a window on the right glowing warm amber (emissive), a lantern on a hook beside the door at about 1.75 m (emissive glass), a coil of rope and a lifebuoy on the wall. |
+| `lighthouse` | 1.2 × 4.3 × 1.2 | A small, stout lighthouse on a round stone base: tapering tower with white and dusty-red bands, a little iron gallery, a glass lamp room **centred at 3.6 m height** glowing pale gold (emissive), a dark conical roof. |
+| `lamp_post` | 0.4 × 2.7 × 0.4 | An old cast-iron harbour lamp post with a square glass lantern on top, the glass **centred at 2.45 m** and glowing warm amber (emissive). |
+| `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
+| `barrel` | 0.6 × 0.72 × 0.6 | An old wooden barrel with iron hoops. |
+| `mooring_post` | 0.3 × 0.6 × 0.3 | A short weathered wooden mooring post (bollard) with a coil of thick rope around it. |
+| `bell_post` | 0.6 × 1.95 × 0.2 | A wooden post with a short arm sticking out to the right (+X) at the top; the end of the arm is **0.38 m right of the post, 1.85 m high**, where the bell hangs (the bell itself is a separate model). |
+| `ferry_bell` | 0.25 × 0.22 × 0.25 | A small, slightly tarnished brass bell with a clapper and a ring at the top. Origin at the **top of the ring** (where it hangs), the bell below it, so the game can swing it. |
+| `hand_cart` | 2.0 × 0.75 × 1.0 | A wooden two-wheeled hand cart: a flat loading bed of planks **0.42 m high, 1.2 × 0.8 m**, with a low rim, two spoked wheels under the middle, two long handles reaching out to the left (−X). The game stacks bought crates on the bed. |
+| `signpost` | 0.95 × 1.95 × 0.2 | A crooked wooden signpost with two arrow-shaped boards pointing to the right, one at 1.6 m and one at 1.3 m, **no lettering**. |
+| `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along the Y axis (front to back), two seats, a pair of oars resting inside. |
+| `jetty` | 1.1 × 0.7 × 3.8 | A narrow wooden jetty: a deck of planks running along the Y axis (3.8 m long, 1.0 m wide) on four posts. Origin at the **centre of the deck surface**; the posts reach about 0.6 m below it. |
+| `paper_lantern` | 0.26 × 0.34 × 0.26 | A small floating paper lantern on a tiny round wooden raft: a box of warm paper glowing amber (emissive). |
 
 ## Delivery: push every model on its own
 

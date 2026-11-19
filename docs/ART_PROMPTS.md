@@ -24,8 +24,8 @@ python3 tools/check_models.py
 
 | What | Prompts |
 |---|---|
-| *(optional)* Models for the harbour (boat, crate, ferryman) and the wall clock | [MODEL_PROMPTS.md](MODEL_PROMPTS.md#the-harbour--assetsmodelsshopidglb-optional) |
-| *(optional)* Painted coin icons | [Coins](#coins-optional--canvas-1024--1024) |
+| 3D models for the harbour, the ferryman, the shop sign and the wall clock | [MODEL_PROMPTS.md – open orders](MODEL_PROMPTS.md#open-orders) |
+| Painted coin icons (replacing the simple drawings) | [Coins](#coins-optional--canvas-1024--1024) |
 
 ## Workflow
 

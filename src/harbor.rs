@@ -15,6 +15,7 @@ use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 
+use crate::data::asset_exists;
 use crate::day_cycle::Phase;
 use crate::i18n::Lang;
 use crate::rng::Rng;
@@ -120,11 +121,55 @@ pub struct RippleMesh(Handle<Mesh>);
 /// Spawning helper: a plain mesh with a matt colour at a harbour position.
 struct Kit<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
+    asset_server: &'a AssetServer,
     meshes: &'a mut Assets<Mesh>,
     materials: &'a mut Assets<StandardMaterial>,
 }
 
 impl Kit<'_, '_, '_> {
+    /// The model `assets/models/harbor/<id>.glb` at a harbour position, or
+    /// `None` while it has not been made (the caller builds a placeholder).
+    fn model(&mut self, id: &str, at: Transform) -> Option<Entity> {
+        let path = format!("models/harbor/{id}.glb");
+        asset_exists(&path).then(|| {
+            self.commands
+                .spawn((
+                    WorldAssetRoot(
+                        self.asset_server
+                            .load(GltfAssetLabel::Scene(0).from_asset(path)),
+                    ),
+                    at.with_translation(HARBOR + at.translation),
+                ))
+                .id()
+        })
+    }
+
+    /// Like `model`, but as a child of a moving entity (local transform).
+    fn model_in(&mut self, parent: Entity, id: &str, at: Transform) -> bool {
+        let Some(e) = self.model(id, at) else {
+            return false;
+        };
+        self.commands.entity(e).insert((at, ChildOf(parent)));
+        true
+    }
+
+    /// A warm point light at a harbour position (the lamp itself is part of
+    /// a model, or drawn by the caller).
+    fn light(&mut self, at: Vec3, intensity: f32, range: f32, shadows: bool) -> Entity {
+        self.commands
+            .spawn((
+                PointLight {
+                    color: Color::srgb(1.0, 0.75, 0.45),
+                    intensity,
+                    range,
+                    shadow_maps_enabled: shadows,
+                    ..default()
+                },
+                Transform::from_translation(HARBOR + at),
+            ))
+            .id()
+    }
+
     fn add(&mut self, mesh: impl Into<Mesh>, color: Color, at: Transform) -> Entity {
         let mesh = self.meshes.add(mesh.into());
         let material = self.materials.add(StandardMaterial {
@@ -163,6 +208,7 @@ impl Kit<'_, '_, '_> {
 
 fn spawn_harbor(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     font: Res<UiFont>,
     lang: Res<Lang>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -188,6 +234,7 @@ fn spawn_harbor(
 
     let mut kit = Kit {
         commands: &mut commands,
+        asset_server: &asset_server,
         meshes: &mut meshes,
         materials: &mut materials,
     };
@@ -225,6 +272,10 @@ fn spawn_harbor(
         (1.0, -7.7, 2.2, 1.6, true),
         (3.6, -8.2, 1.8, 2.0, true),
     ] {
+        let size = Transform::from_xyz(x, 0.0, z).with_scale(Vec3::new(w / 2.2, h / 2.4, 1.0));
+        if kit.model("village_house", size).is_some() {
+            continue;
+        }
         let wall = Color::srgb(0.14, 0.13, 0.17);
         kit.add(
             Cuboid::new(w, h, 1.8),
@@ -251,44 +302,49 @@ fn spawn_harbor(
 
     // The harbour master's hut, with a lit window and a lantern.
     let hut = Vec3::new(3.0, 0.0, -2.6);
-    kit.add(
-        Cuboid::new(2.6, 2.0, 1.8),
-        Color::srgb(0.27, 0.19, 0.13),
-        Transform::from_translation(hut + Vec3::Y * 1.0),
-    );
-    for side in [-1.0, 1.0] {
+    let hut_lamp = hut + Vec3::new(-0.1, 1.75, 1.0);
+    if kit
+        .model("harbour_hut", Transform::from_translation(hut))
+        .is_some()
+    {
+        kit.light(hut_lamp, 60_000.0, 4.0, false);
+    } else {
         kit.add(
-            Cuboid::new(1.65, 0.1, 2.1),
-            Color::srgb(0.16, 0.12, 0.1),
-            Transform::from_translation(hut + Vec3::new(side * 0.62, 2.35, 0.0))
-                .with_rotation(Quat::from_rotation_z(-side * 0.55)),
+            Cuboid::new(2.6, 2.0, 1.8),
+            Color::srgb(0.27, 0.19, 0.13),
+            Transform::from_translation(hut + Vec3::Y * 1.0),
         );
+        for side in [-1.0, 1.0] {
+            kit.add(
+                Cuboid::new(1.65, 0.1, 2.1),
+                Color::srgb(0.16, 0.12, 0.1),
+                Transform::from_translation(hut + Vec3::new(side * 0.62, 2.35, 0.0))
+                    .with_rotation(Quat::from_rotation_z(-side * 0.55)),
+            );
+        }
+        kit.add(
+            Cuboid::new(0.7, 1.4, 0.06),
+            Color::srgb(0.18, 0.12, 0.08),
+            Transform::from_translation(hut + Vec3::new(-0.6, 0.7, 0.91)),
+        );
+        kit.glow(
+            Cuboid::new(0.6, 0.5, 0.06),
+            LinearRgba::rgb(1.2, 0.7, 0.28),
+            hut + Vec3::new(0.55, 1.25, 0.92),
+        );
+        kit.glow(Sphere::new(0.08), LinearRgba::rgb(5.0, 3.0, 1.2), hut_lamp);
+        kit.light(hut_lamp, 60_000.0, 4.0, false);
     }
-    kit.add(
-        Cuboid::new(0.7, 1.4, 0.06),
-        Color::srgb(0.18, 0.12, 0.08),
-        Transform::from_translation(hut + Vec3::new(-0.6, 0.7, 0.91)),
-    );
-    kit.glow(
-        Cuboid::new(0.6, 0.5, 0.06),
-        LinearRgba::rgb(1.2, 0.7, 0.28),
-        hut + Vec3::new(0.55, 1.25, 0.92),
-    );
-    let hut_lamp = kit.glow(
-        Sphere::new(0.08),
-        LinearRgba::rgb(5.0, 3.0, 1.2),
-        hut + Vec3::new(-0.1, 1.75, 1.0),
-    );
-    kit.commands.entity(hut_lamp).insert(PointLight {
-        color: Color::srgb(1.0, 0.75, 0.45),
-        intensity: 60_000.0,
-        range: 4.0,
-        shadow_maps_enabled: false,
-        ..default()
-    });
     // Barrels and nets beside it.
     let barrel = Color::srgb(0.33, 0.22, 0.13);
     for (x, z, y) in [(5.0, -2.2, 0.0), (5.6, -2.5, 0.0), (5.3, -2.35, 0.75)] {
+        let turn = Quat::from_rotation_y(x * 2.0);
+        if kit
+            .model("barrel", Transform::from_xyz(x, y, z).with_rotation(turn))
+            .is_some()
+        {
+            continue;
+        }
         kit.add(
             Cylinder::new(0.3, 0.72),
             barrel,
@@ -299,61 +355,73 @@ fn spawn_harbor(
     // Lamp post at the quay.
     let lamp = Vec3::new(0.6, 0.0, QUAY_EDGE - 0.55);
     let iron = Color::srgb(0.1, 0.1, 0.12);
-    kit.add(
-        Cylinder::new(0.06, 2.6),
-        iron,
-        Transform::from_translation(lamp + Vec3::Y * 1.3),
-    );
-    kit.add(
-        Cuboid::new(0.3, 0.04, 0.3),
-        iron,
-        Transform::from_translation(lamp + Vec3::Y * 2.62),
-    );
-    let light = kit.glow(
-        Cuboid::new(0.22, 0.3, 0.22),
-        LinearRgba::rgb(6.0, 3.8, 1.5),
-        lamp + Vec3::Y * 2.45,
-    );
-    kit.commands.entity(light).insert(PointLight {
-        color: Color::srgb(1.0, 0.75, 0.45),
-        intensity: 220_000.0,
-        range: 9.0,
-        shadow_maps_enabled: true,
-        ..default()
-    });
+    if kit
+        .model("lamp_post", Transform::from_translation(lamp))
+        .is_some()
+    {
+        kit.light(lamp + Vec3::Y * 2.45, 220_000.0, 9.0, true);
+    } else {
+        kit.add(
+            Cylinder::new(0.06, 2.6),
+            iron,
+            Transform::from_translation(lamp + Vec3::Y * 1.3),
+        );
+        kit.add(
+            Cuboid::new(0.3, 0.04, 0.3),
+            iron,
+            Transform::from_translation(lamp + Vec3::Y * 2.62),
+        );
+        let light = kit.glow(
+            Cuboid::new(0.22, 0.3, 0.22),
+            LinearRgba::rgb(6.0, 3.8, 1.5),
+            lamp + Vec3::Y * 2.45,
+        );
+        kit.commands.entity(light).insert(PointLight {
+            color: Color::srgb(1.0, 0.75, 0.45),
+            intensity: 220_000.0,
+            range: 9.0,
+            shadow_maps_enabled: true,
+            ..default()
+        });
+    }
 
     // A small lighthouse at the end of the harbour wall; its beam sweeps
     // over the water.
     let tower = Vec3::new(-6.0, 0.0, -3.6);
-    for (i, (r, h)) in [(0.55, 1.2), (0.45, 1.2), (0.38, 1.0)]
-        .into_iter()
-        .enumerate()
+    if kit
+        .model("lighthouse", Transform::from_translation(tower))
+        .is_none()
     {
-        let y = [0.6, 1.8, 2.9][i];
-        let color = if i % 2 == 0 {
-            Color::srgb(0.8, 0.78, 0.74)
-        } else {
-            Color::srgb(0.55, 0.2, 0.18)
-        };
+        for (i, (r, h)) in [(0.55, 1.2), (0.45, 1.2), (0.38, 1.0)]
+            .into_iter()
+            .enumerate()
+        {
+            let y = [0.6, 1.8, 2.9][i];
+            let color = if i % 2 == 0 {
+                Color::srgb(0.8, 0.78, 0.74)
+            } else {
+                Color::srgb(0.55, 0.2, 0.18)
+            };
+            kit.add(
+                Cylinder::new(r, h),
+                color,
+                Transform::from_translation(tower + Vec3::Y * y),
+            );
+        }
+        kit.glow(
+            Cylinder::new(0.3, 0.45),
+            LinearRgba::rgb(6.0, 5.0, 2.5),
+            tower + Vec3::Y * 3.62,
+        );
         kit.add(
-            Cylinder::new(r, h),
-            color,
-            Transform::from_translation(tower + Vec3::Y * y),
+            Cone {
+                radius: 0.42,
+                height: 0.45,
+            },
+            Color::srgb(0.12, 0.12, 0.14),
+            Transform::from_translation(tower + Vec3::Y * 4.07),
         );
     }
-    kit.glow(
-        Cylinder::new(0.3, 0.45),
-        LinearRgba::rgb(6.0, 5.0, 2.5),
-        tower + Vec3::Y * 3.62,
-    );
-    kit.add(
-        Cone {
-            radius: 0.42,
-            height: 0.45,
-        },
-        Color::srgb(0.12, 0.12, 0.14),
-        Transform::from_translation(tower + Vec3::Y * 4.07),
-    );
     let beam_pivot = kit
         .commands
         .spawn((
@@ -407,22 +475,25 @@ fn spawn_harbor(
 
     // A wooden jetty on posts on the right, with a rowboat tied to it.
     let jetty_x = 5.9;
-    for i in 0..9 {
-        let z = QUAY_EDGE + 0.2 + i as f32 * 0.42;
-        kit.add(
-            Cuboid::new(1.0, 0.06, 0.38),
-            Color::srgb(0.29, 0.2, 0.13),
-            Transform::from_xyz(jetty_x, 0.03, z)
-                .with_rotation(Quat::from_rotation_z(rng.range(-0.03, 0.03))),
-        );
-    }
-    for z in [QUAY_EDGE + 1.2, QUAY_EDGE + 3.4] {
-        for side in [-0.45, 0.45] {
+    let jetty = Transform::from_xyz(jetty_x, 0.06, QUAY_EDGE + 1.9);
+    if kit.model("jetty", jetty).is_none() {
+        for i in 0..9 {
+            let z = QUAY_EDGE + 0.2 + i as f32 * 0.42;
             kit.add(
-                Cylinder::new(0.06, 0.7),
-                Color::srgb(0.18, 0.13, 0.09),
-                Transform::from_xyz(jetty_x + side, -0.2, z),
+                Cuboid::new(1.0, 0.06, 0.38),
+                Color::srgb(0.29, 0.2, 0.13),
+                Transform::from_xyz(jetty_x, 0.03, z)
+                    .with_rotation(Quat::from_rotation_z(rng.range(-0.03, 0.03))),
             );
+        }
+        for z in [QUAY_EDGE + 1.2, QUAY_EDGE + 3.4] {
+            for side in [-0.45, 0.45] {
+                kit.add(
+                    Cylinder::new(0.06, 0.7),
+                    Color::srgb(0.18, 0.13, 0.09),
+                    Transform::from_xyz(jetty_x + side, -0.2, z),
+                );
+            }
         }
     }
 
@@ -440,6 +511,9 @@ fn spawn_harbor(
                 Visibility::default(),
             ))
             .id();
+        if kit.model_in(boat, "rowboat", Transform::from_xyz(0.0, -0.1, 0.0)) {
+            continue;
+        }
         let hull = kit.meshes.add(Cuboid::new(0.7, 0.25, 1.9));
         let seat = kit.meshes.add(Cuboid::new(0.6, 0.05, 0.22));
         let hull_mat = kit.materials.add(Color::srgb(0.32, 0.24, 0.17));
@@ -463,6 +537,12 @@ fn spawn_harbor(
     // Mooring posts with coils of rope along the edge.
     for x in [-4.6, -0.8, 3.6] {
         let base = Vec3::new(x, 0.0, QUAY_EDGE - 0.12);
+        if kit
+            .model("mooring_post", Transform::from_translation(base))
+            .is_some()
+        {
+            continue;
+        }
         kit.add(
             Cylinder::new(0.09, 0.55),
             Color::srgb(0.2, 0.14, 0.1),
@@ -477,47 +557,62 @@ fn spawn_harbor(
 
     // The ferryman's bell on a post beside the mooring.
     let bell_post = Vec3::new(-6.3, 0.0, QUAY_EDGE - 0.4);
-    kit.add(
-        Cylinder::new(0.05, 1.9),
-        Color::srgb(0.2, 0.14, 0.1),
-        Transform::from_translation(bell_post + Vec3::Y * 0.95),
-    );
-    kit.add(
-        Cuboid::new(0.45, 0.05, 0.05),
-        Color::srgb(0.2, 0.14, 0.1),
-        Transform::from_translation(bell_post + Vec3::new(0.2, 1.88, 0.0)),
-    );
-    let bell = kit.add(
-        Cone {
-            radius: 0.12,
-            height: 0.2,
-        },
-        Color::srgb(0.7, 0.55, 0.28),
-        Transform::from_translation(bell_post + Vec3::new(0.38, 1.74, 0.0)),
-    );
+    if kit
+        .model("bell_post", Transform::from_translation(bell_post))
+        .is_none()
+    {
+        kit.add(
+            Cylinder::new(0.05, 1.9),
+            Color::srgb(0.2, 0.14, 0.1),
+            Transform::from_translation(bell_post + Vec3::Y * 0.95),
+        );
+        kit.add(
+            Cuboid::new(0.45, 0.05, 0.05),
+            Color::srgb(0.2, 0.14, 0.1),
+            Transform::from_translation(bell_post + Vec3::new(0.2, 1.88, 0.0)),
+        );
+    }
+    // The bell hangs from the end of the arm and swings about its hook.
+    let hook = bell_post + Vec3::new(0.38, 1.85, 0.0);
+    let bell = match kit.model("ferry_bell", Transform::from_translation(hook)) {
+        Some(bell) => bell,
+        None => kit.add(
+            Cone {
+                radius: 0.12,
+                height: 0.2,
+            },
+            Color::srgb(0.7, 0.55, 0.28),
+            Transform::from_translation(hook - Vec3::Y * 0.11),
+        ),
+    };
     kit.commands.entity(bell).insert(Bell);
 
     // The hand cart that takes bought crates up to the shop.
     let wood = Color::srgb(0.36, 0.25, 0.16);
-    kit.add(
-        Cuboid::new(1.2, 0.08, 0.8),
-        wood,
-        Transform::from_translation(CART + Vec3::Y * 0.42),
-    );
-    for side in [-1.0, 1.0] {
+    if kit
+        .model("hand_cart", Transform::from_translation(CART))
+        .is_none()
+    {
         kit.add(
-            Cylinder::new(0.28, 0.06),
-            Color::srgb(0.22, 0.15, 0.1),
-            Transform::from_translation(CART + Vec3::new(0.0, 0.28, side * 0.45))
-                .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+            Cuboid::new(1.2, 0.08, 0.8),
+            wood,
+            Transform::from_translation(CART + Vec3::Y * 0.42),
+        );
+        for side in [-1.0, 1.0] {
+            kit.add(
+                Cylinder::new(0.28, 0.06),
+                Color::srgb(0.22, 0.15, 0.1),
+                Transform::from_translation(CART + Vec3::new(0.0, 0.28, side * 0.45))
+                    .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+            );
+        }
+        kit.add(
+            Cuboid::new(0.9, 0.05, 0.05),
+            wood,
+            Transform::from_translation(CART + Vec3::new(-1.0, 0.55, 0.0))
+                .with_rotation(Quat::from_rotation_z(0.35)),
         );
     }
-    kit.add(
-        Cuboid::new(0.9, 0.05, 0.05),
-        wood,
-        Transform::from_translation(CART + Vec3::new(-1.0, 0.55, 0.0))
-            .with_rotation(Quat::from_rotation_z(0.35)),
-    );
 
     // The signpost back to the shop: click it to go back.
     let sign = kit
@@ -529,22 +624,24 @@ fn spawn_harbor(
         ))
         .observe(on_signpost_click)
         .id();
-    let post = kit.meshes.add(Cylinder::new(0.06, 1.9));
-    let board = kit.meshes.add(Cuboid::new(0.8, 0.22, 0.05));
-    let sign_mat = kit.materials.add(Color::srgb(0.4, 0.28, 0.18));
-    kit.commands.spawn((
-        Mesh3d(post),
-        MeshMaterial3d(sign_mat.clone()),
-        Transform::from_xyz(0.0, 0.95, 0.0),
-        ChildOf(sign),
-    ));
-    for (y, turn) in [(1.6, 0.15), (1.3, -0.1)] {
+    if !kit.model_in(sign, "signpost", Transform::default()) {
+        let post = kit.meshes.add(Cylinder::new(0.06, 1.9));
+        let board = kit.meshes.add(Cuboid::new(0.8, 0.22, 0.05));
+        let sign_mat = kit.materials.add(Color::srgb(0.4, 0.28, 0.18));
         kit.commands.spawn((
-            Mesh3d(board.clone()),
+            Mesh3d(post),
             MeshMaterial3d(sign_mat.clone()),
-            Transform::from_xyz(0.25, y, 0.05).with_rotation(Quat::from_rotation_y(turn)),
+            Transform::from_xyz(0.0, 0.95, 0.0),
             ChildOf(sign),
         ));
+        for (y, turn) in [(1.6, 0.15), (1.3, -0.1)] {
+            kit.commands.spawn((
+                Mesh3d(board.clone()),
+                MeshMaterial3d(sign_mat.clone()),
+                Transform::from_xyz(0.25, y, 0.05).with_rotation(Quat::from_rotation_y(turn)),
+                ChildOf(sign),
+            ));
+        }
     }
     kit.commands.spawn(world_label(
         &font,
@@ -555,6 +652,7 @@ fn spawn_harbor(
     ));
 
     // Paper lanterns drifting slowly across the water.
+    let lantern_model = asset_exists("models/harbor/paper_lantern.glb");
     let lantern_mesh = meshes.add(Cuboid::new(0.14, 0.18, 0.14));
     let float_mesh = meshes.add(Cylinder::new(0.12, 0.04));
     let float_mat = materials.add(Color::srgb(0.18, 0.14, 0.1));
@@ -577,6 +675,18 @@ fn spawn_harbor(
                 Pickable::IGNORE,
             ))
             .id();
+        if lantern_model {
+            commands.spawn((
+                WorldAssetRoot(
+                    asset_server.load(
+                        GltfAssetLabel::Scene(0).from_asset("models/harbor/paper_lantern.glb"),
+                    ),
+                ),
+                Transform::default(),
+                ChildOf(lantern),
+            ));
+            continue;
+        }
         commands.spawn((
             Mesh3d(float_mesh.clone()),
             MeshMaterial3d(float_mat.clone()),

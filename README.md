@@ -163,7 +163,9 @@ exists, the game shows a coloured box of the size given in `assets/data/decor.ro
 |---|---|
 | Furniture and keepsakes | `assets/models/decor/<id>.glb` |
 | Products (stand on shelves) | `assets/models/products/<id>.glb` |
-| Counter, door, walls | `assets/models/shop/counter.glb`, `door.glb`, `room.glb` (optional) |
+| Counter, door, walls, wall clock, window sign | `assets/models/shop/counter.glb`, `door.glb`, `room.glb`, `wall_clock.glb`, `shop_sign.glb` |
+| The ferryman, his boat and crates | `assets/models/shop/ferryman.glb`, `ferry_boat.glb`, `crate.glb`, `crate_lid.glb` |
+| The harbour (hut, lighthouse, jetty, boats …) | `assets/models/harbor/<id>.glb` |
 
 Check models (size, origin, triangles, scenes, missing files) with:
 
