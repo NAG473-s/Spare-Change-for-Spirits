@@ -640,7 +640,7 @@ fn spawn_ghost(
 
 /// A ghost that already shows the ware it carries.
 #[derive(Component)]
-struct ShowsCarried;
+struct ShowsCarried(Entity);
 
 /// Where a carried ware floats beside the ghost, and its size.
 const CARRY_SPOT: Vec3 = Vec3::new(0.42, 0.6, 0.15);
@@ -649,14 +649,20 @@ const CARRY_SCALE: f32 = 0.85;
 /// A ghost that took its wish from a shelf holds it beside itself.
 fn show_carried_wares(
     mut commands: Commands,
-    ghosts: Query<(Entity, &Ghost), Without<ShowsCarried>>,
+    ghosts: Query<(Entity, &Ghost, Option<&ShowsCarried>)>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (entity, ghost) in &ghosts {
-        let Some(ware) = &ghost.carrying else {
-            continue;
+    for (entity, ghost, shown) in &ghosts {
+        let ware = match (&ghost.carrying, shown) {
+            (Some(ware), None) => ware,
+            (None, Some(ShowsCarried(visual))) => {
+                commands.entity(*visual).despawn();
+                commands.entity(entity).remove::<ShowsCarried>();
+                continue;
+            }
+            _ => continue,
         };
         let visual = crate::shop::product_model(
             &mut commands,
@@ -673,7 +679,7 @@ fn show_carried_wares(
             .and_modify(|mut t| {
                 t.scale *= CARRY_SCALE;
             });
-        commands.entity(entity).insert(ShowsCarried);
+        commands.entity(entity).insert(ShowsCarried(visual));
     }
 }
 
@@ -707,32 +713,26 @@ fn spawn_ordering(
     data: Res<GameData>,
     layout: Res<ShopLayout>,
     clock: Res<NightClock>,
-    progress: Res<Progress>,
+    mut progress: ResMut<Progress>,
     lang: Res<Lang>,
     mut art: GhostArt,
     mut rng: ResMut<Rng>,
     mut cues: MessageWriter<Cue>,
-    mut came: Local<(u32, usize)>,
+    mut report: ResMut<NightReport>,
     upgrades: Res<Upgrades>,
 ) {
-    // `came`: (night, how many of tonight's orders have come so far).
-    if came.0 != progress.night {
-        *came = (progress.night, 0);
-    }
-    let due: Vec<_> = progress
-        .orders
-        .iter()
-        .filter(|o| o.night == progress.night)
-        .collect();
-    let Some(order) = due.get(came.1) else {
+    let mut due = progress.orders.iter().filter(|o| o.night == progress.night);
+    let arrived = report.orders_arrived;
+    let total = due.clone().count();
+    let Some(order) = due.nth(arrived) else {
         return;
     };
     let (from, to) = data.config.orders.arrive_at;
-    let at = from + (to - from) * came.1 as f32 / due.len().max(1) as f32;
+    let at = from + (to - from) * arrived as f32 / total as f32;
     if clock.elapsed < at * clock.length {
         return;
     }
-    came.1 += 1;
+    report.orders_arrived += 1;
     let Some(def_idx) = data.ghost_index(&order.ghost) else {
         return;
     };
@@ -747,6 +747,7 @@ fn spawn_ordering(
         patience_factor: upgrades.patience_factor(&data),
         regular: None,
     };
+    progress.journal.met(&data.ghosts[def_idx].id, &visit.wish);
     spawn_ghost(
         &mut commands,
         &data,
@@ -1207,7 +1208,8 @@ fn animate_ghosts(
         } else if g.vel.x > 0.05 {
             1.0
         } else {
-            g.facing
+            // Finish the turn even if the ghost has already reached the queue.
+            g.facing.signum()
         };
         let turn = (wanted - g.facing).clamp(-dt * 6.0, dt * 6.0);
         g.facing += turn;
@@ -1281,9 +1283,7 @@ fn show_gestures(
         let Some(mut material) = materials.get_mut(&handle.0) else {
             continue;
         };
-        if image.is_some() {
-            material.base_color_texture = image;
-        }
+        material.base_color_texture = image;
         match frames {
             Some(frames) => {
                 commands.entity(entity).insert(SheetAnim {
@@ -1366,11 +1366,120 @@ mod tests {
     use super::*;
 
     #[test]
+    fn replaying_a_night_brings_back_its_ordered_customer() {
+        let data = GameData::load();
+        let mut progress = Progress::new(0);
+        progress.orders.push(crate::day_cycle::Order {
+            night: progress.night,
+            ghost: "cat".into(),
+            product: "fish_bone".into(),
+        });
+        let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()))
+            .init_asset::<Image>()
+            .init_asset::<Font>()
+            .init_resource::<Assets<Mesh>>()
+            .init_resource::<Assets<StandardMaterial>>()
+            .insert_resource(Lang::load("en"))
+            .init_resource::<UiFont>()
+            .init_resource::<Upgrades>()
+            .insert_resource(layout)
+            .insert_resource(data)
+            .insert_resource(Rng::new(1))
+            .insert_resource(NightClock {
+                elapsed: 50.,
+                length: 100.,
+            })
+            .add_message::<Cue>()
+            .add_systems(Update, spawn_ordering);
+
+        for _ in 0..2 {
+            // Loading the evening snapshot starts a fresh report even for the same night.
+            app.insert_resource(progress.clone())
+                .insert_resource(NightReport::default());
+            app.update();
+            app.update();
+            let played = app.world().resource::<Progress>();
+            assert_eq!(played.journal.book["cat"].met, 1);
+            assert_eq!(played.journal.book["cat"].wishes, ["fish_bone"]);
+            assert_eq!(app.world().resource::<NightReport>().orders_arrived, 1);
+        }
+    }
+
+    #[test]
     fn reads_png_size() {
         let mut header = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
         header.extend_from_slice(&704u32.to_be_bytes());
         header.extend_from_slice(&264u32.to_be_bytes());
         assert_eq!(png_size(&header), Some((704, 264)));
         assert_eq!(png_size(b"not a png at all, sorry"), None);
+    }
+
+    #[test]
+    fn accepting_the_last_ware_reserves_it_until_change_is_given() {
+        use crate::economy::Drawer;
+        use crate::inventory::Stock;
+        use crate::register::{Register, RegisterPlugin};
+        use crate::shop::Storeroom;
+        use crate::ui::Action;
+
+        let data = GameData::load();
+        let shy = data.ghost_index("shy").unwrap();
+        let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        let mut app = App::new();
+        app.add_plugins(RegisterPlugin)
+            .add_message::<Action>()
+            .add_message::<Cue>()
+            .add_message::<Finale>()
+            .insert_resource(State::new(Phase::Night))
+            .insert_resource(Progress::new(0))
+            .insert_resource(layout)
+            .insert_resource(data)
+            .insert_resource(Lang::load("en"))
+            .insert_resource(Rng::new(1))
+            .init_resource::<Drawer>()
+            .init_resource::<Stock>()
+            .init_resource::<Storeroom>()
+            .init_resource::<GameLog>()
+            .init_resource::<NightReport>();
+        let world = app.world_mut();
+        let ware = "lavender";
+        world.resource_mut::<Stock>().add(ware, 1);
+        let ghost = world
+            .spawn(Ghost {
+                def: shy,
+                wish: ware.into(),
+                hint: String::new(),
+                state: GhostState::Waiting,
+                pos: Vec2::ZERO,
+                target: Vec2::ZERO,
+                timer: 0.0,
+                patience: 10.0,
+                max_patience: 10.0,
+                lift: 0.0,
+                vel: Vec2::ZERO,
+                facing: 1.0,
+                age: 0.0,
+                chapter: None,
+                plain: false,
+                ordered: false,
+                browse_cell: None,
+                carrying: Some(ware.into()),
+                regular: None,
+                bob_offset: 0.0,
+            })
+            .id();
+        world.insert_resource(Queue(vec![ghost]));
+        app.update();
+        let world = app.world_mut();
+        assert!(world.resource::<Register>().is_busy_with(ghost));
+        assert!(!world.resource_mut::<Stock>().take_one(ware));
+        // A new unit is still there after the first customer's change.
+        world.resource_mut::<Stock>().add(ware, 1);
+        world.write_message(Action::GiveChange);
+        app.update();
+        assert_eq!(app.world().resource::<NightReport>().sales, 1);
+        assert_eq!(app.world().resource::<Stock>().count(ware), 1);
     }
 }

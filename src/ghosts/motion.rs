@@ -194,7 +194,7 @@ impl Act {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq)]
 struct Pose {
     head: Vec2,
     tilt: f32,
@@ -339,7 +339,12 @@ pub(super) fn animate(
         } else {
             act.pose(rig.elapsed * rig.tempo, ghost.bob_offset)
         };
-        rig.current = rig.previous.blend(pose, k * k * (3.0 - 2.0 * k));
+        let next = rig.previous.blend(pose, k * k * (3.0 - 2.0 * k));
+        // A drawn gesture uses the resting mesh once the previous pose has eased out.
+        if next == rig.current {
+            continue;
+        }
+        rig.current = next;
         let Some(mut surface) = meshes.get_mut(mesh) else {
             continue;
         };

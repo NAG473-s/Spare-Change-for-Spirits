@@ -63,9 +63,11 @@ works with the mouse works with it; a ring marks the pointer until the real mous
 
 Saves: three profiles, each a game of its own with an autosave (start of every evening and night,
 and dawn) and three manual slots (pause menu → *Save game*, at any time; autosaves never overwrite
-them). *Continue* loads the newest save of all profiles, *Load game* lists them all, *New game*
-asks for the profile. A save continues at the market or at an evening; one made during a night
-continues at the start of that night. Files: `profile<N>/auto.ron` and `profile<N>/slot<M>.ron`
+them). *Continue* loads the newest playable save across all profiles. *Load game* lists all slots,
+and *New game* asks for the profile. A save continues at the market, in the evening, or at the
+completed season’s epilogue. Saving during a night returns to its opening preparations.
+Market offers, the hourglass, returnable crates and the day’s accounts carry over.
+Profile files are stored in `profile<N>/auto.ron` and `profile<N>/slot<M>.ron`
 (an old `save.ron` is moved to `profile1/auto.ron`). Saves and settings live in
 `%APPDATA%\SpareChangeForSpirits` (Windows), `~/Library/Application Support/SpareChangeForSpirits`
 (macOS) or `~/.local/share/spare-change-for-spirits` (Linux). Set `SCFS_SAVE_DIR` to use another

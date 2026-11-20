@@ -14,11 +14,14 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::accounts::Accounts;
 use crate::data::GameData;
 use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Drawer, Purse};
+use crate::ferry::BoughtTonight;
 use crate::inventory::{CratesOrdered, Stock};
-use crate::loan::{Loan, lend, repay};
+use crate::loan::{Loan, lend};
+use crate::market::MarketDay;
 use crate::shop::{CellContent, ShopLayout, Storeroom};
 use crate::upgrades::Upgrades;
 
@@ -45,7 +48,8 @@ impl Plugin for SavePlugin {
             .add_systems(
                 OnEnter(Phase::Morning),
                 autosave_dawn
-                    .after(repay)
+                    .after(crate::accounts::close_books)
+                    .after(crate::inventory::clear_orders)
                     .after(crate::day_cycle::count_story_tries),
             );
     }
@@ -94,6 +98,13 @@ pub struct SaveGame {
     /// Furniture bought or given but not placed (decor id → count).
     pub storeroom: BTreeMap<String, u32>,
     pub crates_ordered: u32,
+    /// Receipts for crates that can still be returned this evening.
+    #[serde(default)]
+    pub bought_crates: BTreeMap<String, u32>,
+    #[serde(default)]
+    pub accounts: Accounts,
+    #[serde(default)]
+    pub market: MarketDay,
     /// Still owed to the ferryman (the bankruptcy rule).
     #[serde(default)]
     pub loan: u32,
@@ -328,15 +339,20 @@ pub fn write_slot(profile: u8, slot: Slot, save: &SaveGame) {
     }
 }
 
-/// The newest save of a profile (autosave or manual).
+/// Readable saves of one profile, including the time each slot was written.
+fn profile_saves(
+    dir: &Path,
+    profile: u8,
+) -> impl Iterator<Item = (Slot, SaveGame, std::time::SystemTime)> + '_ {
+    Slot::all().filter_map(move |slot| {
+        let path = slot_path(dir, profile, slot);
+        let time = std::fs::metadata(&path).and_then(|m| m.modified()).ok()?;
+        Some((slot, read_save_at(&path)?, time))
+    })
+}
+
 fn latest_in(dir: &Path, profile: u8) -> Option<(Slot, SaveGame, std::time::SystemTime)> {
-    Slot::all()
-        .filter_map(|slot| {
-            let path = slot_path(dir, profile, slot);
-            let time = std::fs::metadata(&path).and_then(|m| m.modified()).ok()?;
-            Some((slot, read_save_at(&path)?, time))
-        })
-        .max_by_key(|(_, _, time)| *time)
+    profile_saves(dir, profile).max_by_key(|(_, _, time)| *time)
 }
 
 /// The newest save of one profile.
@@ -344,15 +360,15 @@ pub fn latest_save(profile: u8) -> Option<(Slot, SaveGame)> {
     latest_in(&save_dir()?, profile).map(|(slot, save, _)| (slot, save))
 }
 
-/// The newest save over all profiles: what "Continue" loads.
-pub fn newest_save() -> Option<(u8, Slot, SaveGame)> {
-    let dir = save_dir()?;
-    newest_in(&dir)
+/// The newest playable save over all profiles and slots for "Continue".
+pub fn newest_save(demo_nights: u32) -> Option<(u8, Slot, SaveGame)> {
+    newest_in(&save_dir()?, demo_nights)
 }
 
-fn newest_in(dir: &Path) -> Option<(u8, Slot, SaveGame)> {
+fn newest_in(dir: &Path, demo_nights: u32) -> Option<(u8, Slot, SaveGame)> {
     (1..=PROFILES)
-        .filter_map(|p| latest_in(dir, p).map(|(slot, save, time)| (p, slot, save, time)))
+        .flat_map(|p| profile_saves(dir, p).map(move |(slot, save, time)| (p, slot, save, time)))
+        .filter(|(_, _, save, _)| save.resume_at(demo_nights).is_some())
         .max_by_key(|(.., time)| *time)
         .map(|(p, slot, save, _)| (p, slot, save))
 }
@@ -411,6 +427,9 @@ pub struct GameState<'w> {
     pub layout: ResMut<'w, ShopLayout>,
     pub storeroom: ResMut<'w, Storeroom>,
     pub crates: ResMut<'w, CratesOrdered>,
+    pub bought: ResMut<'w, BoughtTonight>,
+    pub accounts: ResMut<'w, Accounts>,
+    pub market: ResMut<'w, MarketDay>,
     pub loan: ResMut<'w, Loan>,
     pub upgrades: ResMut<'w, Upgrades>,
 }
@@ -438,6 +457,9 @@ impl GameState<'_> {
             cells: self.layout.cells.clone(),
             storeroom: self.storeroom.0.clone(),
             crates_ordered: self.crates.0,
+            bought_crates: self.bought.0.clone(),
+            accounts: self.accounts.clone(),
+            market: self.market.clone(),
             loan: self.loan.owed,
             upgrades: self.upgrades.0.iter().cloned().collect(),
             market_open,
@@ -445,9 +467,9 @@ impl GameState<'_> {
         }
     }
 
-    pub fn apply(&mut self, save: &SaveGame, data: &GameData) {
+    pub fn apply(&mut self, save: &SaveGame, night: u32, data: &GameData) {
         *self.progress = Progress {
-            night: save.night,
+            night,
             reputation: save.reputation,
             story: save.story.clone(),
             story_tries: save.story_tries.clone(),
@@ -472,6 +494,9 @@ impl GameState<'_> {
         *self.layout = layout;
         self.storeroom.0 = save.storeroom.clone();
         self.crates.0 = save.crates_ordered;
+        self.bought.0 = save.bought_crates.clone();
+        *self.accounts = save.accounts.clone();
+        *self.market = save.market.clone();
         self.loan.owed = save.loan;
         self.upgrades.0 = save.upgrades.iter().cloned().collect();
     }
@@ -483,22 +508,36 @@ impl GameState<'_> {
         *self.layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
         self.storeroom.0.clear();
         self.crates.0 = 0;
+        self.bought.0.clear();
+        *self.accounts = Accounts::default();
+        *self.market = MarketDay::default();
         self.loan.owed = 0;
         self.upgrades.0.clear();
     }
 }
 
-/// Whether this build can continue a save: always, unless the save is
-/// past this build's last night (the end of the demo, played in the demo).
-/// Saves never break between the demo and the full game: new fields need
-/// `#[serde(default)]` instead of a new `SAVE_VERSION`.
 fn first() -> u32 {
     1
 }
 
-pub fn can_continue(save: &SaveGame, final_night: u32) -> bool {
-    // The full game lasts until the finale, however many nights it takes.
-    save.night <= final_night || (!cfg!(feature = "demo") && !save.finished)
+impl SaveGame {
+    /// Dawn saves store the upcoming night. A full-game season finale resumes at
+    /// its epilogue so Keep Playing advances the season and calendar exactly once.
+    pub fn resume_at(&self, demo_nights: u32) -> Option<(Phase, u32)> {
+        if cfg!(feature = "demo") && self.night > demo_nights {
+            return None;
+        }
+        let finished_demo = self.season == 1 && self.night == demo_nights + 1;
+        if self.finished && !finished_demo {
+            return Some((Phase::DemoEnd, self.night.saturating_sub(1)));
+        }
+        let phase = if self.market_open {
+            Phase::Day
+        } else {
+            Phase::Evening
+        };
+        Some((phase, self.night))
+    }
 }
 
 /// The state at the start of the current night: what a save made during
@@ -591,13 +630,33 @@ mod tests {
             cells: Vec::new(),
             storeroom: BTreeMap::new(),
             crates_ordered: 0,
+            bought_crates: BTreeMap::new(),
+            accounts: Accounts::default(),
+            market: MarketDay::default(),
             loan: 0,
             upgrades: Vec::new(),
             market_open: false,
             finished: true,
         };
-        assert!(!can_continue(&save, 5), "nothing left in the demo");
-        assert!(can_continue(&save, 10), "the full game goes on");
+        let expected = if cfg!(feature = "demo") {
+            None
+        } else {
+            Some((Phase::Evening, 6))
+        };
+        assert_eq!(save.resume_at(5), expected);
+    }
+
+    #[test]
+    fn a_full_game_finale_resumes_at_its_epilogue_even_if_it_finished_late() {
+        let mut save = sample(34);
+        save.season = 3;
+        save.finished = true;
+        let expected = if cfg!(feature = "demo") {
+            None
+        } else {
+            Some((Phase::DemoEnd, 33))
+        };
+        assert_eq!(save.resume_at(5), expected);
     }
 
     #[test]
@@ -635,6 +694,12 @@ mod tests {
             ],
             storeroom: BTreeMap::from([("umbrella".to_string(), 1)]),
             crates_ordered: 2,
+            bought_crates: BTreeMap::from([("marbles".into(), 2)]),
+            accounts: Accounts {
+                ferryman: 8,
+                ..default()
+            },
+            market: MarketDay::default(),
             loan: 7,
             upgrades: vec!["clear_corner".into()],
             market_open: true,
@@ -667,6 +732,9 @@ mod tests {
             cells: Vec::new(),
             storeroom: BTreeMap::new(),
             crates_ordered: 0,
+            bought_crates: BTreeMap::new(),
+            accounts: Accounts::default(),
+            market: MarketDay::default(),
             loan: 0,
             upgrades: Vec::new(),
             market_open: false,
@@ -703,12 +771,16 @@ mod tests {
     #[test]
     fn the_newest_save_wins_across_profiles_and_slots() {
         let dir = temp_dir("profiles");
-        assert!(newest_in(&dir).is_none());
+        assert!(newest_in(&dir, 5).is_none());
         write_ron(&slot_path(&dir, 1, Slot::Auto), &sample(2));
         std::thread::sleep(std::time::Duration::from_millis(20));
         write_ron(&slot_path(&dir, 2, Slot::Manual(3)), &sample(4));
-        let (profile, slot, save) = newest_in(&dir).unwrap();
+        let (profile, slot, save) = newest_in(&dir, 5).unwrap();
         assert_eq!((profile, slot, save.night), (2, Slot::Manual(3), 4));
+        if cfg!(feature = "demo") {
+            write_ron(&slot_path(&dir, 2, Slot::Auto), &sample(6));
+            assert_eq!(newest_in(&dir, 5).unwrap().1, Slot::Manual(3));
+        }
         let (slot, save, _) = latest_in(&dir, 1).unwrap();
         assert_eq!((slot, save.night), (Slot::Auto, 2));
         assert!(latest_in(&dir, 3).is_none());

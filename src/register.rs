@@ -38,7 +38,7 @@ impl Plugin for RegisterPlugin {
 }
 
 /// One coin the ghost put on the counter.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PaidCoin {
     pub coin: Coin,
     /// Catalog key of how the coin looks or feels – counterfeits give
@@ -61,8 +61,6 @@ pub struct Sale {
     pub given: Purse,
     /// (story, chapter) this sale completes, if it is a story ghost.
     pub chapter: Option<(usize, usize)>,
-    /// The ferryman's parcel for a story ghost: it does not come out of stock.
-    pub parcel: bool,
     /// Fetched from the storeroom, not found on the shelves: correct change
     /// earns no reputation then.
     pub from_storeroom: bool,
@@ -227,7 +225,7 @@ pub fn can_order(ghost: &Ghost, stock: &Stock, progress: &Progress, max: usize) 
 fn serve_front_ghost(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
-    stock: Res<Stock>,
+    mut stock: ResMut<Stock>,
     mut register: ResMut<Register>,
     mut queue: ResMut<Queue>,
     mut drawer: ResMut<Drawer>,
@@ -269,10 +267,10 @@ fn serve_front_ghost(
         match (action, offer) {
             (Action::Offer(_) | Action::HandParcel, Some(product)) => {
                 let product = &product;
-                if !parcel && stock.count(product) == 0 {
-                    continue;
-                }
                 if *product != ghost.wish {
+                    if stock.count(product) == 0 {
+                        continue;
+                    }
                     log.push(lang.f("log.wrong_item", &[("who", &lang.ghost_the(&def.id))]));
                     report.wrong_item += 1;
                     ghost.state = GhostState::Leaving;
@@ -280,6 +278,11 @@ fn serve_front_ghost(
                     progress.reputation -= 1;
                     report.unhappy += 1;
                     cues.write(Cue::Disappointed);
+                    continue;
+                }
+                // Once payment is accepted the ware belongs to this ghost. The
+                // apprentice, a thief or a mishap can still take other stock.
+                if !parcel && !stock.take_one(product) {
                     continue;
                 }
                 let base = data.product(product).map_or(1, |p| p.price);
@@ -309,7 +312,6 @@ fn serve_front_ghost(
                     coins,
                     given: Purse::default(),
                     chapter: ghost.chapter,
-                    parcel,
                     from_storeroom: ghost.carrying.is_none()
                         && !layout.displayed_products().contains(product),
                 });
@@ -397,7 +399,6 @@ fn make_change(
     data: Res<GameData>,
     mut register: ResMut<Register>,
     mut drawer: ResMut<Drawer>,
-    mut stock: ResMut<Stock>,
     mut queue: ResMut<Queue>,
     mut progress: ResMut<Progress>,
     mut report: ResMut<NightReport>,
@@ -474,9 +475,6 @@ fn make_change(
             Action::GiveChange => {
                 let sale = register.sale.take().expect("checked above");
                 drawer.remove(&sale.given);
-                if !sale.parcel {
-                    stock.take_one(&sale.product);
-                }
                 report.sales += 1;
                 report.revenue += sale.price;
                 if ghosts.get(sale.ghost).is_ok_and(|g| g.ordered) {
@@ -695,7 +693,6 @@ mod tests {
             coins: paid_coins(&spoon, true, &lang(), &mut Rng::new(1)),
             given: Purse::default(),
             chapter: None,
-            parcel: false,
             from_storeroom: false,
         };
         assert_eq!(sale.change_due(), 18);

@@ -8,13 +8,14 @@
 
 use std::collections::BTreeMap;
 
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::data::GameData;
+use crate::data::{GameData, asset_exists};
 use crate::day_cycle::Progress;
 use crate::i18n::Lang;
 use crate::shop::{ShopLayout, Storeroom};
-use crate::ui::{Action, PanelBuilder};
+use crate::ui::{Action, PanelBuilder, TEXT};
 use crate::upgrades::Upgrades;
 
 /// What the shop remembers about its customers (saved with the game).
@@ -110,6 +111,7 @@ pub fn book_page(
     data: &GameData,
     progress: &Progress,
     (layout, storeroom, upgrades): (&ShopLayout, &Storeroom, &Upgrades),
+    assets: &AssetServer,
 ) {
     let journal = &progress.journal;
     let ghosts: Vec<_> = in_book(data).collect();
@@ -128,14 +130,32 @@ pub fn book_page(
     }
     for g in &met {
         let entry = &journal.book[&g.id];
-        ui.section(&lang.f(
-            "book.entry",
-            &[
-                ("ghost", &lang.ghost(&g.id)),
-                ("met", &entry.met),
-                ("served", &entry.served),
-            ],
-        ));
+        ui.rule();
+        let header = ui.node(
+            root,
+            Node {
+                align_items: AlignItems::Center,
+                column_gap: px(10),
+                ..default()
+            },
+        );
+        let portrait = format!("sprites/ghosts/{}.png", g.id);
+        if asset_exists(&portrait) {
+            ui.image_sized(header, assets.load(portrait), Vec2::new(36.0, 54.0));
+        }
+        ui.display_text(
+            header,
+            &lang.f(
+                "book.entry",
+                &[
+                    ("ghost", &lang.ghost(&g.id)),
+                    ("met", &entry.met),
+                    ("served", &entry.served),
+                ],
+            ),
+            17.0,
+            TEXT,
+        );
         if let Some(r) = journal.regular(&g.id) {
             ui.text(&lang.f(
                 "book.regular",

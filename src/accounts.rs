@@ -3,6 +3,7 @@
 //! night went.
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::data::{GameData, asset_exists};
 use crate::day_cycle::{NightReport, Phase, Progress};
@@ -44,7 +45,8 @@ impl Plugin for AccountsPlugin {
 }
 
 /// Money in and out of the drawer for the current day (dusk to dawn).
-#[derive(Resource, Default, Debug, Clone, PartialEq)]
+#[derive(Resource, Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Accounts {
     /// The night these books are for (they open at the market, or in the
     /// evening when there is no market that day).
@@ -64,6 +66,8 @@ pub struct Accounts {
     pub market: u32,
     /// Shop improvements bought at the market.
     pub upgrades: u32,
+    /// Spent repairing broken wares in the evening.
+    pub repairs: u32,
     /// In the drawer when the shop opened.
     pub night_start: u32,
     /// What the night brought in: the drawer at dawn (before counterfeits
@@ -96,7 +100,8 @@ impl Accounts {
     pub fn close(&mut self, closing: u32, dust: u32) {
         self.closing = closing;
         self.dust = dust;
-        self.takings = (closing + dust + self.repaid) as i64 - self.night_start as i64;
+        self.takings = i64::from(closing) + i64::from(dust) + i64::from(self.repaid)
+            - i64::from(self.night_start);
     }
 }
 
@@ -112,7 +117,7 @@ pub(crate) fn open_books(
     data: Res<GameData>,
     mut accounts: ResMut<Accounts>,
 ) {
-    if accounts.night == progress.night && accounts.opening > 0 {
+    if accounts.night == progress.night {
         return;
     }
     *accounts = Accounts {
@@ -307,6 +312,16 @@ fn build_ledger(
             &lang.t("accounts.market"),
             signed(-(a.market as i64)),
             money(-(a.market as i64)),
+            false,
+        );
+    }
+    if a.repairs > 0 {
+        let spent = -i64::from(a.repairs);
+        line(
+            &mut ui,
+            &lang.decor(crate::workbench::WORKBENCH),
+            signed(spent),
+            money(spent),
             false,
         );
     }
@@ -642,6 +657,24 @@ pub fn fading_next_dawn(stock: &Stock, data: &GameData, bonus: u32) -> Vec<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_empty_opening_drawer_still_opens_the_books_only_once() {
+        let mut app = App::new();
+        app.insert_resource(GameData::load())
+            .insert_resource(Progress::new(0))
+            .init_resource::<Drawer>()
+            .init_resource::<Stock>()
+            .init_resource::<Accounts>()
+            .add_systems(Update, open_books);
+        app.update();
+        app.world_mut().resource_mut::<Accounts>().repairs = 3;
+        app.update();
+        assert_eq!(app.world().resource::<Accounts>().repairs, 3);
+        app.world_mut().resource_mut::<Progress>().night += 1;
+        app.update();
+        assert_eq!(app.world().resource::<Accounts>().repairs, 0);
+    }
 
     #[test]
     fn wares_bought_count_as_an_investment() {

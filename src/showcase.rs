@@ -9,14 +9,14 @@ use bevy::prelude::*;
 use crate::data::GameData;
 use crate::day_cycle::{Phase, Progress};
 use crate::inventory::Stock;
-use crate::scene::ROOM_BACK_Z;
+use crate::scene::{ROOM_BACK_Z, WINDOW_SILL_Y};
 use crate::shop::product_model;
 use crate::ui::Action;
 
 /// Where the ware stands: on the sill of the shop window, in front of the
 /// open/closed sign's corner, and how large it is shown.
-const SPOT: Vec3 = Vec3::new(-2.62, 1.06, ROOM_BACK_Z + 0.38);
-const SCALE: f32 = 1.8;
+const SPOT: Vec3 = Vec3::new(-2.48, WINDOW_SILL_Y, ROOM_BACK_Z + 0.265);
+const SCALE: f32 = 1.2;
 
 pub struct ShowcasePlugin;
 

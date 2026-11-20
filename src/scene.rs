@@ -354,10 +354,10 @@ fn spawn_room(
         emissive: LinearRgba::rgb(0.6, 0.8, 1.6),
         ..default()
     });
-    let window = Vec3::new(-3.2, 1.9, ROOM_BACK_Z + 0.03);
+    let window = Vec3::new(-3.2, 1.8, ROOM_BACK_Z + 0.03);
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(1.9, 2.1, 0.06))),
-        MeshMaterial3d(frame),
+        MeshMaterial3d(frame.clone()),
         Transform::from_translation(window),
         children![(
             Mesh3d(meshes.add(Cuboid::new(1.6, 1.8, 0.02))),
@@ -366,7 +366,17 @@ fn spawn_room(
             NotShadowCaster,
         )],
     ));
+    // Match the room model's sill so the window display has a surface
+    // even when the model is unavailable.
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(1.9, 0.11, 0.28))),
+        MeshMaterial3d(frame),
+        Transform::from_xyz(-3.2, WINDOW_SILL_Y - 0.055, ROOM_BACK_Z + 0.15),
+    ));
 }
+
+/// Top of the window sill in the room model and its fallback.
+pub(crate) const WINDOW_SILL_Y: f32 = 0.941;
 
 #[derive(Component)]
 struct Daylight;
@@ -558,13 +568,28 @@ fn time_of_day_light(
 pub struct Billboard;
 
 fn face_camera(
-    camera: Single<&GlobalTransform, With<MainCamera>>,
-    mut billboards: Query<&mut Transform, With<Billboard>>,
+    camera: Single<&Transform, (With<MainCamera>, Without<Billboard>)>,
+    parents: Query<&GlobalTransform>,
+    mut billboards: Query<(&mut Transform, Option<&ChildOf>), With<Billboard>>,
 ) {
-    let cam = camera.translation();
-    for mut t in &mut billboards {
+    for (mut t, parent) in &mut billboards {
+        // The coin pictures on a market stall and wares on the ferry are
+        // children of moving or rotated models. Yaw in the same local
+        // space as the sprite, including the diorama's world offset.
+        let cam = match parent {
+            Some(parent) => {
+                let Ok(at) = parents.get(parent.parent()) else {
+                    continue;
+                };
+                at.affine().inverse().transform_point3(camera.translation)
+            }
+            None => camera.translation,
+        };
         let d = cam - t.translation;
-        t.rotation = Quat::from_rotation_y(d.x.atan2(d.z));
+        let rotation = Quat::from_rotation_y(d.x.atan2(d.z));
+        if t.rotation != rotation {
+            t.rotation = rotation;
+        }
     }
 }
 
@@ -815,5 +840,39 @@ fn turn_clock_hands(
             minutes / 720.0
         };
         transform.rotation = Quat::from_rotation_z(-turn * tau);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_billboard_on_a_rotated_market_stall_faces_the_camera() {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, TransformPlugin))
+            .add_systems(Update, face_camera);
+        let camera = crate::market::MARKET + CAMERA_POS;
+        app.world_mut()
+            .spawn((MainCamera, Transform::from_translation(camera)));
+        let stall = app
+            .world_mut()
+            .spawn(
+                Transform::from_translation(crate::market::MARKET + Vec3::new(-3.0, 0.0, 1.0))
+                    .with_rotation(Quat::from_rotation_y(0.5)),
+            )
+            .id();
+        let coin = app
+            .world_mut()
+            .spawn((
+                Billboard,
+                Transform::from_xyz(0.4, 0.9, 0.0),
+                ChildOf(stall),
+            ))
+            .id();
+        app.update();
+        let at = app.world().get::<GlobalTransform>(coin).unwrap();
+        let towards_camera = (camera - at.translation()).with_y(0.0).normalize();
+        assert!((at.rotation() * Vec3::Z).dot(towards_camera) > 0.9999);
     }
 }

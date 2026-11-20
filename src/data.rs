@@ -684,7 +684,7 @@ pub struct StartArea {
     pub rows: usize,
 }
 
-#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Exchange {
     /// A silver spoon for 4 candle stubs and 4 buttons (fee: 1 button).
     SpoonToCandles,

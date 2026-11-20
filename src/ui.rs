@@ -79,9 +79,11 @@ impl Plugin for UiPlugin {
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
                     reputation_tooltip,
-                    refresh_change.run_if(in_state(Phase::Night).and_then(
-                        resource_changed::<Register>.or_else(resource_changed::<Drawer>),
-                    )),
+                    refresh_change.after(build_night_panel).run_if(
+                        in_state(Phase::Night).and_then(
+                            resource_changed::<Register>.or_else(resource_changed::<Drawer>),
+                        ),
+                    ),
                     build_market_panel.run_if(
                         in_state(Phase::Day).and_then(
                             resource_changed::<Storeroom>
@@ -109,6 +111,8 @@ impl Plugin for UiPlugin {
                             state_changed::<Phase>
                                 .or_else(resource_changed::<Register>)
                                 .or_else(resource_changed::<Queue>)
+                                .or_else(resource_changed::<Stock>)
+                                .or_else(resource_changed::<Drawer>)
                                 .or_else(resource_changed::<UiFont>)
                                 .or_else(resource_changed::<crate::save::Settings>)
                                 .or_else(ghost_state_changed),
@@ -1122,7 +1126,7 @@ fn build_evening_panel(
     bought: Res<BoughtTonight>,
     location: Res<Location>,
     upgrades: Res<Upgrades>,
-    (letter, drawer): (Res<crate::market::FoundLetter>, Res<Drawer>),
+    (market, drawer): (Res<crate::market::MarketDay>, Res<Drawer>),
 ) {
     let night = progress.calendar(&data);
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
@@ -1168,7 +1172,11 @@ fn build_evening_panel(
 
     // Hedda's letters: the first waits on the first evening, the others
     // turn up behind the junk her improvements clear.
-    let letter = if night == 1 { Some(1) } else { letter.0 };
+    let letter = if night == 1 {
+        Some(1)
+    } else {
+        market.evening_letter(progress.night)
+    };
     if let Some(n) = letter {
         ui.section(&lang.t("letter.title"));
         ui.text(&lang.t(&format!("letter.{n}")));
@@ -1566,11 +1574,10 @@ fn workbench_section(
 struct NightPanelShows {
     front: Option<(Entity, GhostState)>,
     line: usize,
-    /// The sale at the register (its ghost and which coins were checked) and
-    /// whether a ghost is asking about a second payment. Counting change does
-    /// not rebuild the panel: `refresh_change` updates it in place, so a click
-    /// is never lost to a button that was just replaced.
-    sale: Option<(Entity, Vec<bool>)>,
+    /// Keep the actual coins and whether the drawer can make change: a
+    /// replacement payment can have the same number of coins as the first.
+    /// Counting change alone leaves these controls in place.
+    sale: Option<(Entity, Vec<crate::register::PaidCoin>, bool)>,
     question: bool,
 }
 
@@ -1599,7 +1606,7 @@ fn refresh_change(
     lang: Res<Lang>,
     mut commands: Commands,
     mut lines: Query<&mut Text, With<CountedLine>>,
-    buttons: Query<(Entity, &ChangeCoin, &Children)>,
+    buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered)>,
     mut texts: Query<&mut Text, Without<CountedLine>>,
     mut colors: Query<&mut TextColor>,
     mut images: Query<&mut ImageNode>,
@@ -1613,7 +1620,7 @@ fn refresh_change(
             line.0 = want;
         }
     }
-    for (entity, ChangeCoin(coin), children) in &buttons {
+    for (entity, ChangeCoin(coin), children, hovered) in &buttons {
         let left = drawer.get(*coin) - sale.given.get(*coin);
         let label = lang.f(
             "night.add_coin",
@@ -1625,7 +1632,7 @@ fn refresh_change(
         );
         let enabled = left > 0;
         let tone = ButtonTone::option(enabled, false);
-        let (surface, trim) = tone.paint(false);
+        let (surface, trim) = tone.paint(hovered.get() && enabled);
         let mut button = commands.entity(entity);
         button.insert((tone, surface, trim));
         if enabled {
@@ -1679,14 +1686,19 @@ fn build_night_panel(
     let shows = NightPanelShows {
         front,
         line: if waiting { 0 } else { queue.0.len() },
-        sale: register
-            .sale
-            .as_ref()
-            .map(|s| (s.ghost, s.coins.iter().map(|c| c.checked).collect())),
+        sale: register.sale.as_ref().map(|sale| {
+            (
+                sale.ghost,
+                sale.coins.clone(),
+                drawer.can_give(sale.change_due()),
+            )
+        }),
         question: register.question.is_some(),
     };
-    let forced =
-        stock.is_changed() || font.is_changed() || settings.is_changed() || phase.is_changed();
+    let forced = (waiting && (stock.is_changed() || drawer.is_changed()))
+        || font.is_changed()
+        || settings.is_changed()
+        || phase.is_changed();
     if !forced && shown.as_ref() == Some(&shows) {
         return;
     }
@@ -2401,6 +2413,11 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
                 ChildOf(id),
             ));
         }
+        let label = if matches!(tone, ButtonTone::Selected) {
+            format!("✓ {label}")
+        } else {
+            label.to_owned()
+        };
         button.commands().spawn((
             Text::new(label),
             text_font(label_font, size),

@@ -27,7 +27,11 @@ impl Plugin for AchievementsPlugin {
         }
         app.add_systems(
             OnEnter(Phase::Morning),
-            tally_night.before(crate::day_cycle::count_story_tries),
+            // Include unlocks from this night in the dawn autosave.
+            (tally_night, unlock_achievements)
+                .chain()
+                .after(crate::loan::repay)
+                .before(crate::day_cycle::count_story_tries),
         )
         .add_systems(
             Update,
@@ -37,6 +41,9 @@ impl Plugin for AchievementsPlugin {
                         .or_else(resource_changed::<Drawer>)
                         .or_else(resource_changed::<Upgrades>),
                 ),
+                sync_steam
+                    .after(unlock_achievements)
+                    .run_if(resource_changed::<Progress>),
                 |steam: Res<AutomaticLanguage>| steam.run_callbacks(),
             ),
         );
@@ -210,54 +217,76 @@ fn tally_night(mut progress: ResMut<Progress>, report: Res<NightReport>) {
     progress.count(Stat::Mishaps, report.mishaps_fixed);
 }
 
-/// Any goal reached: unlock it, say so, and tell Steam.
+/// Record newly reached goals in the profile and the log.
 fn unlock_achievements(
     data: Res<GameData>,
     mut progress: ResMut<Progress>,
     drawer: Res<Drawer>,
     upgrades: Res<Upgrades>,
     lang: Res<Lang>,
-    steam: Res<AutomaticLanguage>,
     mut log: ResMut<GameLog>,
+) {
+    for a in &data.achievements {
+        if progress.achievements.contains(&a.id) || !a.reached(&data, &progress, &drawer, &upgrades)
+        {
+            continue;
+        }
+        progress.achievements.push(a.id.clone());
+        log.push(lang.f(
+            "log.achievement",
+            &[("name", &lang.t(&format!("achievement.{}.name", a.id)))],
+        ));
+    }
+}
+
+/// Report each unlock once per session, including ones earned playing offline.
+fn sync_steam(
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    steam: Res<AutomaticLanguage>,
     mut sent: Local<Vec<String>>,
 ) {
-    // A save may hold achievements unlocked while Steam was not running:
-    // tell Steam about each one once per session.
     let mut store = false;
-    for id in &progress.achievements {
-        if !sent.contains(id) {
-            sent.push(id.clone());
-            steam.unlock_achievement(&id.to_ascii_uppercase());
+    for a in &data.achievements {
+        if progress.achievements.contains(&a.id) && !sent.contains(&a.id) {
+            sent.push(a.id.clone());
+            steam.unlock_achievement(&a.steam_name());
             store = true;
         }
     }
     if store {
         steam.store_stats();
     }
-    let new: Vec<&AchievementDef> = data
-        .achievements
-        .iter()
-        .filter(|a| !progress.achievements.contains(&a.id))
-        .filter(|a| a.reached(&data, &progress, &drawer, &upgrades))
-        .collect();
-    if new.is_empty() {
-        return;
-    }
-    for a in new {
-        progress.achievements.push(a.id.clone());
-        sent.push(a.id.clone());
-        log.push(lang.f(
-            "log.achievement",
-            &[("name", &lang.t(&format!("achievement.{}.name", a.id)))],
-        ));
-        steam.unlock_achievement(&a.steam_name());
-    }
-    steam.store_stats();
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(not(feature = "demo"))]
+    #[test]
+    fn first_sale_is_unlocked_before_leaving_the_dawn_schedule() {
+        let mut app = App::new();
+        app.add_plugins(AchievementsPlugin)
+            .insert_resource(GameData::load())
+            .insert_resource(Lang::load("en"))
+            .insert_resource(Progress::new(0))
+            .insert_resource(NightReport {
+                sales: 1,
+                ..default()
+            })
+            .init_resource::<GameLog>()
+            .init_resource::<Drawer>()
+            .init_resource::<Upgrades>();
+        app.world_mut().run_schedule(OnEnter(Phase::Morning));
+        assert!(
+            app.world()
+                .resource::<Progress>()
+                .achievements
+                .iter()
+                .any(|id| id == "first_sale")
+        );
+    }
 
     #[test]
     fn goals_are_reached_by_counts_and_stories() {

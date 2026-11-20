@@ -32,6 +32,12 @@ pub struct PlaytestPlugin;
 impl Plugin for PlaytestPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Playtest::start())
+            // An abandoned evening or night must not add time to another profile.
+            .add_systems(OnExit(Phase::Menu), |mut log: ResMut<Playtest>| {
+                log.market_secs = 0.0;
+                log.evening_secs = 0.0;
+                log.night_secs = 0.0;
+            })
             .add_systems(OnEnter(Phase::Night), note_crates)
             .add_systems(
                 OnEnter(Phase::Morning),

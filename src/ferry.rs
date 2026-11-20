@@ -40,7 +40,9 @@ impl Plugin for FerryPlugin {
                     animate_ferryman,
                     name_ferryman,
                     make_wake,
-                    fly_crates,
+                    (sync_cart, fly_crates)
+                        .chain()
+                        .run_if(in_state(Phase::Evening)),
                     (animate_crates, update_crate_labels, update_tooltip)
                         .run_if(in_state(Phase::Evening)),
                 ),
@@ -118,16 +120,16 @@ struct Crate {
 /// A bought crate on its way from the boat into the shop.
 #[derive(Component)]
 struct FlyingCrate {
-    /// Which container it is (crate, chest, basket, keg).
-    container: String,
     from: Vec3,
-    to: Vec3,
     age: f32,
 }
 
-/// A bought crate waiting on the hand cart (its place in the stack).
+/// A purchased crate, including those still in flight to their slot.
 #[derive(Component)]
-struct CartCrate(usize);
+struct CartCrate {
+    product: String,
+    slot: usize,
+}
 
 /// The "×2" / "new" label above a crate.
 #[derive(Component)]
@@ -382,6 +384,7 @@ impl Builder<'_, '_, '_> {
 
 fn spawn_boat(
     commands: Commands,
+    old_boats: Query<Entity, With<Boat>>,
     data: Res<GameData>,
     progress: Res<Progress>,
     font: Res<UiFont>,
@@ -398,6 +401,9 @@ fn spawn_boat(
         meshes: &mut meshes,
         materials: &mut materials,
     };
+    for old in &old_boats {
+        b.commands.entity(old).despawn();
+    }
     let boat = b
         .commands
         .spawn((
@@ -678,15 +684,10 @@ fn spawn_ferryman(b: &mut Builder, boat: Entity) {
 }
 
 /// When the shop opens the ferryman poles away to the right.
-fn cast_off(
-    mut boats: Query<&mut Boat>,
-    mut bought: ResMut<BoughtTonight>,
-    mut hovered: ResMut<HoveredCrate>,
-) {
+fn cast_off(mut boats: Query<&mut Boat>, mut hovered: ResMut<HoveredCrate>) {
     for mut boat in &mut boats {
         boat.leaving.get_or_insert(0.0);
     }
-    bought.0.clear();
     hovered.0 = None;
 }
 
@@ -811,7 +812,7 @@ fn on_crate_out(out: On<PointerOut>, mut hovered: ResMut<HoveredCrate>) {
 fn on_crate_click(
     click: On<PointerClick>,
     phase: Res<State<Phase>>,
-    mut crates_q: Query<(&mut Crate, &GlobalTransform)>,
+    mut crates_q: Query<&mut Crate>,
     mut men: Query<&mut Ferryman>,
     data: Res<GameData>,
     (progress, upgrades): (Res<Progress>, Res<Upgrades>),
@@ -823,13 +824,11 @@ fn on_crate_click(
     mut accounts: ResMut<Accounts>,
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
-    cart: Query<(Entity, &CartCrate)>,
-    mut commands: Commands,
 ) {
     if *phase.get() != Phase::Evening {
         return;
     }
-    let Ok((mut item, global)) = crates_q.get_mut(click.event_target()) else {
+    let Ok(mut item) = crates_q.get_mut(click.event_target()) else {
         return;
     };
     let id = item.id.clone();
@@ -861,18 +860,6 @@ fn on_crate_click(
                     "log.ferry_brings",
                     &[("count", &p.crate_size), ("item", &lang.product(&id))],
                 ));
-                // A full crate is lifted onto the hand cart.
-                commands.spawn((
-                    FlyingCrate {
-                        container: p.container.clone(),
-                        from: global.translation(),
-                        to: HARBOR + CART + Vec3::Y * 0.5,
-                        age: 0.0,
-                    },
-                    Transform::from_translation(global.translation()),
-                    Visibility::default(),
-                    DespawnOnExit(Phase::Evening),
-                ));
             }
             None => {}
         },
@@ -892,10 +879,6 @@ fn on_crate_click(
             accounts.ferryman = accounts.ferryman.saturating_sub(p.crate_cost);
             drawer.merge(&Purse::greedy(p.crate_cost));
             item.bump = 0.5;
-            // The top crate leaves the hand cart again.
-            if let Some((top, _)) = cart.iter().max_by_key(|(_, c)| c.0) {
-                commands.entity(top).despawn();
-            }
             log.push(lang.f("log.ferry_takes_back", &[("item", &lang.product(&id))]));
         }
         PointerButton::Middle => {}
@@ -953,51 +936,115 @@ fn animate_crates(
     }
 }
 
-/// A bought crate flies in an arc onto the hand cart and stays there.
-fn fly_crates(
-    mut commands: Commands,
-    time: Res<Time>,
+/// Two by two on the cart, then another layer.
+fn cart_pose(slot: usize) -> Transform {
+    let spot = Vec3::new(
+        if slot.is_multiple_of(2) { -0.27 } else { 0.27 },
+        CART_BED_HEIGHT + (slot / 4) as f32 * CRATE_SIZE.y * 0.85,
+        if slot % 4 < 2 { -0.18 } else { 0.18 },
+    );
+    Transform::from_translation(HARBOR + CART + spot).with_scale(Vec3::splat(0.85))
+}
+
+/// Match the cart to the purchases after a sale, refund or evening load.
+fn sync_cart(
+    commands: Commands,
+    bought: Res<BoughtTonight>,
+    phase: Res<State<Phase>>,
+    data: Res<GameData>,
+    deck: Query<(&Crate, &GlobalTransform)>,
+    mut cart: Query<(Entity, &mut CartCrate, &mut Transform, Has<FlyingCrate>)>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut flying: Query<(Entity, &mut FlyingCrate, &mut Transform, Option<&Children>)>,
-    cart: Query<&CartCrate>,
 ) {
-    let mut stacked = cart.iter().map(|c| c.0 + 1).max().unwrap_or(0);
-    let dt = time.delta_secs();
-    for (entity, mut flight, mut transform, children) in &mut flying {
-        if children.is_none() {
-            // First frame: give it a body (a shut crate).
-            let mut b = Builder {
-                commands: commands.reborrow(),
-                asset_server: &asset_server,
-                meshes: &mut meshes,
-                materials: &mut materials,
-            };
-            b.crate_box(entity, Transform::default(), &flight.container);
+    if !bought.is_changed() && !phase.is_changed() {
+        return;
+    }
+    let mut b = Builder {
+        commands,
+        asset_server: &asset_server,
+        meshes: &mut meshes,
+        materials: &mut materials,
+    };
+    let mut missing = bought.0.clone();
+    let mut slot = 0;
+    // Keep the oldest copy of each product first. A return can cancel its
+    // latest flight, or remove a landed crate beneath another product.
+    let mut current: Vec<_> = cart.iter_mut().collect();
+    current.sort_by_key(|(_, c, _, _)| c.slot);
+    for (entity, mut cargo, mut at, flying) in current {
+        let count = missing.get_mut(&cargo.product).filter(|n| **n > 0);
+        let Some(count) = count else {
+            b.commands.entity(entity).despawn();
+            continue;
+        };
+        *count -= 1;
+        if cargo.slot != slot {
+            cargo.slot = slot;
+            if !flying {
+                *at = cart_pose(slot);
+            }
         }
-        flight.age += dt;
+        slot += 1;
+    }
+    for (id, count) in missing {
+        if count == 0 {
+            continue;
+        }
+        let Some(product) = data.product(&id) else {
+            continue;
+        };
+        // Restored purchases are already stacked when the player arrives.
+        let from = if phase.is_changed() {
+            None
+        } else {
+            deck.iter()
+                .find(|(c, _)| c.id == id)
+                .map(|(_, at)| at.translation())
+        };
+        for _ in 0..count {
+            let mut root = b.commands.spawn((
+                CartCrate {
+                    product: id.clone(),
+                    slot,
+                },
+                cart_pose(slot),
+                Visibility::default(),
+                DespawnOnExit(Phase::Evening),
+            ));
+            if let Some(from) = from {
+                root.insert((
+                    FlyingCrate { from, age: 0.0 },
+                    Transform::from_translation(from),
+                ));
+            }
+            let root = root.id();
+            b.crate_box(root, Transform::default(), &product.container);
+            slot += 1;
+        }
+    }
+}
+
+/// Each purchased crate flies directly to its current place in the stack.
+fn fly_crates(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut flying: Query<(Entity, &CartCrate, &mut FlyingCrate, &mut Transform)>,
+) {
+    for (entity, cargo, mut flight, mut transform) in &mut flying {
+        flight.age += time.delta_secs();
         let k = (flight.age / FLIGHT_SECS).min(1.0);
-        let arc = 4.0 * k * (1.0 - k) * 1.2;
-        transform.translation = flight.from.lerp(flight.to, k) + Vec3::Y * arc;
-        transform.rotation = Quat::from_rotation_y(k * 2.0) * Quat::from_rotation_z(k * 0.6);
-        transform.scale = Vec3::splat(1.0 - 0.15 * k);
+        let target = cart_pose(cargo.slot);
         if k >= 1.0 {
-            // Two by two on the cart, then a second layer.
-            let slot = stacked;
-            stacked += 1;
-            let spot = Vec3::new(
-                if slot % 2 == 0 { -0.27 } else { 0.27 },
-                CART_BED_HEIGHT + (slot / 4) as f32 * CRATE_SIZE.y * 0.85,
-                if slot % 4 < 2 { -0.18 } else { 0.18 },
-            );
-            *transform =
-                Transform::from_translation(HARBOR + CART + spot).with_scale(Vec3::splat(0.85));
-            commands
-                .entity(entity)
-                .remove::<FlyingCrate>()
-                .insert((CartCrate(slot), DespawnOnExit(Phase::Evening)));
+            *transform = target;
+            commands.entity(entity).remove::<FlyingCrate>();
+            continue;
         }
+        let arc = 4.0 * k * (1.0 - k);
+        transform.translation = flight.from.lerp(target.translation, k) + Vec3::Y * (arc * 1.2);
+        transform.rotation = Quat::from_rotation_y(arc * 0.9) * Quat::from_rotation_z(arc * 0.35);
+        transform.scale = Vec3::ONE.lerp(target.scale, k);
     }
 }
 
@@ -1148,6 +1195,70 @@ fn update_tooltip(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn loaded_cart_and_refunds_match_the_purchased_products() {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()))
+            .init_asset::<WorldAsset>()
+            .init_asset::<Mesh>()
+            .init_asset::<StandardMaterial>()
+            .insert_resource(GameData::load())
+            .insert_resource(State::new(Phase::Evening))
+            .insert_resource(BoughtTonight(BTreeMap::from([
+                ("gear".into(), 1),
+                ("tea_tin".into(), 1),
+            ])))
+            .add_systems(Update, sync_cart);
+        app.world_mut().spawn((
+            Crate {
+                id: "gear".into(),
+                top: 0.3,
+                lid: Entity::PLACEHOLDER,
+                item: Entity::PLACEHOLDER,
+                lid_angle: 0.0,
+                lift: 0.0,
+                bump: 0.0,
+            },
+            Transform::from_translation(MOORING),
+        ));
+        let contents = |app: &mut App| {
+            let world = app.world_mut();
+            let mut cargo = world.query::<(&CartCrate, Has<FlyingCrate>)>();
+            let mut rows: Vec<_> = cargo
+                .iter(world)
+                .map(|(c, flying)| (c.slot, c.product.clone(), flying))
+                .collect();
+            rows.sort();
+            rows
+        };
+        app.update();
+        assert_eq!(
+            contents(&mut app),
+            [(0, "gear".into(), false), (1, "tea_tin".into(), false)]
+        );
+        app.world_mut()
+            .resource_mut::<BoughtTonight>()
+            .0
+            .remove("gear");
+        app.update();
+        assert_eq!(contents(&mut app), [(0, "tea_tin".into(), false)]);
+        app.world_mut()
+            .resource_mut::<BoughtTonight>()
+            .0
+            .insert("gear".into(), 1);
+        app.update();
+        assert_eq!(
+            contents(&mut app),
+            [(0, "tea_tin".into(), false), (1, "gear".into(), true)]
+        );
+        app.world_mut()
+            .resource_mut::<BoughtTonight>()
+            .0
+            .remove("gear");
+        app.update();
+        assert_eq!(contents(&mut app), [(0, "tea_tin".into(), false)]);
+    }
 
     #[test]
     fn crates_are_blocked_by_boat_size_and_budget() {

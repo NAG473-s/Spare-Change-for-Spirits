@@ -150,7 +150,7 @@ struct Game<'a> {
     layout: ShopLayout,
     owed: u32,
     upgrades: Upgrades,
-    /// Products on the shelves tonight; only these can be sold.
+    /// Products on the shelves tonight; the others must be fetched.
     displayed: Vec<String>,
 }
 
@@ -460,15 +460,13 @@ impl<'a> Game<'a> {
             // The poltergeist knocks something off a shelf.
             let calm = def.quirks.calm_with.is_some_and(|n| n.is_met(&atmosphere));
             if !calm && self.rng.chance(def.quirks.knock_chance) {
-                let on_shelf: Vec<String> = self
-                    .stock
-                    .units()
+                let on_shelf: Vec<&String> = self
+                    .displayed
                     .iter()
-                    .filter(|(_, u)| !u.is_empty())
-                    .map(|(id, _)| id.clone())
+                    .filter(|id| self.stock.count(id) > 0)
                     .collect();
                 if !on_shelf.is_empty() {
-                    let id = &on_shelf[self.rng.index(on_shelf.len())];
+                    let id = on_shelf[self.rng.index(on_shelf.len())];
                     self.stock.take_one(id);
                 }
             }
@@ -566,6 +564,10 @@ pub fn averages(data: &GameData, strategy: Strategy, runs: u32) -> Vec<NightStat
 
 /// `--simulate [runs]`: prints the table and returns.
 pub fn run(data: &GameData, runs: u32) {
+    if runs == 0 {
+        eprintln!("--simulate needs at least one run.");
+        return;
+    }
     let start = Purse::total(&data.config.start_coins);
     println!(
         "Balancing simulation: {runs} runs per strategy, {} nights, start money {start}.",

@@ -16,7 +16,7 @@ use bevy::text::LineBreak;
 
 use crate::accounts::Accounts;
 use crate::data::{Exchange, GameData, Ware, asset_exists, rgb};
-use crate::day_cycle::{NightBonus, Phase, Progress};
+use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse};
 use crate::fx::Cue;
 use crate::harbor::{Location, repeating};
@@ -37,10 +37,6 @@ pub struct MarketPlugin;
 impl Plugin for MarketPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MarketDay>()
-            .init_resource::<FoundLetter>()
-            .add_systems(OnEnter(Phase::Night), |mut l: ResMut<FoundLetter>| {
-                l.0 = None
-            })
             .init_resource::<HoveredWare>()
             .add_systems(Startup, spawn_market)
             .add_systems(OnEnter(Phase::Day), (open_market, spawn_vendor_plaques))
@@ -87,23 +83,22 @@ const NIGHT_SKY: Color = Color::srgb(0.04, 0.04, 0.07);
 const SQUARE_PAVING: &str = "sprites/market/square.png";
 const COBBLES: &str = "sprites/market/cobbles.png";
 
-/// A letter from Hedda found today behind cleared junk (`letter.<n>`),
-/// read in the evening.
-#[derive(Resource, Default)]
-pub struct FoundLetter(pub Option<u32>);
-
-/// What happened at the market today.
-#[derive(Resource, Default)]
+/// The offers and purchases for one market day, kept when the player saves.
+#[derive(Resource, Default, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct MarketDay {
+    night: u32,
+    /// A letter found behind the cleared junk, read the following evening.
+    letter: Option<u32>,
     /// Furniture bought today (it may be sold back until the evening).
     bought: Vec<String>,
     hourglass: bool,
     /// Single pieces already sold today (the Reaper's and the seasonal ones).
-    rare_sold: Vec<String>,
+    rare_sold: Vec<(usize, String)>,
     /// Today's wares of each trader (index in `market.ron`) and whether each
     /// is a special offer. Empty for a trader who is not here today.
     offers: Vec<Vec<(WareKind, bool)>>,
     /// The trader whose wares the side panel lists, if any.
+    #[serde(skip)]
     pub stall: Option<usize>,
 }
 
@@ -148,7 +143,7 @@ struct WareItem {
     special: bool,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
 enum WareKind {
     Decor(String),
     Exchange(Exchange),
@@ -650,6 +645,110 @@ fn spawn_vendor_placeholder(k: &mut Kit, figure: Entity, id: &str) {
     }
 }
 
+impl MarketDay {
+    pub fn evening_letter(&self, night: u32) -> Option<u32> {
+        self.letter.filter(|_| self.night == night)
+    }
+
+    pub fn night_length_factor(&self, night: u32) -> f32 {
+        if self.night == night && self.hourglass {
+            HOURGLASS_BONUS
+        } else {
+            1.0
+        }
+    }
+
+    /// Draw fresh stock only when entering a new market day.
+    fn prepare(
+        &mut self,
+        data: &GameData,
+        progress: &Progress,
+        upgrades: &Upgrades,
+        rng: &mut Rng,
+    ) {
+        if self.night == progress.night && self.offers.len() == data.vendors.len() {
+            return;
+        }
+        *self = Self {
+            night: progress.night,
+            ..default()
+        };
+        let night = progress.calendar(data);
+        // The Reaper's single pieces: different products every day.
+        let mut pool: Vec<String> = data
+            .products
+            .iter()
+            .filter(|p| p.unlock_night <= night)
+            .map(|p| p.id.clone())
+            .collect();
+        let mut rare = Vec::new();
+        let wanted = data
+            .vendors
+            .iter()
+            .flat_map(|v| &v.wares)
+            .map(|w| match w {
+                Ware::RarePieces(n) => *n as usize,
+                _ => 0,
+            })
+            .sum::<usize>();
+        while rare.len() < wanted && !pool.is_empty() {
+            rare.push(pool.swap_remove(rng.index(pool.len())));
+        }
+        let mut rare = rare.into_iter();
+        for vendor in &data.vendors {
+            if !vendor.in_season(night) {
+                self.offers.push(Vec::new());
+                continue;
+            }
+            let mut kinds = Vec::new();
+            for ware in &vendor.wares {
+                match ware {
+                    Ware::Decor(id) => {
+                        if data.decor(id).is_some_and(|d| d.unlock_night <= night) {
+                            kinds.push(WareKind::Decor(id.clone()));
+                        }
+                    }
+                    Ware::Exchange(e) => kinds.push(WareKind::Exchange(*e)),
+                    Ware::Hourglass => kinds.push(WareKind::Hourglass),
+                    Ware::RarePieces(n) => {
+                        for _ in 0..*n {
+                            if let Some(id) = rare.next() {
+                                kinds.push(WareKind::Rare(id));
+                            }
+                        }
+                    }
+                    Ware::Single(id) => {
+                        if data.product(id).is_some_and(|p| p.unlock_night <= night) {
+                            kinds.push(WareKind::Single(id.clone()));
+                        }
+                    }
+                    Ware::Upgrade(id) => {
+                        if data.upgrade(id).is_some_and(|u| upgrades.offered(u, night)) {
+                            kinds.push(WareKind::Upgrade(id.clone()));
+                        }
+                    }
+                }
+            }
+            // Today's special offers: furniture or an improvement, a new pick each day.
+            let mut offers: Vec<(WareKind, bool)> = kinds.into_iter().map(|k| (k, false)).collect();
+            let mut candidates: Vec<usize> = offers
+                .iter()
+                .enumerate()
+                .filter(|(_, (k, _))| matches!(k, WareKind::Decor(_) | WareKind::Upgrade(_)))
+                .map(|(n, _)| n)
+                .collect();
+            for _ in 0..vendor.specials {
+                if candidates.is_empty() {
+                    break;
+                }
+                let n = candidates.swap_remove(rng.index(candidates.len()));
+                offers[n].1 = true;
+            }
+            self.offers.push(offers);
+        }
+    }
+}
+
 /// Opens the market for the day: the camera moves there and today's wares
 /// go on the tables.
 fn open_market(
@@ -669,27 +768,7 @@ fn open_market(
     *location = Location::Market;
     sky.0 = DAY_SKY;
     let night = progress.calendar(&data);
-    // The Reaper's single pieces: different products every day.
-    let mut pool: Vec<String> = data
-        .products
-        .iter()
-        .filter(|p| p.unlock_night <= night)
-        .map(|p| p.id.clone())
-        .collect();
-    let mut rare = Vec::new();
-    let wanted = data
-        .vendors
-        .iter()
-        .flat_map(|v| &v.wares)
-        .map(|w| match w {
-            Ware::RarePieces(n) => *n as usize,
-            _ => 0,
-        })
-        .sum::<usize>();
-    while rare.len() < wanted && !pool.is_empty() {
-        rare.push(pool.swap_remove(rng.index(pool.len())));
-    }
-    *day = MarketDay::default();
+    day.prepare(&data, &progress, &upgrades, &mut rng);
 
     let mut k = Kit {
         commands: commands.reborrow(),
@@ -697,8 +776,6 @@ fn open_market(
         meshes: &mut meshes,
         materials: &mut materials,
     };
-    let mut rare = rare.into_iter();
-    day.offers = vec![Vec::new(); data.vendors.len()];
     for (stall, Stall(i)) in &stalls {
         let vendor = &data.vendors[*i];
         // A seasonal trader's stall stands only in its season.
@@ -711,52 +788,7 @@ fn open_market(
         if !here {
             continue;
         }
-        let mut kinds = Vec::new();
-        for ware in &vendor.wares {
-            match ware {
-                Ware::Decor(id) => {
-                    if data.decor(id).is_some_and(|d| d.unlock_night <= night) {
-                        kinds.push(WareKind::Decor(id.clone()));
-                    }
-                }
-                Ware::Exchange(e) => kinds.push(WareKind::Exchange(*e)),
-                Ware::Hourglass => kinds.push(WareKind::Hourglass),
-                Ware::RarePieces(n) => {
-                    for _ in 0..*n {
-                        if let Some(id) = rare.next() {
-                            kinds.push(WareKind::Rare(id));
-                        }
-                    }
-                }
-                Ware::Single(id) => {
-                    if data.product(id).is_some_and(|p| p.unlock_night <= night) {
-                        kinds.push(WareKind::Single(id.clone()));
-                    }
-                }
-                Ware::Upgrade(id) => {
-                    if data.upgrade(id).is_some_and(|u| upgrades.offered(u, night)) {
-                        kinds.push(WareKind::Upgrade(id.clone()));
-                    }
-                }
-            }
-        }
-        // Today's special offers: furniture or an improvement, a new pick each day.
-        let mut offers: Vec<(WareKind, bool)> = kinds.into_iter().map(|k| (k, false)).collect();
-        let mut candidates: Vec<usize> = offers
-            .iter()
-            .enumerate()
-            .filter(|(_, (k, _))| matches!(k, WareKind::Decor(_) | WareKind::Upgrade(_)))
-            .map(|(n, _)| n)
-            .collect();
-        for _ in 0..vendor.specials {
-            if candidates.is_empty() {
-                break;
-            }
-            let n = candidates.swap_remove(rng.index(candidates.len()));
-            offers[n].1 = true;
-        }
-        day.offers[*i] = offers.clone();
-        let kinds = offers;
+        let kinds = &day.offers[*i];
         let n = kinds.len().max(1) as f32;
         let step = ((TABLE.x - 0.3) / n).min(0.5);
         // One fixed, invisible hover box per ware, as wide as its place on
@@ -771,7 +803,7 @@ fn open_market(
             unlit: true,
             ..default()
         });
-        for (j, (kind, special)) in kinds.into_iter().enumerate() {
+        for (j, (kind, special)) in kinds.iter().enumerate() {
             let x = (j as f32 - (n - 1.0) / 2.0) * step;
             let base = Vec3::new(x, TABLE.y, 0.08);
             let item = k
@@ -780,7 +812,7 @@ fn open_market(
                     WareItem {
                         vendor: *i,
                         kind: kind.clone(),
-                        special,
+                        special: *special,
                     },
                     Transform::from_translation(base),
                     Visibility::default(),
@@ -806,8 +838,8 @@ fn open_market(
             ));
             let visual = k.node(Some(item), Transform::default());
             k.commands.entity(visual).insert(WareVisual);
-            spawn_ware_visual(&mut k, &data, visual, &kind);
-            if special {
+            spawn_ware_visual(&mut k, &data, visual, kind);
+            if *special {
                 spawn_special_tag(&mut k, item);
             }
         }
@@ -1023,13 +1055,19 @@ fn blocked(
     data: &GameData,
     day: &MarketDay,
     drawer: &Drawer,
+    vendor: usize,
     kind: &WareKind,
     special: bool,
     reputation: i32,
 ) -> Option<&'static str> {
     match kind {
         WareKind::Hourglass if day.hourglass => Some("market.tip_sold_out"),
-        WareKind::Rare(id) | WareKind::Single(id) if day.rare_sold.contains(id) => {
+        WareKind::Rare(id) | WareKind::Single(id)
+            if day
+                .rare_sold
+                .iter()
+                .any(|(seller, ware)| *seller == vendor && ware == id) =>
+        {
             Some("market.tip_sold_out")
         }
         // The Reaper's rare pieces are for shops the spirits speak well of.
@@ -1057,11 +1095,9 @@ struct Shop<'w, 's> {
     stock: ResMut<'w, Stock>,
     accounts: ResMut<'w, Accounts>,
     day: ResMut<'w, MarketDay>,
-    bonus: ResMut<'w, NightBonus>,
     log: ResMut<'w, GameLog>,
     cues: MessageWriter<'w, Cue>,
     figures: Query<'w, 's, &'static mut VendorFigure>,
-    letter: ResMut<'w, FoundLetter>,
     progress: Res<'w, Progress>,
 }
 
@@ -1074,6 +1110,7 @@ impl Shop<'_, '_> {
             data,
             &self.day,
             &self.drawer,
+            vendor,
             kind,
             special,
             self.progress.reputation,
@@ -1103,7 +1140,7 @@ impl Shop<'_, '_> {
                 }
                 self.accounts.market += cost;
                 self.stock.add(id, 1);
-                self.day.rare_sold.push(id.clone());
+                self.day.rare_sold.push((vendor, id.clone()));
                 self.log.push(lang.f(
                     "log.market_bought",
                     &[("item", &lang.product(id)), ("vendor", &name)],
@@ -1115,7 +1152,6 @@ impl Shop<'_, '_> {
                 }
                 self.accounts.market += cost;
                 self.day.hourglass = true;
-                self.bonus.0 = HOURGLASS_BONUS;
                 self.log.push(lang.t("log.hourglass"));
             }
             WareKind::Exchange(e) => {
@@ -1144,7 +1180,7 @@ impl Shop<'_, '_> {
                 ));
                 // Clearing Hedda's junk turns up one of her letters.
                 if let Some(n) = data.upgrade(id).and_then(|u| u.letter) {
-                    self.letter.0 = Some(n);
+                    self.day.letter = Some(n);
                     self.log.push(lang.t("log.letter_found"));
                 }
                 // Done for good: it leaves the table and the list.
@@ -1279,7 +1315,7 @@ pub(crate) fn stall_panel(
             ),
             _ => lang.f("market.offer", &[("item", &name), ("price", &cost)]),
         };
-        let ok = blocked(data, day, drawer, kind, *special, reputation).is_none();
+        let ok = blocked(data, day, drawer, vendor, kind, *special, reputation).is_none();
         ui.icon_button_in(root, icon, &label, Action::MarketBuy(vendor, n), false, ok);
     }
     ui.dim(&lang.t("market.list_hint"));
@@ -1410,6 +1446,7 @@ fn ware_tooltip(
         &data,
         &day,
         &drawer,
+        item.vendor,
         &item.kind,
         item.special,
         progress.reputation,
@@ -1489,6 +1526,54 @@ fn sway_bunting(time: Res<Time>, mut pennants: Query<(&Pennant, &mut Transform)>
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn traders_can_sell_their_own_copy_of_the_same_product() {
+        let data = GameData::load();
+        let reaper = data.vendors.iter().position(|v| v.id == "reaper").unwrap();
+        let frost = data.vendors.iter().position(|v| v.id == "frost").unwrap();
+        let day = MarketDay {
+            rare_sold: vec![(reaper, "snow_globe".into())],
+            ..default()
+        };
+        let drawer = Drawer(Purse::greedy(100));
+        let rare = WareKind::Rare("snow_globe".into());
+        let single = WareKind::Single("snow_globe".into());
+        assert_eq!(
+            blocked(&data, &day, &drawer, reaper, &rare, false, 100),
+            Some("market.tip_sold_out")
+        );
+        assert_eq!(
+            blocked(&data, &day, &drawer, frost, &single, false, 100),
+            None
+        );
+    }
+
+    #[test]
+    fn resuming_a_market_keeps_its_offers_receipts_and_hourglass() {
+        let data = GameData::load();
+        let mut progress = Progress::new(0);
+        progress.night = 4;
+        let upgrades = Upgrades::default();
+        let mut day = MarketDay::default();
+        day.prepare(&data, &progress, &upgrades, &mut Rng::new(17));
+        day.bought.push("shelf".into());
+        day.letter = Some(2);
+        day.hourglass = true;
+        let mut resumed: MarketDay = ron::from_str(&ron::to_string(&day).unwrap()).unwrap();
+        let mut rng = Rng::new(29);
+        resumed.prepare(&data, &progress, &upgrades, &mut rng);
+        assert_eq!(resumed, day);
+        assert_eq!(resumed.evening_letter(4), Some(2));
+        assert_eq!(resumed.evening_letter(5), None);
+        assert_eq!(resumed.night_length_factor(4), HOURGLASS_BONUS);
+        progress.night += 1;
+        assert_eq!(resumed.night_length_factor(5), 1.0);
+        resumed.prepare(&data, &progress, &upgrades, &mut rng);
+        assert!(resumed.bought.is_empty());
+        assert!(resumed.letter.is_none());
+        assert!(!resumed.hourglass);
+    }
 
     #[test]
     fn exchanges_keep_the_value_minus_the_fee() {

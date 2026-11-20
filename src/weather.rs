@@ -12,7 +12,7 @@ use serde::Deserialize;
 
 use crate::data::GameData;
 use crate::day_cycle::{Phase, Progress};
-use crate::harbor::HARBOR;
+use crate::harbor::{HARBOR, Location};
 use crate::rng::Rng;
 use crate::scene::{ROOM_BACK_Z, ROOM_FRONT_Z, ROOM_MAX_X, ROOM_MIN_X};
 
@@ -95,6 +95,7 @@ struct Drop {
 
 #[derive(Component)]
 struct Fog {
+    location: Location,
     base: Vec3,
     speed: f32,
     phase: f32,
@@ -190,7 +191,10 @@ fn spawn_weather(
         HARBOR + Vec3::new(0.0, 0.35, 1.0),
         Vec3::new(11.0, 0.1, 4.0),
     );
-    for (area, count) in [(shop, SHOP_FOG), (water, HARBOR_FOG)] {
+    for (location, area, count) in [
+        (Location::Shop, shop, SHOP_FOG),
+        (Location::Harbor, water, HARBOR_FOG),
+    ] {
         for _ in 0..count {
             let (centre, half) = area;
             let size = rng.range(FOG_SIZE.0, FOG_SIZE.1);
@@ -202,6 +206,7 @@ fn spawn_weather(
                 );
             commands.spawn((
                 Fog {
+                    location,
                     base: at,
                     speed: rng.range(FOG_DRIFT.0, FOG_DRIFT.1),
                     phase: rng.range(0.0, TAU),
@@ -233,15 +238,12 @@ fn choose_weather(
     now.set_if_neq(wanted);
 }
 
-fn show(visibility: &mut Visibility, on: bool) {
-    let wanted = if on {
+fn show(mut visibility: Mut<Visibility>, on: bool) {
+    visibility.set_if_neq(if on {
         Visibility::Inherited
     } else {
         Visibility::Hidden
-    };
-    if *visibility != wanted {
-        *visibility = wanted;
-    }
+    });
 }
 
 /// Drops slide down the glass with a little wobble, rain and snow fall
@@ -249,15 +251,27 @@ fn show(visibility: &mut Visibility, on: bool) {
 fn fall(
     time: Res<Time>,
     now: Res<WeatherNow>,
+    location: Res<Location>,
     mut drops: Query<(&Drop, &mut Transform, &mut Visibility)>,
 ) {
     let storm = now.stormy();
     let raining = now.is(Weather::Rain) || now.is(Weather::Storm);
     let snowing = now.is(Weather::Snow) || now.is(Weather::Blizzard);
     let (dt, t) = (time.delta_secs(), time.elapsed_secs());
-    for (d, mut transform, mut visibility) in &mut drops {
-        let on = if d.snow { snowing } else { raining };
-        show(&mut visibility, on);
+    let changed = now.is_changed() || location.is_changed();
+    if !changed && ((!raining && !snowing) || dt == 0.0) {
+        return;
+    }
+    for (d, mut transform, visibility) in &mut drops {
+        let here = if d.on_glass {
+            Location::Shop
+        } else {
+            Location::Harbor
+        };
+        let on = here == *location && if d.snow { snowing } else { raining };
+        if changed {
+            show(visibility, on);
+        }
         if !on {
             continue;
         }
@@ -279,6 +293,8 @@ fn fall(
         }
         if p.x > centre.x + half.x {
             p.x -= 2.0 * half.x;
+        } else if p.x < centre.x - half.x {
+            p.x += 2.0 * half.x;
         }
         if p.y < centre.y - half.y {
             p.y += 2.0 * half.y;
@@ -295,12 +311,20 @@ fn fall(
 fn drift_fog(
     time: Res<Time>,
     now: Res<WeatherNow>,
+    location: Res<Location>,
     mut patches: Query<(&Fog, &mut Transform, &mut Visibility)>,
 ) {
-    let on = now.is(Weather::Fog);
+    let foggy = now.is(Weather::Fog);
+    let changed = now.is_changed() || location.is_changed();
+    if !changed && (!foggy || time.delta().is_zero()) {
+        return;
+    }
     let t = time.elapsed_secs();
-    for (f, mut transform, mut visibility) in &mut patches {
-        show(&mut visibility, on);
+    for (f, mut transform, visibility) in &mut patches {
+        let on = foggy && *location == f.location;
+        if changed {
+            show(visibility, on);
+        }
         if !on {
             continue;
         }

@@ -14,10 +14,16 @@ impl Plugin for InventoryPlugin {
         app.init_resource::<Stock>()
             .init_resource::<CratesOrdered>()
             // Reset for the next evening; a loaded save keeps its own count.
-            .add_systems(OnEnter(Phase::Morning), |mut c: ResMut<CratesOrdered>| {
-                c.0 = 0
-            });
+            .add_systems(OnEnter(Phase::Morning), clear_orders);
     }
+}
+
+pub(crate) fn clear_orders(
+    mut crates: ResMut<CratesOrdered>,
+    mut bought: ResMut<crate::ferry::BoughtTonight>,
+) {
+    crates.0 = 0;
+    bought.0.clear();
 }
 
 /// Per product, a list with the age (in nights) of every unit.

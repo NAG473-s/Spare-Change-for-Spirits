@@ -48,7 +48,7 @@ Checkboxes are ticked in the commit that finishes them.
 
 - [ ] 3–5 people play the demo nights without help; notes on where they get stuck
 - [ ] Fix what they stumbled over (tips, clarity, bugs)
-- [ ] Models from ChatGPT arriving one by one; each checked with `tools/check_models.py`
+- [x] All currently ordered models are delivered and checked with `tools/check_models.py`
 - [x] Ghost tooltips (name, mood, wish hint when waiting)
 
 ### Week 3 · Dec 7 – Dec 13: content for Early Access

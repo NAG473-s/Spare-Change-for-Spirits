@@ -34,7 +34,6 @@ impl Plugin for TitlePlugin {
                 Update,
                 (
                     cover_window,
-                    breathe_background,
                     flicker_glows,
                     drift_motes,
                     float_ghost,
@@ -96,9 +95,6 @@ struct TitleScreen;
 struct TitleBackground(Handle<Image>);
 
 #[derive(Component)]
-struct MenuBackdrop;
-
-#[derive(Component)]
 struct Glow {
     tint: Color,
     strength: f32,
@@ -155,7 +151,6 @@ fn spawn_title(mut commands: Commands, asset_server: Res<AssetServer>, mut rng: 
     let background = commands
         .spawn((
             TitleBackground(image.clone()),
-            MenuBackdrop,
             ImageNode {
                 image,
                 image_mode: NodeImageMode::Stretch,
@@ -306,23 +301,16 @@ fn cover_window(
         let width = size.x.max(size.y * aspect);
         let height = width / aspect;
         let (left, top) = ((size.x - width) / 2.0, (size.y - height) / 2.0);
-        if node.width != px(width) || node.height != px(height) {
+        if node.width != px(width)
+            || node.height != px(height)
+            || node.left != px(left)
+            || node.top != px(top)
+        {
             node.width = px(width);
             node.height = px(height);
             node.left = px(left);
             node.top = px(top);
         }
-    }
-}
-
-/// A very slow zoom in and out, so the picture feels alive.
-fn breathe_background(
-    time: Res<Time>,
-    mut backgrounds: Query<&mut UiTransform, With<MenuBackdrop>>,
-) {
-    let t = time.elapsed_secs();
-    for mut transform in &mut backgrounds {
-        transform.scale = Vec2::splat(1.025 + 0.02 * (t * 0.12).sin());
     }
 }
 
@@ -450,6 +438,42 @@ fn fade_in(
         color.0 = Color::srgba(0.0, 0.0, 0.0, a * a);
         if a <= 0.0 {
             commands.entity(entity).despawn();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_title_stays_centred_when_only_the_crop_changes() {
+        let mut app = App::new();
+        app.init_resource::<UiScale>()
+            .init_resource::<Assets<Image>>()
+            .add_systems(Update, cover_window);
+        let window = app
+            .world_mut()
+            .spawn((Window::default(), PrimaryWindow))
+            .id();
+        let background = app
+            .world_mut()
+            .spawn((TitleBackground(default()), Node::default()))
+            .id();
+        for (w, h, left, top) in [
+            (960., 720., -160., 0.),
+            (800., 720., -240., 0.),
+            (1280., 640., 0., -40.),
+            (1280., 600., 0., -60.),
+        ] {
+            app.world_mut()
+                .get_mut::<Window>(window)
+                .unwrap()
+                .resolution
+                .set(w, h);
+            app.update();
+            let node = app.world().get::<Node>(background).unwrap();
+            assert_eq!((node.left, node.top), (px(left), px(top)));
         }
     }
 }

@@ -3,8 +3,9 @@
 
 Exporting from a Blender file with several scenes writes every scene into
 the .glb, most of them empty; Bevy refuses such files ("missing field
-`nodes`") and always loads scene 0. This keeps only scenes that contain
-nodes, puts the default scene first and rewrites the file in place.
+`nodes`") and always loads scene 0. This keeps the single scene containing
+nodes and rewrites the file in place. If several scenes contain nodes,
+the model needs a new export and the original file is preserved.
 
     python3 tools/fix_models.py                 # every model in assets/models
     python3 tools/fix_models.py path/to/x.glb   # specific files
@@ -42,30 +43,31 @@ def write(path, version, gltf, rest):
 def fix(path):
     version, gltf, rest = read(path)
     scenes = gltf.get("scenes", [])
-    default = gltf.get("scene", 0)
     keep = [s for s in scenes if s.get("nodes")]
     if not keep:
-        return "no scene with content – left unchanged"
-    main = scenes[default] if default < len(scenes) and scenes[default].get("nodes") else keep[0]
-    new = [main] + [s for s in keep if s is not main]
-    if new == scenes and default == 0:
+        raise ValueError("no scene with content")
+    if len(keep) > 1:
+        raise ValueError("multiple scenes contain nodes; export just the intended scene")
+    if keep == scenes and gltf.get("scene", 0) == 0:
         return None
-    gltf["scenes"] = new
+    gltf["scenes"] = keep
     gltf["scene"] = 0
     write(path, version, gltf, rest)
-    return f"kept {len(new)} of {len(scenes)} scenes, '{main.get('name', '?')}' first"
+    return f"kept '{keep[0].get('name', '?')}' as scene 0"
 
 
 def main():
     paths = [Path(p) for p in sys.argv[1:]] or sorted((ROOT / "assets" / "models").rglob("*.glb"))
+    failures = 0
     for p in paths:
         try:
             result = fix(p)
         except Exception as e:  # noqa: BLE001 - report and go on
             result = f"cannot fix: {e}"
+            failures += 1
         if result:
             print(f"{p}: {result}")
-    return 0
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

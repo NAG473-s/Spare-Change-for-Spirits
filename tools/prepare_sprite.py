@@ -40,8 +40,8 @@ KINDS = {
     "product": (96, 96, "products", False),
     "door": (256, 384, "shop", False),
     "counter": (192, 1088, "shop", False),
-    "floor": (256, 256, "shop", True),
-    "background": (1920, 1080, "shop", True),
+    "floor": (512, 512, "shop", True),
+    "background": (1920, 1080, "title", True),
 }
 NAMED = {"door", "counter", "floor", "background"}
 
@@ -68,7 +68,7 @@ def fit(img: Image.Image, width: int, height: int) -> Image.Image:
     size = (max(1, round(img.width * scale)), max(1, round(img.height * scale)))
     img = img.resize(size, Image.LANCZOS)
     out = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    out.paste(img, ((width - size[0]) // 2, height - size[1]), img)
+    out.paste(img, ((width - size[0]) // 2, height - size[1]))
     return out
 
 

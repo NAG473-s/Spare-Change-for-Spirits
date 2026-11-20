@@ -9,9 +9,9 @@
 //! controller is in use; touching the real mouse hides it again.
 
 use bevy::input::ButtonState;
-use bevy::input::InputSystems;
 use bevy::input::mouse::{AccumulatedMouseMotion, MouseButtonInput, MouseScrollUnit, MouseWheel};
 use bevy::input::touch::TouchPhase;
+use bevy::picking::PickingSystems;
 use bevy::prelude::*;
 use bevy::window::{CursorMoved, PrimaryWindow, WindowEvent};
 
@@ -36,8 +36,14 @@ impl Plugin for GamepadPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PadPointer>()
             .add_systems(Startup, spawn_ring)
-            // Before the input systems, so this frame's clicks count at once.
-            .add_systems(PreUpdate, drive_pointer.before(InputSystems))
+            // Picking reads window events in First; regular mouse input follows
+            // in PreUpdate. Both must see the same press in the same frame.
+            .add_systems(
+                First,
+                drive_pointer
+                    .after(bevy::time::TimeSystems)
+                    .before(PickingSystems::Input),
+            )
             .add_systems(Update, show_ring);
     }
 }
@@ -88,7 +94,7 @@ fn drive_pointer(
     let (entity, window) = &mut *window;
     let entity = *entity;
     // The real mouse moved: it takes over again.
-    if mouse.delta != Vec2::ZERO {
+    if mouse.delta != Vec2::ZERO || gamepads.is_empty() {
         pointer.active = false;
         pointer.pos = None;
     }
@@ -118,15 +124,16 @@ fn drive_pointer(
         let clicking = clicks
             .iter()
             .any(|(b, _)| gamepad.just_pressed(*b) || gamepad.just_released(*b));
-        if step == Vec2::ZERO && !clicking && pointer.pos.is_none() {
+        let scroll = stick(gamepad, GamepadAxis::RightStickX, GamepadAxis::RightStickY);
+        if step == Vec2::ZERO && !clicking && scroll == Vec2::ZERO {
             continue;
         }
         let from = pointer
             .pos
             .or_else(|| window.cursor_position())
             .unwrap_or(size / 2.0);
-        let to = (from + step).clamp(Vec2::ZERO, size - Vec2::ONE);
-        if step != Vec2::ZERO || pointer.pos.is_none() {
+        let to = (from + step).clamp(Vec2::ZERO, (size - Vec2::ONE).max(Vec2::ZERO));
+        if to != from || pointer.pos.is_none() {
             window.set_cursor_position(Some(to));
             let event = CursorMoved {
                 window: entity,
@@ -155,17 +162,18 @@ fn drive_pointer(
             window_events.write(WindowEvent::MouseButtonInput(event));
             pointer.active = true;
         }
-        let scroll = stick(gamepad, GamepadAxis::RightStickX, GamepadAxis::RightStickY);
         if scroll != Vec2::ZERO {
             // Pushing the stick down scrolls down, like the wheel turned
             // towards you.
-            wheel.write(MouseWheel {
+            let event = MouseWheel {
                 unit: MouseScrollUnit::Pixel,
                 x: -scroll.x * SCROLL_SPEED * dt,
                 y: -scroll.y * SCROLL_SPEED * dt,
                 window: entity,
                 phase: TouchPhase::Moved,
-            });
+            };
+            wheel.write(event);
+            window_events.write(WindowEvent::MouseWheel(event));
         }
     }
 }
@@ -208,5 +216,42 @@ fn show_ring(
     };
     if **visibility != shown {
         **visibility = shown;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scrolling_can_be_the_first_controller_input() {
+        let mut app = App::new();
+        app.init_resource::<PadPointer>()
+            .init_resource::<Time<Real>>()
+            .init_resource::<AccumulatedMouseMotion>()
+            .add_message::<WindowEvent>()
+            .add_message::<CursorMoved>()
+            .add_message::<MouseButtonInput>()
+            .add_message::<MouseWheel>()
+            .add_systems(Update, drive_pointer);
+        let mut window = Window::default();
+        let position = Vec2::new(75.0, 80.0);
+        window.set_cursor_position(Some(position));
+        let entity = app.world_mut().spawn((window, PrimaryWindow)).id();
+        let mut pad = Gamepad::default();
+        pad.analog_mut().set(GamepadAxis::RightStickY, -1.0);
+        app.world_mut().spawn(pad);
+        app.world_mut()
+            .resource_mut::<Time<Real>>()
+            .advance_by(std::time::Duration::from_millis(16));
+        app.update();
+
+        let pointer = app.world().resource::<PadPointer>();
+        assert!(pointer.active);
+        assert_eq!(pointer.pos, Some(position));
+        let wheel = app.world().resource::<Messages<MouseWheel>>();
+        let event = wheel.get_cursor().read(wheel).copied().next().unwrap();
+        assert_eq!(event.window, entity);
+        assert!(event.y < 0.0);
     }
 }

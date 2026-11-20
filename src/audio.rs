@@ -19,6 +19,8 @@ const SEASON_MUSIC: &[(u32, &str)] = &[(2, "winter"), (3, "spring")];
 /// Seconds between two ghost "wooos" or hums, so several ghosts never
 /// turn into a choir. Whispers and startled sounds always play.
 const VOICE_GAP_SECS: f32 = 2.5;
+/// A cue that still has no audio sink after this delay is no longer timely.
+const MAX_CUE_DELAY: f32 = 2.0;
 
 pub struct SoundPlugin;
 
@@ -26,8 +28,17 @@ impl Plugin for SoundPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Sounds>()
             .init_resource::<CurrentMusic>()
-            .add_systems(Update, (play_cues, choose_music, fade_music));
+            .add_systems(
+                Update,
+                (play_cues, update_effects, choose_music, fade_music),
+            );
     }
+}
+
+#[derive(Component)]
+struct Effect {
+    gain: f32,
+    queued_at: f32,
 }
 
 #[derive(Resource)]
@@ -78,7 +89,7 @@ fn play_cues(
     mut last_voice: Local<Option<f32>>,
 ) {
     for cue in cues.read() {
-        if !settings.sound {
+        if !settings.sound || settings.effects == 0.0 {
             continue;
         }
         if let Cue::GhostVoice(voice, pitch) = *cue {
@@ -95,6 +106,10 @@ fn play_cues(
                 Voice::Flee => (&sounds.ghost_flee, 0.45),
             };
             commands.spawn((
+                Effect {
+                    gain: volume,
+                    queued_at: now,
+                },
                 AudioPlayer::new(sound.clone()),
                 PlaybackSettings {
                     volume: Volume::Linear(volume * settings.effects),
@@ -117,6 +132,10 @@ fn play_cues(
         // A little pitch variation keeps repeated sounds from feeling canned.
         let speed = if vary { rng.range(0.93, 1.07) } else { 1.0 };
         commands.spawn((
+            Effect {
+                gain: volume,
+                queued_at: time.elapsed_secs(),
+            },
             AudioPlayer::new(sound.clone()),
             PlaybackSettings {
                 volume: Volume::Linear(volume * settings.effects),
@@ -124,6 +143,26 @@ fn play_cues(
                 ..PlaybackSettings::DESPAWN
             },
         ));
+    }
+}
+
+fn update_effects(
+    mut commands: Commands,
+    settings: Res<Settings>,
+    time: Res<Time<Real>>,
+    mut playing: Query<(Entity, &Effect, Option<&mut AudioSink>)>,
+) {
+    for (entity, effect, sink) in &mut playing {
+        if !settings.sound || settings.effects == 0.0 {
+            commands.entity(entity).despawn();
+        } else if let Some(mut sink) = sink {
+            if settings.is_changed() || sink.is_added() {
+                sink.set_volume(Volume::Linear(effect.gain * settings.effects));
+            }
+        } else if time.elapsed_secs() - effect.queued_at >= MAX_CUE_DELAY {
+            // Without an output device Bevy never starts or cleans up this player.
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -217,15 +256,16 @@ fn fade_music(
     mut commands: Commands,
     time: Res<Time<Real>>,
     settings: Res<Settings>,
-    mut playing: Query<(Entity, &mut Music, &mut AudioSink)>,
+    mut playing: Query<(Entity, &mut Music, Option<&mut AudioSink>)>,
 ) {
     let step = time.delta_secs() / MUSIC_FADE_SECS;
-    for (entity, mut music, mut sink) in &mut playing {
+    for (entity, mut music, sink) in &mut playing {
         let diff = music.target - music.volume;
         music.volume += diff.clamp(-step, step);
-        sink.set_volume(Volume::Linear(music.volume * settings.music));
-        if music.target == 0.0 && music.volume <= 0.0 {
+        if !settings.sound || (music.target == 0.0 && music.volume <= 0.0) {
             commands.entity(entity).despawn();
+        } else if let Some(mut sink) = sink {
+            sink.set_volume(Volume::Linear(music.volume * settings.music));
         }
     }
 }
@@ -233,6 +273,28 @@ fn fade_music(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cues_without_an_audio_sink_expire() {
+        let mut app = App::new();
+        app.init_resource::<Settings>()
+            .init_resource::<Time<Real>>()
+            .add_systems(Update, update_effects);
+        let cue = app
+            .world_mut()
+            .spawn(Effect {
+                gain: 0.5,
+                queued_at: 0.0,
+            })
+            .id();
+        app.update();
+        assert!(app.world().get_entity(cue).is_ok());
+        app.world_mut()
+            .resource_mut::<Time<Real>>()
+            .advance_by(std::time::Duration::from_secs_f32(MAX_CUE_DELAY));
+        app.update();
+        assert!(app.world().get_entity(cue).is_err());
+    }
 
     #[test]
     fn seasons_play_their_own_music() {

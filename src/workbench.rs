@@ -77,6 +77,7 @@ fn use_workbench(
     lang: Res<Lang>,
     mut progress: ResMut<Progress>,
     mut drawer: ResMut<Drawer>,
+    mut accounts: ResMut<crate::accounts::Accounts>,
     mut stock: ResMut<Stock>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
@@ -132,6 +133,7 @@ fn use_workbench(
                 if !drawer.pay(cost) {
                     continue;
                 }
+                accounts.repairs += cost;
                 progress.broken.remove(at);
                 progress.repaired_on = night;
                 progress.count(crate::achievements::Stat::Repairs, 1);

@@ -5,8 +5,8 @@ and lists which ghost sprites (docs/ART_PROMPTS.md) are still missing.
 For every .glb it reports the size (width × height × depth in metres),
 where the origin sits and the triangle count, and flags models that are
 much bigger or smaller than their target size, not standing on their
-origin, or over the polygon budget. Also lists which models are still
-missing. No extra packages needed.
+origin, or over the polygon budget. Checks required portraits against the
+documented 176 × 264 PNG size, and lists missing assets. No extra packages needed.
 
     python3 tools/check_models.py
 """
@@ -168,9 +168,11 @@ def decor_sizes():
 
 def read_glb(path):
     data = path.read_bytes()
-    magic, _version, _length = struct.unpack_from("<4sII", data, 0)
+    magic, version, length = struct.unpack_from("<4sII", data, 0)
     if magic != b"glTF":
         raise ValueError("not a binary glTF (.glb) file")
+    if version != 2 or length != len(data):
+        raise ValueError("invalid GLB version or file length")
     chunk_len, chunk_type = struct.unpack_from("<II", data, 12)
     if chunk_type != 0x4E4F534A:
         raise ValueError("first chunk is not JSON")
@@ -237,9 +239,9 @@ def check(path, target, budget):
     problems = []
     try:
         gltf = read_glb(path)
+        lo, hi, tris = bounds_and_triangles(gltf)
     except Exception as e:  # noqa: BLE001 - report any broken file
         return f"{path.relative_to(ROOT)}: cannot read ({e})", [str(e)]
-    lo, hi, tris = bounds_and_triangles(gltf)
     if lo[0] == float("inf"):
         return f"{path.relative_to(ROOT)}: no meshes", ["no meshes"]
     size = [hi[i] - lo[i] for i in range(3)]
@@ -273,6 +275,17 @@ def check(path, target, budget):
     return line, problems
 
 
+def portrait_problem(path):
+    with path.open("rb") as file:
+        header = file.read(33)
+    if len(header) != 33 or not header.startswith(b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR"):
+        return "invalid PNG header"
+    width, height = struct.unpack_from(">II", header, 16)
+    if (width, height) != (176, 264):
+        return f"{width} × {height} px, expected 176 × 264 px"
+    return None
+
+
 def main():
     expected = {
         "decor": decor_sizes(),
@@ -303,6 +316,7 @@ def main():
             path = MODELS / folder / f"{model_id}.glb"
             if not path.is_file():
                 print(f"  missing  models/{folder}/{model_id}.glb")
+                failures += 1
                 continue
             line, problems = check(path, target, TRIANGLE_BUDGET[folder])
             print(("  ok       " if not problems else "  CHECK    ") + line)
@@ -314,27 +328,35 @@ def main():
                 print(f"  unknown  {extra.relative_to(ROOT)} (no id with this name)")
     # Required portraits, interface art and scene textures.
     print()
-    for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
+    customers = ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"')
+    for ghost in [*customers, "apprentice"]:
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
-        print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
-    # Helpers that are not customers (src/apprentice.rs).
-    for helper in ("apprentice",):
-        sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{helper}.png"
-        print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{helper}.png")
+        if not sprite.is_file():
+            print(f"  missing  sprites/ghosts/{ghost}.png")
+            failures += 1
+            continue
+        problem = portrait_problem(sprite)
+        if problem:
+            print(f"  CHECK    sprites/ghosts/{ghost}.png: {problem}")
+            failures += 1
+        else:
+            print(f"  ok       sprites/ghosts/{ghost}.png")
     # Drawn idle and gesture sheets are optional: without one the portrait performs it.
     print()
-    for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
+    for ghost in customers:
         for gesture in ("sheet", *GESTURES):
             sheet = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}_{gesture}.png"
             print(("  ok       " if sheet.is_file() else "  no sheet ") + f"sprites/ghosts/{ghost}_{gesture}.png")
     for name in (
-        "shop/floor.png", "market/square.png", "harbor/quay_stone.png",
-        "title/intro_harbor.png", "title/intro_ferry.png", "title/intro_crew.png", "title/logo.png",
+        "shop/floor.png", "market/square.png", "market/cobbles.png", "harbor/quay_stone.png", "fx/glow.png",
+        "title/background.png", "title/intro_harbor.png", "title/intro_ferry.png", "title/intro_crew.png", "title/logo.png",
         "shop/sign_paint.png", "shop/porthole_light.png", "ui/ledger_frame.png",
         "coins/button.png", "coins/candle.png", "coins/spoon.png",
     ):
         path = ROOT / "assets" / "sprites" / name
-        print(("  ok       " if path.is_file() else "  missing  ") + f"sprites/{name}")
+        present = path.is_file()
+        print(("  ok       " if present else "  missing  ") + f"sprites/{name}")
+        failures += not present
     # Button icons (optional: a button without one shows only its text).
     print()
     for folder in ("products", "decor"):

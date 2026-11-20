@@ -45,7 +45,6 @@ impl Plugin for DayCyclePlugin {
         app.init_state::<Phase>()
             .init_resource::<NightClock>()
             .init_resource::<NightReport>()
-            .init_resource::<NightBonus>()
             .add_systems(
                 OnEnter(Phase::Night),
                 (start_night, deliver_parcels).chain(),
@@ -301,6 +300,8 @@ pub struct NightReport {
     /// How many tips were left, orders fulfilled and mishaps fixed tonight.
     pub tips_given: u32,
     pub orders_fulfilled: u32,
+    /// Returning customers already dispatched for this playthrough of the night.
+    pub orders_arrived: usize,
     pub mishaps_fixed: u32,
     /// Customers the apprentice served (`apprentice.rs`).
     pub apprentice_served: u32,
@@ -310,21 +311,10 @@ pub struct NightReport {
     pub wrong_item: u32,
 }
 
-/// Makes the coming night longer (the Reaper's hourglass): a factor on its
-/// length, used up when the night begins.
-#[derive(Resource)]
-pub struct NightBonus(pub f32);
-
-impl Default for NightBonus {
-    fn default() -> Self {
-        Self(1.0)
-    }
-}
-
 fn start_night(
     data: Res<GameData>,
     progress: Res<Progress>,
-    mut bonus: ResMut<NightBonus>,
+    market: Res<crate::market::MarketDay>,
     mut clock: ResMut<NightClock>,
     mut report: ResMut<NightReport>,
     mut log: ResMut<GameLog>,
@@ -332,9 +322,9 @@ fn start_night(
 ) {
     *clock = NightClock {
         elapsed: 0.0,
-        length: data.night_length(progress.calendar(&data)) * bonus.0,
+        length: data.night_length(progress.calendar(&data))
+            * market.night_length_factor(progress.night),
     };
-    bonus.0 = 1.0;
     *report = NightReport {
         reputation_start: progress.reputation,
         ..default()
