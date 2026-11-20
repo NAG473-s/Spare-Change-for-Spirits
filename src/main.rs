@@ -40,6 +40,7 @@ mod tooltip;
 mod trailer;
 mod ui;
 mod upgrades;
+mod weather;
 mod winter;
 mod workbench;
 
@@ -112,6 +113,7 @@ fn main() {
             winter::WinterPlugin,
             achievements::AchievementsPlugin,
             trailer::TrailerPlugin,
+            weather::WeatherPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

@@ -184,6 +184,7 @@ src/
   i18n.rs        language catalogs, placeholders, language detection
   rng.rs         small random number generator
   sim.rs         balancing simulation (`--simulate`), plays every night without a window
+  weather.rs     rain, storm, snow and fog of tonight's event
   trailer.rs     helpers for trailers and screenshots (`--trailer`)
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation
 assets/
@@ -288,6 +289,11 @@ Each of the 31 game languages has a recorded reading and timed captions. The gam
 `intro_voice_<language>.ogg` alongside `intro_music.ogg`. Skipping ends both tracks. Music,
 narration and effects have independent volume controls. Audio production credits are in
 [`assets/sounds/CREDITS.txt`](assets/sounds/CREDITS.txt).
+
+Weather (`weather` in `events.ron`, `src/weather.rs`): tonight's event shows outside from the
+evening until dawn – rain running down the shop window and falling over the harbour, slanting
+rain or a snowstorm with harder-flickering candles, quiet snowfall, or fog drifting through the
+shop at knee height and over the harbour water.
 
 Visual atmosphere: candles, lamps and other light-giving decor are flickering point lights
 (`src/fx.rs`), ambient and moon light follow the time of day (`src/scene.rs`), dust drifts through

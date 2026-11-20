@@ -112,11 +112,19 @@ pub struct Flicker {
     pub phase: f32,
 }
 
-fn flicker(time: Res<Time<Real>>, mut lights: Query<(&Flicker, &mut PointLight)>) {
+/// In a storm the draught makes the flames flicker this much harder.
+const STORM_FLICKER: f32 = 2.2;
+
+fn flicker(
+    time: Res<Time<Real>>,
+    weather: Res<crate::weather::WeatherNow>,
+    mut lights: Query<(&Flicker, &mut PointLight)>,
+) {
     let t = time.elapsed_secs();
+    let k = if weather.stormy() { STORM_FLICKER } else { 1.0 };
     for (f, mut light) in &mut lights {
         let wobble =
-            0.85 + 0.09 * (t * 7.3 + f.phase).sin() + 0.06 * (t * 13.1 + f.phase * 2.3).sin();
+            0.85 + k * (0.09 * (t * 7.3 + f.phase).sin() + 0.06 * (t * 13.1 + f.phase * 2.3).sin());
         light.intensity = f.base * wobble;
     }
 }

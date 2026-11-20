@@ -331,6 +331,9 @@ pub struct NightEvent {
     /// Multiplies how long the night lasts.
     #[serde(default = "one_f")]
     pub length_factor: f32,
+    /// What it looks like outside (rain, storm, snow, fog), see `weather.rs`.
+    #[serde(default)]
+    pub weather: Option<crate::weather::Weather>,
 }
 
 fn default_size() -> (f32, f32, f32) {

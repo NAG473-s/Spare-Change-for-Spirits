@@ -1321,7 +1321,7 @@ fn move_waves(
 }
 
 /// A white disc that fades out towards its edge.
-fn soft_puff(size: u32) -> Image {
+pub(crate) fn soft_puff(size: u32) -> Image {
     let mut data = Vec::with_capacity((size * size * 4) as usize);
     let c = (size as f32 - 1.0) / 2.0;
     for y in 0..size {
