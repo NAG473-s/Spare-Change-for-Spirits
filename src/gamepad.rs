@@ -9,9 +9,11 @@
 //! controller is in use; touching the real mouse hides it again.
 
 use bevy::input::ButtonState;
+use bevy::input::gamepad::GamepadButtonStateChangedEvent;
 use bevy::input::mouse::{AccumulatedMouseMotion, MouseButtonInput, MouseScrollUnit, MouseWheel};
 use bevy::input::touch::TouchPhase;
 use bevy::picking::PickingSystems;
+use bevy::picking::pointer::{PointerAction, PointerId, PointerInput, PointerLocation};
 use bevy::prelude::*;
 use bevy::window::{CursorMoved, PrimaryWindow, WindowEvent};
 
@@ -27,6 +29,10 @@ const NUDGE: f32 = 6.0;
 const NUDGE_SPEED: f32 = 160.0;
 /// Scrolling with the right stick at full tilt, in pixels a second.
 const SCROLL_SPEED: f32 = 900.0;
+const POINTER_BUTTONS: [(GamepadButton, MouseButton); 2] = [
+    (GamepadButton::South, MouseButton::Left),
+    (GamepadButton::East, MouseButton::Right),
+];
 /// Size of the ring that marks the pointer (logical pixels).
 const RING: f32 = 26.0;
 
@@ -36,11 +42,13 @@ impl Plugin for GamepadPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PadPointer>()
             .add_systems(Startup, spawn_ring)
+            .add_observer(disconnect_pointer)
             // Picking reads window events in First; regular mouse input follows
             // in PreUpdate. Both must see the same press in the same frame.
             .add_systems(
                 First,
-                drive_pointer
+                (drive_pointer, forward_buttons)
+                    .chain()
                     .after(bevy::time::TimeSystems)
                     .before(PickingSystems::Input),
             )
@@ -88,7 +96,6 @@ fn drive_pointer(
     mut pointer: ResMut<PadPointer>,
     mut window_events: MessageWriter<WindowEvent>,
     mut moved: MessageWriter<CursorMoved>,
-    mut buttons: MessageWriter<MouseButtonInput>,
     mut wheel: MessageWriter<MouseWheel>,
 ) {
     let (entity, window) = &mut *window;
@@ -117,13 +124,9 @@ fn drive_pointer(
                 step += dir * NUDGE_SPEED * dt;
             }
         }
-        let clicks = [
-            (GamepadButton::South, MouseButton::Left),
-            (GamepadButton::East, MouseButton::Right),
-        ];
-        let clicking = clicks
+        let clicking = POINTER_BUTTONS
             .iter()
-            .any(|(b, _)| gamepad.just_pressed(*b) || gamepad.just_released(*b));
+            .any(|&(b, _)| gamepad.just_pressed(b) || gamepad.just_released(b));
         let scroll = stick(gamepad, GamepadAxis::RightStickX, GamepadAxis::RightStickY);
         if step == Vec2::ZERO && !clicking && scroll == Vec2::ZERO {
             continue;
@@ -142,26 +145,9 @@ fn drive_pointer(
             };
             moved.write(event.clone());
             window_events.write(WindowEvent::CursorMoved(event));
-            pointer.active = true;
         }
         pointer.pos = Some(to);
-        for (pad, button) in clicks {
-            let state = if gamepad.just_pressed(pad) {
-                ButtonState::Pressed
-            } else if gamepad.just_released(pad) {
-                ButtonState::Released
-            } else {
-                continue;
-            };
-            let event = MouseButtonInput {
-                button,
-                state,
-                window: entity,
-            };
-            buttons.write(event);
-            window_events.write(WindowEvent::MouseButtonInput(event));
-            pointer.active = true;
-        }
+        pointer.active = true;
         if scroll != Vec2::ZERO {
             // Pushing the stick down scrolls down, like the wheel turned
             // towards you.
@@ -174,6 +160,71 @@ fn drive_pointer(
             };
             wheel.write(event);
             window_events.write(WindowEvent::MouseWheel(event));
+        }
+    }
+}
+
+/// Forward digital edges in arrival order, including several taps between frames.
+fn forward_buttons(
+    window: Single<Entity, With<PrimaryWindow>>,
+    mut changes: MessageReader<GamepadButtonStateChangedEvent>,
+    mut buttons: MessageWriter<MouseButtonInput>,
+    mut window_events: MessageWriter<WindowEvent>,
+) {
+    for change in changes.read() {
+        let Some((_, button)) = POINTER_BUTTONS
+            .into_iter()
+            .find(|(pad, _)| *pad == change.button)
+        else {
+            continue;
+        };
+        let event = MouseButtonInput {
+            button,
+            state: change.state,
+            window: *window,
+        };
+        buttons.write(event);
+        window_events.write(WindowEvent::MouseButtonInput(event));
+    }
+}
+
+/// A disconnected pad cannot send its release. Cancel the interaction before
+/// releasing the emulated mouse buttons, so unplugging never confirms a purchase.
+fn disconnect_pointer(
+    removed: On<Remove<Gamepad>>,
+    gamepads: Query<&Gamepad>,
+    window: Single<Entity, With<PrimaryWindow>>,
+    pointers: Query<(&PointerId, &PointerLocation)>,
+    mut inputs: MessageWriter<PointerInput>,
+    mut buttons: MessageWriter<MouseButtonInput>,
+    mut window_events: MessageWriter<WindowEvent>,
+) {
+    let Ok(pad) = gamepads.get(removed.entity) else {
+        return;
+    };
+    if !POINTER_BUTTONS.iter().any(|(b, _)| pad.pressed(*b)) {
+        return;
+    }
+    if let Some(location) = pointers
+        .iter()
+        .find(|(id, _)| **id == PointerId::Mouse)
+        .and_then(|(_, pointer)| pointer.location())
+    {
+        inputs.write(PointerInput::new(
+            PointerId::Mouse,
+            location.clone(),
+            PointerAction::Cancel,
+        ));
+    }
+    for (pad_button, button) in POINTER_BUTTONS {
+        if pad.pressed(pad_button) {
+            let event = MouseButtonInput {
+                button,
+                state: ButtonState::Released,
+                window: *window,
+            };
+            buttons.write(event);
+            window_events.write(WindowEvent::MouseButtonInput(event));
         }
     }
 }
@@ -222,6 +273,118 @@ fn show_ring(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn quick_controller_taps_activate_the_button_and_release_the_mouse() {
+        use bevy::app::HierarchyPropagatePlugin;
+        use bevy::input::gamepad::{RawGamepadButtonChangedEvent, RawGamepadEvent};
+        use bevy::ui::{ComputedUiTargetCamera, UiStack, update::propagate_ui_target_cameras};
+        use bevy::ui_widgets::{Activate, Button, ButtonPlugin};
+
+        #[derive(Component, Default)]
+        struct Clicks(u32);
+
+        let mut app = App::new();
+        app.add_plugins((
+            MinimalPlugins,
+            bevy::window::WindowPlugin::default(),
+            bevy::input::InputPlugin,
+            DefaultPickingPlugins,
+            UiPickingPlugin,
+            ButtonPlugin,
+            HierarchyPropagatePlugin::<ComputedUiTargetCamera>::new(PostUpdate),
+            GamepadPlugin,
+        ))
+        .init_resource::<UiScale>()
+        .add_systems(Update, propagate_ui_target_cameras);
+
+        let world = app.world_mut();
+        let position = Vec2::new(80.0, 65.0);
+        world
+            .query_filtered::<&mut Window, With<PrimaryWindow>>()
+            .single_mut(world)
+            .unwrap()
+            .set_cursor_position(Some(position));
+        let pad = world.spawn(Gamepad::default()).id();
+        let camera = world.spawn(Camera2d).id();
+        let button = world
+            .spawn((
+                Node::default(),
+                Button,
+                Clicks::default(),
+                UiTargetCamera(camera),
+                ComputedNode {
+                    size: Vec2::splat(100.),
+                    ..default()
+                },
+                UiGlobalTransform::from_translation(position),
+                InheritedVisibility::VISIBLE,
+            ))
+            .observe(|event: On<Activate>, mut buttons: Query<&mut Clicks>| {
+                buttons.get_mut(event.entity).unwrap().0 += 1;
+            })
+            .id();
+        let mut stack = UiStack::default();
+        stack.uinodes.push(button);
+        stack.partition.push(0..1);
+        world.insert_resource(stack);
+        app.update();
+        let window = app
+            .world_mut()
+            .query_filtered::<Entity, With<PrimaryWindow>>()
+            .single(app.world())
+            .unwrap();
+        app.world_mut()
+            .write_message(WindowEvent::CursorMoved(CursorMoved {
+                window,
+                position,
+                delta: None,
+            }));
+        app.update();
+
+        // Two complete taps can arrive between frames, e.g. after a rendering stall.
+        for value in [1., 0., 1., 0.] {
+            app.world_mut().write_message(RawGamepadEvent::Button(
+                RawGamepadButtonChangedEvent::new(pad, GamepadButton::South, value),
+            ));
+        }
+        app.update();
+        app.update();
+        assert_eq!(app.world().get::<Clicks>(button).unwrap().0, 2);
+        assert!(
+            !app.world()
+                .resource::<ButtonInput<MouseButton>>()
+                .pressed(MouseButton::Left)
+        );
+
+        // Losing the pad during the next press clears the drag without a third click.
+        app.world_mut()
+            .write_message(RawGamepadEvent::Button(RawGamepadButtonChangedEvent::new(
+                pad,
+                GamepadButton::South,
+                1.,
+            )));
+        app.update();
+        app.update();
+        assert!(
+            app.world()
+                .resource::<ButtonInput<MouseButton>>()
+                .pressed(MouseButton::Left)
+        );
+        use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent};
+        app.world_mut().write_message(GamepadConnectionEvent::new(
+            pad,
+            GamepadConnection::Disconnected,
+        ));
+        app.update();
+        app.update();
+        assert!(
+            !app.world()
+                .resource::<ButtonInput<MouseButton>>()
+                .pressed(MouseButton::Left)
+        );
+        assert_eq!(app.world().get::<Clicks>(button).unwrap().0, 2);
+    }
 
     #[test]
     fn scrolling_can_be_the_first_controller_input() {
