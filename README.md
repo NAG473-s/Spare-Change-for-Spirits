@@ -83,10 +83,10 @@ xdg-desktop-menu install --mode user --novendor packaging/linux/spare-change-for
 
 ## Windows build
 
-The GitHub Actions workflow [`build-windows.yml`](.github/workflows/build-windows.yml) builds a
-release `.exe`, packages it together with `assets/`, `LICENSE` and `THIRD_PARTY_LICENSES.txt` and
-uploads it as the artifact
-`SpareChangeForSpirits-windows`.
+The GitHub Actions workflow [`build-windows.yml`](.github/workflows/build-windows.yml) builds both
+editions as release `.exe`s, packages each together with `steam_api64.dll`, `assets/`, `LICENSE`
+and `THIRD_PARTY_LICENSES.txt` and uploads them as the artifacts `SpareChangeForSpirits-windows`
+(full game) and `SpareChangeForSpirits-windows-demo` (`--features demo`). The tests run for both.
 
 - Runs on pushes to `main`, on tags `v*`, and manually via
   *Actions → Build Windows → Run workflow*.

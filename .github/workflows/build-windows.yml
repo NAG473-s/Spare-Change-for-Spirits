@@ -41,11 +41,22 @@ jobs:
             windows-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-
             windows-${{ steps.toolchain.outputs.cachekey }}-
 
+      # Both editions: the full game, then the demo (`--features demo`). Each
+      # executable is copied aside right away, since both builds write the
+      # same file in target/release.
       - name: Build
-        run: cargo build --release --locked
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path editions | Out-Null
+          cargo build --release --locked
+          Copy-Item target/release/spare_change_for_spirits.exe editions/full.exe
+          cargo build --release --locked --features demo
+          Copy-Item target/release/spare_change_for_spirits.exe editions/demo.exe
 
       - name: Test
-        run: cargo test --release --locked
+        run: |
+          cargo test --release --locked
+          cargo test --release --locked --features demo
 
       # Save right away – also when a step failed or the run was cancelled –
       # so the next run continues where this one stopped instead of starting over.
@@ -76,20 +87,29 @@ jobs:
           tar -xzf steamworks-sys.crate "steamworks-sys-$version/lib/steam/redistributable_bin/win64/steam_api64.dll"
           Move-Item "steamworks-sys-$version/lib/steam/redistributable_bin/win64/steam_api64.dll" steam_api64.dll
 
+      # One folder per edition, each for its own Steam depot.
       - name: Package
         shell: pwsh
         run: |
-          $out = "dist/SpareChangeForSpirits"
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-          Copy-Item target/release/spare_change_for_spirits.exe "$out/SpareChangeForSpirits.exe"
-          Copy-Item steam_api64.dll "$out/steam_api64.dll"
-          Copy-Item -Recurse assets "$out/assets"
-          Copy-Item LICENSE "$out/LICENSE.txt"
-          Copy-Item THIRD_PARTY_LICENSES.txt "$out/THIRD_PARTY_LICENSES.txt"
-          Get-ChildItem -Recurse -Filter .gitkeep $out | Remove-Item
+          foreach ($edition in "full", "demo") {
+            $out = "dist/$edition/SpareChangeForSpirits"
+            New-Item -ItemType Directory -Force -Path $out | Out-Null
+            Copy-Item "editions/$edition.exe" "$out/SpareChangeForSpirits.exe"
+            Copy-Item steam_api64.dll "$out/steam_api64.dll"
+            Copy-Item -Recurse assets "$out/assets"
+            Copy-Item LICENSE "$out/LICENSE.txt"
+            Copy-Item THIRD_PARTY_LICENSES.txt "$out/THIRD_PARTY_LICENSES.txt"
+            Get-ChildItem -Recurse -Filter .gitkeep $out | Remove-Item
+          }
 
       - uses: actions/upload-artifact@v7
         with:
           name: SpareChangeForSpirits-windows
-          path: dist/SpareChangeForSpirits
+          path: dist/full/SpareChangeForSpirits
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: SpareChangeForSpirits-windows-demo
+          path: dist/demo/SpareChangeForSpirits
           if-no-files-found: error
