@@ -13,6 +13,13 @@ from the editable vector logo. No Steam upload is performed by this repository.
 | `library_capsule.png` | 600 × 900 | Included |
 | `library_hero.png` | 3840 × 1240 | None; use the separate library logo |
 | `library_logo.png` | 1280 × 720 | Transparent logo |
+| `achievements/<id>.png` | 256 × 256 | None; 18 achieved icons |
+| `achievements/<id>_locked.png` | 256 × 256 | None; 18 greyed, darkened icons |
+
+The achievement icons cover all IDs in [`assets/data/achievements.ron`](../../assets/data/achievements.ron)
+for the full game. Each locked version uses the same artwork and transparency as its coloured
+counterpart. The prompts and export commands are in
+[`ART_PROMPTS.md`](../../docs/ART_PROMPTS.md#achievement-icons--canvas-1024--1024-done).
 
 `artwork/` contains the text-free crops used for the capsule exports, so the title can
 be repositioned without regenerating the scene. `logo.svg` is the editable source;
