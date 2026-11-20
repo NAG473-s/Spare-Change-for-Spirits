@@ -30,6 +30,7 @@ impl Plugin for CrittersPlugin {
                 fly_bats,
                 jump_fish,
                 flutter_moths,
+                show_companions,
             ),
         );
     }
@@ -43,6 +44,9 @@ const GULL: Vec3 = Vec3::new(3.6, 0.6, -0.82);
 const OWL: Vec3 = Vec3::new(-5.7, 3.28, -3.3);
 const LIGHTHOUSE_TOP: Vec3 = Vec3::new(-6.0, 3.9, -3.6);
 const LAMP: Vec3 = Vec3::new(0.6, 2.45, -1.25);
+/// Where a story's companion lives in the shop (shop metres): Pfote, the
+/// ghost dog, curled up at the front of the shop.
+const SHOP_DOG: Vec3 = Vec3::new(-4.3, 0.0, 2.75);
 const BATS: usize = 3;
 const MOTHS: usize = 7;
 
@@ -380,6 +384,88 @@ fn spawn_critters(
             },
         );
         p.glow(moth, 0.015, LinearRgba::rgb(1.2, 1.1, 0.9), Vec3::ZERO);
+    }
+}
+
+/// A critter that came with a story (`companion` in story.ron).
+#[derive(Component)]
+struct Companion;
+
+/// Once a story with a companion is finished, the companion lives in the
+/// shop: Lotte's dog Pfote.
+fn show_companions(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    data: Res<crate::data::GameData>,
+    progress: Res<crate::day_cycle::Progress>,
+    existing: Query<Entity, With<Companion>>,
+) {
+    let wanted = data.stories.iter().enumerate().any(|(i, s)| {
+        s.companion.as_deref() == Some("dog") && progress.chapter(i) >= s.chapters.len()
+    });
+    match (wanted, existing.iter().next()) {
+        (true, None) => {}
+        (false, Some(dog)) => {
+            commands.entity(dog).despawn();
+            return;
+        }
+        _ => return,
+    }
+    let mut p = Parts {
+        commands,
+        asset_server: &asset_server,
+        meshes: &mut meshes,
+        materials: &mut materials,
+    };
+    // A small, pale, faintly glowing ghost dog.
+    let ghostly = Color::srgba(0.85, 0.92, 1.0, 0.9);
+    let dog = p.node(
+        None,
+        Transform::from_translation(SHOP_DOG).with_rotation(Quat::from_rotation_y(0.6)),
+        (Breathing { phase: 0.7 }, Companion),
+    );
+    if !p.model(dog, "dog_body") {
+        p.shape(
+            dog,
+            Capsule3d::new(0.1, 0.22).into(),
+            ghostly,
+            Transform::from_xyz(0.0, 0.12, 0.0).with_rotation(Quat::from_rotation_z(TAU / 4.0)),
+        );
+        p.shape(
+            dog,
+            Sphere::new(0.09).into(),
+            ghostly,
+            Transform::from_xyz(0.2, 0.2, 0.0),
+        );
+        for z in [-0.05, 0.05] {
+            p.shape(
+                dog,
+                Sphere::new(0.035).into(),
+                ghostly,
+                Transform::from_xyz(0.2, 0.29, z).with_scale(Vec3::new(0.6, 1.4, 0.6)),
+            );
+            p.glow(
+                dog,
+                0.012,
+                LinearRgba::rgb(0.6, 0.9, 2.0),
+                Vec3::new(0.28, 0.22, z * 0.7),
+            );
+        }
+    }
+    let tail = p.node(
+        Some(dog),
+        Transform::from_xyz(-0.2, 0.17, 0.0),
+        Tail { phase: 0.0 },
+    );
+    if !p.model(tail, "dog_tail") {
+        p.shape(
+            tail,
+            Capsule3d::new(0.025, 0.1).into(),
+            ghostly,
+            Transform::from_xyz(-0.04, 0.05, 0.0).with_rotation(Quat::from_rotation_z(0.8)),
+        );
     }
 }
 

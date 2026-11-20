@@ -11,7 +11,7 @@
     (id: "draught", effect: (light: -2), pos: (-3.2, 1.85, -2.75), size: (0.45, 0.25, 0.2),
      color: (0.75, 0.5, 0.25), motion: Swirl),
     // A crow flutters in and settles on the counter, cawing.
-    (id: "crow", effect: (silence: -2), pos: (6.3, 0.75, 1.8), size: (0.3, 0.32, 0.4),
+    (id: "crow", effect: (silence: -2), pos: (6.3, 0.75, 0.85), size: (0.3, 0.32, 0.4),
      color: (0.1, 0.1, 0.12), motion: Hop),
     // The roof drips: a cold puddle on the floor.
     (id: "leak", effect: (warmth: -1), pos: (-1.5, 0.01, 3.0), size: (0.6, 0.04, 0.6),

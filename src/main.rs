@@ -38,6 +38,7 @@ mod title;
 mod tooltip;
 mod ui;
 mod upgrades;
+mod winter;
 mod workbench;
 
 use bevy::prelude::*;
@@ -106,6 +107,7 @@ fn main() {
             upgrades::UpgradesPlugin,
             incidents::IncidentsPlugin,
             workbench::WorkbenchPlugin,
+            winter::WinterPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

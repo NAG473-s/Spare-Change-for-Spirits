@@ -26,4 +26,11 @@
     (id: "hair_ribbon", price: 6, crate_cost: 11, crate_size: 4, fade_after: 4, unlock_night: 4, container: "basket"),
     (id: "wedding_veil", price: 20, crate_cost: 29, crate_size: 2, fade_after: 4, unlock_night: 4, container: "chest"),
     (id: "pressed_flower", price: 7, crate_cost: 13, crate_size: 3, fade_after: 3, unlock_night: 4, container: "crate"),
+
+    // Season 2, "The Long Winter" (from calendar night 11).
+    (id: "gear", price: 8, crate_cost: 15, crate_size: 3, fade_after: 6, unlock_night: 11, container: "chest"),
+    (id: "clock_key", price: 7, crate_cost: 13, crate_size: 3, fade_after: 6, unlock_night: 11, container: "chest"),
+    (id: "little_bell", price: 5, crate_cost: 10, crate_size: 4, fade_after: 5, unlock_night: 11, container: "basket"),
+    (id: "leash", price: 6, crate_cost: 12, crate_size: 3, fade_after: 5, unlock_night: 11, container: "basket"),
+    (id: "snow_globe", price: 16, crate_cost: 24, crate_size: 2, fade_after: 5, unlock_night: 11, container: "crate"),
 ]

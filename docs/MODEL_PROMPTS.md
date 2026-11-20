@@ -9,6 +9,12 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
+- Season 2, "The Long Winter":
+  - the products `gear`, `clock_key`, `little_bell`, `leash` and `snow_globe` (*Products*);
+  - the keepsakes `chalk_drawing`, `dog_basket`, `cog_wheel` and `cuckoo_clock` (*Keepsakes*);
+  - the tower clock `clock_tower` with `clock_hand_hour` and `clock_hand_minute` (*The village
+    market*);
+  - Lotte's ghost dog Pfote, `dog_body` and `dog_tail` (*Animals*).
 - The `workbench` (decor, see *Furniture* below, `assets/models/decor/workbench.glb`).
 - Three mishaps during the night: `draught`, `crow` and `leak` (see *Mishaps* below,
   `assets/models/incidents/<id>.glb`).
@@ -105,6 +111,10 @@ Placed like furniture on one floor cell; origin at the bottom centre, front towa
 | `sea_chart` | 0.7 × 1.2 × 0.3 | A wooden easel holding a framed, yellowed sea chart of a small harbour with a lighthouse; a tiny ghost doodle in one corner. |
 | `lifebuoy` | 0.6 × 1.1 × 0.3 | A red-and-white striped ring lifebuoy hanging on a weathered wooden post, a coil of rope looped over the top. |
 | `apron` | 0.5 × 1.6 × 0.5 | A slim wooden coat stand with a faded lavender shop apron hanging on it; the apron has a pocket with a small sprig of dried lavender peeking out. |
+| `chalk_drawing` | 0.5 × 0.9 × 0.3 | A small wooden easel holding a child's chalk drawing on dark paper: a fluffy little dog with a bell on its collar, drawn with wobbly white and yellow lines. |
+| `dog_basket` | 0.7 × 0.35 × 0.5 | A round wicker dog basket with a soft knitted blanket inside and a little bell lying on the rim. |
+| `cog_wheel` | 0.6 × 0.8 × 0.3 | A large, old brass cog from a tower clock, leaning upright in a simple wooden stand; worn teeth, a bit of patina. |
+| `cuckoo_clock` | 0.45 × 1.6 × 0.3 | A carved wooden cuckoo clock hanging on a slim wooden post; small roof, pine cones on chains, the little door shut. Static – the game moves nothing on it. |
 
 ## Mishaps – `assets/models/incidents/<id>.glb`
 
@@ -117,6 +127,16 @@ the crow hop, the leaves swirl and the puddle shimmer.
 | `draught` | 0.45 × 0.25 × 0.2 | Three dry autumn leaves (orange, brown, ochre) caught in a little swirl of wind, floating just above a window sill; no sill, only the leaves and a faint curl of pale wind ribbon. |
 | `crow` | 0.3 × 0.32 × 0.4 | A small, glossy black crow standing on two feet, beak half open as if cawing, head slightly cocked, wings folded; friendly, a little scruffy. |
 | `leak` | 0.6 × 0.04 × 0.6 | A flat, irregular puddle of water on the floor with two small ripple rings and a single drop splashing in the middle. |
+
+### The tower clock (season 2)
+
+The clockmaker's story sets it going chapter by chapter; the game turns the hands.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `clock_tower` | 1.2 × 4.2 × 1.2 | A slim old stone clock tower with a pointed slate roof, a round clock face **without hands** centred at **2.75 m** height on the front (−Y), Roman numerals, a little balcony rail below the face. Origin at the bottom centre. |
+| `clock_hand_hour` | 0.06 × 0.22 × 0.02 | The short, ornate black iron hour hand, pointing up along +Z (Blender), origin at its **pivot (bottom end)**. |
+| `clock_hand_minute` | 0.04 × 0.32 × 0.02 | The long, slim black iron minute hand, pointing up, origin at its **pivot (bottom end)**. |
 
 ## Products – `assets/models/products/<id>.glb`
 
@@ -145,6 +165,16 @@ distance; each product fits inside **0.25 × 0.25 × 0.25 m**.
 | `hair_ribbon` | A light blue silk ribbon tied in a bow, lying flat. |
 | `wedding_veil` | A folded white lace veil with a small pearl comb on top. |
 | `pressed_flower` | An open old book with a pressed pink flower between the pages. |
+
+Season 2 products:
+
+| id | Prompt |
+|---|---|
+| `gear` | A single shiny brass gear wheel lying flat, with a smaller gear leaning against it. |
+| `clock_key` | An ornate brass clock-winding key with a heart-shaped bow, on a short ribbon. |
+| `little_bell` | A small silver bell on a red ribbon tied in a bow. |
+| `leash` | A coiled red dog leash with a brass clip and a looped handle. |
+| `snow_globe` | A snow globe on a wooden base with a tiny house and a pine tree inside, a few white flakes floating. |
 
 ## Shop – `assets/models/shop/<id>.glb`
 
@@ -317,6 +347,8 @@ Night colours, cute and simple, no rigs or animations.
 | `bat_body` | 0.07 × 0.06 × 0.12 | A tiny dark bat's body with ears, **without wings**, head towards −Y. Origin at the **centre**. |
 | `bat_wing` | 0.12 × 0.02 × 0.08 | One bat wing, spread flat out to the right (+X). Origin at the **shoulder (its left end)**; the game mirrors it for the other side. |
 | `fish` | 0.08 × 0.1 × 0.26 | A small silvery fish, length along the Y axis, head towards −Y. Origin at the **centre**. |
+| `dog_body` | 0.5 × 0.36 × 0.24 | Pfote, a small fluffy ghost dog lying down with its head up, pale blue-white and slightly translucent-looking, a little bell on its collar, **without its tail**; head towards +X. |
+| `dog_tail` | 0.06 × 0.16 × 0.06 | Pfote's fluffy tail, pointing up and back. Origin at its **root (bottom end)**. |
 
 ## The village market – `assets/models/market/<id>.glb`
 

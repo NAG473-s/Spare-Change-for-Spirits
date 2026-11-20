@@ -115,3 +115,10 @@ Findings:
   "No fitting change" and the ghost pays with smaller coins.
 - The simulation does not model the story ghosts, tips, the shade or the market's rare pieces,
   hourglass and exchange; it does model the picky guests.
+
+## Season 2 (nights 11–20)
+
+The simulation now plays all 20 nights. 100 runs: demand +1088, demand + furniture +2493,
+demand + furniture + improvements +2581, cheapest crates −92 (loans in 38 % of the nights);
+39–42 % of the wishes fulfilled. Money grows about twice as much over twice the nights, so the
+winter neither breaks nor starves the shop. Not simulated yet: orders, mishaps, the workbench.

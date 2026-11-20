@@ -6,6 +6,9 @@
 // arrive_at: when the ghost arrives, as a fraction of the night (0..1).
 // finale: finishing this story ends the season – the season lasts until it is finished.
 // lighthouse: every chapter of this story repairs the harbour lighthouse a little.
+// tower_clock: every chapter sets the market's tower clock going a little more.
+// snow: once this story is finished, snow falls over the village.
+// companion: a critter (critters.rs) that lives in the shop once this story is finished.
 // keepsake: decor (keepsake: true in decor.ron) left in your storeroom as thanks.
 // Texts: assets/i18n/<language>.ron (story.<ghost>.arrives, story.<ghost>.<n>.intro,
 // story.<ghost>.<n>.thanks, story.<ghost>.ending).
@@ -37,6 +40,39 @@
             (wish: "brass_compass", keepsake: Some("sea_chart")),
             (wish: "ship_in_bottle", keepsake: Some("lifebuoy")),
             (wish: "lavender", keepsake: Some("apron")),
+        ],
+    ),
+    // Season 2, "The Long Winter". Lotte, a little ghost girl, looks for her dog Pfote; once
+    // she has found him he stays in the shop (`companion`).
+    (
+        ghost: "lotte",
+        start_night: 11,
+        arrive_at: 0.3,
+        companion: Some("dog"),
+        chapters: [
+            (wish: "ball_of_yarn"),
+            (wish: "fish_bone", keepsake: Some("chalk_drawing")),
+            (wish: "little_bell"),
+            (wish: "leash"),
+            (wish: "wool_scarf", keepsake: Some("dog_basket")),
+        ],
+    ),
+    // Anselm the clockmaker: the tower clock on the market square has stood still since he died,
+    // so winter never quite comes. Each chapter sets it going a little more (`tower_clock`); his
+    // last one is the season's finale and brings the first snow (`snow`).
+    (
+        ghost: "anselm",
+        start_night: 16,
+        arrive_at: 0.4,
+        finale: true,
+        tower_clock: true,
+        snow: true,
+        chapters: [
+            (wish: "gear"),
+            (wish: "clock_key", keepsake: Some("cog_wheel")),
+            (wish: "polishing_cloth"),
+            (wish: "pocket_watch"),
+            (wish: "snow_globe", keepsake: Some("cuckoo_clock")),
         ],
     ),
 ]

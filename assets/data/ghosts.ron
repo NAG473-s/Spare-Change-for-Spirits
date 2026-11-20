@@ -74,4 +74,25 @@
      spawn_weight: 1.5, pay_multiplier: 1.6, patience_secs: 20.0, voice: 1.18,
      needs: [AtLeast(Reflection, 2), AtLeast(Warmth, 2)],
      wishes: ["wedding_veil", "pressed_flower", "hair_ribbon", "powder_compact"]),
+
+    // Season 2, "The Long Winter".
+    (id: "snow", color: (0.85, 0.92, 1.0), unlock_night: 11,
+     spawn_weight: 2.0, pay_multiplier: 1.1, patience_secs: 26.0, voice: 1.2,
+     needs: [AtMost(Warmth, 2)],
+     wishes: ["wool_scarf", "snow_globe", "little_bell"]),
+    (id: "lantern_child", color: (1.0, 0.85, 0.5), unlock_night: 13,
+     spawn_weight: 1.5, pay_multiplier: 1.0, patience_secs: 18.0, voice: 1.35,
+     needs: [AtLeast(Light, 2)],
+     wishes: ["little_bell", "marbles", "music_box"],
+     pays_with: [Button, Candle]),
+    // Story ghosts of season 2 (story.ron).
+    (id: "lotte", color: (0.8, 0.92, 0.85),
+     spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 1.45,
+     needs: [],
+     wishes: ["ball_of_yarn", "fish_bone", "little_bell", "leash", "wool_scarf"],
+     pays_with: [Button]),
+    (id: "anselm", color: (0.85, 0.8, 0.65),
+     spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 0.85,
+     needs: [],
+     wishes: ["gear", "clock_key", "polishing_cloth", "pocket_watch", "snow_globe"]),
 ]

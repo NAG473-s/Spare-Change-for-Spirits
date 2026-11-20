@@ -478,7 +478,10 @@ mod tests {
     }
     /// Plays the stories with one chapter per night, the given nights failing.
     fn play(data: &GameData, failures: &[u32]) -> Progress {
-        let mut progress = Progress::new(0);
+        play_from(Progress::new(0), data, failures)
+    }
+
+    fn play_from(mut progress: Progress, data: &GameData, failures: &[u32]) -> Progress {
         loop {
             for i in 0..data.stories.len() {
                 if progress.story_due(data, i) {
@@ -517,6 +520,13 @@ mod tests {
         assert_eq!((next.season, next.night), (2, len + 3));
         assert_eq!(next.calendar(&data), len + 1);
         assert!(!next.season_over(&data));
+        // Season 2 tells its own story and ends with its own finale.
+        let mut second = smooth.clone();
+        second.next_season();
+        let second = play_from(second, &data, &[]);
+        assert_eq!((second.season, second.night), (2, 2 * len));
+        assert!(crate::winter::snowing(&data, &second));
+        assert_eq!(crate::winter::clock_level(&data, &second), 1.0);
     }
 
     #[test]

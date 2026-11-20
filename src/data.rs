@@ -361,6 +361,15 @@ pub struct StoryDef {
     /// Each chapter of this story repairs the harbour lighthouse a little.
     #[serde(default)]
     pub lighthouse: bool,
+    /// Each chapter sets the market's tower clock going a little more.
+    #[serde(default)]
+    pub tower_clock: bool,
+    /// Once this story is finished, snow falls over the village.
+    #[serde(default)]
+    pub snow: bool,
+    /// A critter that lives in the shop once this story is finished.
+    #[serde(default)]
+    pub companion: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

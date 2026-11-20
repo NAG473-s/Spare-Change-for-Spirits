@@ -45,6 +45,9 @@ MARKET_SIZES = {
     "vendor_candlemaker": (0.5, 1.6, 0.5),
     "hourglass": (0.2, 0.3, 0.2),
     "plan": (0.4, 0.12, 0.12),
+    "clock_tower": (1.2, 4.2, 1.2),
+    "clock_hand_hour": (0.06, 0.22, 0.02),
+    "clock_hand_minute": (0.04, 0.32, 0.02),
 }
 # Old junk on the floor that is not cleared yet (src/upgrades.rs, JUNK_SIZE).
 JUNK_SIZES = {f"junk_{n}": (0.85, 0.75, 0.85) for n in (1, 2, 3)}
@@ -80,6 +83,8 @@ CRITTER_SIZES = {
     "bat_body": (0.07, 0.06, 0.12),
     "bat_wing": (0.12, 0.02, 0.08),
     "fish": (0.08, 0.1, 0.26),
+    "dog_body": (0.5, 0.36, 0.24),
+    "dog_tail": (0.06, 0.16, 0.06),
 }
 # The harbour scene (docs/MODEL_PROMPTS.md).
 HARBOR_SIZES = {

@@ -24,6 +24,11 @@ python3 tools/check_models.py
 
 ## To do
 
+- Season 2, "The Long Winter": portraits (and later idle and gesture sheets) for `snow`,
+  `lantern_child`, `lotte` and `anselm` (*Ghosts introduced in later nights*); icons for the
+  products `gear`, `clock_key`, `little_bell`, `leash`, `snow_globe` and the keepsakes
+  `chalk_drawing`, `dog_basket`, `cog_wheel`, `cuckoo_clock` (prompts: as for their models in
+  [MODEL_PROMPTS.md](MODEL_PROMPTS.md)).
 - Icon for the `workbench` (kind `decor`): "A sturdy little wooden workbench with a vice, a
   hammer and a half-repaired music box on top."
 
@@ -109,6 +114,10 @@ All thirteen sprites are included in `assets/sprites/ghosts/`. The prompts below
 | `ida` | Ida, an elderly lighthouse keeper ghost, cool sea-blue glow, sturdy and weather-beaten, short grey hair under a knitted fisherman's cap, a thick oilskin coat, holding a small brass storm lantern, determined but kind eyes. |
 | `hedda` | Hedda, a small, round, elderly lady ghost with a warm peach glow, silver hair in a bun with a pencil stuck in it, little round spectacles, a lavender shop apron with a sprig of lavender in the pocket, hands folded, a gentle knowing smile. |
 | `shade` | A shade, a thin, smoky ghost with a dark violet glow and a wispy hood, sly narrow glowing yellow eyes and a cheeky grin, long grasping fingers, a small patched sack slung over its shoulder; mischievous but still cute, not scary. |
+| `snow` | A round, soft snow ghost with a frosty white-blue glow, little icicles on its edges, a knitted red scarf, rosy cheeks and a shy smile, a few snowflakes floating around it. |
+| `lantern_child` | A small ghost child with a warm golden glow carrying a paper lantern on a stick, wrapped in a woolly cap, big curious eyes. |
+| `lotte` | Lotte, a little ghost girl with a mint glow, plaits under a woolly hat with a bobble, mittens on a string, holding a small dog collar with a bell, hopeful worried eyes. |
+| `anselm` | Anselm, an old clockmaker ghost with a pale amber glow, a jeweller's magnifying glass pushed up on his forehead, a waistcoat with a watch chain, white sideburns, holding a tiny screwdriver, kind and precise. |
 
 **Original ghosts:**
 
