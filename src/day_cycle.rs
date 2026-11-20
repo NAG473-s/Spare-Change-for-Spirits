@@ -223,6 +223,10 @@ pub struct NightReport {
     pub change_kept: i64,
     /// Value of second payments that were kept.
     pub second_payments_kept: u32,
+    /// Tips left for exact change (in button units).
+    pub tips: u32,
+    /// Wares a shade stole from the shelves (product ids).
+    pub stolen: Vec<String>,
     /// Ghosts turned away because their wish was not in stock.
     pub declined: u32,
     /// Ghosts offered the wrong item.

@@ -941,10 +941,15 @@ fn blocked(
     day: &MarketDay,
     drawer: &Drawer,
     kind: &WareKind,
+    reputation: i32,
 ) -> Option<&'static str> {
     match kind {
         WareKind::Hourglass if day.hourglass => Some("market.tip_sold_out"),
         WareKind::Rare(id) if day.rare_sold.contains(id) => Some("market.tip_sold_out"),
+        // The Reaper's rare pieces are for shops the spirits speak well of.
+        WareKind::Rare(_) if reputation < data.config.reputation_perks.rare_from => {
+            Some("market.tip_reputation")
+        }
         WareKind::Exchange(e) => {
             let (coin, _, _) = exchange_gives(*e);
             (drawer.get(coin) < exchange_takes(*e)).then_some("market.no_coins")
@@ -971,6 +976,7 @@ fn on_ware_click(
     mut cues: MessageWriter<Cue>,
     mut figures: Query<&mut VendorFigure>,
     mut letter: ResMut<FoundLetter>,
+    progress: Res<Progress>,
 ) {
     let Ok(item) = items.get(click.event_target()) else {
         return;
@@ -978,7 +984,7 @@ fn on_ware_click(
     let vendor = lang.t(&format!("vendor.{}.name", data.vendors[item.vendor].id));
     let sold = match click.button {
         PointerButton::Primary => {
-            if blocked(&data, &day, &drawer, &item.kind).is_some() {
+            if blocked(&data, &day, &drawer, &item.kind, progress.reputation).is_some() {
                 return;
             }
             let cost = price(&data, &item.kind);
@@ -1096,6 +1102,7 @@ fn ware_tooltip(
     day: Res<MarketDay>,
     mut tip: ResMut<HoverTip>,
     mut shown: Local<bool>,
+    progress: Res<Progress>,
 ) {
     let Some(item) = hovered.0.and_then(|e| items.get(e).ok()) else {
         if *shown {
@@ -1175,9 +1182,10 @@ fn ware_tooltip(
             t.line(TipKind::Text, lang.t(&format!("exchange.{key}.text")));
         }
     }
-    match blocked(&data, &day, &drawer, &item.kind) {
+    match blocked(&data, &day, &drawer, &item.kind, progress.reputation) {
         Some(key) => {
-            t.line(TipKind::Bad, lang.t(key));
+            let min = data.config.reputation_perks.rare_from;
+            t.line(TipKind::Bad, lang.f(key, &[("min", &min)]));
         }
         None => {
             let key = if matches!(item.kind, WareKind::Decor(_)) {

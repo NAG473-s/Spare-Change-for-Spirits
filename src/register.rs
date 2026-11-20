@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 use crate::data::GameData;
 use crate::day_cycle::{NightReport, Phase, Progress};
-use crate::economy::{Coin, Drawer, Purse, ghost_payment};
+use crate::economy::{Coin, Drawer, Purse, ghost_payment, smaller_payment};
 use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
@@ -314,6 +314,27 @@ fn make_change(
                 }
             }
             Action::ResetChange => sale.given = Purse::default(),
+            // The drawer cannot give back the change exactly: the ghost takes
+            // its coins back and pays with smaller ones.
+            Action::NoChange if !drawer.can_give(sale.change_due()) => {
+                let Ok(ghost) = ghosts.get(sale.ghost) else {
+                    continue;
+                };
+                let def = &data.ghosts[ghost.def];
+                drawer.remove(&sale.paid());
+                let purse = smaller_payment(sale.price, &def.pays_with, &drawer.0);
+                drawer.merge(&purse);
+                sale.coins = paid_coins(&purse, false, &lang, &mut rng);
+                sale.given = Purse::default();
+                cues.write(Cue::Paid);
+                log.push(lang.f(
+                    "log.smaller_coins",
+                    &[
+                        ("who", &lang.ghost_the(&def.id)),
+                        ("coins", &purse.describe(&lang)),
+                    ],
+                ));
+            }
             Action::GiveChange => {
                 let sale = register.sale.take().expect("checked above");
                 drawer.remove(&sale.given);
@@ -360,6 +381,20 @@ fn make_change(
                     // Found on the shelves: the ghost leaves happier.
                     if !sale.from_storeroom {
                         progress.reputation += 1;
+                    }
+                    // A shop the spirits speak well of gets a tip now and then.
+                    let perks = data.config.reputation_perks;
+                    if rng.chance(perks.tip_chance(progress.reputation)) {
+                        let coin =
+                            if progress.reputation >= perks.candle_tip_from && rng.chance(0.5) {
+                                Coin::Candle
+                            } else {
+                                Coin::Button
+                            };
+                        drawer.0.add(coin, 1);
+                        report.tips += coin.value();
+                        cues.write(Cue::Tip(ghost.pos, coin));
+                        log.push(lang.f("log.tip", &[("who", &name), ("coin", &coin.name(&lang))]));
                     }
                 }
 

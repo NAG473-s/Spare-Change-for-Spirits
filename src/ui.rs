@@ -74,6 +74,7 @@ impl Plugin for UiPlugin {
                     build_demo_end_panel
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
+                    reputation_tooltip,
                     build_market_panel.run_if(in_state(Phase::Day).and_then(
                         resource_changed::<Storeroom>.or_else(resource_changed::<UiFont>),
                     )),
@@ -116,6 +117,8 @@ pub enum Action {
     Offer(String),
     /// Hand the ferryman's parcel to the story ghost at the counter.
     HandParcel,
+    /// The drawer cannot give the change: ask the ghost for smaller coins.
+    NoChange,
     /// The season is over: keep the shop open anyway.
     KeepPlaying,
     Decline,
@@ -564,6 +567,7 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
             children![
                 (
                     HudText,
+                    Hovered::default(),
                     StaticText { bold: true },
                     Text::new(""),
                     text_font(&font.bold, 15.0),
@@ -733,6 +737,82 @@ fn button_hover(
     for (hovered, tone, mut bg, mut edge, disabled) in &mut buttons {
         (*bg, *edge) = tone.paint(hovered.get() && !disabled);
     }
+}
+
+/// Hovering the top bar explains what the reputation does right now.
+fn reputation_tooltip(
+    hud: Single<&Hovered, With<HudText>>,
+    progress: Res<Progress>,
+    data: Res<GameData>,
+    lang: Res<Lang>,
+    mut tip: ResMut<crate::tooltip::HoverTip>,
+    mut shown: Local<bool>,
+) {
+    use crate::tooltip::{HoverTip, TipKind};
+    if !hud.get() {
+        if *shown {
+            HoverTip::hide(&mut tip);
+            *shown = false;
+        }
+        return;
+    }
+    *shown = true;
+    let rep = progress.reputation;
+    let mut t = HoverTip {
+        title: lang.f("rep_tip.title", &[("reputation", &rep)]),
+        ..default()
+    };
+    // The factor is on the time between ghosts: its inverse is how often they come.
+    let percent = ((1.0 / data.config.reputation_spawn_factor(rep) - 1.0) * 100.0).round() as i32;
+    match percent {
+        p if p > 0 => t.line(TipKind::Good, lang.f("rep_tip.more", &[("percent", &p)])),
+        p if p < 0 => t.line(TipKind::Bad, lang.f("rep_tip.fewer", &[("percent", &-p)])),
+        _ => t.line(TipKind::Text, lang.t("rep_tip.same")),
+    };
+    let perks = data.config.reputation_perks;
+    let chance = (perks.tip_chance(rep) * 100.0).round() as u32;
+    if chance > 0 {
+        t.line(
+            TipKind::Good,
+            lang.f("rep_tip.tips", &[("percent", &chance)]),
+        );
+    } else {
+        t.line(
+            TipKind::Text,
+            lang.f("rep_tip.tips_from", &[("min", &perks.tip_from)]),
+        );
+    }
+    for g in data
+        .ghosts
+        .iter()
+        .filter(|g| g.unlock_night <= progress.night)
+    {
+        let Some(min) = g.min_reputation else {
+            continue;
+        };
+        let name = lang.ghost(&g.id);
+        if rep >= min {
+            t.line(TipKind::Good, lang.f("rep_tip.guest", &[("ghost", &name)]));
+        } else {
+            t.line(
+                TipKind::Text,
+                lang.f("rep_tip.guest_from", &[("ghost", &name), ("min", &min)]),
+            );
+        }
+    }
+    if rep >= perks.rare_from {
+        t.line(TipKind::Good, lang.t("rep_tip.rare"));
+    } else {
+        t.line(
+            TipKind::Text,
+            lang.f("rep_tip.rare_from", &[("min", &perks.rare_from)]),
+        );
+    }
+    if progress.night >= data.config.thief.from_night && rep < data.config.thief.below {
+        t.line(TipKind::Bad, lang.t("rep_tip.thief"));
+    }
+    t.line(TipKind::Hint, lang.t("rep_tip.earn"));
+    HoverTip::show(&mut tip, t);
 }
 
 fn update_hud(
@@ -1000,7 +1080,7 @@ fn build_evening_panel(
                 )],
             ));
         }
-        let odds = data.ghost_odds(night, &layout.atmosphere(&data, night));
+        let odds = data.ghost_odds(night, &layout.atmosphere(&data, night), progress.reputation);
         expected_guests(&mut ui, &lang, &data, &stock, &progress, &odds);
         ui.section(&lang.t("evening.shelve"));
         let in_stock: Vec<String> = data
@@ -1048,7 +1128,7 @@ fn build_evening_panel(
         }
     }
 
-    let odds = data.ghost_odds(night, &layout.atmosphere(&data, night));
+    let odds = data.ghost_odds(night, &layout.atmosphere(&data, night), progress.reputation);
     expected_guests(&mut ui, &lang, &data, &stock, &progress, &odds);
 
     ui.section(&lang.f(
@@ -1336,6 +1416,18 @@ fn build_night_panel(
             false,
             true,
         );
+        // Only when the drawer really cannot give the change exactly.
+        let due = sale.change_due();
+        if !drawer.can_give(due) {
+            ui.button_in(
+                row,
+                &lang.t("register.no_change"),
+                Action::NoChange,
+                false,
+                true,
+            );
+            ui.dim(&lang.f("register.no_change_hint", &[("due", &due)]));
+        }
         ui.spacer();
         ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
         return;

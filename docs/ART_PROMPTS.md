@@ -24,7 +24,10 @@ python3 tools/check_models.py
 
 ## To do
 
-There are no open image orders. Ida and Hedda have portraits and four-frame idle sheets
+- Sprite and idle sheet for the `shade`, the thief that visits shops with a bad reputation,
+  see *Ghosts introduced in later nights* below.
+
+Everything else is delivered. Ida and Hedda have portraits and four-frame idle sheets
 in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
 apron are in `assets/sprites/decor/`.
 
@@ -103,6 +106,7 @@ All twelve sprites are included in `assets/sprites/ghosts/`. The prompts below c
 | `bride` | A ghostly bride, pearly white glow, old-fashioned lace dress, no veil, a small bouquet held close, hopeful but sad eyes. |
 | `ida` | Ida, an elderly lighthouse keeper ghost, cool sea-blue glow, sturdy and weather-beaten, short grey hair under a knitted fisherman's cap, a thick oilskin coat, holding a small brass storm lantern, determined but kind eyes. |
 | `hedda` | Hedda, a small, round, elderly lady ghost with a warm peach glow, silver hair in a bun with a pencil stuck in it, little round spectacles, a lavender shop apron with a sprig of lavender in the pocket, hands folded, a gentle knowing smile. |
+| `shade` | A shade, a thin, smoky ghost with a dark violet glow and a wispy hood, sly narrow glowing yellow eyes and a cheeky grin, long grasping fingers, a small patched sack slung over its shoulder; mischievous but still cute, not scary. |
 
 **Original ghosts:**
 

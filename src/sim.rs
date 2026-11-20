@@ -248,7 +248,9 @@ impl<'a> Game<'a> {
     /// stay (its needs are met by the atmosphere).
     fn ghost_weights(&self) -> Vec<(usize, f32, bool)> {
         let atmosphere = self.layout.atmosphere(self.data, self.night);
-        let odds = self.data.ghost_odds(self.night, &atmosphere);
+        let odds = self
+            .data
+            .ghost_odds(self.night, &atmosphere, self.reputation);
         self.data
             .ghosts
             .iter()

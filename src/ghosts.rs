@@ -39,13 +39,19 @@ impl Plugin for GhostPlugin {
             .init_resource::<Queue>()
             .init_resource::<HoveredGhost>()
             .insert_resource(SpawnTimer(2.0))
+            .init_resource::<ThiefTonight>()
             .add_systems(
                 OnEnter(Phase::Night),
-                |mut q: ResMut<Queue>, mut t: ResMut<SpawnTimer>, mut h: ResMut<HoveredGhost>| {
-                    h.0 = None;
-                    q.0.clear();
-                    t.0 = 2.0;
-                },
+                (
+                    |mut q: ResMut<Queue>,
+                     mut t: ResMut<SpawnTimer>,
+                     mut h: ResMut<HoveredGhost>| {
+                        h.0 = None;
+                        q.0.clear();
+                        t.0 = 2.0;
+                    },
+                    plan_thief,
+                ),
             )
             // The ghosts are gone: so is a ghost tooltip.
             .add_systems(OnExit(Phase::Night), |mut tip: ResMut<HoverTip>| {
@@ -58,10 +64,12 @@ impl Plugin for GhostPlugin {
                     spawn_story_ghost,
                     come_home,
                     say_farewell,
+                    spawn_thief,
                     ghost_ai,
                     ghost_murmurs,
                     ghost_tooltip,
                     mute_browsing_names,
+                    steal_from_shelf,
                     show_carried_wares,
                     move_ghosts,
                     fade_ghosts,
@@ -190,7 +198,7 @@ fn spawn_ghosts(
     }
 
     let atmosphere = layout.atmosphere(&data, night);
-    let weights = data.ghost_odds(night, &atmosphere);
+    let weights = data.ghost_odds(night, &atmosphere, progress.reputation);
     let Some(def_idx) = rng.weighted(&weights) else {
         return;
     };
@@ -353,7 +361,9 @@ fn ghost_tooltip(
     };
     t.line(kind, mood);
     let at_counter = matches!(g.state, GhostState::Waiting | GhostState::AtRegister);
-    if let Some(ware) = &g.carrying {
+    if def.id == THIEF_GHOST {
+        t.line(TipKind::Bad, lang.t("ghost_tip.thief"));
+    } else if let Some(ware) = &g.carrying {
         t.line(
             TipKind::Good,
             lang.f("ghost_tip.carries", &[("item", &lang.product(ware))]),
@@ -619,6 +629,113 @@ fn mute_browsing_names(
         } else if !quiet && is_muted {
             commands.entity(*label).try_remove::<LabelMuted>();
         }
+    }
+}
+
+/// The ghost id of the shade that steals from shops with a bad reputation.
+pub const THIEF_GHOST: &str = "shade";
+
+/// When tonight's shade comes, as a fraction of the night, if it comes.
+#[derive(Resource, Default)]
+struct ThiefTonight(Option<f32>);
+
+/// A shade that has come to steal.
+#[derive(Component)]
+struct Thief;
+
+/// As the night begins: a shop with a bad reputation may get a visit from a
+/// shade.
+fn plan_thief(
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    mut rng: ResMut<Rng>,
+    mut tonight: ResMut<ThiefTonight>,
+) {
+    let t = data.config.thief;
+    let comes =
+        progress.night >= t.from_night && progress.reputation < t.below && rng.chance(t.chance);
+    tonight.0 = comes.then(|| rng.range(t.arrive_at.0, t.arrive_at.1));
+}
+
+/// The shade slips in – unless the shop is bright enough to drive it away.
+fn spawn_thief(
+    mut commands: Commands,
+    data: Res<GameData>,
+    layout: Res<ShopLayout>,
+    clock: Res<NightClock>,
+    progress: Res<Progress>,
+    lang: Res<Lang>,
+    mut art: GhostArt,
+    mut rng: ResMut<Rng>,
+    mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
+    mut tonight: ResMut<ThiefTonight>,
+) {
+    let Some(at) = tonight.0 else {
+        return;
+    };
+    if clock.elapsed < at * clock.length {
+        return;
+    }
+    tonight.0 = None;
+    let Some(def_idx) = data.ghost_index(THIEF_GHOST) else {
+        return;
+    };
+    let wares = layout.displayed_products();
+    if wares.is_empty() {
+        return;
+    }
+    if layout.atmosphere(&data, progress.night).light >= data.config.thief.scared_by_light {
+        log.push(lang.t("log.thief_scared"));
+        return;
+    }
+    let visit = Visit {
+        def_idx,
+        wish: wares[rng.index(wares.len())].clone(),
+        hint: "ghost_tip.thief".into(),
+        chapter: None,
+        plain: false,
+        flees: false,
+        patience_factor: 1.0,
+    };
+    let ghost = spawn_ghost(
+        &mut commands,
+        &data,
+        &layout,
+        &art.font,
+        &lang,
+        &art.asset_server,
+        &mut art.meshes,
+        &mut art.materials,
+        &mut rng,
+        visit,
+    );
+    commands.entity(ghost).insert(Thief);
+    cues.write(Cue::GhostEnters);
+}
+
+/// At the shelf the shade snatches a ware and makes for the door.
+fn steal_from_shelf(
+    mut ghosts: Query<&mut Ghost, With<Thief>>,
+    data: Res<GameData>,
+    mut stock: ResMut<Stock>,
+    lang: Res<Lang>,
+    mut log: ResMut<GameLog>,
+    mut cues: MessageWriter<Cue>,
+    mut report: ResMut<NightReport>,
+) {
+    for mut g in &mut ghosts {
+        if g.state != GhostState::Browsing {
+            continue;
+        }
+        g.state = GhostState::Leaving;
+        if !stock.take_one(&g.wish) {
+            continue;
+        }
+        g.carrying = Some(g.wish.clone());
+        report.stolen.push(g.wish.clone());
+        cues.write(Cue::GhostVoice(Voice::Flee, data.ghosts[g.def].voice));
+        log.push(lang.f("log.thief", &[("item", &lang.product(&g.wish))]));
     }
 }
 

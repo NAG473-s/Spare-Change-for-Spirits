@@ -219,6 +219,9 @@ pub struct GhostDef {
     /// First night this ghost can appear.
     #[serde(default = "one")]
     pub unlock_night: u32,
+    /// Picky ghosts only visit a shop with at least this reputation.
+    #[serde(default)]
+    pub min_reputation: Option<i32>,
 }
 
 /// Special behaviour of a ghost type. All chances are 0..1.
@@ -359,6 +362,10 @@ pub struct Config {
     pub ferryman_loan: crate::loan::LoanTerms,
     /// How reputation changes the time between ghosts.
     pub reputation_spawn: ReputationSpawn,
+    /// What a good reputation brings besides more customers.
+    pub reputation_perks: ReputationPerks,
+    /// The shade that steals from shops with a bad reputation.
+    pub thief: ThiefConfig,
     /// The part of the floor free of old junk at the start; the rest is
     /// cleared by improvements (`upgrades.ron`).
     pub start_area: StartArea,
@@ -371,6 +378,43 @@ pub struct ReputationSpawn {
     pub per_point: f32,
     pub fastest: f32,
     pub slowest: f32,
+}
+
+/// When the shade comes to steal (config.ron).
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct ThiefConfig {
+    /// The first night it can come.
+    pub from_night: u32,
+    /// It only comes while the reputation is below this.
+    pub below: i32,
+    /// Chance per night.
+    pub chance: f32,
+    /// When it arrives, as a fraction of the night (from, to).
+    pub arrive_at: (f32, f32),
+    /// A shop at least this bright drives it away.
+    pub scared_by_light: i32,
+}
+
+/// Tips for exact change and the Reaper's rare pieces (config.ron).
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct ReputationPerks {
+    /// From this reputation on ghosts sometimes leave a tip.
+    pub tip_from: i32,
+    /// Chance of a tip per point above `tip_from - 1`, up to `tip_chance_max`.
+    pub tip_chance_per_point: f32,
+    pub tip_chance_max: f32,
+    /// From this reputation on a tip can be a candle stub instead of a button.
+    pub candle_tip_from: i32,
+    /// The Reaper sells rare pieces only from this reputation on.
+    pub rare_from: i32,
+}
+
+impl ReputationPerks {
+    /// Chance that a ghost served with exact change leaves a tip.
+    pub fn tip_chance(&self, reputation: i32) -> f32 {
+        ((reputation - self.tip_from + 1).max(0) as f32 * self.tip_chance_per_point)
+            .min(self.tip_chance_max)
+    }
 }
 
 impl Config {
@@ -691,11 +735,11 @@ impl GameData {
     /// Chance of each ghost type (same order as `ghosts`) to be the next one
     /// through the door tonight, relative to the others. A ghost whose needs
     /// the atmosphere does not meet still comes, but less often.
-    pub fn ghost_odds(&self, night: u32, atmosphere: &Atmosphere) -> Vec<f32> {
+    pub fn ghost_odds(&self, night: u32, atmosphere: &Atmosphere, reputation: i32) -> Vec<f32> {
         self.ghosts
             .iter()
             .map(|g| {
-                if g.unlock_night > night {
+                if g.unlock_night > night || g.min_reputation.is_some_and(|m| reputation < m) {
                     return 0.0;
                 }
                 let fits = g.unmet_need(atmosphere).is_none();
@@ -800,6 +844,32 @@ pub fn rgb((r, g, b): (f32, f32, f32)) -> Color {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reputation_brings_tips_and_picky_guests() {
+        let data = GameData::load();
+        let perks = data.config.reputation_perks;
+        assert_eq!(perks.tip_chance(perks.tip_from - 1), 0.0);
+        assert!(perks.tip_chance(perks.tip_from) > 0.0);
+        assert_eq!(perks.tip_chance(1000), perks.tip_chance_max);
+        // A picky ghost stays away below its reputation and comes above it.
+        let (i, g) = data
+            .ghosts
+            .iter()
+            .enumerate()
+            .find(|(_, g)| g.min_reputation.is_some())
+            .expect("a picky ghost");
+        let min = g.min_reputation.unwrap();
+        let bright = Atmosphere {
+            light: 5,
+            warmth: 5,
+            silence: 5,
+            reflection: 5,
+        };
+        let night = data.config.last_night;
+        assert_eq!(data.ghost_odds(night, &bright, min - 1)[i], 0.0);
+        assert!(data.ghost_odds(night, &bright, min)[i] > 0.0);
+    }
 
     #[test]
     fn night_events_change_the_night() {

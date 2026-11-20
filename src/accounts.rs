@@ -333,6 +333,15 @@ fn build_ledger(
             true,
         );
     }
+    if report.tips > 0 {
+        line(
+            &mut ui,
+            &lang.t("accounts.tips"),
+            signed(report.tips as i64),
+            TEXT_DIM,
+            true,
+        );
+    }
     if report.second_payments_kept > 0 {
         line(
             &mut ui,
@@ -567,6 +576,11 @@ fn build_ledger(
         &mut ui,
         &lang.t("morning.knocked_title"),
         product_chips(&report.knocked),
+    );
+    chips(
+        &mut ui,
+        &lang.t("morning.stolen_title"),
+        product_chips(&report.stolen),
     );
     let faded: Vec<String> = report
         .faded

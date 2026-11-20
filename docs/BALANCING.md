@@ -104,7 +104,14 @@ Findings:
 - **Improvements should pay back** for a player who buys them sensibly, at least by night 10:
   e.g. let the lantern and the bench matter more once the shop is crowded, or tie more shelf
   slots to the cleared floor.
-- **Reputation keeps growing** (about 70 by night 5) although its effect stops at 35. It could
-  grow more slowly, or unlock something above that.
-- The simulation does not model the story ghost or the market's rare pieces, hourglass and
-  exchange.
+- **Reputation keeps growing** (about 70 by night 5) although its effect on arrivals stops at
+  35. It now also unlocks things (`reputation_perks` in `config.ron`): tips for exact change
+  from 3, the Reaper's rare pieces from 8, the knight from 5 and the bride from 10
+  (`min_reputation` in `ghosts.ron`). Below 0 a shade may come and steal one displayed ware a
+  night unless the shop has light 5 or more (`thief`). Raising the arrival effect to 2 % per
+  point was tried again and dropped: it crowded the shop as before.
+- Ghosts no longer pay with a coin worth 1.7 times the price or more when they have smaller
+  ones, so the drawer runs out of change far less often; when it does, the register offers
+  "No fitting change" and the ghost pays with smaller coins.
+- The simulation does not model the story ghosts, tips, the shade or the market's rare pieces,
+  hourglass and exchange; it does model the picky guests.

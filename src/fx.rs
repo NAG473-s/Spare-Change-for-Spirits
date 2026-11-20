@@ -24,6 +24,8 @@ pub enum Cue {
     Click,
     /// The shop clock strikes midnight.
     Midnight,
+    /// A grateful ghost at this floor position leaves a tip: the coin rises.
+    Tip(Vec2, crate::economy::Coin),
     /// A ghost makes a sound, at its own voice pitch.
     GhostVoice(Voice, f32),
 }
@@ -53,6 +55,7 @@ impl Plugin for FxPlugin {
                     flicker,
                     cue_particles,
                     move_particles,
+                    rise_tips,
                     dust_motes.run_if(in_state(Phase::Night)),
                 ),
             );
@@ -164,9 +167,55 @@ fn cue_particles(
     mut cues: MessageReader<Cue>,
     fx: Res<FxAssets>,
     mut rng: ResMut<Rng>,
+    icons: Res<crate::ui::Icons>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for cue in cues.read() {
         match *cue {
+            Cue::Tip(pos, coin) => {
+                // The coin's picture (or a coloured disc) floats up over the
+                // ghost and fades, with a few sparkles.
+                let material = materials.add(StandardMaterial {
+                    base_color: if icons.coin(coin).is_some() {
+                        Color::WHITE
+                    } else {
+                        tip_color(coin)
+                    },
+                    base_color_texture: icons.coin(coin),
+                    emissive: LinearRgba::rgb(0.6, 0.5, 0.3),
+                    unlit: true,
+                    alpha_mode: AlphaMode::Blend,
+                    ..default()
+                });
+                let start = floor(pos, TIP_START_HEIGHT);
+                commands.spawn((
+                    Mesh3d(meshes.add(Rectangle::new(TIP_SIZE, TIP_SIZE))),
+                    MeshMaterial3d(material),
+                    Transform::from_translation(start),
+                    crate::scene::Billboard,
+                    RisingTip { start, age: 0.0 },
+                    NotShadowCaster,
+                    Pickable::IGNORE,
+                ));
+                for _ in 0..8 {
+                    let vel = Vec3::new(
+                        rng.range(-0.25, 0.25),
+                        rng.range(0.5, 0.9),
+                        rng.range(-0.25, 0.25),
+                    );
+                    spawn_particle(
+                        &mut commands,
+                        &fx.dot,
+                        &fx.sparkle,
+                        start,
+                        vel,
+                        -0.2,
+                        rng.range(0.8, 1.4),
+                        rng.range(0.015, 0.03),
+                    );
+                }
+            }
             Cue::Ascend(pos) => {
                 for _ in 0..22 {
                     let start = floor(pos, rng.range(0.2, 1.4))
@@ -219,6 +268,56 @@ fn cue_particles(
 
 /// Particles follow the game clock, so they freeze while paused. They
 /// shrink away instead of fading, so they can share one material.
+/// Size and starting height of a rising tip coin, how high it rises and
+/// how long it takes.
+const TIP_SIZE: f32 = 0.32;
+const TIP_START_HEIGHT: f32 = 1.5;
+const TIP_RISE: f32 = 0.9;
+const TIP_SECS: f32 = 1.8;
+
+/// A tip coin floating up over a grateful ghost.
+#[derive(Component)]
+struct RisingTip {
+    start: Vec3,
+    age: f32,
+}
+
+/// Placeholder colour of a tip coin without a picture.
+fn tip_color(coin: crate::economy::Coin) -> Color {
+    match coin {
+        crate::economy::Coin::Button => Color::srgb(0.6, 0.38, 0.22),
+        crate::economy::Coin::Candle => Color::srgb(0.95, 0.85, 0.6),
+        crate::economy::Coin::Spoon => Color::srgb(0.8, 0.82, 0.86),
+    }
+}
+
+fn rise_tips(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut tips: Query<(
+        Entity,
+        &mut RisingTip,
+        &mut Transform,
+        &MeshMaterial3d<StandardMaterial>,
+    )>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (entity, mut tip, mut t, material) in &mut tips {
+        tip.age += time.delta_secs();
+        let k = tip.age / TIP_SECS;
+        if k >= 1.0 {
+            materials.remove(&material.0);
+            commands.entity(entity).despawn();
+            continue;
+        }
+        // Eases out as it rises; fades over the last half.
+        t.translation = tip.start + Vec3::Y * TIP_RISE * (1.0 - (1.0 - k).powi(2));
+        if let Some(mut m) = materials.get_mut(&material.0) {
+            m.base_color.set_alpha((2.0 - 2.0 * k).min(1.0));
+        }
+    }
+}
+
 fn move_particles(
     mut commands: Commands,
     time: Res<Time>,

@@ -15,6 +15,16 @@
     // Reputation shortens the time between ghosts by `per_point` per point (negative reputation
     // lengthens it), but never below `fastest` or above `slowest` times the normal interval.
     reputation_spawn: (per_point: 0.01, fastest: 0.65, slowest: 1.5),
+    // A good reputation also brings tips for exact change (a chance of `tip_chance_per_point`
+    // per point from `tip_from` on, at most `tip_chance_max`; candle stubs from
+    // `candle_tip_from`), and the Reaper sells his rare pieces only from `rare_from` on.
+    // Picky ghosts need a reputation too: `min_reputation` in ghosts.ron.
+    reputation_perks: (tip_from: 3, tip_chance_per_point: 0.03, tip_chance_max: 0.45,
+                       candle_tip_from: 15, rare_from: 8),
+    // Below `below` reputation a shade may come (chance per night, from night `from_night`):
+    // it snatches one ware from the shelves and leaves. A shop with light `scared_by_light`
+    // or more drives it away.
+    thief: (from_night: 2, below: 0, chance: 0.6, arrive_at: (0.25, 0.7), scared_by_light: 5),
 
     grid_cols: 10,
     grid_rows: 5,

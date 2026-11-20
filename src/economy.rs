@@ -76,6 +76,15 @@ impl Purse {
         *self.get_mut(coin) += count;
     }
 
+    /// Can exactly `amount` be counted out of this purse?
+    pub fn can_give(&self, amount: u32) -> bool {
+        let (spoon, candle) = (Coin::Spoon.value(), Coin::Candle.value());
+        (0..=self.spoons.min(amount / spoon)).any(|s| {
+            let rest = amount - s * spoon;
+            (0..=self.candles.min(rest / candle)).any(|c| rest - c * candle <= self.buttons)
+        })
+    }
+
     pub fn total(&self) -> u32 {
         Coin::ASCENDING
             .iter()
@@ -168,6 +177,59 @@ pub struct Drawer(pub Purse);
 
 /// How a ghost pays: usually with one kind of coin that requires change,
 /// sometimes the exact amount.
+/// The most coins of one kind a ghost counts out.
+const MAX_COINS_PAID: u32 = 8;
+/// A ghost does not hand over a coin worth this many times the price or
+/// more unless it has nothing smaller.
+const COIN_TOO_BIG: f32 = 1.7;
+
+/// The drawer cannot give back the change exactly: the ghost looks for
+/// smaller coins (only kinds it pays with, if it can) so that the drawer can
+/// give back what is left – as little as possible above the price.
+pub fn smaller_payment(price: u32, allowed: &[Coin], drawer: &Purse) -> Purse {
+    let best = |kinds: &[Coin]| -> Option<Purse> {
+        let max = |c: Coin| {
+            if kinds.contains(&c) {
+                price.div_ceil(c.value())
+            } else {
+                0
+            }
+        };
+        let mut best: Option<Purse> = None;
+        for spoons in 0..=max(Coin::Spoon) {
+            for candles in 0..=max(Coin::Candle) {
+                for buttons in 0..=max(Coin::Button) {
+                    let p = Purse {
+                        buttons,
+                        candles,
+                        spoons,
+                    };
+                    if p.total() < price {
+                        continue;
+                    }
+                    let mut after = *drawer;
+                    after.merge(&p);
+                    if !after.can_give(p.total() - price) {
+                        continue;
+                    }
+                    let count = |q: &Purse| (q.total(), q.buttons + q.candles + q.spoons);
+                    if best.is_none_or(|b| count(&p) < count(&b)) {
+                        best = Some(p);
+                    }
+                }
+            }
+        }
+        best
+    };
+    let allowed: Vec<Coin> = if allowed.is_empty() {
+        Coin::ASCENDING.to_vec()
+    } else {
+        allowed.to_vec()
+    };
+    // Exact payment in any coins always works.
+    best(&allowed).unwrap_or_else(|| Purse::greedy(price))
+}
+
 pub fn ghost_payment(price: u32, allowed: &[Coin], rng: &mut Rng) -> Purse {
     let allowed: Vec<Coin> = if allowed.is_empty() {
         Coin::ASCENDING.to_vec()
@@ -186,13 +248,22 @@ pub fn ghost_payment(price: u32, allowed: &[Coin], rng: &mut Rng) -> Purse {
         }
     }
 
+    // A handful of coins at most, and none far bigger than the price: a
+    // silver spoon for a cheap ware leaves the drawer short of change.
+    let handful = |c: &Coin| price.div_ceil(c.value()) <= MAX_COINS_PAID;
     let sensible: Vec<Coin> = allowed
         .iter()
         .copied()
-        .filter(|c| price.div_ceil(c.value()) <= 8)
+        .filter(|c| handful(c) && (c.value() as f32) < price as f32 * COIN_TOO_BIG)
         .collect();
     let coin = if sensible.is_empty() {
-        *allowed.iter().max_by_key(|c| c.value()).unwrap()
+        // Nothing fits nicely: the smallest coin that is still a handful.
+        allowed
+            .iter()
+            .copied()
+            .filter(handful)
+            .min_by_key(|c| c.value())
+            .unwrap_or_else(|| *allowed.iter().max_by_key(|c| c.value()).unwrap())
     } else {
         sensible[rng.index(sensible.len())]
     };
@@ -255,6 +326,39 @@ mod tests {
         let mut p = purse(0, 1, 2);
         assert!(p.pay(4));
         assert_eq!(p.total(), 3);
+    }
+
+    #[test]
+    fn no_spoon_for_a_cheap_ware() {
+        let mut rng = Rng::new(3);
+        for _ in 0..200 {
+            assert_eq!(ghost_payment(6, &[], &mut rng).get(Coin::Spoon), 0);
+        }
+        // The knight pays only with candles and spoons: candles then.
+        assert_eq!(
+            ghost_payment(2, &[Coin::Candle, Coin::Spoon], &mut rng).spoons,
+            0
+        );
+    }
+
+    #[test]
+    fn drawer_knows_what_change_it_can_give() {
+        let p = purse(1, 0, 3);
+        assert!(p.can_give(28) && p.can_give(3) && p.can_give(0));
+        assert!(!p.can_give(4) && !p.can_give(19));
+    }
+
+    #[test]
+    fn smaller_coins_leave_change_the_drawer_can_give() {
+        // An empty drawer: the ghost pays exactly.
+        let empty = Purse::default();
+        assert_eq!(smaller_payment(7, &[], &empty).total(), 7);
+        // Only candles allowed and a drawer with three buttons: 10 for 7.
+        let three = purse(0, 0, 3);
+        let p = smaller_payment(7, &[Coin::Candle], &three);
+        assert_eq!((p.candles, p.total()), (2, 10));
+        // Nothing allowed works (no buttons to give back): exact anyway.
+        assert_eq!(smaller_payment(7, &[Coin::Candle], &empty).total(), 7);
     }
 
     #[test]

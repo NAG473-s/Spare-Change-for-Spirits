@@ -101,7 +101,7 @@ fn play_cues(
         }
         let (sound, volume, vary) = match cue {
             Cue::GhostEnters => (&sounds.bell, 0.5, false),
-            Cue::Paid | Cue::ChangeGiven => (&sounds.coins, 0.7, true),
+            Cue::Paid | Cue::ChangeGiven | Cue::Tip(..) => (&sounds.coins, 0.7, true),
             Cue::Ascend(_) => (&sounds.chime, 0.7, false),
             Cue::Knock(_) => (&sounds.crash, 0.6, true),
             Cue::Disappointed => (&sounds.sigh, 0.6, false),
