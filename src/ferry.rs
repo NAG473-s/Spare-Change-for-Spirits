@@ -1100,7 +1100,7 @@ fn update_tooltip(
     ) {
         Some(key) => ui.add_text(body, &lang.t(key), false, 13.0, RED),
         None => ui.add_text(body, &lang.t("ferry.tip_controls"), false, 12.0, TEXT_DIM),
-    }
+    };
 }
 
 #[cfg(test)]

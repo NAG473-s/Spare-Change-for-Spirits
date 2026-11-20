@@ -79,6 +79,9 @@ impl Plugin for UiPlugin {
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
                     reputation_tooltip,
+                    refresh_change.run_if(in_state(Phase::Night).and_then(
+                        resource_changed::<Register>.or_else(resource_changed::<Drawer>),
+                    )),
                     build_market_panel.run_if(in_state(Phase::Day).and_then(
                         resource_changed::<Storeroom>.or_else(resource_changed::<UiFont>),
                     )),
@@ -1409,6 +1412,87 @@ fn workbench_section(
 struct NightPanelShows {
     front: Option<(Entity, GhostState)>,
     line: usize,
+    /// The sale at the register (its ghost and which coins were checked) and
+    /// whether a ghost is asking about a second payment. Counting change does
+    /// not rebuild the panel: `refresh_change` updates it in place, so a click
+    /// is never lost to a button that was just replaced.
+    sale: Option<(Entity, Vec<bool>)>,
+    question: bool,
+}
+
+/// The line that shows the change counted so far.
+#[derive(Component)]
+struct CountedLine;
+
+/// A button that adds one coin of this kind to the change.
+#[derive(Component)]
+struct ChangeCoin(Coin);
+
+fn counted_line(lang: &Lang, sale: &crate::register::Sale) -> String {
+    lang.f(
+        "night.counted",
+        &[
+            ("coins", &sale.given.describe(lang)),
+            ("total", &sale.given.total()),
+        ],
+    )
+}
+
+/// While change is counted: the counted line and what is left of each coin.
+fn refresh_change(
+    register: Res<Register>,
+    drawer: Res<Drawer>,
+    lang: Res<Lang>,
+    mut commands: Commands,
+    mut lines: Query<&mut Text, With<CountedLine>>,
+    buttons: Query<(Entity, &ChangeCoin, &Children)>,
+    mut texts: Query<&mut Text, Without<CountedLine>>,
+    mut colors: Query<&mut TextColor>,
+    mut images: Query<&mut ImageNode>,
+) {
+    let Some(sale) = &register.sale else {
+        return;
+    };
+    for mut line in &mut lines {
+        let want = counted_line(&lang, sale);
+        if line.0 != want {
+            line.0 = want;
+        }
+    }
+    for (entity, ChangeCoin(coin), children) in &buttons {
+        let left = drawer.get(*coin) - sale.given.get(*coin);
+        let label = lang.f(
+            "night.add_coin",
+            &[
+                ("coin", &coin.name(&lang)),
+                ("value", &coin.value()),
+                ("left", &left),
+            ],
+        );
+        let enabled = left > 0;
+        let tone = ButtonTone::option(enabled, false);
+        let (surface, trim) = tone.paint(false);
+        let mut button = commands.entity(entity);
+        button.insert((tone, surface, trim));
+        if enabled {
+            button.remove::<InteractionDisabled>();
+        } else {
+            button.insert(InteractionDisabled);
+        }
+        for child in children.iter() {
+            if let Ok(mut text) = texts.get_mut(child)
+                && text.0 != label
+            {
+                text.0 = label.clone();
+            }
+            if let Ok(mut color) = colors.get_mut(child) {
+                color.0 = if enabled { TEXT } else { TEXT_DIM };
+            }
+            if let Ok(mut image) = images.get_mut(child) {
+                image.color = Color::srgba(1.0, 1.0, 1.0, if enabled { 1.0 } else { 0.4 });
+            }
+        }
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1441,12 +1525,14 @@ fn build_night_panel(
     let shows = NightPanelShows {
         front,
         line: if waiting { 0 } else { queue.0.len() },
+        sale: register
+            .sale
+            .as_ref()
+            .map(|s| (s.ghost, s.coins.iter().map(|c| c.checked).collect())),
+        question: register.question.is_some(),
     };
-    let forced = register.is_changed()
-        || stock.is_changed()
-        || font.is_changed()
-        || settings.is_changed()
-        || phase.is_changed();
+    let forced =
+        stock.is_changed() || font.is_changed() || settings.is_changed() || phase.is_changed();
     if !forced && shown.as_ref() == Some(&shows) {
         return;
     }
@@ -1454,6 +1540,9 @@ fn build_night_panel(
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("night.title"));
 
+    // Marked after building: the counted line and the change buttons are
+    // updated in place while change is counted (`refresh_change`).
+    let mut commands_later: Vec<(Entity, Option<Coin>)> = Vec::new();
     if let Some(sale) = &register.sale {
         ui.section(&lang.t("night.register"));
         ui.text(&lang.f("night.item", &[("item", &lang.product(&sale.product))]));
@@ -1482,13 +1571,8 @@ fn build_night_panel(
         if settings.change_hint {
             ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
         }
-        ui.text(&lang.f(
-            "night.counted",
-            &[
-                ("coins", &sale.given.describe(&lang)),
-                ("total", &sale.given.total()),
-            ],
-        ));
+        let counted = ui.text(&counted_line(&lang, sale));
+        commands_later.push((counted, None));
         let row = ui.row();
         for coin in Coin::ASCENDING {
             let left = drawer.get(coin) - sale.given.get(coin);
@@ -1500,7 +1584,7 @@ fn build_night_panel(
                     ("left", &left),
                 ],
             );
-            ui.icon_button_in(
+            let button = ui.icon_button_in(
                 row,
                 icons.coin(coin),
                 &label,
@@ -1508,6 +1592,7 @@ fn build_night_panel(
                 false,
                 left > 0,
             );
+            commands_later.push((button, Some(coin)));
         }
         let row = ui.row();
         ui.button_in(
@@ -1531,6 +1616,13 @@ fn build_night_panel(
         }
         ui.spacer();
         ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
+        drop(ui);
+        for (entity, coin) in commands_later {
+            match coin {
+                Some(coin) => commands.entity(entity).insert(ChangeCoin(coin)),
+                None => commands.entity(entity).insert(CountedLine),
+            };
+        }
         return;
     }
 
@@ -1679,7 +1771,10 @@ fn build_morning_panel(
     for o in progress.orders.iter().filter(|o| o.night == tomorrow.night) {
         ui.text(&lang.f(
             "morning.order",
-            &[("who", &lang.ghost(&o.ghost)), ("item", &lang.product(&o.product))],
+            &[
+                ("who", &lang.ghost(&o.ghost)),
+                ("item", &lang.product(&o.product)),
+            ],
         ));
     }
 }
@@ -1915,19 +2010,21 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         bold: bool,
         size: f32,
         color: Color,
-    ) {
+    ) -> Entity {
         let font = if bold {
             &self.font.bold
         } else {
             &self.font.regular
         };
-        self.commands.spawn((
-            Text::new(text),
-            text_font(font, size),
-            TextColor(color),
-            Pickable::IGNORE,
-            ChildOf(parent),
-        ));
+        self.commands
+            .spawn((
+                Text::new(text),
+                text_font(font, size),
+                TextColor(color),
+                Pickable::IGNORE,
+                ChildOf(parent),
+            ))
+            .id()
     }
 
     pub(crate) fn display_text(&mut self, parent: Entity, text: &str, size: f32, color: Color) {
@@ -1976,8 +2073,8 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         self.add_text(self.root, text, true, 15.0, TEXT);
     }
 
-    pub(crate) fn text(&mut self, text: &str) {
-        self.add_text(self.root, text, false, 14.0, TEXT);
+    pub(crate) fn text(&mut self, text: &str) -> Entity {
+        self.add_text(self.root, text, false, 14.0, TEXT)
     }
 
     pub(crate) fn dim(&mut self, text: &str) {
@@ -2029,7 +2126,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         action: Action,
         selected: bool,
         enabled: bool,
-    ) {
+    ) -> Entity {
         self.spawn_button(
             parent,
             icon,
@@ -2038,7 +2135,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             ButtonTone::option(enabled, selected),
             12.0,
             false,
-        );
+        )
     }
 
     /// Full-width menu rows can share equal space for related settings.
@@ -2081,7 +2178,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         tone: ButtonTone,
         size: f32,
         grow: bool,
-    ) {
+    ) -> Entity {
         let enabled = !matches!(tone, ButtonTone::Disabled);
         let (label_font, text_color) = match tone {
             ButtonTone::Brass => (&self.font.display, INK),
@@ -2139,6 +2236,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         if !enabled {
             button.insert(InteractionDisabled);
         }
+        id
     }
 }
 
