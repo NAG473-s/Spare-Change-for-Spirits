@@ -93,6 +93,8 @@ pub struct Progress {
     pub season: u32,
     /// The night the current season began.
     pub season_start: u32,
+    /// The ghost book, the regulars and the shop window (`book.rs`).
+    pub journal: crate::book::Journal,
 }
 
 /// A ware a ghost ordered: it comes back for it on `night`.
@@ -122,6 +124,7 @@ impl Progress {
             achievements: Vec::new(),
             season: 1,
             season_start: 1,
+            journal: Default::default(),
         }
     }
 
@@ -299,6 +302,8 @@ pub struct NightReport {
     pub tips_given: u32,
     pub orders_fulfilled: u32,
     pub mishaps_fixed: u32,
+    /// Customers the apprentice served (`apprentice.rs`).
+    pub apprentice_served: u32,
     /// Ghosts turned away because their wish was not in stock.
     pub declined: u32,
     /// Ghosts offered the wrong item.

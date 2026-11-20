@@ -11,13 +11,16 @@
 
 mod accounts;
 mod achievements;
+mod apprentice;
 mod audio;
+mod book;
 mod critters;
 mod data;
 mod day_cycle;
 mod economy;
 mod ferry;
 mod fx;
+mod gamepad;
 mod ghosts;
 mod harbor;
 mod i18n;
@@ -29,10 +32,13 @@ mod menu;
 mod playtest;
 mod props;
 mod register;
+mod regulars;
 mod rng;
 mod save;
 mod scene;
+mod sets;
 mod shop;
+mod showcase;
 mod sign;
 mod sim;
 mod title;
@@ -112,8 +118,13 @@ fn main() {
             workbench::WorkbenchPlugin,
             winter::WinterPlugin,
             achievements::AchievementsPlugin,
+        ))
+        .add_plugins((
             trailer::TrailerPlugin,
             weather::WeatherPlugin,
+            showcase::ShowcasePlugin,
+            apprentice::ApprenticePlugin,
+            gamepad::GamepadPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

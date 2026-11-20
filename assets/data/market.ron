@@ -38,7 +38,7 @@
      wares: [Exchange(SpoonToCandles), Exchange(CandleToButtons), Exchange(CandlesToSpoon)]),
     (id: "reaper", pos: (4.3, 1.4), turn: -25.0, color: (0.15, 0.13, 0.18),
      wares: [RarePieces(3), Hourglass, Decor("grandfather_clock"), Decor("gramophone"),
-             Upgrade("ferry_contract")]),
+             Upgrade("ferry_contract"), Upgrade("apprentice")]),
     // Seasonal traders between the herbalist and the glazier.
     // Winter (season 2): the frost seller with warm lights, fur and winter wares.
     (id: "frost", pos: (2.4, -3.35), color: (0.7, 0.82, 0.95),

@@ -131,6 +131,8 @@ pub struct Ghost {
     /// The ware it took from the shelf and brings to the counter (its wish
     /// was on display); `None` if it has to whisper its wish instead.
     pub carrying: Option<String>,
+    /// A regular customer: its index in `Progress::journal.regulars`.
+    pub regular: Option<usize>,
     bob_offset: f32,
 }
 
@@ -179,7 +181,7 @@ fn spawn_ghosts(
     data: Res<GameData>,
     layout: Res<ShopLayout>,
     clock: Res<NightClock>,
-    progress: Res<Progress>,
+    mut progress: ResMut<Progress>,
     lang: Res<Lang>,
     mut art: GhostArt,
     mut timer: ResMut<SpawnTimer>,
@@ -188,7 +190,7 @@ fn spawn_ghosts(
     mut cues: MessageWriter<Cue>,
     mut report: ResMut<NightReport>,
     ghosts: Query<(), With<Ghost>>,
-    upgrades: Res<Upgrades>,
+    (upgrades, stock): (Res<Upgrades>, Res<crate::inventory::Stock>),
 ) {
     timer.0 -= time.delta_secs();
     // Nobody new arrives in the last 20 seconds.
@@ -207,14 +209,28 @@ fn spawn_ghosts(
     }
 
     let atmosphere = layout.atmosphere(&data, night);
-    let weights = data.ghost_odds(night, &atmosphere, progress.reputation);
+    // Complete furniture sets and the shop window draw certain ghosts.
+    let weights = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
     let Some(def_idx) = rng.weighted(&weights) else {
         return;
     };
     let def = &data.ghosts[def_idx];
 
     let wishes = data.wishes_tonight(def, night);
-    let wish = wishes[rng.index(wishes.len())].to_string();
+    let mut wish = wishes[rng.index(wishes.len())].to_string();
+    // Now and then it is a regular, by name, often after its favourite.
+    let regular = crate::regulars::returning(&data, &mut progress, &def.id, &mut rng);
+    let regular = regular.map(|i| {
+        let r = &progress.journal.regulars[i];
+        wish = crate::regulars::wish(&data, r, &wishes, wish.clone(), &mut rng);
+        let name = r.name(&lang);
+        log.push(lang.f(
+            "log.regular_back",
+            &[("name", &name), ("visits", &r.visits)],
+        ));
+        (i, name)
+    });
+    progress.journal.met(&def.id, &wish);
     let hints = lang.count(&format!("product.{wish}.hint."));
     let hint = format!("product.{wish}.hint.{}", rng.index(hints) + 1);
 
@@ -238,6 +254,7 @@ fn spawn_ghosts(
         ordered: false,
         flees: unmet.is_some(),
         patience_factor: upgrades.patience_factor(&data),
+        regular,
     };
     spawn_ghost(
         &mut commands,
@@ -329,6 +346,7 @@ fn ghost_tooltip(
     asset_server: Res<AssetServer>,
     mut tip: ResMut<HoverTip>,
     mut shown: Local<Option<String>>,
+    progress: Res<Progress>,
 ) {
     // Another tooltip (a product on a shelf) took over: leave it alone.
     if shown.as_ref().is_some_and(|title| *title != tip.title) {
@@ -343,11 +361,27 @@ fn ghost_tooltip(
     };
     let def = &data.ghosts[g.def];
     let portrait = format!("sprites/ghosts/{}.png", def.id);
+    let regular = g.regular.and_then(|i| progress.journal.regulars.get(i));
     let mut t = HoverTip {
         icon: asset_exists(&portrait).then(|| asset_server.load(portrait)),
-        title: lang.ghost(&def.id),
+        title: match regular {
+            Some(r) => lang.f(
+                "ghost_tip.regular_title",
+                &[("name", &r.name(&lang)), ("ghost", &lang.ghost(&def.id))],
+            ),
+            None => lang.ghost(&def.id),
+        },
         lines: Vec::new(),
     };
+    if let Some(r) = regular {
+        t.line(
+            TipKind::Good,
+            lang.f(
+                "ghost_tip.regular",
+                &[("visits", &r.visits), ("item", &lang.product(&r.favourite))],
+            ),
+        );
+    }
     let patience = (g.patience / g.max_patience.max(0.01)).clamp(0.0, 1.0);
     let (kind, mood) = match g.state {
         GhostState::Entering | GhostState::Browsing => {
@@ -453,6 +487,8 @@ struct Visit {
     flees: bool,
     /// The waiting bench: ghosts wait longer.
     patience_factor: f32,
+    /// A regular: its index and its name.
+    regular: Option<(usize, String)>,
 }
 
 fn spawn_ghost(
@@ -523,6 +559,7 @@ fn spawn_ghost(
                 ordered: visit.ordered,
                 browse_cell,
                 carrying: None,
+                regular: visit.regular.as_ref().map(|(i, _)| *i),
                 bob_offset: rng.range(0.0, std::f32::consts::TAU),
             },
             Billboard,
@@ -580,10 +617,14 @@ fn spawn_ghost(
         .entity(ghost)
         .observe(on_ghost_over)
         .observe(on_ghost_out);
+    let name = match &visit.regular {
+        Some((_, name)) => name.clone(),
+        None => lang.ghost(&def.id),
+    };
     let label = commands
         .spawn(world_label(
             font,
-            lang.ghost(&def.id),
+            name,
             10.0,
             ghost,
             Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
@@ -704,6 +745,7 @@ fn spawn_ordering(
         ordered: true,
         flees: false,
         patience_factor: upgrades.patience_factor(&data),
+        regular: None,
     };
     spawn_ghost(
         &mut commands,
@@ -788,6 +830,7 @@ fn spawn_thief(
         ordered: false,
         flees: false,
         patience_factor: 1.0,
+        regular: None,
     };
     let ghost = spawn_ghost(
         &mut commands,
@@ -874,6 +917,7 @@ fn come_home(
             ordered: false,
             flees: false,
             patience_factor: 1.0,
+            regular: None,
         };
         let ghost = spawn_ghost(
             &mut commands,
@@ -910,7 +954,7 @@ fn spawn_story_ghost(
     data: Res<GameData>,
     layout: Res<ShopLayout>,
     clock: Res<NightClock>,
-    progress: Res<Progress>,
+    mut progress: ResMut<Progress>,
     lang: Res<Lang>,
     mut art: GhostArt,
     mut rng: ResMut<Rng>,
@@ -932,6 +976,7 @@ fn spawn_story_ghost(
         report.story_arrived.push(i);
         let chapter = progress.chapter(i);
         let c = &story.chapters[chapter];
+        progress.journal.met(&story.ghost, &c.wish);
         log.push(lang.t(&format!("story.{}.arrives", story.ghost)));
         let visit = Visit {
             def_idx,
@@ -942,6 +987,7 @@ fn spawn_story_ghost(
             ordered: false,
             flees: false,
             patience_factor: upgrades.patience_factor(&data),
+            regular: None,
         };
         spawn_ghost(
             &mut commands,

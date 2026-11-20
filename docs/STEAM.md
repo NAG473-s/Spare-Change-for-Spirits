@@ -70,3 +70,13 @@ menu (all profiles together) and the pause menu, and tells Steam each unlock. An
 earned while Steam was not running is sent to Steam the next time the game runs through Steam.
 New achievements: add them to `assets/data/achievements.ron`, translate the texts, and create
 them in Steamworks under the upper-case id.
+
+## Steam Deck and controllers
+
+The game reads controllers itself (`src/gamepad.rs`): the left stick moves the mouse pointer,
+A clicks, B right-clicks, the right stick scrolls, the d-pad nudges the pointer and Start opens
+the pause menu. In Steamworks set *Controller support* to **Full** only after a test round on a
+Steam Deck; until then *Partial*. Choose the **Gamepad** template as the default Steam Input
+configuration so the Deck sends controller input rather than keyboard and mouse. The interface
+scales with the window height, so 1280 × 800 needs no extra layout; check the text size at 100 %
+interface size on the Deck before applying for *Verified*.

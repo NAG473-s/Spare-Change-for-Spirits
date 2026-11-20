@@ -81,6 +81,8 @@ pub enum SaveMenu {
     Save,
     /// The achievements of the full game (pause menu).
     Achievements,
+    /// The ghost book (pause menu).
+    Book,
 }
 
 /// The game is paused and the pause menu is open.
@@ -271,7 +273,7 @@ fn build_main_menu(
             let all = crate::achievements::across_profiles();
             return crate::achievements::achievements_page(&mut ui, &lang, &data, &all);
         }
-        SaveMenu::Closed | SaveMenu::Save => {}
+        SaveMenu::Closed | SaveMenu::Save | SaveMenu::Book => {}
     }
     ui.text(&lang.t("menu.tagline"));
     ui.rule();
@@ -654,10 +656,11 @@ fn apply_display(
 
 fn toggle_pause(
     keys: Res<ButtonInput<KeyCode>>,
+    gamepads: Query<&Gamepad>,
     mut paused: ResMut<Paused>,
     mut save_menu: ResMut<SaveMenu>,
 ) {
-    if keys.just_pressed(KeyCode::Escape) {
+    if keys.just_pressed(KeyCode::Escape) || crate::gamepad::start_pressed(&gamepads) {
         paused.0 = !paused.0;
         *save_menu = SaveMenu::Closed;
     }
@@ -695,6 +698,12 @@ fn pause_actions(
             }
             Action::OpenAchievements => {
                 *save_menu = SaveMenu::Achievements;
+                continue;
+            }
+            // From the pause menu or straight from the evening panel.
+            Action::OpenBook => {
+                paused.0 = true;
+                *save_menu = SaveMenu::Book;
                 continue;
             }
             Action::CloseSaveMenu => {
@@ -746,6 +755,12 @@ fn sync_pause(
     existing: Query<Entity, With<PauseRoot>>,
     mut time: ResMut<Time<Virtual>>,
     progress: Res<Progress>,
+    shop: (
+        Res<ShopLayout>,
+        Res<crate::shop::Storeroom>,
+        Res<crate::upgrades::Upgrades>,
+    ),
+    gamepads: Query<&Gamepad>,
 ) {
     for e in &existing {
         commands.entity(e).despawn();
@@ -764,6 +779,17 @@ fn sync_pause(
     }
     if *save_menu == SaveMenu::Achievements {
         crate::achievements::achievements_page(&mut ui, &lang, &data, &progress);
+        return;
+    }
+    if *save_menu == SaveMenu::Book {
+        let (layout, storeroom, upgrades) = &shop;
+        crate::book::book_page(
+            &mut ui,
+            &lang,
+            &data,
+            &progress,
+            (layout, storeroom, upgrades),
+        );
         return;
     }
     if *save_menu == SaveMenu::Save {
@@ -787,6 +813,7 @@ fn sync_pause(
         _ => "pause.save_quit",
     };
     ui.menu_option(root, &lang.t(quit_label), Action::QuitToMenu, false);
+    ui.menu_option(root, &lang.t("book.open"), Action::OpenBook, false);
     // The demo has no achievements.
     if !cfg!(feature = "demo") {
         ui.menu_option(
@@ -799,6 +826,9 @@ fn sync_pause(
     ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("pause.quit_game"), Action::QuitGame, false);
     ui.dim(&lang.t("pause.hint"));
+    if !gamepads.is_empty() {
+        ui.dim(&lang.t("pause.controller"));
+    }
 }
 
 fn spawn_tip_box(mut commands: Commands) {

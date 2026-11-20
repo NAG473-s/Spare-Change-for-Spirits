@@ -56,6 +56,11 @@ quit; the *Menu* button in the top bar does the same). Settings (main menu and p
 sound, music, effects and narration volume, interface size (on top of the automatic scaling with the window
 height), fullscreen, and the assists *Patient ghosts* and *Show change due*. 
 
+**Controller** (Steam Deck, Xbox, PlayStation …, `src/gamepad.rs`): the left stick moves the
+pointer, **A** clicks, **B** right-clicks, the right stick scrolls panels, the d-pad nudges the
+pointer and **Start** pauses. The controller drives the mouse cursor itself, so everything that
+works with the mouse works with it; a ring marks the pointer until the real mouse moves again.
+
 Saves: three profiles, each a game of its own with an autosave (start of every evening and night,
 and dawn) and three manual slots (pause menu → *Save game*, at any time; autosaves never overwrite
 them). *Continue* loads the newest save of all profiles, *Load game* lists them all, *New game*
@@ -148,6 +153,19 @@ Special customers:
 - **Hedda's letters** – the player inherited the shop from great-aunt Hedda. Her first letter
   waits on the first evening, the others turn up when improvements clear her old junk
   (`letter` in `upgrades.ron`). At the finale she comes home through the shop door.
+- **Ghost book** – every kind of ghost the shop meets gets a page that fills in while playing:
+  how often it came and was served, what it likes, how it pays and the wishes heard so far, with
+  the regulars, Hedda's letters and the keepsakes (pause menu or the evening panel, `book.rs`).
+- **Regulars** – a ghost served well may come back now and then by name (Mrs Wispel, Captain
+  Brine …), often for the ware it bought the first time, and tips more often the more it visits
+  (`regulars` in `config.ron`, `regulars.rs`).
+- **Shop window** – in the evening one ware from stock goes in the window; ghosts who wish for
+  it come more often while one is left (`showcase_attract`, `showcase.rs`).
+- **Furniture sets** – three matching pieces in the shop draw certain ghosts and add to the
+  atmosphere, e.g. the dressing room (mirror, vanity, folding screen) for vain ghosts and
+  brides, or Ida's keepsakes as the seafarer's corner (`sets.ron`, `sets.rs`).
+- **Apprentice** – an improvement from the Reaper: a helper ghost behind the counter serves up
+  to three customers a night who wait in line with a ware from the shelves (`apprentice.rs`).
 
 ## Project layout
 
@@ -184,12 +202,18 @@ src/
   i18n.rs        language catalogs, placeholders, language detection
   rng.rs         small random number generator
   sim.rs         balancing simulation (`--simulate`), plays every night without a window
+  book.rs        the ghost book, regulars and shop window in the save
+  regulars.rs    regular customers who come back by name
+  showcase.rs    the ware in the shop window
+  sets.rs        furniture sets and tonight's ghost odds
+  apprentice.rs  the helper ghost behind the counter
   weather.rs     rain, storm, snow and fog of tonight's event
+  gamepad.rs     controller: the sticks drive the mouse pointer, A/B click
   trailer.rs     helpers for trailers and screenshots (`--trailer`)
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
-                 props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron
+                 props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron, sets.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md

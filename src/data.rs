@@ -435,6 +435,10 @@ pub struct Config {
     pub orders: OrdersConfig,
     /// Mishaps during the night (`incidents.ron`).
     pub incidents: IncidentsConfig,
+    /// Ghosts who come back as regulars (`regulars.rs`).
+    pub regulars: RegularsConfig,
+    /// How strongly the ware in the shop window draws ghosts who want it.
+    pub showcase_attract: f32,
     /// The part of the floor free of old junk at the start; the rest is
     /// cleared by improvements (`upgrades.ron`).
     pub start_area: StartArea,
@@ -458,6 +462,22 @@ pub struct IncidentsConfig {
     pub per_night: (u32, u32),
     /// When they happen, as a fraction of the night (from, to).
     pub arrive_at: (f32, f32),
+}
+
+/// Regular customers (config.ron).
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct RegularsConfig {
+    /// Chance that a ghost served well becomes a regular.
+    pub become_chance: f32,
+    /// Chance that a ghost of a regular's kind is the regular.
+    pub return_chance: f32,
+    /// Chance that a returning regular wants its favourite ware.
+    pub favourite_chance: f32,
+    /// At most this many regulars.
+    pub max: usize,
+    /// Each visit adds this to the chance of a tip, up to `max_tip_bonus`.
+    pub tip_per_visit: f32,
+    pub max_tip_bonus: f32,
 }
 
 /// Orders for the next night (config.ron).
@@ -536,6 +556,8 @@ pub struct GameData {
     pub stories: Vec<StoryDef>,
     /// Mishaps during the night (`incidents.ron`).
     pub incidents: Vec<crate::incidents::IncidentDef>,
+    /// Furniture sets (`sets.ron`).
+    pub sets: Vec<crate::sets::SetDef>,
     /// Achievements of the full game (`achievements.ron`).
     pub achievements: Vec<crate::achievements::AchievementDef>,
     /// Broken things in the junk and their repair (`workbench.ron`).
@@ -626,6 +648,8 @@ pub struct UpgradeEffect {
     pub fade_bonus: u32,
     pub spawn_factor: f32,
     pub patience_factor: f32,
+    /// A helper ghost serves this many customers a night (`apprentice.rs`).
+    pub apprentice: u32,
 }
 
 impl Default for UpgradeEffect {
@@ -637,6 +661,7 @@ impl Default for UpgradeEffect {
             fade_bonus: 0,
             spawn_factor: 1.0,
             patience_factor: 1.0,
+            apprentice: 0,
         }
     }
 }
@@ -679,6 +704,7 @@ impl GameData {
             decor: load_ron("data/decor.ron"),
             stories: load_ron("data/story.ron"),
             incidents: load_ron("data/incidents.ron"),
+            sets: load_ron("data/sets.ron"),
             workbench: load_ron("data/workbench.ron"),
             achievements: load_ron("data/achievements.ron"),
             events: load_ron("data/events.ron"),
@@ -692,6 +718,23 @@ impl GameData {
 
     fn validate(&self) {
         let c = &self.config;
+        for set in &self.sets {
+            assert!(set.decor.len() >= 2, "set '{}' needs two pieces", set.id);
+            for d in &set.decor {
+                assert!(
+                    self.decor(d).is_some(),
+                    "set '{}' has unknown decor '{d}'",
+                    set.id
+                );
+            }
+            for (g, _) in &set.ghost_weights {
+                assert!(
+                    self.ghost_index(g).is_some(),
+                    "set '{}' draws unknown ghost '{g}'",
+                    set.id
+                );
+            }
+        }
         assert!(
             c.start_area.cols <= c.grid_cols && c.start_area.rows <= c.grid_rows,
             "start_area is bigger than the grid"

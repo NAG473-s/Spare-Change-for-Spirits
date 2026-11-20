@@ -1349,6 +1349,18 @@ fn ware_tooltip(
                 TipKind::Text,
                 lang.f("market.tip_owned", &[("count", &storeroom.count(id))]),
             );
+            for set in data.sets.iter().filter(|s| s.decor.contains(id)) {
+                t.line(
+                    TipKind::Good,
+                    lang.f(
+                        "sets.part_of",
+                        &[
+                            ("name", &lang.t(&format!("set.{}.name", set.id))),
+                            ("bonus", &crate::ui::set_bonus(&lang, set)),
+                        ],
+                    ),
+                );
+            }
         }
         WareKind::Rare(id) | WareKind::Single(id) => {
             t.icon = icons.product(id);

@@ -137,6 +137,10 @@ pub enum Action {
     GiveFare,
     /// The achievements page of the pause menu.
     OpenAchievements,
+    /// The ghost book (pauses the game).
+    OpenBook,
+    /// Put a ware in the shop window, or empty it.
+    Showcase(Option<String>),
     /// List a trader's wares in the side panel (`None`: all traders).
     OpenStall(Option<usize>),
     /// Buy the n-th ware of the day from a trader's list.
@@ -1142,7 +1146,7 @@ fn build_evening_panel(
                 )],
             ));
         }
-        let odds = data.ghost_odds(night, &layout.atmosphere(&data, night), progress.reputation);
+        let odds = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
         expected_guests(&mut ui, &lang, &data, &stock, &progress, &layout, &odds);
         ui.section(&lang.t("evening.shelve"));
         let in_stock: Vec<String> = data
@@ -1190,8 +1194,10 @@ fn build_evening_panel(
         }
     }
 
-    let odds = data.ghost_odds(night, &layout.atmosphere(&data, night), progress.reputation);
+    let odds = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
     expected_guests(&mut ui, &lang, &data, &stock, &progress, &layout, &odds);
+    let root = ui.root();
+    ui.button_in(root, &lang.t("book.open"), Action::OpenBook, false, true);
 
     ui.section(&lang.f(
         "evening.ferryman",
@@ -1278,6 +1284,9 @@ fn build_evening_panel(
     if !any {
         ui.dim(&lang.t("evening.storeroom_empty"));
     }
+
+    showcase_section(&mut ui, &lang, &data, &stock, &progress, &icons);
+    sets_section(&mut ui, &lang, &data, &layout, &storeroom);
 
     workbench_section(
         &mut ui, &lang, &data, &layout, &progress, &drawer, &upgrades,
@@ -1401,6 +1410,104 @@ fn expected_guests(
         ui.dim(&lang.f("evening.turn_away", &[("list", &lang.join(&away))]));
     }
     ui.dim(&lang.t("evening.expected_hint"));
+}
+
+/// The shop window: one ware from stock draws the ghosts who wish for it.
+fn showcase_section(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    stock: &Stock,
+    progress: &Progress,
+    icons: &Icons,
+) {
+    ui.section(&lang.t("showcase.title"));
+    let chosen = progress.journal.showcase.as_deref();
+    match chosen {
+        Some(w) if stock.count(w) > 0 => {
+            ui.text(&lang.f("showcase.shows", &[("item", &lang.product(w))]))
+        }
+        Some(w) => ui.text(&lang.f("showcase.sold_out", &[("item", &lang.product(w))])),
+        None => ui.text(&lang.t("showcase.empty")),
+    };
+    let row = ui.row();
+    for p in data.products.iter().filter(|p| stock.count(&p.id) > 0) {
+        ui.icon_button_in(
+            row,
+            icons.product(&p.id),
+            &lang.product(&p.id),
+            Action::Showcase(Some(p.id.clone())),
+            chosen == Some(p.id.as_str()),
+            true,
+        );
+    }
+    if chosen.is_some() {
+        ui.button_in(
+            row,
+            &lang.t("showcase.clear"),
+            Action::Showcase(None),
+            false,
+            true,
+        );
+    }
+    ui.dim(&lang.t("showcase.hint"));
+}
+
+/// Furniture sets the player has started: how far each is, and what it
+/// brings once complete (in words, not by colour).
+fn sets_section(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    layout: &ShopLayout,
+    storeroom: &Storeroom,
+) {
+    let started: Vec<_> = data
+        .sets
+        .iter()
+        .filter(|s| s.started(layout, storeroom))
+        .collect();
+    if started.is_empty() {
+        return;
+    }
+    ui.section(&lang.t("sets.title"));
+    for set in started {
+        let name = lang.t(&format!("set.{}.name", set.id));
+        let pieces: Vec<String> = set.decor.iter().map(|d| lang.decor(d)).collect();
+        let bonus = set_bonus(lang, set);
+        if set.complete(layout) {
+            ui.text(&lang.f("sets.complete", &[("name", &name), ("bonus", &bonus)]));
+        } else {
+            ui.text(&lang.f(
+                "sets.progress",
+                &[
+                    ("name", &name),
+                    ("placed", &set.placed(layout)),
+                    ("total", &set.decor.len()),
+                    ("bonus", &bonus),
+                ],
+            ));
+        }
+        ui.dim(&lang.f("sets.pieces", &[("items", &lang.join(&pieces))]));
+    }
+}
+
+/// What a complete set brings, in words.
+pub fn set_bonus(lang: &Lang, set: &crate::sets::SetDef) -> String {
+    let ghosts: Vec<String> = set
+        .ghost_weights
+        .iter()
+        .map(|(g, _)| lang.ghost(g))
+        .collect();
+    let mut parts = Vec::new();
+    if !ghosts.is_empty() {
+        parts.push(lang.f("sets.draws", &[("ghosts", &lang.join(&ghosts))]));
+    }
+    let atmosphere = set.atmosphere.changes(lang);
+    if !atmosphere.is_empty() {
+        parts.push(atmosphere);
+    }
+    lang.join(&parts)
 }
 
 /// The workbench: search the junk, repair one broken thing an evening.
@@ -1806,6 +1913,7 @@ fn build_morning_panel(
     data: Res<GameData>,
     progress: Res<Progress>,
     settings: Res<crate::save::Settings>,
+    report: Res<crate::day_cycle::NightReport>,
 ) {
     // The accounts are shown in the middle of the screen (`accounts.rs`);
     // beside them: the first night's tip, and what tomorrow brings.
@@ -1815,6 +1923,12 @@ fn build_morning_panel(
         ui.text(&lang.t("tip.morning"));
         let root = ui.root();
         ui.button_in(root, &lang.t("tips.hide"), Action::ToggleTips, false, true);
+    }
+    if report.apprentice_served > 0 {
+        ui.text(&lang.f(
+            "morning.apprentice",
+            &[("count", &report.apprentice_served)],
+        ));
     }
     if progress.season_over(&data) {
         return;

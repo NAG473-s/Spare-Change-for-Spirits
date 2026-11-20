@@ -1,0 +1,23 @@
+// Furniture sets: once every piece of a set stands in the shop, it draws certain ghosts
+// (ghost_weights: (ghost id, factor) on how often they come) and adds to the atmosphere.
+// A piece may belong to several sets. Texts: assets/i18n/<language>.ron (set.<id>.name).
+// Sets made of keepsakes reward finishing a story.
+[
+    (id: "fireside", decor: ["stove", "rug", "oil_lamp"], atmosphere: (warmth: 1),
+     ghost_weights: [("cat", 1.5), ("child", 1.5)]),
+    (id: "dressing_room", decor: ["mirror", "vanity", "folding_screen"],
+     atmosphere: (reflection: 1), ghost_weights: [("vain", 1.5), ("bride", 1.5)]),
+    (id: "reading_nook", decor: ["tall_bookcase", "fern", "incense"], atmosphere: (silence: 1),
+     ghost_weights: [("shy", 1.5), ("forgetful", 1.5)]),
+    (id: "clockmakers_corner", decor: ["grandfather_clock", "cuckoo_clock", "cog_wheel"],
+     ghost_weights: [("knight", 1.5), ("forgetful", 1.3)]),
+    (id: "winter_parlour", decor: ["fairy_lights", "fur_rug", "stove"],
+     atmosphere: (warmth: 1, light: 1), ghost_weights: [("snow", 1.5), ("lantern_child", 1.5)]),
+    (id: "spring_garden", decor: ["flower_pot", "birdhouse", "seedling_pot"],
+     ghost_weights: [("frog", 1.5), ("butterfly", 1.5)]),
+    // Keepsakes.
+    (id: "edwins_porch", decor: ["umbrella", "teacup", "blanket"], atmosphere: (warmth: 1),
+     ghost_weights: [("shy", 1.3), ("forgetful", 1.3)]),
+    (id: "seafarers_corner", decor: ["ship_bell", "sea_chart", "logbook"],
+     ghost_weights: [("sailor", 2.0)]),
+]

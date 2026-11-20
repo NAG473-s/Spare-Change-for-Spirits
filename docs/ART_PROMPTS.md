@@ -24,7 +24,9 @@ python3 tools/check_models.py
 
 ## To do
 
-None. All currently ordered images are delivered.
+- The apprentice portrait `apprentice` (see *Helpers* under *Ghosts* below): one PNG,
+  `assets/sprites/ghosts/apprentice.png`, prepared like the other portraits (176 × 264,
+  transparent). Until it arrives the game shows a pale placeholder behind the counter.
 
 The seasonal furniture icons `fairy_lights`, `fur_rug`, `flower_pot` and `birdhouse` are in
 `assets/sprites/decor/` (96 × 96, transparent PNG). Their replacement prompts are listed
@@ -147,6 +149,13 @@ All twenty-one portraits are included in `assets/sprites/ghosts/`. The prompts b
 | `butterfly` | A tiny butterfly soul: a small ghost with a warm pink glow and two large translucent butterfly wings with pastel patterns, delicate antennae, a dreamy smile. |
 | `mira` | Mira, a gardener ghost with a fresh spring-green glow, a straw hat with a flower, rolled-up sleeves, a muddy apron with seed packets in the pocket, a small trowel in her hand, cheerful. |
 | `kasimir` | Kasimir, the ferryman without his hood: an old, gaunt but kind ghost with a cool blue-grey glow, a long grey beard, a weathered dark cloak with the hood pushed back, holding a storm lantern, tired but gentle eyes. |
+
+**Helpers** (not customers; they float behind the counter and face the camera, about 1 m tall,
+bottom centre of the canvas = where they hover):
+
+| File id | Prompt |
+|---|---|
+| `apprentice` | A small, eager apprentice ghost with a soft mint-white glow, a little too-big shop apron with a pencil behind its ear, sleeves rolled up, holding a tiny brass coin tray in both hands, a proud helpful smile. |
 
 **Original ghosts:**
 

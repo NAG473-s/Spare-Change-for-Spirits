@@ -85,6 +85,9 @@ pub struct SaveGame {
     pub season: u32,
     #[serde(default = "first")]
     pub season_start: u32,
+    /// The ghost book, the regulars and the shop window.
+    #[serde(default)]
+    pub journal: crate::book::Journal,
     pub drawer: Purse,
     pub stock: BTreeMap<String, Vec<u32>>,
     pub cells: Vec<CellContent>,
@@ -429,6 +432,7 @@ impl GameState<'_> {
             achievements: self.progress.achievements.clone(),
             season: self.progress.season,
             season_start: self.progress.season_start,
+            journal: self.progress.journal.clone(),
             drawer: self.drawer.0,
             stock: self.stock.units().clone(),
             cells: self.layout.cells.clone(),
@@ -456,6 +460,7 @@ impl GameState<'_> {
             achievements: save.achievements.clone(),
             season: save.season,
             season_start: save.season_start,
+            journal: save.journal.clone(),
         };
         self.drawer.0 = save.drawer;
         *self.stock = Stock::from_units(save.stock.clone());
@@ -580,6 +585,7 @@ mod tests {
             achievements: Vec::new(),
             season: 1,
             season_start: 1,
+            journal: Default::default(),
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),
@@ -613,6 +619,7 @@ mod tests {
             achievements: Vec::new(),
             season: 1,
             season_start: 1,
+            journal: Default::default(),
             drawer: Purse {
                 buttons: 4,
                 candles: 1,
@@ -654,6 +661,7 @@ mod tests {
             achievements: Vec::new(),
             season: 1,
             season_start: 1,
+            journal: Default::default(),
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),

@@ -317,6 +317,10 @@ def main():
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
+    # Helpers that are not customers (src/apprentice.rs).
+    for helper in ("apprentice",):
+        sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{helper}.png"
+        print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{helper}.png")
     # Drawn idle and gesture sheets are optional: without one the portrait performs it.
     print()
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):

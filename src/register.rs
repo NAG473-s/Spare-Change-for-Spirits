@@ -497,6 +497,7 @@ fn make_change(
                 let def = &data.ghosts[ghost.def];
                 let name = lang.ghost_the(&def.id);
                 let correct = given == due;
+                progress.journal.served(&def.id);
                 if given > 0 {
                     cues.write(Cue::ChangeGiven);
                 }
@@ -523,7 +524,10 @@ fn make_change(
                     }
                     // A shop the spirits speak well of gets a tip now and then.
                     let perks = data.config.reputation_perks;
-                    if rng.chance(perks.tip_chance(progress.reputation)) {
+                    // Regulars tip more often the more often they come.
+                    let regular = ghost.regular.and_then(|i| progress.journal.regulars.get(i));
+                    let bonus = crate::regulars::tip_bonus(&data, regular);
+                    if rng.chance(perks.tip_chance(progress.reputation) + bonus) {
                         let coin =
                             if progress.reputation >= perks.candle_tip_from && rng.chance(0.5) {
                                 Coin::Candle
@@ -562,6 +566,19 @@ fn make_change(
                         amount: sale.price,
                     });
                 } else {
+                    // Served well, it may come back as a regular.
+                    if ghost.regular.is_none()
+                        && let Some(regular) = crate::regulars::maybe_new(
+                            &data,
+                            &mut progress,
+                            def,
+                            &sale.product,
+                            &lang,
+                            &mut rng,
+                        )
+                    {
+                        log.push(lang.f("log.regular_new", &[("who", &name), ("name", &regular)]));
+                    }
                     cues.write(Cue::Ascend(ghost.pos));
                     ghost.state = GhostState::Ascending;
                     ghost.timer = 0.0;

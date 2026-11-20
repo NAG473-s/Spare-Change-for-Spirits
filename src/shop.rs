@@ -183,6 +183,7 @@ impl ShopLayout {
                 a.add(&d.effect);
             }
         }
+        a.add(&crate::sets::atmosphere(data, self));
         a
     }
 }
