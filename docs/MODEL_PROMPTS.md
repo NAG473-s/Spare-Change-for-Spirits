@@ -43,7 +43,8 @@ replacements.
   (numpad 1). Height goes along +Z.
 - **Polygons:** low-poly, at most ~3,000 triangles per model (products ~800).
 - **Materials:** only *Principled BSDF* with base colour, roughness and optionally emission,
-  or one baked colour texture per model (≤ 1024 px). Procedural node textures do **not** export.
+  or one baked colour texture per model (≤ 1024 px). Embed baked colour textures as PNG
+  so the game can load them. Procedural node textures do **not** export.
 - **Flames and glowing parts** (candles, lantern, window glass): give them their own material
   with *Emission* colour and strength; the game adds the real light source itself.
 - Smooth shading with a small bevel on edges looks best in the game's soft lighting.
