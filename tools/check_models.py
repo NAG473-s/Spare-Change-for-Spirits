@@ -37,7 +37,8 @@ TRIANGLE_BUDGET = {
 }
 # The village market (src/market.rs): a stall and a trader for each vendor in
 # assets/data/market.ron, and the Reaper's hourglass.
-MARKET_VENDORS = ["carpenter", "candlemaker", "herbalist", "glazier", "weaver", "raven", "reaper"]
+MARKET_VENDORS = ["carpenter", "candlemaker", "herbalist", "glazier", "weaver", "raven", "reaper",
+                  "frost", "florist"]
 MARKET_SIZES = {
     **{f"stall_{v}": (1.9, 2.5, 1.2) for v in MARKET_VENDORS},
     **{f"vendor_{v}": (0.7, 1.7, 0.6) for v in MARKET_VENDORS if v not in ("raven", "candlemaker")},
@@ -49,6 +50,7 @@ MARKET_SIZES = {
     "clock_hand_hour": (0.06, 0.22, 0.02),
     "clock_hand_minute": (0.04, 0.32, 0.02),
     "window_flowers": (0.7, 0.35, 0.2),
+    "special_tag": (0.14, 0.1, 0.02),
 }
 # Old junk on the floor that is not cleared yet (src/upgrades.rs, JUNK_SIZE).
 JUNK_SIZES = {f"junk_{n}": (0.85, 0.75, 0.85) for n in (1, 2, 3)}

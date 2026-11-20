@@ -82,9 +82,14 @@ impl Plugin for UiPlugin {
                     refresh_change.run_if(in_state(Phase::Night).and_then(
                         resource_changed::<Register>.or_else(resource_changed::<Drawer>),
                     )),
-                    build_market_panel.run_if(in_state(Phase::Day).and_then(
-                        resource_changed::<Storeroom>.or_else(resource_changed::<UiFont>),
-                    )),
+                    build_market_panel.run_if(
+                        in_state(Phase::Day).and_then(
+                            resource_changed::<Storeroom>
+                                .or_else(resource_changed::<UiFont>)
+                                .or_else(resource_changed::<crate::market::MarketDay>)
+                                .or_else(resource_changed::<Drawer>),
+                        ),
+                    ),
                     build_evening_panel.run_if(
                         in_state(Phase::Evening).and_then(
                             state_changed::<Phase>
@@ -132,6 +137,10 @@ pub enum Action {
     GiveFare,
     /// The achievements page of the pause menu.
     OpenAchievements,
+    /// List a trader's wares in the side panel (`None`: all traders).
+    OpenStall(Option<usize>),
+    /// Buy the n-th ware of the day from a trader's list.
+    MarketBuy(usize, usize),
     /// Search the old junk for something broken (once an evening).
     Rummage,
     /// Repair a broken thing at the workbench.
@@ -1018,6 +1027,7 @@ fn ghost_state_changed(ghosts: Query<&Ghost>, mut last: Local<Vec<GhostState>>) 
 
 /// The side panel at the village market: who sells what, the storeroom,
 /// and the way back to the shop.
+#[allow(clippy::too_many_arguments)]
 fn build_market_panel(
     mut commands: Commands,
     parts: Res<SidePanelParts>,
@@ -1025,17 +1035,45 @@ fn build_market_panel(
     lang: Res<Lang>,
     data: Res<GameData>,
     storeroom: Res<Storeroom>,
+    day: Res<crate::market::MarketDay>,
+    drawer: Res<Drawer>,
+    icons: Res<Icons>,
+    progress: Res<Progress>,
 ) {
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
+    // One trader's wares, or the overview of all traders here today.
+    if let Some(stall) = day.stall {
+        crate::market::stall_panel(
+            &mut ui,
+            &lang,
+            &data,
+            &day,
+            &drawer,
+            &icons,
+            progress.reputation,
+            stall,
+        );
+        ui.spacer();
+        ui.primary(&lang.t("market.back"), Action::EndDay);
+        return;
+    }
     ui.heading(&lang.t("market.title"));
     ui.dim(&lang.t("market.intro"));
     ui.section(&lang.t("market.vendors"));
-    for v in &data.vendors {
-        ui.display_text(
-            ui.root,
-            &lang.t(&format!("vendor.{}.name", v.id)),
-            14.0,
-            TEXT,
+    let calendar = progress.calendar(&data);
+    let root = ui.root();
+    for (i, v) in data.vendors.iter().enumerate() {
+        if !v.in_season(calendar) {
+            continue;
+        }
+        ui.menu_option(
+            root,
+            &lang.f(
+                "market.show_wares",
+                &[("vendor", &lang.t(&format!("vendor.{}.name", v.id)))],
+            ),
+            Action::OpenStall(Some(i)),
+            false,
         );
         ui.dim(&lang.t(&format!("vendor.{}.text", v.id)));
     }

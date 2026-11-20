@@ -24,6 +24,8 @@ python3 tools/check_models.py
 
 ## To do
 
+- Icons (kind `decor`) for the seasonal furniture `fairy_lights`, `fur_rug`, `flower_pot` and
+  `birdhouse` (prompts as for their models in [MODEL_PROMPTS.md](MODEL_PROMPTS.md)).
 None. All currently ordered images are delivered.
 
 All 18 Steam achievement icons and their greyed locked versions are in

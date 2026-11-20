@@ -9,24 +9,45 @@
 //   Hourglass       the coming night lasts a quarter longer; one a day
 //   RarePieces(n)   n single pieces of different products, a new choice every day
 //   Upgrade("<id>") a shop improvement from upgrades.ron, bought once
+//   Single("<id>")  one piece of a product, every day
+// specials (optional): how many of its furniture and improvements are on special offer each
+//   day (`special_discount` in config.ron cheaper; a new pick every day).
+// from_night / until_night (optional): a seasonal trader, at the market only between these
+//   calendar nights. Seasonal traders may share a place, as their seasons do not overlap.
 [
     // Three traders share the western cobbled bay. The cart lane passes east of the herbalist.
     (id: "carpenter", pos: (-5.65, -3.18), turn: 10.0, color: (0.6, 0.45, 0.28),
      wares: [Decor("small_shelf"), Decor("shelf"), Decor("display_table"),
              Decor("tall_bookcase"), Decor("glass_cabinet"), Decor("workbench"),
              Upgrade("clear_corner"), Upgrade("back_room"), Upgrade("knock_through"),
-             Upgrade("waiting_bench")]),
+             Upgrade("waiting_bench")],
+     specials: 1),
     (id: "candlemaker", pos: (-2.85, -3.40), color: (0.95, 0.75, 0.35),
-     wares: [Decor("candle"), Decor("oil_lamp"), Decor("stove"), Upgrade("door_lantern")]),
+     wares: [Decor("candle"), Decor("oil_lamp"), Decor("stove"), Upgrade("door_lantern")],
+     specials: 1),
     (id: "herbalist", pos: (-0.10, -3.32), turn: 4.0, color: (0.4, 0.6, 0.4),
-     wares: [Decor("incense"), Decor("fern"), Upgrade("herb_sachets")]),
+     wares: [Decor("incense"), Decor("fern"), Upgrade("herb_sachets")],
+     specials: 1),
     (id: "glazier", pos: (4.9, -3.35), turn: -12.0, color: (0.55, 0.15, 0.2),
-     wares: [Decor("mirror"), Decor("vanity")]),
+     wares: [Decor("mirror"), Decor("vanity")],
+     specials: 1),
     (id: "weaver", pos: (-4.2, 1.4), turn: 25.0, color: (0.65, 0.35, 0.4),
-     wares: [Decor("rug"), Decor("folding_screen")]),
+     wares: [Decor("rug"), Decor("folding_screen")],
+     specials: 1),
     (id: "raven", pos: (0.0, 1.9), color: (0.2, 0.22, 0.3),
      wares: [Exchange(SpoonToCandles), Exchange(CandleToButtons), Exchange(CandlesToSpoon)]),
     (id: "reaper", pos: (4.3, 1.4), turn: -25.0, color: (0.15, 0.13, 0.18),
      wares: [RarePieces(3), Hourglass, Decor("grandfather_clock"), Decor("gramophone"),
              Upgrade("ferry_contract")]),
+    // Seasonal traders between the herbalist and the glazier.
+    // Winter (season 2): the frost seller with warm lights, fur and winter wares.
+    (id: "frost", pos: (2.4, -3.35), color: (0.7, 0.82, 0.95),
+     from_night: 11, until_night: Some(20),
+     wares: [Decor("fairy_lights"), Decor("fur_rug"), Single("snow_globe"), Single("wool_scarf")],
+     specials: 1),
+    // Spring (season 3): the florist with plants, a birdhouse and spring wares.
+    (id: "florist", pos: (2.4, -3.35), color: (0.95, 0.7, 0.8),
+     from_night: 21, until_night: Some(30),
+     wares: [Decor("flower_pot"), Decor("birdhouse"), Single("seed_packet"), Single("lavender")],
+     specials: 1),
 ]

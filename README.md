@@ -134,6 +134,9 @@ Special customers:
   finale: Hedda's (1–10), "The Long Winter" with Lotte, her dog Pfote and Anselm the clockmaker
   (11–20), and "The Thaw" with Mira the gardener and Kasimir the ferryman, whose last wish is
   one coin for his own crossing (21–30). Later seasons keep the shop open without a story.
+- **Market** – each trader's wares can be listed and bought from the side panel; five traders
+  have one ware on special offer each day (`specials`, `special_discount`), and seasonal traders
+  come only in their season: Ilse Icicle in winter, Bluma the florist in spring (`market.ron`).
 - **Hedda's letters** – the player inherited the shop from great-aunt Hedda. Her first letter
   waits on the first evening, the others turn up when improvements clear her old junk
   (`letter` in `upgrades.ron`). At the finale she comes home through the shop door.

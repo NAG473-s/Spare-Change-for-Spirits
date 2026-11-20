@@ -145,6 +145,14 @@ pub fn achievements_page(
         "achievements.title",
         &[("done", &done), ("total", &data.achievements.len())],
     ));
+    // Back at the top as well: the list is long and scrolls.
+    let root = ui.root();
+    ui.menu_option(
+        root,
+        &lang.t("menu.back"),
+        crate::ui::Action::CloseSaveMenu,
+        false,
+    );
     for a in &data.achievements {
         let unlocked = progress.achievements.contains(&a.id);
         let state = if unlocked {

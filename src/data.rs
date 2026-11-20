@@ -426,6 +426,8 @@ pub struct Config {
     pub reputation_perks: ReputationPerks,
     /// The shade that steals from shops with a bad reputation.
     pub thief: ThiefConfig,
+    /// How much cheaper a trader's special offer of the day is (0.3 = 30 %).
+    pub special_discount: f32,
     /// Wares a ghost orders for the next night.
     pub orders: OrdersConfig,
     /// Mishaps during the night (`incidents.ron`).
@@ -555,6 +557,22 @@ pub struct VendorDef {
     /// Awning and placeholder colour.
     pub color: (f32, f32, f32),
     pub wares: Vec<Ware>,
+    /// How many of its wares are on special offer each day.
+    #[serde(default)]
+    pub specials: u32,
+    /// A seasonal trader comes only from this calendar night …
+    #[serde(default = "one")]
+    pub from_night: u32,
+    /// … until this one.
+    #[serde(default)]
+    pub until_night: Option<u32>,
+}
+
+impl VendorDef {
+    /// Is this trader at the market on this calendar night?
+    pub fn in_season(&self, calendar: u32) -> bool {
+        calendar >= self.from_night && self.until_night.is_none_or(|u| calendar <= u)
+    }
 }
 
 /// What a trader offers.
@@ -568,6 +586,8 @@ pub enum Ware {
     Hourglass,
     /// This many single pieces of different products, a new choice every day.
     RarePieces(u32),
+    /// One piece of this product, every day.
+    Single(String),
     /// A shop improvement from `upgrades.ron`, bought once.
     Upgrade(String),
 }
@@ -806,6 +826,19 @@ impl GameData {
                     "achievement '{}' waits for an unknown story '{g}'",
                     a.id
                 );
+            }
+        }
+        for v in &self.vendors {
+            for w in &v.wares {
+                match w {
+                    Ware::Single(p) => {
+                        assert!(self.product(p).is_some(), "{}: unknown product '{p}'", v.id)
+                    }
+                    Ware::Decor(d) => {
+                        assert!(self.decor(d).is_some(), "{}: unknown decor '{d}'", v.id)
+                    }
+                    _ => {}
+                }
             }
         }
         for j in &self.workbench.junk {

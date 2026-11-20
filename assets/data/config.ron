@@ -24,6 +24,8 @@
     // Below `below` reputation a shade may come (chance per night, from night `from_night`):
     // it snatches one ware from the shelves and leaves. A shop with light `scared_by_light`
     // or more drives it away.
+    // A trader's special offer of the day (`specials` in market.ron) is this much cheaper.
+    special_discount: 0.3,
     // Mishaps during the night (incidents.ron): `per_night` (at least, at most) from calendar
     // night `from_night` on, at a random time between `arrive_at`.
     incidents: (from_night: 2, per_night: (0, 2), arrive_at: (0.15, 0.8)),

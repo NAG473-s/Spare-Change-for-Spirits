@@ -27,7 +27,9 @@ use crate::scene::{LABEL_WIDTH, WorldLabel, billboard_material, billboard_mesh};
 use crate::shop::{Storeroom, model_or_box, product_model};
 use crate::sign::return_post;
 use crate::tooltip::{HoverTip, TipKind};
-use crate::ui::{Action, BG_PANEL, GameLog, Icons, PANEL_EDGE, TEXT, UiFont, UiTheme, text_font};
+use crate::ui::{
+    Action, BG_PANEL, GameLog, Icons, PANEL_EDGE, PanelBuilder, TEXT, UiFont, UiTheme, text_font,
+};
 use crate::upgrades::Upgrades;
 
 pub struct MarketPlugin;
@@ -48,7 +50,7 @@ impl Plugin for MarketPlugin {
                 (
                     animate_vendors,
                     sway_bunting,
-                    (ware_tooltip, animate_wares).run_if(in_state(Phase::Day)),
+                    (ware_tooltip, animate_wares, buy_from_list).run_if(in_state(Phase::Day)),
                 ),
             );
     }
@@ -96,8 +98,13 @@ pub struct MarketDay {
     /// Furniture bought today (it may be sold back until the evening).
     bought: Vec<String>,
     hourglass: bool,
-    /// The Reaper's single pieces already sold today.
+    /// Single pieces already sold today (the Reaper's and the seasonal ones).
     rare_sold: Vec<String>,
+    /// Today's wares of each trader (index in `market.ron`) and whether each
+    /// is a special offer. Empty for a trader who is not here today.
+    offers: Vec<Vec<(WareKind, bool)>>,
+    /// The trader whose wares the side panel lists, if any.
+    pub stall: Option<usize>,
 }
 
 #[derive(Resource, Default)]
@@ -137,6 +144,8 @@ enum FigureKind {
 struct WareItem {
     vendor: usize,
     kind: WareKind,
+    /// Today's special offer: cheaper.
+    special: bool,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -145,6 +154,8 @@ enum WareKind {
     Exchange(Exchange),
     Hourglass,
     Rare(String),
+    /// One piece of a product from a seasonal trader, every day.
+    Single(String),
     /// A shop improvement; it leaves the table once bought.
     Upgrade(String),
 }
@@ -408,8 +419,12 @@ fn spawn_vendor_plaques(
     lang: Res<Lang>,
     font: Res<UiFont>,
     theme: Res<UiTheme>,
+    progress: Res<Progress>,
 ) {
     for (stall, Stall(index)) in &stalls {
+        if !data.vendors[*index].in_season(progress.calendar(&data)) {
+            continue;
+        }
         let key = format!("vendor.{}.name", data.vendors[*index].id);
         let mut plaque = commands.spawn((
             WorldLabel {
@@ -683,8 +698,19 @@ fn open_market(
         materials: &mut materials,
     };
     let mut rare = rare.into_iter();
+    day.offers = vec![Vec::new(); data.vendors.len()];
     for (stall, Stall(i)) in &stalls {
         let vendor = &data.vendors[*i];
+        // A seasonal trader's stall stands only in its season.
+        let here = vendor.in_season(night);
+        k.commands.entity(stall).insert(if here {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        });
+        if !here {
+            continue;
+        }
         let mut kinds = Vec::new();
         for ware in &vendor.wares {
             match ware {
@@ -702,6 +728,11 @@ fn open_market(
                         }
                     }
                 }
+                Ware::Single(id) => {
+                    if data.product(id).is_some_and(|p| p.unlock_night <= night) {
+                        kinds.push(WareKind::Single(id.clone()));
+                    }
+                }
                 Ware::Upgrade(id) => {
                     if data.upgrade(id).is_some_and(|u| upgrades.offered(u, night)) {
                         kinds.push(WareKind::Upgrade(id.clone()));
@@ -709,6 +740,23 @@ fn open_market(
                 }
             }
         }
+        // Today's special offers: furniture or an improvement, a new pick each day.
+        let mut offers: Vec<(WareKind, bool)> = kinds.into_iter().map(|k| (k, false)).collect();
+        let mut candidates: Vec<usize> = offers
+            .iter()
+            .enumerate()
+            .filter(|(_, (k, _))| matches!(k, WareKind::Decor(_) | WareKind::Upgrade(_)))
+            .map(|(n, _)| n)
+            .collect();
+        for _ in 0..vendor.specials {
+            if candidates.is_empty() {
+                break;
+            }
+            let n = candidates.swap_remove(rng.index(candidates.len()));
+            offers[n].1 = true;
+        }
+        day.offers[*i] = offers.clone();
+        let kinds = offers;
         let n = kinds.len().max(1) as f32;
         let step = ((TABLE.x - 0.3) / n).min(0.5);
         // One fixed, invisible hover box per ware, as wide as its place on
@@ -723,7 +771,7 @@ fn open_market(
             unlit: true,
             ..default()
         });
-        for (j, kind) in kinds.into_iter().enumerate() {
+        for (j, (kind, special)) in kinds.into_iter().enumerate() {
             let x = (j as f32 - (n - 1.0) / 2.0) * step;
             let base = Vec3::new(x, TABLE.y, 0.08);
             let item = k
@@ -732,6 +780,7 @@ fn open_market(
                     WareItem {
                         vendor: *i,
                         kind: kind.clone(),
+                        special,
                     },
                     Transform::from_translation(base),
                     Visibility::default(),
@@ -758,7 +807,32 @@ fn open_market(
             let visual = k.node(Some(item), Transform::default());
             k.commands.entity(visual).insert(WareVisual);
             spawn_ware_visual(&mut k, &data, visual, &kind);
+            if special {
+                spawn_special_tag(&mut k, item);
+            }
         }
+    }
+}
+
+/// A little brass tag over today's special offer. Model (optional):
+/// `assets/models/market/special_tag.glb`, origin at the bottom centre.
+const SPECIAL_TAG: &str = "models/market/special_tag.glb";
+const SPECIAL_TAG_SIZE: Vec3 = Vec3::new(0.14, 0.1, 0.02);
+const SPECIAL_TAG_HEIGHT: f32 = 0.55;
+
+fn spawn_special_tag(k: &mut Kit, item: Entity) {
+    let at = Transform::from_xyz(0.0, SPECIAL_TAG_HEIGHT, 0.0);
+    if !k.model(item, SPECIAL_TAG, at) {
+        let tag = model_or_box(
+            &mut k.commands,
+            k.asset_server,
+            k.meshes,
+            k.materials,
+            SPECIAL_TAG,
+            SPECIAL_TAG_SIZE,
+            Color::srgb(0.85, 0.68, 0.3),
+        );
+        k.commands.entity(tag).insert((at, ChildOf(item)));
     }
 }
 
@@ -806,7 +880,7 @@ fn spawn_ware_visual(k: &mut Kit, data: &GameData, item: Entity, kind: &WareKind
             );
             k.commands.entity(visual).insert(ChildOf(sample));
         }
-        WareKind::Rare(id) => {
+        WareKind::Rare(id) | WareKind::Single(id) => {
             let visual = product_model(
                 &mut k.commands,
                 k.asset_server,
@@ -925,10 +999,19 @@ fn exchange_takes(e: Exchange) -> u32 {
 }
 
 /// Price of a ware (0 for exchanges, which cost a fee instead).
-fn price(data: &GameData, kind: &WareKind) -> u32 {
+fn price(data: &GameData, kind: &WareKind, special: bool) -> u32 {
+    let full = full_price(data, kind);
+    if special {
+        ((full as f32 * (1.0 - data.config.special_discount)).round() as u32).max(1)
+    } else {
+        full
+    }
+}
+
+fn full_price(data: &GameData, kind: &WareKind) -> u32 {
     match kind {
         WareKind::Decor(id) => data.decor(id).map_or(0, |d| d.cost),
-        WareKind::Rare(id) => data.product(id).map_or(0, |p| p.price),
+        WareKind::Rare(id) | WareKind::Single(id) => data.product(id).map_or(0, |p| p.price),
         WareKind::Hourglass => HOURGLASS_PRICE,
         WareKind::Exchange(_) => 0,
         WareKind::Upgrade(id) => data.upgrade(id).map_or(0, |u| u.cost),
@@ -941,11 +1024,14 @@ fn blocked(
     day: &MarketDay,
     drawer: &Drawer,
     kind: &WareKind,
+    special: bool,
     reputation: i32,
 ) -> Option<&'static str> {
     match kind {
         WareKind::Hourglass if day.hourglass => Some("market.tip_sold_out"),
-        WareKind::Rare(id) if day.rare_sold.contains(id) => Some("market.tip_sold_out"),
+        WareKind::Rare(id) | WareKind::Single(id) if day.rare_sold.contains(id) => {
+            Some("market.tip_sold_out")
+        }
         // The Reaper's rare pieces are for shops the spirits speak well of.
         WareKind::Rare(_) if reputation < data.config.reputation_perks.rare_from => {
             Some("market.tip_reputation")
@@ -954,139 +1040,262 @@ fn blocked(
             let (coin, _, _) = exchange_gives(*e);
             (drawer.get(coin) < exchange_takes(*e)).then_some("market.no_coins")
         }
-        _ => (drawer.total() < price(data, kind)).then_some("market.tip_poor"),
+        _ => (drawer.total() < price(data, kind, special)).then_some("market.tip_poor"),
+    }
+}
+
+/// Everything a purchase at the market touches.
+#[derive(bevy::ecs::system::SystemParam)]
+struct Shop<'w, 's> {
+    commands: Commands<'w, 's>,
+    upgrades: ResMut<'w, Upgrades>,
+    items: Query<'w, 's, (Entity, &'static WareItem)>,
+    data: Res<'w, GameData>,
+    lang: Res<'w, Lang>,
+    drawer: ResMut<'w, Drawer>,
+    storeroom: ResMut<'w, Storeroom>,
+    stock: ResMut<'w, Stock>,
+    accounts: ResMut<'w, Accounts>,
+    day: ResMut<'w, MarketDay>,
+    bonus: ResMut<'w, NightBonus>,
+    log: ResMut<'w, GameLog>,
+    cues: MessageWriter<'w, Cue>,
+    figures: Query<'w, 's, &'static mut VendorFigure>,
+    letter: ResMut<'w, FoundLetter>,
+    progress: Res<'w, Progress>,
+}
+
+impl Shop<'_, '_> {
+    /// Buys one ware of a trader; false if it cannot be bought now.
+    fn buy(&mut self, vendor: usize, kind: &WareKind, special: bool) -> bool {
+        let data = &self.data;
+        let lang = &self.lang;
+        if blocked(
+            data,
+            &self.day,
+            &self.drawer,
+            kind,
+            special,
+            self.progress.reputation,
+        )
+        .is_some()
+        {
+            return false;
+        }
+        let name = lang.t(&format!("vendor.{}.name", data.vendors[vendor].id));
+        let cost = price(data, kind, special);
+        match kind {
+            WareKind::Decor(id) => {
+                if !self.drawer.pay(cost) {
+                    return false;
+                }
+                self.accounts.furniture += cost;
+                self.storeroom.give(id);
+                self.day.bought.push(id.clone());
+                self.log.push(lang.f(
+                    "log.market_bought",
+                    &[("item", &lang.decor(id)), ("vendor", &name)],
+                ));
+            }
+            WareKind::Rare(id) | WareKind::Single(id) => {
+                if !self.drawer.pay(cost) {
+                    return false;
+                }
+                self.accounts.market += cost;
+                self.stock.add(id, 1);
+                self.day.rare_sold.push(id.clone());
+                self.log.push(lang.f(
+                    "log.market_bought",
+                    &[("item", &lang.product(id)), ("vendor", &name)],
+                ));
+            }
+            WareKind::Hourglass => {
+                if !self.drawer.pay(cost) {
+                    return false;
+                }
+                self.accounts.market += cost;
+                self.day.hourglass = true;
+                self.bonus.0 = HOURGLASS_BONUS;
+                self.log.push(lang.t("log.hourglass"));
+            }
+            WareKind::Exchange(e) => {
+                let (coin, get, fee) = exchange_gives(*e);
+                let mut give = Purse::default();
+                give.add(coin, exchange_takes(*e));
+                if !self.drawer.remove(&give) {
+                    return false;
+                }
+                self.drawer.merge(&get);
+                self.accounts.market += fee;
+                self.log.push(lang.f("log.exchanged", &[("vendor", &name)]));
+            }
+            WareKind::Upgrade(id) => {
+                if !self.drawer.pay(cost) {
+                    return false;
+                }
+                self.accounts.upgrades += cost;
+                self.upgrades.0.insert(id.clone());
+                self.log.push(lang.f(
+                    "log.market_bought",
+                    &[
+                        ("item", &lang.t(&format!("upgrade.{id}.name"))),
+                        ("vendor", &name),
+                    ],
+                ));
+                // Clearing Hedda's junk turns up one of her letters.
+                if let Some(n) = data.upgrade(id).and_then(|u| u.letter) {
+                    self.letter.0 = Some(n);
+                    self.log.push(lang.t("log.letter_found"));
+                }
+                // Done for good: it leaves the table and the list.
+                for (entity, item) in &self.items {
+                    if item.vendor == vendor && item.kind == *kind {
+                        self.commands.entity(entity).despawn();
+                    }
+                }
+                if let Some(offers) = self.day.offers.get_mut(vendor) {
+                    offers.retain(|(k, _)| k != kind);
+                }
+            }
+        }
+        self.sold(vendor);
+        true
+    }
+
+    /// Furniture bought today can go back while the market is open.
+    fn sell_back(&mut self, vendor: usize, kind: &WareKind, special: bool) -> bool {
+        let WareKind::Decor(id) = kind else {
+            return false;
+        };
+        let Some(pos) = self.day.bought.iter().position(|b| b == id) else {
+            return false;
+        };
+        if !self.storeroom.take(id) {
+            return false;
+        }
+        self.day.bought.remove(pos);
+        let cost = price(&self.data, kind, special);
+        self.drawer.merge(&Purse::greedy(cost));
+        self.accounts.furniture = self.accounts.furniture.saturating_sub(cost);
+        let name = self
+            .lang
+            .t(&format!("vendor.{}.name", self.data.vendors[vendor].id));
+        self.log.push(self.lang.f(
+            "log.market_sold_back",
+            &[("item", &self.lang.decor(id)), ("vendor", &name)],
+        ));
+        self.sold(vendor);
+        true
+    }
+
+    /// The trader nods after a sale.
+    fn sold(&mut self, vendor: usize) {
+        self.cues.write(Cue::Paid);
+        for mut figure in &mut self.figures {
+            if figure.vendor == vendor {
+                figure.nod = 0.8;
+            }
+        }
+    }
+}
+
+fn on_ware_click(click: On<PointerClick>, mut shop: Shop) {
+    let Ok((_, item)) = shop.items.get(click.event_target()) else {
+        return;
+    };
+    let (vendor, kind, special) = (item.vendor, item.kind.clone(), item.special);
+    match click.button {
+        PointerButton::Primary => {
+            shop.buy(vendor, &kind, special);
+        }
+        PointerButton::Secondary => {
+            shop.sell_back(vendor, &kind, special);
+        }
+        PointerButton::Middle => {}
+    }
+}
+
+/// The side panel lists a trader's wares; buying from the list works like
+/// clicking the ware on the table.
+fn buy_from_list(mut actions: MessageReader<Action>, mut shop: Shop) {
+    for action in actions.read() {
+        match action {
+            Action::OpenStall(stall) => shop.day.stall = *stall,
+            Action::MarketBuy(vendor, n) => {
+                let Some((kind, special)) = shop
+                    .day
+                    .offers
+                    .get(*vendor)
+                    .and_then(|o| o.get(*n))
+                    .cloned()
+                else {
+                    continue;
+                };
+                shop.buy(*vendor, &kind, special);
+            }
+            _ => {}
+        }
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-fn on_ware_click(
-    click: On<PointerClick>,
-    mut commands: Commands,
-    mut upgrades: ResMut<Upgrades>,
-    items: Query<&WareItem>,
-    data: Res<GameData>,
-    lang: Res<Lang>,
-    mut drawer: ResMut<Drawer>,
-    mut storeroom: ResMut<Storeroom>,
-    mut stock: ResMut<Stock>,
-    mut accounts: ResMut<Accounts>,
-    mut day: ResMut<MarketDay>,
-    mut bonus: ResMut<NightBonus>,
-    mut log: ResMut<GameLog>,
-    mut cues: MessageWriter<Cue>,
-    mut figures: Query<&mut VendorFigure>,
-    mut letter: ResMut<FoundLetter>,
-    progress: Res<Progress>,
+/// The side panel's view of one trader: every ware of the day with its
+/// price, today's special marked in words, and a button to buy it.
+pub(crate) fn stall_panel(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    day: &MarketDay,
+    drawer: &Drawer,
+    icons: &Icons,
+    reputation: i32,
+    vendor: usize,
 ) {
-    let Ok(item) = items.get(click.event_target()) else {
-        return;
-    };
-    let vendor = lang.t(&format!("vendor.{}.name", data.vendors[item.vendor].id));
-    let sold = match click.button {
-        PointerButton::Primary => {
-            if blocked(&data, &day, &drawer, &item.kind, progress.reputation).is_some() {
-                return;
+    let v = &data.vendors[vendor];
+    ui.heading(&lang.t(&format!("vendor.{}.name", v.id)));
+    ui.dim(&lang.t(&format!("vendor.{}.text", v.id)));
+    let root = ui.root();
+    let percent = (data.config.special_discount * 100.0).round() as u32;
+    for (n, (kind, special)) in day.offers.get(vendor).into_iter().flatten().enumerate() {
+        let (name, icon) = match kind {
+            WareKind::Decor(id) => (lang.decor(id), icons.decor(id)),
+            WareKind::Rare(id) | WareKind::Single(id) => (lang.product(id), icons.product(id)),
+            WareKind::Hourglass => (lang.t("item.hourglass.name"), None),
+            WareKind::Upgrade(id) => (lang.t(&format!("upgrade.{id}.name")), None),
+            WareKind::Exchange(e) => {
+                let key = exchange_key(*e);
+                (
+                    lang.t(&format!("exchange.{key}.name")),
+                    icons.coin(exchange_gives(*e).0),
+                )
             }
-            let cost = price(&data, &item.kind);
-            match &item.kind {
-                WareKind::Decor(id) => {
-                    if !drawer.pay(cost) {
-                        return;
-                    }
-                    accounts.furniture += cost;
-                    storeroom.give(id);
-                    day.bought.push(id.clone());
-                    log.push(lang.f(
-                        "log.market_bought",
-                        &[("item", &lang.decor(id)), ("vendor", &vendor)],
-                    ));
-                }
-                WareKind::Rare(id) => {
-                    if !drawer.pay(cost) {
-                        return;
-                    }
-                    accounts.market += cost;
-                    stock.add(id, 1);
-                    day.rare_sold.push(id.clone());
-                    log.push(lang.f(
-                        "log.market_bought",
-                        &[("item", &lang.product(id)), ("vendor", &vendor)],
-                    ));
-                }
-                WareKind::Hourglass => {
-                    if !drawer.pay(cost) {
-                        return;
-                    }
-                    accounts.market += cost;
-                    day.hourglass = true;
-                    bonus.0 = HOURGLASS_BONUS;
-                    log.push(lang.t("log.hourglass"));
-                }
-                WareKind::Exchange(e) => {
-                    let (coin, get, fee) = exchange_gives(*e);
-                    let mut give = Purse::default();
-                    give.add(coin, exchange_takes(*e));
-                    if !drawer.remove(&give) {
-                        return;
-                    }
-                    drawer.merge(&get);
-                    accounts.market += fee;
-                    log.push(lang.f("log.exchanged", &[("vendor", &vendor)]));
-                }
-                WareKind::Upgrade(id) => {
-                    if !drawer.pay(cost) {
-                        return;
-                    }
-                    accounts.upgrades += cost;
-                    upgrades.0.insert(id.clone());
-                    log.push(lang.f(
-                        "log.market_bought",
-                        &[
-                            ("item", &lang.t(&format!("upgrade.{id}.name"))),
-                            ("vendor", &vendor),
-                        ],
-                    ));
-                    // Clearing Hedda's junk turns up one of her letters.
-                    if let Some(n) = data.upgrade(id).and_then(|u| u.letter) {
-                        letter.0 = Some(n);
-                        log.push(lang.t("log.letter_found"));
-                    }
-                    // Done for good: it leaves the table.
-                    commands.entity(click.event_target()).despawn();
-                }
-            }
-            true
-        }
-        // Furniture bought today can go back while the market is open.
-        PointerButton::Secondary => {
-            let WareKind::Decor(id) = &item.kind else {
-                return;
-            };
-            let Some(pos) = day.bought.iter().position(|b| b == id) else {
-                return;
-            };
-            if !storeroom.take(id) {
-                return;
-            }
-            day.bought.remove(pos);
-            let cost = price(&data, &item.kind);
-            drawer.merge(&Purse::greedy(cost));
-            accounts.furniture = accounts.furniture.saturating_sub(cost);
-            log.push(lang.f(
-                "log.market_sold_back",
-                &[("item", &lang.decor(id)), ("vendor", &vendor)],
-            ));
-            true
-        }
-        PointerButton::Middle => false,
-    };
-    if sold {
-        cues.write(Cue::Paid);
-        for mut figure in &mut figures {
-            if figure.vendor == item.vendor {
-                figure.nod = 0.8;
-            }
-        }
+        };
+        let cost = price(data, kind, *special);
+        let label = match kind {
+            WareKind::Exchange(_) => name,
+            _ if *special => lang.f(
+                "market.offer_special",
+                &[("item", &name), ("price", &cost), ("percent", &percent)],
+            ),
+            _ => lang.f("market.offer", &[("item", &name), ("price", &cost)]),
+        };
+        let ok = blocked(data, day, drawer, kind, *special, reputation).is_none();
+        ui.icon_button_in(root, icon, &label, Action::MarketBuy(vendor, n), false, ok);
+    }
+    ui.dim(&lang.t("market.list_hint"));
+    ui.menu_option(
+        root,
+        &lang.t("market.all_traders"),
+        Action::OpenStall(None),
+        false,
+    );
+}
+
+fn exchange_key(e: Exchange) -> &'static str {
+    match e {
+        Exchange::SpoonToCandles => "spoon_to_candles",
+        Exchange::CandleToButtons => "candle_to_buttons",
+        Exchange::CandlesToSpoon => "candles_to_spoon",
     }
 }
 
@@ -1113,7 +1322,7 @@ fn ware_tooltip(
     };
     *shown = true;
     let mut t = HoverTip::default();
-    let cost = price(&data, &item.kind);
+    let cost = price(&data, &item.kind, item.special);
     match &item.kind {
         WareKind::Decor(id) => {
             let Some(def) = data.decor(id) else { return };
@@ -1141,7 +1350,7 @@ fn ware_tooltip(
                 lang.f("market.tip_owned", &[("count", &storeroom.count(id))]),
             );
         }
-        WareKind::Rare(id) => {
+        WareKind::Rare(id) | WareKind::Single(id) => {
             t.icon = icons.product(id);
             t.title = lang.product(id);
             t.line(TipKind::Text, lang.t("market.rare_text"));
@@ -1172,17 +1381,27 @@ fn ware_tooltip(
             t.line(TipKind::Good, lang.t("market.tip_upgrade"));
         }
         WareKind::Exchange(e) => {
-            let key = match e {
-                Exchange::SpoonToCandles => "spoon_to_candles",
-                Exchange::CandleToButtons => "candle_to_buttons",
-                Exchange::CandlesToSpoon => "candles_to_spoon",
-            };
+            let key = exchange_key(*e);
             t.icon = icons.coin(exchange_gives(*e).0);
             t.title = lang.t(&format!("exchange.{key}.name"));
             t.line(TipKind::Text, lang.t(&format!("exchange.{key}.text")));
         }
     }
-    match blocked(&data, &day, &drawer, &item.kind, progress.reputation) {
+    if item.special {
+        let percent = (data.config.special_discount * 100.0).round() as u32;
+        t.line(
+            TipKind::Good,
+            lang.f("market.tip_special", &[("percent", &percent)]),
+        );
+    }
+    match blocked(
+        &data,
+        &day,
+        &drawer,
+        &item.kind,
+        item.special,
+        progress.reputation,
+    ) {
         Some(key) => {
             let min = data.config.reputation_perks.rare_from;
             t.line(TipKind::Bad, lang.f(key, &[("min", &min)]));
@@ -1279,7 +1498,7 @@ mod tests {
             for w in &v.wares {
                 if let Ware::Decor(id) = w {
                     assert!(
-                        price(&data, &WareKind::Decor(id.clone())) > 0,
+                        price(&data, &WareKind::Decor(id.clone()), false) > 0,
                         "{id} is free"
                     );
                 }
