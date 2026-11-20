@@ -51,7 +51,7 @@ python3 tools/playtest_report.py
 ```
 
 The game starts on the title screen: its own painted background with flickering lamp light,
-drifting dust and ghosts floating past, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
+drifting dust, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit; the *Menu* button in the top bar does the same). Settings (main menu and pause menu): tips,
 sound, music, effects and narration volume, interface size (on top of the automatic scaling with the window
 height), fullscreen, and the assists *Patient ghosts* and *Show change due*. 
@@ -88,6 +88,8 @@ Each of the six ghost stories ends with a short, narrated film. The three painte
 Windows builds embed the ghost-and-button icon in the executable. On macOS, run
 `cargo build --release --locked` followed by `python3 tools/package_macos.py`. The resulting
 `target/macos/Spare Change for Spirits.app` includes the Finder and Dock icon and the game assets.
+For a binary built with `--features demo`, run `python3 tools/package_macos.py --edition demo`.
+The demo bundle is written to `target/macos/demo/Spare Change for Spirits.app`.
 Pass a prebuilt macOS executable to package an Intel, Apple Silicon or Universal build. For Steam,
 place the matching `libsteam_api.dylib` beside that executable before packaging. The packager
 includes it in `Contents/Frameworks` before signing the bundle on macOS.
@@ -108,6 +110,8 @@ one run. Windows, Linux and macOS run in parallel, each with its own Cargo cache
 the Rust tests for both editions and start each staged game with `--simulate 1` to check that
 it finds the packaged assets.
 
+For Windows packages alone, choose **Actions → Windows builds → Run workflow**. This manual workflow builds the x86-64 full game and demo on one Ubuntu runner using MinGW-w64. Both editions share their compiled dependencies, and Wine runs the tests and starts each packaged executable. [Windows builds workflow](.github/workflows/windows.yml)
+
 | Platform | Full game artifact | Demo artifact |
 | --- | --- | --- |
 | Windows x86-64 | `SpareChangeForSpirits-windows` | `SpareChangeForSpirits-windows-demo` |
@@ -117,7 +121,7 @@ it finds the packaged assets.
 Download the artifacts from the run summary. The Windows download contains the executable and
 its files. Extract the Linux `.tar.gz` to keep the executable permissions. Extract the macOS
 `.zip` to get the ad-hoc signed Universal `.app`. Each edition includes its Steam runtime,
-assets and licenses.
+assets and licenses. All three platforms use the same five-night asset selection for the demo.
 
 The workflow runs on pushes to `main` and tags matching `v*`, and can be started manually under
 *Actions → Desktop builds → Run workflow*. Commits marked `[skip ci]` skip the automatic run.
@@ -167,9 +171,7 @@ Special customers:
 - **Hedda's letters** – the player inherited the shop from great-aunt Hedda. Her first letter
   waits on the first evening, the others turn up when improvements clear her old junk
   (`letter` in `upgrades.ron`). At the finale she comes home through the shop door.
-- **Ghost book** – every kind of ghost the shop meets gets a page that fills in while playing:
-  how often it came and was served, what it likes, how it pays and the wishes heard so far, with
-  the regulars, Hedda's letters and the keepsakes (pause menu or the evening panel, `book.rs`).
+- **Ghost book** – seeing a visitor for the first time adds their name to the index, even if they turn away at the door. Select the name to see a painted portrait, a short character note and the traits you can use at the counter. The page also keeps track of visits, wishes heard and wares supplied. The book holds letters, keepsakes and records of returning regulars. In the shop and at the harbour, the expected guest list links familiar names to their pages. An unfamiliar visitor is listed anonymously.
   Next-night orders have a slip showing the customer, ware, quantity and collection night. Pin a slip to mark its crate on the ferry. The book keeps the outcome when an order is collected or expires.
 - **Regulars** – a ghost served well may come back now and then by name (Mrs Wispel, Captain
   Brine …), often for the ware it bought the first time, and tips more often as it returns. A regular can recall its last purchase or recognise a keepsake it has seen in the shop before. The ghost book records the remark and the wish from that visit (`regulars` in `config.ron`, `regulars.rs`).
@@ -177,7 +179,7 @@ Special customers:
   it come more often while one is left (`showcase_attract`, `showcase.rs`).
 - **Furniture sets** – three matching pieces in the shop draw certain ghosts and add to the
   atmosphere, e.g. the dressing room (mirror, vanity, folding screen) for vain ghosts and
-  brides, or Ida's keepsakes as the seafarer's corner (`sets.ron`, `sets.rs`). With a furnishing or removal tool selected, hover over a floor square to see which visiting ghosts would gain or lose a condition they need, including the effects of replacing a piece or completing a set.
+  brides, or Ida's keepsakes as the seafarer's corner (`sets.ron`, `sets.rs`). With a furnishing or removal tool selected, hover over a floor square to see how the atmosphere would change and which familiar guests would gain or lose a condition they need, including the effects of replacing a piece or completing a set.
 - **Apprentice** – an improvement from the Reaper: a helper ghost behind the counter serves up
   to three customers a night who wait in line with a ware from the shelves (`apprentice.rs`).
 

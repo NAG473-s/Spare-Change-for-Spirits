@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the current platform's Steam redistributable from the pinned crate."""
+"""Fetch a desktop platform's Steam redistributable from the pinned crate."""
 
 import argparse
 import hashlib
@@ -12,9 +12,9 @@ from urllib.request import urlopen
 VERSION = "0.13.0"
 SHA256 = "ae139f051204a4af015d4f0ed3a1f7a51020d03a44c7cf249168c543d88131e9"
 LIBRARIES = {
-    "win32": "win64/steam_api64.dll",
+    "windows": "win64/steam_api64.dll",
     "linux": "linux64/libsteam_api.so",
-    "darwin": "osx/libsteam_api.dylib",
+    "macos-universal": "osx/libsteam_api.dylib",
 }
 
 
@@ -36,5 +36,7 @@ def fetch(destination, library):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
+    parser.add_argument("--platform", choices=LIBRARIES,
+                        default={"win32": "windows", "darwin": "macos-universal"}.get(sys.platform, sys.platform))
     args = parser.parse_args()
-    fetch(args.destination, LIBRARIES[sys.platform])
+    fetch(args.destination, LIBRARIES[args.platform])

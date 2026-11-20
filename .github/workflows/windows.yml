@@ -1,0 +1,18 @@
+name: Windows builds
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-builds-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Windows x64 · full and demo
+    uses: ./.github/workflows/package-desktop.yml
+    with:
+      runner: ubuntu-latest
+      platform: windows

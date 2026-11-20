@@ -12,11 +12,26 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 
+from package_assets import copy_assets
+
 ROOT = Path(__file__).resolve().parents[1]
 NAME = "Spare Change for Spirits"
 BINARY = "spare_change_for_spirits"
 ICON = "spare-change-for-spirits.icns"
 STEAM_LIBRARY = "libsteam_api.dylib"
+
+
+def publish_directory(staged, destination):
+    """Replace a complete package from a temporary sibling on the same filesystem."""
+    previous = staged.parent / "previous-package"
+    if destination.exists():
+        destination.rename(previous)
+    try:
+        staged.rename(destination)
+    except OSError:
+        if previous.exists():
+            previous.rename(destination)
+        raise
 
 
 def macos_architectures(path, file_type):
@@ -64,6 +79,8 @@ def macos_architectures(path, file_type):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--edition", choices=["full", "demo"], default="full",
+                        help="match the edition of the supplied game executable")
     parser.add_argument("binary", nargs="?", type=Path, help="macOS executable (defaults to the release build)")
     args = parser.parse_args()
     metadata = json.loads(subprocess.check_output(
@@ -81,7 +98,10 @@ def main():
     except (OSError, ValueError, struct.error) as error:
         parser.error(f"cannot package {binary}: {error}")
     version = next(p["version"] for p in metadata["packages"] if p["name"] == BINARY)
-    dest = target / "macos" / f"{NAME}.app"
+    output = target / "macos"
+    if args.edition == "demo":
+        output = output / "demo"
+    dest = output / f"{NAME}.app"
     dest.parent.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(dir=dest.parent) as tmp:
         app = Path(tmp) / dest.name
@@ -97,7 +117,7 @@ def main():
             frameworks.mkdir()
             shutil.copy2(steam_library, frameworks / STEAM_LIBRARY)
         shutil.copy2(ROOT / "art/icons" / ICON, resources / ICON)
-        shutil.copytree(ROOT / "assets", resources / "assets", ignore=shutil.ignore_patterns(".gitkeep"))
+        copy_assets(ROOT / "assets", resources / "assets", args.edition)
         # The game and Bevy both look for assets beside the executable.
         (macos / "assets").symlink_to("../Resources/assets", target_is_directory=True)
         for license_name in ("LICENSE", "THIRD_PARTY_LICENSES.txt"):
@@ -118,15 +138,7 @@ def main():
             }, plist)
         if sys.platform == "darwin":
             subprocess.run(["codesign", "--force", "--sign", "-", str(app)], check=True)
-        previous = Path(tmp) / "previous.app"
-        if dest.exists():
-            dest.rename(previous)
-        try:
-            app.rename(dest)
-        except OSError:
-            if previous.exists():
-                previous.rename(dest)
-            raise
+        publish_directory(app, dest)
     print(dest)
 
 

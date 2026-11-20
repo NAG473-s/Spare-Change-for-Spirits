@@ -1,0 +1,145 @@
+name: Package desktop editions
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  PLATFORM: ${{ inputs.platform }}
+  CACHE_PLATFORM: ${{ inputs.platform }}
+
+jobs:
+  package:
+    runs-on: ${{ inputs.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Linux build dependencies
+        if: inputs.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y g++ pkg-config libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev libxkbcommon-x11-0 libx11-dev
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Windows cross-compilation and Wine
+        id: cross
+        if: inputs.platform == 'windows' && runner.os == 'Linux'
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y g++-mingw-w64-x86-64-win32 wine wine64 xvfb xauth
+          export WINEPREFIX="$RUNNER_TEMP/wine" WINEARCH=win64
+          export WINEDEBUG=fixme-all WINEDLLOVERRIDES='mscoree,mshtml='
+          xvfb-run -a wineboot --init
+          {
+            echo "WINEPREFIX=$WINEPREFIX"
+            echo "WINEARCH=$WINEARCH"
+            echo "WINEDEBUG=$WINEDEBUG"
+            echo "WINEDLLOVERRIDES=$WINEDLLOVERRIDES"
+            echo "CARGO_BUILD_TARGET=x86_64-pc-windows-gnu"
+            echo "CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER=xvfb-run -a wine"
+            echo "CACHE_PLATFORM=windows-gnu-on-linux"
+          } >> "$GITHUB_ENV"
+
+      - name: Install Rust targets for both Mac architectures
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Restore build cache
+        id: cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          # Keep the large MinGW dependencies across manual runs with the same lockfile.
+          key: ${{ env.CACHE_PLATFORM }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-${{ steps.cross.outcome == 'success' && 'dependencies' || format('{0}-{1}', github.run_id, github.run_attempt) }}
+          restore-keys: |
+            ${{ env.CACHE_PLATFORM }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-
+            ${{ env.CACHE_PLATFORM }}-${{ steps.toolchain.outputs.cachekey }}-
+
+      - name: Build and test both editions
+        run: |
+          for edition in full demo; do
+            features=()
+            if [[ "$edition" == demo ]]; then features=(--features demo); fi
+            mkdir -p "editions/$edition"
+            if [[ "$RUNNER_OS" == macOS ]]; then
+              for arch in aarch64-apple-darwin x86_64-apple-darwin; do
+                cargo build --release --locked --target "$arch" "${features[@]}"
+              done
+              cargo test --release --locked --target aarch64-apple-darwin "${features[@]}"
+              lipo -create target/{aarch64,x86_64}-apple-darwin/release/spare_change_for_spirits \
+                -output "editions/$edition/spare_change_for_spirits"
+            else
+              suffix=""
+              if [[ "$PLATFORM" == windows ]]; then suffix=.exe; fi
+              cargo build --release --locked "${features[@]}"
+              cp "target/${CARGO_BUILD_TARGET:+$CARGO_BUILD_TARGET/}release/spare_change_for_spirits$suffix" "editions/$edition/"
+              cargo test --release --locked "${features[@]}"
+            fi
+          done
+
+      - name: Save build cache
+        if: >-
+          always() && steps.cache.outcome == 'success' && steps.cache.outputs.cache-hit != 'true' &&
+          (steps.cross.outcome != 'success' || success())
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Fetch verified Steam redistributable
+        run: python tools/fetch_steam_runtime.py "$RUNNER_TEMP/steam" --platform "$PLATFORM"
+
+      - name: Package and check the release files
+        run: |
+          prefix=()
+          runner=()
+          if [[ "$PLATFORM" == windows && "$RUNNER_OS" == Linux ]]; then
+            prefix=(xvfb-run -a)
+            runner=(--runner wine)
+          fi
+          for edition in full demo; do
+            "${prefix[@]}" python tools/package_ci.py "$PLATFORM" "$edition" "$RUNNER_TEMP/steam" "${runner[@]}"
+          done
+
+      - name: Upload full game
+        uses: actions/upload-artifact@v7
+        with:
+          name: SpareChangeForSpirits-${{ inputs.platform }}
+          path: dist/full/${{ inputs.platform }}/
+          if-no-files-found: error
+
+      - name: Upload demo
+        uses: actions/upload-artifact@v7
+        with:
+          name: SpareChangeForSpirits-${{ inputs.platform }}-demo
+          path: dist/demo/${{ inputs.platform }}/
+          if-no-files-found: error

@@ -14,7 +14,8 @@ both editions on each platform. It verifies the SHA-256 of `steamworks-sys` 0.13
 Valve’s redistributable from that package. Windows and Linux load the library beside the
 executable. The macOS Universal app includes both architectures in `Contents/Frameworks`.
 Use the full and demo artifacts for their respective depots. Unpack the Linux tarball and
-macOS app archive before uploading. See the [artifact names](../README.md#desktop-builds).
+macOS app archive before uploading. A local run of `tools/package_ci.py` stages each depot
+under `dist/<edition>/<platform>/`. See the [artifact names](../README.md#desktop-builds).
 
 ## Steam Cloud – full game and demo
 
