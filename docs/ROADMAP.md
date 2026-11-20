@@ -81,7 +81,7 @@ Checkboxes are ticked in the commit that finishes them.
 
 - [ ] Demo build with `--features demo` (nights 1–5); end screen with "continue with night 6"
       and a wishlist link; check that a finished demo save continues in the full build
-- [x] Windows workflow builds both editions
+- [x] One workflow builds both editions for Windows, Linux and macOS Universal
 - [ ] Demo build uploaded and submitted for Steam's build review
 - [ ] Second playtest round with the Early Access content
 

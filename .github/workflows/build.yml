@@ -1,0 +1,130 @@
+name: Desktop builds
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-builds-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  build:
+    name: ${{ matrix.name }} · full and demo
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            runner: windows-latest
+            platform: windows
+          - name: Linux x64
+            runner: ubuntu-24.04
+            platform: linux
+          - name: macOS Universal
+            runner: macos-15
+            platform: macos-universal
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y g++ pkg-config libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev libxkbcommon-x11-0 libx11-dev
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust targets for both Mac architectures
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Restore build cache
+        id: cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ matrix.platform }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ matrix.platform }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.lock') }}-
+            ${{ matrix.platform }}-${{ steps.toolchain.outputs.cachekey }}-
+
+      - name: Build and test both editions
+        run: |
+          for edition in full demo; do
+            features=()
+            if [[ "$edition" == demo ]]; then features=(--features demo); fi
+            mkdir -p "editions/$edition"
+            if [[ "$RUNNER_OS" == macOS ]]; then
+              for arch in aarch64-apple-darwin x86_64-apple-darwin; do
+                cargo build --release --locked --target "$arch" "${features[@]}"
+              done
+              cargo test --release --locked --target aarch64-apple-darwin "${features[@]}"
+              lipo -create target/{aarch64,x86_64}-apple-darwin/release/spare_change_for_spirits \
+                -output "editions/$edition/spare_change_for_spirits"
+            else
+              suffix=""
+              if [[ "$RUNNER_OS" == Windows ]]; then suffix=.exe; fi
+              cargo build --release --locked "${features[@]}"
+              cp "target/release/spare_change_for_spirits$suffix" "editions/$edition/"
+              cargo test --release --locked "${features[@]}"
+            fi
+          done
+
+      - name: Save build cache
+        if: always() && steps.cache.outcome == 'success'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Fetch verified Steam redistributable
+        run: python tools/fetch_steam_runtime.py "$RUNNER_TEMP/steam"
+
+      - name: Package and check the release files
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          for edition in full demo; do
+            python tools/package_ci.py "$PLATFORM" "$edition" "$RUNNER_TEMP/steam"
+          done
+
+      - name: Upload full game
+        uses: actions/upload-artifact@v7
+        with:
+          name: SpareChangeForSpirits-${{ matrix.platform }}
+          path: dist/full/
+          if-no-files-found: error
+
+      - name: Upload demo
+        uses: actions/upload-artifact@v7
+        with:
+          name: SpareChangeForSpirits-${{ matrix.platform }}-demo
+          path: dist/demo/
+          if-no-files-found: error

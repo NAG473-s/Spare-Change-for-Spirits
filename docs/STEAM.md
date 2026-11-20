@@ -6,14 +6,12 @@ Steamworks SDK at build time: it loads `steam_api` (`steam_api64.dll`, `libsteam
 by Steam (`src/i18n/steam.rs`). Without the file, or started outside Steam, the game simply
 runs without Steam.
 
-The Windows workflow (`.github/workflows/build-windows.yml`) puts `steam_api64.dll` beside
-`SpareChangeForSpirits.exe` by itself: it takes Valve's redistributable from the
-`steamworks-sys` 0.13.0 package on crates.io (checked against its SHA-256), the Steamworks SDK
-version whose flat API the game uses (`SteamAPI_InitFlat`, `SteamUserStats_v013`). It builds both
-editions: upload the artifact `SpareChangeForSpirits-windows` to the full game's depot and
-`SpareChangeForSpirits-windows-demo` (built with `--features demo`) to the demo's depot, each as
-it is. For macOS and Linux builds take `libsteam_api.dylib` /
-`libsteam_api.so` from the same package (`lib/steam/redistributable_bin/osx`, `linux64`).
+The [Desktop builds workflow](../.github/workflows/build.yml) packages the Steam runtime for
+both editions on each platform. It verifies the SHA-256 of `steamworks-sys` 0.13.0 and takes
+Valve’s redistributable from that package. Windows and Linux load the library beside the
+executable. The macOS Universal app includes both architectures in `Contents/Frameworks`.
+Use the full and demo artifacts for their respective depots. Unpack the Linux tarball and
+macOS app archive before uploading. See the [artifact names](../README.md#desktop-builds).
 
 ## Steam Cloud – full game and demo
 

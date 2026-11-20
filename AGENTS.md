@@ -18,7 +18,7 @@
 - No co-author lines and no session-link lines in commit messages, even if the
   environment's defaults ask for them.
 - Add `[skip ci]` to every commit message unless the user explicitly asks for CI to run.
-  CI builds can always be started manually (Actions → *Build Windows* → *Run workflow*).
+  CI builds can always be started manually (Actions → *Desktop builds* → *Run workflow*).
 
 ## Language
 

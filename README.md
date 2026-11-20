@@ -86,6 +86,9 @@ shows the time of night.
 Windows builds embed the ghost-and-button icon in the executable. On macOS, run
 `cargo build --release --locked` followed by `python3 tools/package_macos.py`. The resulting
 `target/macos/Spare Change for Spirits.app` includes the Finder and Dock icon and the game assets.
+Pass a prebuilt macOS executable to package an Intel, Apple Silicon or Universal build. For Steam,
+place the matching `libsteam_api.dylib` beside that executable before packaging. The packager
+includes it in `Contents/Frameworks` before signing the bundle on macOS.
 
 On Linux the game sets its window icon and application ID. To add it to the application menu,
 place `spare_change_for_spirits` on your PATH with `assets/` beside the real executable. Install
@@ -96,20 +99,27 @@ xdg-icon-resource install --mode user --novendor --size 512 art/icons/spare-chan
 xdg-desktop-menu install --mode user --novendor packaging/linux/spare-change-for-spirits.desktop
 ```
 
-## Windows build
+## Desktop builds
 
-The GitHub Actions workflow [`build-windows.yml`](.github/workflows/build-windows.yml) builds both
-editions as release `.exe`s, packages each together with `steam_api64.dll`, `assets/`, `LICENSE`
-and `THIRD_PARTY_LICENSES.txt` and uploads them as the artifacts `SpareChangeForSpirits-windows`
-(full game) and `SpareChangeForSpirits-windows-demo` (`--features demo`). The tests run for both.
+The [Desktop builds workflow](.github/workflows/build.yml) builds the full game and demo in
+one run. Windows, Linux and macOS run in parallel, each with its own Cargo cache. The jobs run
+the Rust tests for both editions and start each staged game with `--simulate 1` to check that
+it finds the packaged assets.
 
-- Runs on pushes to `main`, on tags `v*`, and manually via
-  *Actions → Build Windows → Run workflow*.
-- Commits containing `[skip ci]` do not trigger it (see [AGENTS.md](AGENTS.md)).
-- Build results are cached. The cache is saved right after building and testing, even when a
-  step failed or the run was cancelled, so the next run continues instead of starting over.
-  Only the very first run (or one after a Rust update) compiles everything.
-- A new run of the same branch waits for a running one instead of cancelling it.
+| Platform | Full game artifact | Demo artifact |
+| --- | --- | --- |
+| Windows x86-64 | `SpareChangeForSpirits-windows` | `SpareChangeForSpirits-windows-demo` |
+| Linux x86-64 | `SpareChangeForSpirits-linux` | `SpareChangeForSpirits-linux-demo` |
+| macOS Universal (Apple Silicon and Intel) | `SpareChangeForSpirits-macos-universal` | `SpareChangeForSpirits-macos-universal-demo` |
+
+Download the artifacts from the run summary. The Windows download contains the executable and
+its files. Extract the Linux `.tar.gz` to keep the executable permissions. Extract the macOS
+`.zip` to get the ad-hoc signed Universal `.app`. Each edition includes its Steam runtime,
+assets and licenses.
+
+The workflow runs on pushes to `main` and tags matching `v*`, and can be started manually under
+*Actions → Desktop builds → Run workflow*. Commits marked `[skip ci]` skip the automatic run.
+Runs for the same ref queue behind the current run.
 
 ## Gameplay
 
