@@ -653,7 +653,7 @@ fn open_market(
 ) {
     *location = Location::Market;
     sky.0 = DAY_SKY;
-    let night = progress.night;
+    let night = progress.calendar(&data);
     // The Reaper's single pieces: different products every day.
     let mut pool: Vec<String> = data
         .products

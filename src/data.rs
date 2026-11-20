@@ -352,8 +352,11 @@ pub struct Config {
     pub max_ghosts_in_shop: usize,
     pub grid_cols: usize,
     pub grid_rows: usize,
-    /// The last night of the full game.
+    /// The last night with written content (events, stories) in the full
+    /// game; later seasons keep the shop open without a story.
     pub last_night: u32,
+    /// Nights per season; each season tells its own story.
+    pub season_length: u32,
     /// The last night of the demo (built with `--features demo`). A save from
     /// the end of the demo continues in the full game with the night after.
     pub demo_nights: u32,
@@ -708,11 +711,16 @@ impl GameData {
         }
     }
 
-    /// Is the story with this index still running on this night: started,
-    /// and not every chapter done?
-    pub fn story_due(&self, i: usize, night: u32, chapter: usize) -> bool {
+    /// Is the story with this index still running on this calendar night:
+    /// started, and not every chapter done?
+    pub fn story_due(&self, i: usize, calendar: u32, chapter: usize) -> bool {
         let s = &self.stories[i];
-        night >= s.start_night && chapter < s.chapters.len()
+        calendar >= s.start_night && chapter < s.chapters.len()
+    }
+
+    /// The season a calendar night belongs to.
+    pub fn season_of(&self, calendar: u32) -> u32 {
+        (calendar.max(1) - 1) / self.config.season_length + 1
     }
 
     pub fn event(&self, night: u32) -> Option<&NightEvent> {
@@ -943,6 +951,11 @@ mod tests {
                     "story {g} {n}"
                 );
             }
+        }
+        // Every season that ends with a finale has an epilogue.
+        for story in data.stories.iter().filter(|s| s.finale) {
+            let season = data.season_of(story.start_night);
+            assert!(has(format!("season.{season}.epilogue")), "season {season}");
         }
         for n in 1..=HEDDA_LETTERS {
             assert!(has(format!("letter.{n}")), "letter {n}");

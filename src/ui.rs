@@ -785,7 +785,7 @@ fn reputation_tooltip(
     for g in data
         .ghosts
         .iter()
-        .filter(|g| g.unlock_night <= progress.night)
+        .filter(|g| g.unlock_night <= progress.calendar(&data))
     {
         let Some(min) = g.min_reputation else {
             continue;
@@ -808,7 +808,7 @@ fn reputation_tooltip(
             lang.f("rep_tip.rare_from", &[("min", &perks.rare_from)]),
         );
     }
-    if progress.night >= data.config.thief.from_night && rep < data.config.thief.below {
+    if progress.calendar(&data) >= data.config.thief.from_night && rep < data.config.thief.below {
         t.line(TipKind::Bad, lang.t("rep_tip.thief"));
     }
     t.line(TipKind::Hint, lang.t("rep_tip.earn"));
@@ -839,16 +839,23 @@ fn update_hud(
     };
     // Past the last night (the story still running, or after the season)
     // the night count has no end.
-    let key = if progress.night > data.config.final_night() || progress.free_play {
-        "hud_open"
+    // A season with a finale counts up to its last night; past it (the
+    // finale still open), or in a season without a story, the count is open.
+    let season_end = if cfg!(feature = "demo") {
+        data.config.final_night()
     } else {
+        progress.season_end(&data)
+    };
+    let key = if progress.season_has_finale(&data) && progress.night <= season_end {
         "hud"
+    } else {
+        "hud_open"
     };
     hud.0 = lang.f(
         key,
         &[
             ("night", &progress.night),
-            ("nights", &data.config.final_night()),
+            ("nights", &season_end),
             ("phase", &lang.t(phase.get().key())),
             ("time", &time),
             ("reputation", &progress.reputation),
@@ -1058,7 +1065,7 @@ fn build_evening_panel(
     upgrades: Res<Upgrades>,
     letter: Res<crate::market::FoundLetter>,
 ) {
-    let night = progress.night;
+    let night = progress.calendar(&data);
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     let max_crates = upgrades.crates_tonight(&data, night);
     let bought_units = bought.units(&data);
@@ -1244,7 +1251,7 @@ fn expected_guests(
     progress: &Progress,
     odds: &[f32],
 ) {
-    let night = progress.night;
+    let night = progress.calendar(data);
     let total: f32 = odds.iter().sum();
     if total <= 0.0 {
         return;
@@ -1548,7 +1555,10 @@ fn build_demo_end_panel(
     ui.text(&lang.f("end.reputation", &[("reputation", &progress.reputation)]));
     for (i, story) in data.stories.iter().enumerate() {
         let left = story.chapters.len().saturating_sub(progress.chapter(i));
-        if progress.night < story.start_night {
+        // This season's stories only.
+        if data.season_of(story.start_night) != progress.season
+            || progress.calendar(&data) < story.start_night
+        {
             continue;
         }
         if left == 0 {
@@ -1564,16 +1574,20 @@ fn build_demo_end_panel(
         ui.text(&lang.f("end.carry_over", &[("night", &(progress.night + 1))]));
         ui.dim(&lang.t("end.thanks"));
     } else {
-        ui.text(&lang.t("finale.epilogue"));
+        ui.text(&lang.t(&format!("season.{}.epilogue", progress.season)));
         ui.dim(&lang.t("end.thanks_full"));
+        // On to a season with its own story, or simply keep the shop open.
+        let next_story = data
+            .stories
+            .iter()
+            .any(|s| data.season_of(s.start_night) == progress.season + 1);
+        let label = if next_story {
+            "end.next_season"
+        } else {
+            "end.keep_playing"
+        };
         let root = ui.root();
-        ui.button_in(
-            root,
-            &lang.t("end.keep_playing"),
-            Action::KeepPlaying,
-            false,
-            true,
-        );
+        ui.button_in(root, &lang.t(label), Action::KeepPlaying, false, true);
     }
     ui.spacer();
     ui.primary(&lang.t("end.back"), Action::QuitToMenu);

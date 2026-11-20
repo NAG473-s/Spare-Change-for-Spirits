@@ -846,7 +846,7 @@ fn update_tips(
         })
         .flatten()
         .map(|key| {
-            let crates = upgrades.crates_tonight(&data, progress.night);
+            let crates = upgrades.crates_tonight(&data, progress.calendar(&data));
             lang.f(key, &[("count", &crates)])
         });
     if *shown == tip {

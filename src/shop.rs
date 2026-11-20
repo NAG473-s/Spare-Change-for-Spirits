@@ -720,7 +720,7 @@ fn shelf_tooltip(
         TipKind::Text,
         lang.f(
             "ferry.tip_price",
-            &[("price", &sale_price(&data, &p.id, progress.night))],
+            &[("price", &sale_price(&data, &p.id, progress.calendar(&data)))],
         ),
     );
     t.line(

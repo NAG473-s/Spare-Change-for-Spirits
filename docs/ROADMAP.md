@@ -54,7 +54,7 @@ Checkboxes are ticked in the commit that finishes them.
 ### Week 3 · Dec 7 – Dec 13: content for Early Access
 
 - [x] Nights 6–10: new events in `events.ron`, rising difficulty
-- [ ] 4 new ghosts with wishes, sprites and sheets ordered
+- [x] 4 new ghosts with wishes, sprites and sheets ordered
 - [x] A second story ghost for nights 6–10: Ida the lighthouse keeper repairs the harbour
       lighthouse chapter by chapter; Hedda's letters and the finale tell the player's own story
       (`story.ron`)

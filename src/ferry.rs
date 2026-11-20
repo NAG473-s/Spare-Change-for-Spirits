@@ -390,7 +390,7 @@ fn spawn_boat(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let night = progress.night;
+    let night = progress.calendar(&data);
     let mut b = Builder {
         commands,
         asset_server: &asset_server,
@@ -797,7 +797,7 @@ fn on_crate_click(
             &data,
             &crates,
             &drawer,
-            upgrades.crates_tonight(&data, progress.night),
+            upgrades.crates_tonight(&data, progress.calendar(&data)),
             &id,
         ) {
             Some("ferry.tip_full") => log.push(lang.t("log.boat_full")),
@@ -881,7 +881,7 @@ fn animate_crates(
             &data,
             &crates,
             &drawer,
-            upgrades.crates_tonight(&data, progress.night),
+            upgrades.crates_tonight(&data, progress.calendar(&data)),
             &item.id,
         )
         .is_none();
@@ -978,7 +978,7 @@ fn update_crate_labels(
         let n = bought.0.get(&item.id).copied().unwrap_or(0);
         let new = data
             .product(&item.id)
-            .is_some_and(|p| p.unlock_night == progress.night && progress.night > 1);
+            .is_some_and(|p| p.unlock_night == progress.calendar(&data) && p.unlock_night > 1);
         text.0 = if n > 0 {
             format!("×{n}")
         } else if new {
@@ -1043,7 +1043,7 @@ fn update_tooltip(
     }
     *shown = Some(hovered_entity);
     let Some(p) = data.product(&id) else { return };
-    let night = progress.night;
+    let night = progress.calendar(&data);
     let body = tooltip.0;
     let mut ui = PanelBuilder::new(&mut commands, body, &font);
     let heading = ui.node(

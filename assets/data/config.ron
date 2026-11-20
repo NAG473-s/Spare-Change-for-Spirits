@@ -32,8 +32,12 @@
     // improvements at the market (upgrades.ron) clear the rest.
     start_area: (cols: 6, rows: 3),
 
-    // The full game ends after `last_night`, the demo (cargo build --features demo)
-    // after `demo_nights`; a finished demo save continues in the full game.
+    // The game is told in seasons of `season_length` nights, each with its own story; a season
+    // lasts until its finale is done. `last_night` is the last night with written events and
+    // stories – later seasons keep the shop open without a story. The demo
+    // (cargo build --features demo) stops after `demo_nights`; a finished demo save continues
+    // in the full game.
+    season_length: 10,
     last_night: 10,
     demo_nights: 5,
 

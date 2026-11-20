@@ -77,8 +77,11 @@ pub struct Progress {
     pub story_tries: Vec<u32>,
     /// Stories whose ghost has a parcel from the ferryman waiting.
     pub parcels: Vec<usize>,
-    /// The season is over and the shop stays open anyway.
-    pub free_play: bool,
+    /// The season the shop is in (1, 2, …): each tells its own story over
+    /// `season_length` nights and lasts until its finale is done.
+    pub season: u32,
+    /// The night the current season began.
+    pub season_start: u32,
 }
 
 /// From this many failed nights on, a story ghost names the ware it needs.
@@ -92,8 +95,41 @@ impl Progress {
             story: Vec::new(),
             story_tries: Vec::new(),
             parcels: Vec::new(),
-            free_play: false,
+            season: 1,
+            season_start: 1,
         }
+    }
+
+    /// The night in the story's calendar: what events, unlocks and story
+    /// ghosts go by. Season 2 starts at calendar night `season_length + 1`
+    /// whenever season 1 actually ended; while a season waits for its finale
+    /// past its last night, its last calendar night repeats.
+    pub fn calendar(&self, data: &GameData) -> u32 {
+        let len = data.config.season_length;
+        let into = (self.night + 1)
+            .saturating_sub(self.season_start)
+            .clamp(1, len);
+        (self.season - 1) * len + into
+    }
+
+    /// The night the current season is meant to end (later if its finale is
+    /// still open).
+    pub fn season_end(&self, data: &GameData) -> u32 {
+        self.season_start + data.config.season_length - 1
+    }
+
+    /// Does the current season end with a finale story?
+    pub fn season_has_finale(&self, data: &GameData) -> bool {
+        data.stories
+            .iter()
+            .any(|s| s.finale && data.season_of(s.start_night) == self.season)
+    }
+
+    /// The next season begins the night after this one.
+    pub fn next_season(&mut self) {
+        self.night += 1;
+        self.season += 1;
+        self.season_start = self.night;
     }
 
     /// The next chapter of story `i`.
@@ -108,7 +144,7 @@ impl Progress {
 
     /// Does the ghost of story `i` come tonight?
     pub fn story_due(&self, data: &GameData, i: usize) -> bool {
-        data.story_due(i, self.night, self.chapter(i))
+        data.story_due(i, self.calendar(data), self.chapter(i))
     }
 
     /// Does the ghost of story `i` say plainly what it needs?
@@ -137,30 +173,26 @@ impl Progress {
         self.story_tries[i] += 1;
     }
 
-    /// Is the finale behind us? Without a finale story the season ends at
-    /// the last night.
+    /// Is the finale of the current season behind us? A season without a
+    /// finale story never ends: the shop just stays open.
     pub fn finale_done(&self, data: &GameData) -> bool {
-        let mut finales = data.stories.iter().enumerate().filter(|(_, s)| s.finale);
-        let mut any = false;
-        let done = finales.all(|(i, s)| {
-            any = true;
-            self.chapter(i) >= s.chapters.len()
-        });
-        if any {
-            done
-        } else {
-            self.night >= data.config.last_night
-        }
+        self.season_has_finale(data)
+            && data
+                .stories
+                .iter()
+                .enumerate()
+                .filter(|(_, s)| s.finale && data.season_of(s.start_night) == self.season)
+                .all(|(i, s)| self.chapter(i) >= s.chapters.len())
     }
 
     /// Does the season end with this night? The demo stops at its last
-    /// night; the full game lasts until the finale, at least `last_night`
-    /// nights, unless the player keeps the shop open afterwards.
+    /// night; the full game's seasons last `season_length` nights or until
+    /// their finale is done, whichever is later.
     pub fn season_over(&self, data: &GameData) -> bool {
         if cfg!(feature = "demo") {
             return self.night >= data.config.final_night();
         }
-        !self.free_play && self.night >= data.config.last_night && self.finale_done(data)
+        self.night >= self.season_end(data) && self.finale_done(data)
     }
 }
 
@@ -255,7 +287,7 @@ fn start_night(
 ) {
     *clock = NightClock {
         elapsed: 0.0,
-        length: data.night_length(progress.night) * bonus.0,
+        length: data.night_length(progress.calendar(&data)) * bonus.0,
     };
     bonus.0 = 1.0;
     *report = NightReport {
@@ -322,15 +354,14 @@ pub fn deliver_parcels(
     }
 }
 
-/// After the season: the shop stays open, night after night.
+/// After a season's finale: on to the next season.
 fn keep_playing(
     mut actions: MessageReader<Action>,
     mut progress: ResMut<Progress>,
     mut next: ResMut<NextState<Phase>>,
 ) {
     if actions.read().any(|a| *a == Action::KeepPlaying) {
-        progress.free_play = true;
-        progress.night += 1;
+        progress.next_season();
         next.set(Phase::Day);
     }
 }
@@ -444,22 +475,26 @@ mod tests {
         }
     }
 
+    // The demo stops after its last night instead.
+    #[cfg(not(feature = "demo"))]
     #[test]
-    fn the_season_lasts_until_the_finale() {
+    fn a_season_lasts_until_its_finale() {
         let data = GameData::load();
+        let len = data.config.season_length;
         let smooth = play(&data, &[]);
-        assert_eq!(
-            smooth.night, data.config.last_night,
-            "every chapter on time"
-        );
-        // Two failed nights push the finale back by two nights.
+        assert_eq!(smooth.night, len, "every chapter on time");
+        // Two failed nights push the finale back by two nights; meanwhile
+        // the season's last calendar night repeats.
         let late = play(&data, &[7, 8]);
-        assert_eq!(late.night, data.config.last_night + 2);
+        assert_eq!(late.night, len + 2);
+        assert_eq!(late.calendar(&data), len);
         assert!(late.finale_done(&data));
-        // Keeping the shop open after the finale: the season stays over.
-        let mut free = late.clone();
-        free.free_play = true;
-        assert!(!free.season_over(&data));
+        // The next season starts its own calendar the night after.
+        let mut next = late.clone();
+        next.next_season();
+        assert_eq!((next.season, next.night), (2, len + 3));
+        assert_eq!(next.calendar(&data), len + 1);
+        assert!(!next.season_over(&data));
     }
 
     #[test]

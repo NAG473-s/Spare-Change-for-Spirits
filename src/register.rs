@@ -216,7 +216,7 @@ fn serve_front_ghost(
                     continue;
                 }
                 let base = data.product(product).map_or(1, |p| p.price);
-                let factor = def.pay_multiplier * data.price_factor(progress.night);
+                let factor = def.pay_multiplier * data.price_factor(progress.calendar(&data));
                 let price = ((base as f32 * factor).round() as u32).max(1);
                 let purse = ghost_payment(price, &def.pays_with, &mut rng);
                 let counterfeit = rng.chance(def.quirks.counterfeit_chance);

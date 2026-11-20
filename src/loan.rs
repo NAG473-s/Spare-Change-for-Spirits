@@ -82,7 +82,7 @@ pub fn lend(
     mut accounts: ResMut<Accounts>,
     mut log: ResMut<GameLog>,
 ) {
-    let night = progress.night;
+    let night = progress.calendar(&data);
     if crates.0 > 0 || !is_stuck(&data, night, drawer.total(), &stock) {
         return;
     }

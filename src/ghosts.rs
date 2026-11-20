@@ -190,7 +190,7 @@ fn spawn_ghosts(
     // Good reputation = more customers.
     let (min, max) = data.config.spawn_interval_secs;
     let rep_factor = data.config.reputation_spawn_factor(progress.reputation);
-    let night = progress.night;
+    let night = progress.calendar(&data);
     timer.0 =
         rng.range(min, max) * rep_factor * data.spawn_factor(night) * upgrades.spawn_factor(&data);
 
@@ -659,8 +659,9 @@ fn plan_thief(
     mut tonight: ResMut<ThiefTonight>,
 ) {
     let t = data.config.thief;
-    let comes =
-        progress.night >= t.from_night && progress.reputation < t.below && rng.chance(t.chance);
+    let comes = progress.calendar(&data) >= t.from_night
+        && progress.reputation < t.below
+        && rng.chance(t.chance);
     tonight.0 = comes.then(|| rng.range(t.arrive_at.0, t.arrive_at.1));
 }
 
@@ -692,7 +693,8 @@ fn spawn_thief(
     if wares.is_empty() {
         return;
     }
-    if layout.atmosphere(&data, progress.night).light >= data.config.thief.scared_by_light {
+    if layout.atmosphere(&data, progress.calendar(&data)).light >= data.config.thief.scared_by_light
+    {
         log.push(lang.t("log.thief_scared"));
         return;
     }
@@ -905,7 +907,7 @@ fn ghost_ai(
                 let quirks = &data.ghosts[g.def].quirks;
                 let calm = quirks
                     .calm_with
-                    .is_some_and(|n| n.is_met(&layout.atmosphere(&data, progress.night)));
+                    .is_some_and(|n| n.is_met(&layout.atmosphere(&data, progress.calendar(&data))));
                 if !calm
                     && rng.chance(quirks.knock_chance)
                     && let Some(product) = g.browse_cell.and_then(|c| {

@@ -41,7 +41,7 @@ impl Plugin for SavePlugin {
                 autosave_night.after(crate::day_cycle::deliver_parcels),
             )
             // Keeping the shop open after the season: continue at that market.
-            .add_systems(OnExit(Phase::DemoEnd), autosave_free_play)
+            .add_systems(OnExit(Phase::DemoEnd), autosave_next_season)
             .add_systems(
                 OnEnter(Phase::Morning),
                 autosave_dawn
@@ -65,9 +65,11 @@ pub struct SaveGame {
     /// Stories whose ghost has a parcel from the ferryman waiting.
     #[serde(default)]
     pub parcels: Vec<usize>,
-    /// The season is over and the shop stays open anyway.
-    #[serde(default)]
-    pub free_play: bool,
+    /// The season the shop is in, and the night it began (see `Progress`).
+    #[serde(default = "first")]
+    pub season: u32,
+    #[serde(default = "first")]
+    pub season_start: u32,
     pub drawer: Purse,
     pub stock: BTreeMap<String, Vec<u32>>,
     pub cells: Vec<CellContent>,
@@ -404,7 +406,8 @@ impl GameState<'_> {
             story: self.progress.story.clone(),
             story_tries: self.progress.story_tries.clone(),
             parcels: self.progress.parcels.clone(),
-            free_play: self.progress.free_play,
+            season: self.progress.season,
+            season_start: self.progress.season_start,
             drawer: self.drawer.0,
             stock: self.stock.units().clone(),
             cells: self.layout.cells.clone(),
@@ -424,7 +427,8 @@ impl GameState<'_> {
             story: save.story.clone(),
             story_tries: save.story_tries.clone(),
             parcels: save.parcels.clone(),
-            free_play: save.free_play,
+            season: save.season,
+            season_start: save.season_start,
         };
         self.drawer.0 = save.drawer;
         *self.stock = Stock::from_units(save.stock.clone());
@@ -456,6 +460,10 @@ impl GameState<'_> {
 /// past this build's last night (the end of the demo, played in the demo).
 /// Saves never break between the demo and the full game: new fields need
 /// `#[serde(default)]` instead of a new `SAVE_VERSION`.
+fn first() -> u32 {
+    1
+}
+
 pub fn can_continue(save: &SaveGame, final_night: u32) -> bool {
     // The full game lasts until the finale, however many nights it takes.
     save.night <= final_night || (!cfg!(feature = "demo") && !save.finished)
@@ -482,8 +490,10 @@ fn autosave_night(state: GameState, profile: Res<ActiveProfile>, mut start: ResM
     start.0 = Some(save);
 }
 
-fn autosave_free_play(state: GameState, profile: Res<ActiveProfile>) {
-    if state.progress.free_play {
+fn autosave_next_season(state: GameState, profile: Res<ActiveProfile>) {
+    // Only when the next season has just begun (not when quitting to the menu).
+    let p = &state.progress;
+    if p.season > 1 && p.season_start == p.night {
         write_slot(
             profile.0,
             Slot::Auto,
@@ -535,7 +545,8 @@ mod tests {
             story: vec![5],
             story_tries: Vec::new(),
             parcels: Vec::new(),
-            free_play: false,
+            season: 1,
+            season_start: 1,
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),
@@ -561,7 +572,8 @@ mod tests {
             story: vec![2],
             story_tries: Vec::new(),
             parcels: Vec::new(),
-            free_play: false,
+            season: 1,
+            season_start: 1,
             drawer: Purse {
                 buttons: 4,
                 candles: 1,
@@ -595,7 +607,8 @@ mod tests {
             story: vec![0],
             story_tries: Vec::new(),
             parcels: Vec::new(),
-            free_play: false,
+            season: 1,
+            season_start: 1,
             drawer: Purse::default(),
             stock: BTreeMap::new(),
             cells: Vec::new(),
