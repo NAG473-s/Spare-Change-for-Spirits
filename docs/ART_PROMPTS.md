@@ -24,8 +24,7 @@ python3 tools/check_models.py
 
 ## To do
 
-- Optional gesture sheets for every ghost (pay, ascend, impatient, goodbye first), see
-  *Ghost gesture sheets* below.
+All eight activities under *Ghost gesture sheets* have been drawn for all thirteen ghosts.
 
 Ida, Hedda and the shade have portraits and four-frame idle sheets
 in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
@@ -38,9 +37,9 @@ floor, market street map and quay paving. The opening score and all 31 readings 
 `assets/sounds/`. All thirteen ghost portraits have gestures for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
-To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
-It marks absent files with `missing` or `no icon`. The environment textures and their paths are
-listed under [Water and light](#water-and-light--canvas-1024--1024).
+To check models, icons and gesture sheets on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
+It reports `missing` for absent assets, `no icon` for absent icons and `no sheet` for absent gesture sheets.
+The environment textures and their paths are listed under [Water and light](#water-and-light--canvas-1024--1024).
 
 ## Workflow
 
@@ -153,18 +152,18 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
 
-## Ghost gesture sheets – canvas 1024 × 1536 (optional, open)
+## Ghost gesture sheets – canvas 1024 × 1536 (delivered)
 
-Each ghost can get a drawn four-frame sheet for each of its eight activities. While a ghost does
-something it has a sheet for, the game plays that sheet (8 frames per second, looping) instead
-of bending the portrait; without one it keeps bending the portrait as now. So sheets can arrive
-one at a time, in any order. Worth ordering first, because they are seen most: **pay**, **ascend**,
-**impatient**, **goodbye** – then browse, arrive, approach, flee. `python3 tools/check_models.py`
-lists every sheet with `ok` or `no sheet`.
+All thirteen ghosts have a painted four-frame loop for each of the eight activities in the table.
+The 104 sheets live in `assets/sprites/ghosts/`. Each PNG is a 704 × 264 strip of four
+176 × 264 frames. The game switches sheets when the activity changes and plays eight frames
+per second. For a new ghost with a missing sheet, the animated portrait supplies the gesture.
+Run `python3 tools/check_models.py` to check each sheet for `ok` or `no sheet`.
 
-Order them like the idle sheets: one ChatGPT conversation per ghost, its portrait (and idle
-sheet) attached as reference, one gesture per image as a **2 × 2 grid** on one 1024 × 1536
-canvas. Start each prompt with:
+For a new ghost, start with **pay**, **ascend**, **impatient** and **goodbye**, the most visible
+activities. Use one conversation per ghost and attach its portrait and idle sheet as references.
+Request one gesture per image as a **2 × 2 grid** on a 1024 × 1536 canvas. Start each prompt
+with the following block.
 
 ```
 Four frames of a looping animation of this ghost, arranged as a 2 x 2 grid on
