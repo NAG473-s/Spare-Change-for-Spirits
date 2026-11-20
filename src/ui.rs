@@ -1616,7 +1616,6 @@ fn build_night_panel(
         }
         ui.spacer();
         ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
-        drop(ui);
         for (entity, coin) in commands_later {
             match coin {
                 Some(coin) => commands.entity(entity).insert(ChangeCoin(coin)),
