@@ -24,12 +24,10 @@ python3 tools/check_models.py
 
 ## To do
 
-- Sprite and idle sheet for the `shade`, the thief that visits shops with a bad reputation,
-  see *Ghosts introduced in later nights* below.
 - Optional gesture sheets for every ghost (pay, ascend, impatient, goodbye first), see
   *Ghost gesture sheets* below.
 
-Everything else is delivered. Ida and Hedda have portraits and four-frame idle sheets
+Ida, Hedda and the shade have portraits and four-frame idle sheets
 in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
 apron are in `assets/sprites/decor/`.
 
@@ -37,7 +35,7 @@ The sign emblems and the shop door’s porthole light are included. The market n
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
 floor, market street map and quay paving. The opening score and all 31 readings are in
-`assets/sounds/`. All twelve ghost portraits have gestures for nine activities.
+`assets/sounds/`. All thirteen ghost portraits have gestures for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -96,7 +94,7 @@ Ghosts are friendly, semi-transparent, softly glowing and float slightly; no leg
 Keep the same body shape and size as the existing ghosts; vary colour, face and one accessory.
 In the game they are about 1.35 m tall and face the camera.
 
-All twelve sprites are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
+All thirteen sprites are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
 
 **Ghosts introduced in later nights:**
 
@@ -126,11 +124,12 @@ All twelve sprites are included in `assets/sprites/ghosts/`. The prompts below c
 The portraits move differently as a ghost peeks in, reaches towards a shelf, glides to the
 counter, waits, grows impatient, pays, waves goodbye, flees or rises into the light. The game
 places the head, hand and hem movements on each portrait separately, including the cat's paw
-and the knight's carried helmet. Ida holds her lantern by its handle and base, and Hedda folds
-her hands over her apron. The four drawn frames in `<id>_sheet.png` add an idle loop at
+and the knight's carried helmet. Ida holds her lantern by its handle and base, Hedda folds
+her hands over her apron, and the shade reaches out while clutching its patched sack.
+The four drawn frames in `<id>_sheet.png` add an idle loop at
 8 frames per second. A single `<id>.png` can perform all nine gestures on its own.
 
-All twelve ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
+All thirteen ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
 1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
 attached as reference:
 
