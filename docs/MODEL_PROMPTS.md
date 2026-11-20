@@ -9,17 +9,19 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- Season 2, "The Long Winter":
-  - the products `gear`, `clock_key`, `little_bell`, `leash` and `snow_globe` (*Products*);
-  - the keepsakes `chalk_drawing`, `dog_basket`, `cog_wheel` and `cuckoo_clock` (*Keepsakes*);
-  - the tower clock `clock_tower` with `clock_hand_hour` and `clock_hand_minute` (*The village
-    market*);
-  - Lotte's ghost dog Pfote, `dog_body` and `dog_tail` (*Animals*).
-- The `workbench` (decor, see *Furniture* below, `assets/models/decor/workbench.glb`).
-- Three mishaps during the night: `draught`, `crow` and `leak` (see *Mishaps* below,
-  `assets/models/incidents/<id>.glb`).
+None. All currently ordered models are delivered, including:
 
-Everything else is delivered. The models for Ida’s four keepsakes (logbook, ship’s bell,
+- Season 2, "The Long Winter": the five products `gear`, `clock_key`, `little_bell`, `leash`
+  and `snow_globe` in `assets/models/products/`; the four keepsakes `chalk_drawing`,
+  `dog_basket`, `cog_wheel` and `cuckoo_clock` in `assets/models/decor/`.
+- The tower clock `clock_tower` and its separate pivoted hands `clock_hand_hour` and
+  `clock_hand_minute` in `assets/models/market/`. The dial centre is at 2.75 m, aligned
+  with the hands placed by the game.
+- Lotte's ghost dog Pfote, `dog_body` and the separate `dog_tail`, in `assets/models/critters/`.
+- The `workbench` in `assets/models/decor/`.
+- The three night mishaps `draught`, `crow` and `leak` in `assets/models/incidents/`.
+
+The models for Ida’s four keepsakes (logbook, ship’s bell,
 sea chart and lifebuoy) and Hedda’s apron are in `assets/models/decor/`. Their dimensions
 and replacement prompts are listed under *Keepsakes*.
 

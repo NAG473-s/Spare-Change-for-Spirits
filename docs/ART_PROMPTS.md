@@ -24,15 +24,21 @@ python3 tools/check_models.py
 
 ## To do
 
-- Season 2, "The Long Winter": portraits (and later idle and gesture sheets) for `snow`,
-  `lantern_child`, `lotte` and `anselm` (*Ghosts introduced in later nights*); icons for the
-  products `gear`, `clock_key`, `little_bell`, `leash`, `snow_globe` and the keepsakes
-  `chalk_drawing`, `dog_basket`, `cog_wheel`, `cuckoo_clock` (prompts: as for their models in
-  [MODEL_PROMPTS.md](MODEL_PROMPTS.md)).
-- Icon for the `workbench` (kind `decor`): "A sturdy little wooden workbench with a vice, a
-  hammer and a half-repaired music box on top."
+- Later: idle and gesture sheets for the four season 2 ghosts `snow`, `lantern_child`,
+  `lotte` and `anselm`. Their portraits already perform all nine activities using the
+  game's portrait animation. The four idle sheets and 32 gesture sheets remain open.
 
-All eight activities under *Ghost gesture sheets* have been drawn for all thirteen ghosts.
+All currently ordered portraits and icons are delivered:
+
+- Season 2 portraits for `snow`, `lantern_child`, `lotte` and `anselm` in
+  `assets/sprites/ghosts/` (176 × 264, transparent PNG).
+- Product icons for `gear`, `clock_key`, `little_bell`, `leash` and `snow_globe` in
+  `assets/sprites/products/` (96 × 96, transparent PNG).
+- Keepsake icons for `chalk_drawing`, `dog_basket`, `cog_wheel` and `cuckoo_clock`, plus the
+  `workbench` icon, in `assets/sprites/decor/` (96 × 96, transparent PNG). Replacement
+  prompts follow their models in [MODEL_PROMPTS.md](MODEL_PROMPTS.md).
+
+All eight activities under *Ghost gesture sheets* have been drawn for the original thirteen ghosts.
 
 Ida, Hedda and the shade have portraits and four-frame idle sheets
 in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
@@ -42,7 +48,7 @@ The sign emblems and the shop door’s porthole light are included. The market n
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
 floor, market street map and quay paving. The opening score and all 31 readings are in
-`assets/sounds/`. All thirteen ghost portraits have gestures for nine activities.
+`assets/sounds/`. The original thirteen ghost portraits have drawn sheets for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models, icons and gesture sheets on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -101,7 +107,7 @@ Ghosts are friendly, semi-transparent, softly glowing and float slightly; no leg
 Keep the same body shape and size as the existing ghosts; vary colour, face and one accessory.
 In the game they are about 1.35 m tall and face the camera.
 
-All thirteen sprites are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
+All seventeen portraits are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
 
 **Ghosts introduced in later nights:**
 
@@ -140,7 +146,8 @@ her hands over her apron, and the shade reaches out while clutching its patched 
 The four drawn frames in `<id>_sheet.png` add an idle loop at
 8 frames per second. A single `<id>.png` can perform all nine gestures on its own.
 
-All thirteen ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
+The original thirteen ghosts have four-frame idle sheets; the four season 2 sheets are deferred.
+To draw or redraw a sheet, ask for a **2 × 2 grid** on one
 1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
 attached as reference:
 
@@ -164,9 +171,9 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
 
-## Ghost gesture sheets – canvas 1024 × 1536 (delivered)
+## Ghost gesture sheets – canvas 1024 × 1536 (original thirteen delivered)
 
-All thirteen ghosts have a painted four-frame loop for each of the eight activities in the table.
+The original thirteen ghosts have a painted four-frame loop for each of the eight activities in the table.
 The 104 sheets live in `assets/sprites/ghosts/`. Each PNG is a 704 × 264 strip of four
 176 × 264 frames. The game switches sheets when the activity changes and plays eight frames
 per second. For a new ghost with a missing sheet, the animated portrait supplies the gesture.
