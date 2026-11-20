@@ -9,11 +9,11 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- Five keepsakes for the story of Ida, the lighthouse keeper, and the finale:
-  `logbook`, `ship_bell`, `sea_chart`, `lifebuoy` and `apron` (see *Keepsakes* below,
-  `assets/models/decor/<id>.glb`). Until they exist the game shows coloured boxes.
+There are no open model orders. The models for Ida’s four keepsakes (logbook, ship’s bell,
+sea chart and lifebuoy) and Hedda’s apron are in `assets/models/decor/`. Their dimensions
+and replacement prompts are listed under *Keepsakes*.
 
-Everything else is delivered. The shop's three junk piles, waiting bench, door lantern,
+The shop's three junk piles, waiting bench, door lantern,
 herb sachets, ferry contract and wooden way board are in `assets/models/shop/`.
 The painted return post for the quay and market is in `assets/models/harbor/signpost.glb`.
 The seven market awnings carry embroidered trade emblems, and the quay has a storm lantern.
