@@ -134,6 +134,7 @@ fn use_workbench(
                 }
                 progress.broken.remove(at);
                 progress.repaired_on = night;
+                progress.count(crate::achievements::Stat::Repairs, 1);
                 stock.add(product, 1);
                 log.push(lang.f("log.repaired", &[("item", &lang.product(product))]));
             }

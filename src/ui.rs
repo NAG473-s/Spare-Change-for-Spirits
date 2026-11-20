@@ -130,6 +130,8 @@ pub enum Action {
     OrderForTomorrow,
     /// Give the ferryman his fare: one coin from the drawer.
     GiveFare,
+    /// The achievements page of the pause menu.
+    OpenAchievements,
     /// Search the old junk for something broken (once an evening).
     Rummage,
     /// Repair a broken thing at the workbench.

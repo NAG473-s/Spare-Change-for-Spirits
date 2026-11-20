@@ -281,6 +281,8 @@ Gameplay triggers sounds and effects through the `Cue` message.
 ## Next steps (ideas)
 
 The plan up to the festival and the Early Access launch is in [docs/ROADMAP.md](docs/ROADMAP.md).
+What to enter in Steamworks (Steam Cloud for both apps, achievements for the full game) is in
+[docs/STEAM.md](docs/STEAM.md).
 
 - [x] Poltergeist: knocks items off shelves, sometimes pays with counterfeit coins (spot them!)
 - [x] Forgetful ghost: wants to pay twice – accept or be honest?

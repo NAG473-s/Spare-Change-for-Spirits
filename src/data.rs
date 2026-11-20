@@ -531,6 +531,8 @@ pub struct GameData {
     pub stories: Vec<StoryDef>,
     /// Mishaps during the night (`incidents.ron`).
     pub incidents: Vec<crate::incidents::IncidentDef>,
+    /// Achievements of the full game (`achievements.ron`).
+    pub achievements: Vec<crate::achievements::AchievementDef>,
     /// Broken things in the junk and their repair (`workbench.ron`).
     pub workbench: crate::workbench::WorkbenchDef,
     pub events: Vec<NightEvent>,
@@ -655,6 +657,7 @@ impl GameData {
             stories: load_ron("data/story.ron"),
             incidents: load_ron("data/incidents.ron"),
             workbench: load_ron("data/workbench.ron"),
+            achievements: load_ron("data/achievements.ron"),
             events: load_ron("data/events.ron"),
             props: load_ron("data/props.ron"),
             vendors: load_ron("data/market.ron"),
@@ -794,6 +797,15 @@ impl GameData {
                         k
                     );
                 }
+            }
+        }
+        for a in &self.achievements {
+            if let crate::achievements::Goal::Story(g) = &a.goal {
+                assert!(
+                    self.stories.iter().any(|s| &s.ghost == g),
+                    "achievement '{}' waits for an unknown story '{g}'",
+                    a.id
+                );
             }
         }
         for j in &self.workbench.junk {
@@ -1065,6 +1077,14 @@ mod tests {
             assert!(
                 has(format!("finale.{g}.arrives")) && has(format!("finale.{g}.farewell")),
                 "finale guest {g}"
+            );
+        }
+        for a in &data.achievements {
+            assert!(
+                has(format!("achievement.{}.name", a.id))
+                    && has(format!("achievement.{}.text", a.id)),
+                "achievement {}",
+                a.id
             );
         }
         // Every season that ends with a finale has an epilogue.

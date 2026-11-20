@@ -53,7 +53,7 @@ pub fn languages() -> Vec<LanguageDef> {
 #[derive(Resource)]
 pub struct AutomaticLanguage {
     pub code: String,
-    _steam: Option<steam::Language>,
+    steam: Option<steam::Language>,
 }
 
 impl AutomaticLanguage {
@@ -63,9 +63,28 @@ impl AutomaticLanguage {
         let code = automatic_code(steam.as_ref().map(|s| s.name.as_str()), &supported, || {
             detect(&supported)
         });
-        Self {
-            code,
-            _steam: steam,
+        Self { code, steam }
+    }
+
+    /// Unlocks a Steam achievement by its API name, when the game runs
+    /// through Steam (otherwise nothing happens).
+    pub fn unlock_achievement(&self, name: &str) {
+        if let Some(s) = &self.steam {
+            s.unlock_achievement(name);
+        }
+    }
+
+    /// Sends the unlocked achievements to Steam.
+    pub fn store_stats(&self) {
+        if let Some(s) = &self.steam {
+            s.store_stats();
+        }
+    }
+
+    /// Lets Steam deliver its callbacks.
+    pub fn run_callbacks(&self) {
+        if let Some(s) = &self.steam {
+            s.run_callbacks();
         }
     }
 }
@@ -242,7 +261,7 @@ mod tests {
         assert_eq!(automatic_code(None, &langs, || None), SOURCE);
         let auto = AutomaticLanguage {
             code: "it".into(),
-            _steam: None,
+            steam: None,
         };
         assert_eq!(Lang::from_preference(Some("de"), &auto).code, "de");
         assert_eq!(Lang::from_preference(Some("unsupported"), &auto).code, "it");

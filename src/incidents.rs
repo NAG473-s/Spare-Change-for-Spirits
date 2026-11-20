@@ -208,6 +208,7 @@ fn on_marker_click(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut tip: ResMut<HoverTip>,
+    mut report: ResMut<crate::day_cycle::NightReport>,
 ) {
     if click.button != PointerButton::Primary {
         return;
@@ -220,6 +221,7 @@ fn on_marker_click(
     undo.scale(-1);
     layout.mishaps.add(&undo);
     log.push(lang.t(&format!("incident.{}.fixed", def.id)));
+    report.mishaps_fixed += 1;
     cues.write(Cue::Click);
     HoverTip::hide(&mut tip);
     commands.entity(click.event_target()).despawn();

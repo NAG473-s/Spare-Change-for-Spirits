@@ -10,6 +10,7 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
 mod accounts;
+mod achievements;
 mod audio;
 mod critters;
 mod data;
@@ -108,6 +109,7 @@ fn main() {
             incidents::IncidentsPlugin,
             workbench::WorkbenchPlugin,
             winter::WinterPlugin,
+            achievements::AchievementsPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

@@ -67,6 +67,8 @@ Checkboxes are ticked in the commit that finishes them.
 - [ ] Trailer v1 (30–60 s, captured in the game)
 - [ ] Store page submitted for review and set to "coming soon" – wishlists start counting
 - [ ] Demo set up as its own app in Steamworks
+- [ ] Steam Cloud (Auto-Cloud, both apps) and the achievements (full game) entered as in
+      `docs/STEAM.md`; achievement icons uploaded
 - [ ] Accessibility features declared in Steamworks (list in `docs/ACCESSIBILITY.md`)
 
 ### Week 5 · Dec 21 – Jan 3: holidays, buffer

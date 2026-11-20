@@ -75,6 +75,11 @@ pub struct SaveGame {
     pub rummaged_on: u32,
     #[serde(default)]
     pub repaired_on: u32,
+    /// Counters over the whole game and the achievements unlocked.
+    #[serde(default)]
+    pub tally: std::collections::BTreeMap<String, u32>,
+    #[serde(default)]
+    pub achievements: Vec<String>,
     /// The season the shop is in, and the night it began (see `Progress`).
     #[serde(default = "first")]
     pub season: u32,
@@ -420,6 +425,8 @@ impl GameState<'_> {
             broken: self.progress.broken.clone(),
             rummaged_on: self.progress.rummaged_on,
             repaired_on: self.progress.repaired_on,
+            tally: self.progress.tally.clone(),
+            achievements: self.progress.achievements.clone(),
             season: self.progress.season,
             season_start: self.progress.season_start,
             drawer: self.drawer.0,
@@ -445,6 +452,8 @@ impl GameState<'_> {
             broken: save.broken.clone(),
             rummaged_on: save.rummaged_on,
             repaired_on: save.repaired_on,
+            tally: save.tally.clone(),
+            achievements: save.achievements.clone(),
             season: save.season,
             season_start: save.season_start,
         };
@@ -567,6 +576,8 @@ mod tests {
             broken: Vec::new(),
             rummaged_on: 0,
             repaired_on: 0,
+            tally: Default::default(),
+            achievements: Vec::new(),
             season: 1,
             season_start: 1,
             drawer: Purse::default(),
@@ -598,6 +609,8 @@ mod tests {
             broken: Vec::new(),
             rummaged_on: 0,
             repaired_on: 0,
+            tally: Default::default(),
+            achievements: Vec::new(),
             season: 1,
             season_start: 1,
             drawer: Purse {
@@ -637,6 +650,8 @@ mod tests {
             broken: Vec::new(),
             rummaged_on: 0,
             repaired_on: 0,
+            tally: Default::default(),
+            achievements: Vec::new(),
             season: 1,
             season_start: 1,
             drawer: Purse::default(),

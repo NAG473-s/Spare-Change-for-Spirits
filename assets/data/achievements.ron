@@ -1,0 +1,31 @@
+// Achievements of the full game (the demo has none). Steamworks needs each one under its API
+// name: the id in upper case (first_sale -> FIRST_SALE), see docs/STEAM.md.
+// goal:
+//   Count(Stat, n)   a counter over the whole game reaches n. Stat: Sales, ExactChange,
+//                    IntoTheLight, Honest, Counterfeits, Tips, Orders, Mishaps, Repairs
+//   Story("<ghost>") the story of this ghost (story.ron) is finished
+//   Reputation(n)    the reputation reaches n
+//   Drawer(n)        this much money in the drawer at once (button units)
+//   JunkCleared      all of Hedda's old junk is cleared
+// Texts: assets/i18n/<language>.ron (achievement.<id>.name, achievement.<id>.text).
+// Icons for Steam: docs/ART_PROMPTS.md.
+[
+    (id: "first_sale", goal: Count(Sales, 1)),
+    (id: "exact_change", goal: Count(ExactChange, 50)),
+    (id: "into_the_light", goal: Count(IntoTheLight, 100)),
+    (id: "honest", goal: Count(Honest, 10)),
+    (id: "sharp_eye", goal: Count(Counterfeits, 10)),
+    (id: "well_liked", goal: Count(Tips, 25)),
+    (id: "on_order", goal: Count(Orders, 10)),
+    (id: "handy", goal: Count(Mishaps, 20)),
+    (id: "tinkerer", goal: Count(Repairs, 10)),
+    (id: "good_name", goal: Reputation(25)),
+    (id: "full_drawer", goal: Drawer(500)),
+    (id: "room_to_breathe", goal: JunkCleared),
+    (id: "edwin", goal: Story("edwin")),
+    (id: "lighthouse", goal: Story("ida")),
+    (id: "pfote", goal: Story("lotte")),
+    (id: "first_snow", goal: Story("anselm")),
+    (id: "spring", goal: Story("mira")),
+    (id: "ferryman", goal: Story("kasimir")),
+]

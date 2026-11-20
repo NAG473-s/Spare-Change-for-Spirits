@@ -335,6 +335,11 @@ def main():
         for item in expected[folder]:
             icon = ROOT / "assets" / "sprites" / folder / f"{item}.png"
             print(("  ok       " if icon.is_file() else "  no icon  ") + f"sprites/{folder}/{item}.png")
+    # Achievement icons for Steam (docs/STEAM.md), achieved and greyed.
+    for a in ids("assets/data/achievements.ron", r'\(id: "([^"]+)"'):
+        for suffix in ("", "_locked"):
+            icon = ROOT / "art" / "steam" / "achievements" / f"{a}{suffix}.png"
+            print(("  ok       " if icon.is_file() else "  no icon  ") + str(icon.relative_to(ROOT)))
     for ext in ("png", "icns", "ico"):
         icon = ROOT / "art" / "icons" / f"spare-change-for-spirits.{ext}"
         present = icon.is_file()

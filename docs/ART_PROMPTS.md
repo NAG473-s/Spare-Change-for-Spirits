@@ -24,6 +24,7 @@ python3 tools/check_models.py
 
 ## To do
 
+- Achievement icons for Steam (full game only), see *Achievement icons* below.
 - Season 3, "The Thaw": four idle sheets and 32 gesture sheets for `frog`, `butterfly`,
   `mira` and `kasimir`. Their portraits are delivered; use them as the references for
   *Ghost animation sheets* and *Ghost gesture sheets* below.
@@ -336,6 +337,41 @@ the later ones:
 | `sea_chart` | A framed, yellowed sea chart of a small harbour with a lighthouse. |
 | `lifebuoy` | A red-and-white striped ring lifebuoy with a coil of rope. |
 | `apron` | A faded lavender shop apron on a hook, a sprig of dried lavender in its pocket. |
+
+## Achievement icons – canvas 1024 × 1024 (open)
+
+For Steam (full game only, list in [STEAM.md](STEAM.md)). One image per achievement in the
+style block's look, a single bold motif on a round dark plum badge with a thin brass rim, no
+text. Steam needs 256 × 256 for each, plus a greyed version for "not yet achieved":
+
+```bash
+mkdir -p art/steam/achievements
+convert ~/Downloads/image.png -resize 256x256 art/steam/achievements/<id>.png
+convert art/steam/achievements/<id>.png -colorspace Gray -modulate 70 art/steam/achievements/<id>_locked.png
+```
+
+Delivery: one commit per icon, `Add <id> achievement icon [skip ci]`.
+
+| File id | Name | Motif |
+|---|---|---|
+| `first_sale` | Open for Business | a small ghost happily holding a wrapped parcel over a shop counter |
+| `exact_change` | Exact Change | a neat little stack of coins – a button, a candle stub and a silver spoon – perfectly balanced |
+| `into_the_light` | Into the Light | a ghost rising into a soft beam of golden light with sparkles |
+| `honest` | Honest Shopkeeper | an open hand pushing a coin back across a counter, a small heart above it |
+| `sharp_eye` | Sharp Eye | a magnifying glass over a cracked counterfeit coin |
+| `well_liked` | Well Liked | a little coin floating up with sparkles above a smiling ghost |
+| `on_order` | Worth the Wait | a parcel with a hand-written tag and a crescent moon |
+| `handy` | Handy | a bucket under a single falling drop, a few autumn leaves and a crow feather |
+| `tinkerer` | Tinkerer | a small screwdriver and a half-repaired music box on a workbench |
+| `good_name` | A Good Name | a shop sign with a glowing star above it |
+| `full_drawer` | A Full Drawer | an overflowing wooden cash drawer full of buttons, candle stubs and spoons |
+| `room_to_breathe` | Room to Breathe | a broom and a clean, empty patch of wooden floor with dust motes |
+| `edwin` | Dear Margaret | a folded letter with a pocket lantern beside it, light rain |
+| `lighthouse` | The Light Returns | a small lighthouse with its beam sweeping over dark water |
+| `pfote` | Good Dog | a small fluffy ghost dog curled up in a wicker basket |
+| `first_snow` | First Snow | a clock tower at midnight with the first snowflakes falling |
+| `spring` | In Bloom | a window box full of spring flowers and a bee |
+| `ferryman` | The Ferryman's Fare | a single silver coin on the palm of an old weathered hand, a rowing boat behind |
 
 ## Coins – canvas 1024 × 1024 (done)
 

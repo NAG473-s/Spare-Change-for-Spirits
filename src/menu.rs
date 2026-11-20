@@ -79,6 +79,8 @@ pub enum SaveMenu {
     /// Asks before a new game replaces the saves of this profile.
     Confirm(u8),
     Save,
+    /// The achievements of the full game (pause menu).
+    Achievements,
 }
 
 /// The game is paused and the pause menu is open.
@@ -264,6 +266,11 @@ fn build_main_menu(
             ui.menu_option(root, &lang.t("menu.back"), Action::OpenNewGame, false);
             return;
         }
+        // All profiles together: unlocked in any of them.
+        SaveMenu::Achievements => {
+            let all = crate::achievements::across_profiles();
+            return crate::achievements::achievements_page(&mut ui, &lang, &data, &all);
+        }
         SaveMenu::Closed | SaveMenu::Save => {}
     }
     ui.text(&lang.t("menu.tagline"));
@@ -290,6 +297,15 @@ fn build_main_menu(
         Action::OpenLanguages,
         false,
     );
+    // The demo has no achievements.
+    if !cfg!(feature = "demo") {
+        ui.menu_option(
+            root,
+            &lang.t("pause.achievements"),
+            Action::OpenAchievements,
+            false,
+        );
+    }
     ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("menu.quit"), Action::QuitGame, false);
     ui.dim(&lang.f(version_key(), &[("version", &env!("CARGO_PKG_VERSION"))]));
@@ -328,6 +344,7 @@ fn main_menu_actions(
             Action::OpenLoad => *save_menu = SaveMenu::Load,
             Action::OpenNewGame => *save_menu = SaveMenu::NewGame,
             Action::CloseSaveMenu => *save_menu = SaveMenu::Closed,
+            Action::OpenAchievements => *save_menu = SaveMenu::Achievements,
             Action::NewGameIn(p) if latest_save(*p).is_some() => {
                 *save_menu = SaveMenu::Confirm(*p);
             }
@@ -676,6 +693,10 @@ fn pause_actions(
                 *save_menu = SaveMenu::Save;
                 continue;
             }
+            Action::OpenAchievements => {
+                *save_menu = SaveMenu::Achievements;
+                continue;
+            }
             Action::CloseSaveMenu => {
                 *save_menu = SaveMenu::Closed;
                 continue;
@@ -724,6 +745,7 @@ fn sync_pause(
     lang: Res<Lang>,
     existing: Query<Entity, With<PauseRoot>>,
     mut time: ResMut<Time<Virtual>>,
+    progress: Res<Progress>,
 ) {
     for e in &existing {
         commands.entity(e).despawn();
@@ -738,6 +760,10 @@ fn sync_pause(
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     if settings_menu.0 {
         settings_page(&mut ui, &settings, &lang);
+        return;
+    }
+    if *save_menu == SaveMenu::Achievements {
+        crate::achievements::achievements_page(&mut ui, &lang, &data, &progress);
         return;
     }
     if *save_menu == SaveMenu::Save {
@@ -761,6 +787,15 @@ fn sync_pause(
         _ => "pause.save_quit",
     };
     ui.menu_option(root, &lang.t(quit_label), Action::QuitToMenu, false);
+    // The demo has no achievements.
+    if !cfg!(feature = "demo") {
+        ui.menu_option(
+            root,
+            &lang.t("pause.achievements"),
+            Action::OpenAchievements,
+            false,
+        );
+    }
     ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("pause.quit_game"), Action::QuitGame, false);
     ui.dim(&lang.t("pause.hint"));

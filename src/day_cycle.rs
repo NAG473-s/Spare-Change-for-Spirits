@@ -84,6 +84,10 @@ pub struct Progress {
     /// The last night the junk was searched / something was repaired.
     pub rummaged_on: u32,
     pub repaired_on: u32,
+    /// Counters over the whole game, for the achievements (`Stat::key`).
+    pub tally: std::collections::BTreeMap<String, u32>,
+    /// Achievements unlocked in this game (ids from achievements.ron).
+    pub achievements: Vec<String>,
     /// The season the shop is in (1, 2, …): each tells its own story over
     /// `season_length` nights and lasts until its finale is done.
     pub season: u32,
@@ -114,6 +118,8 @@ impl Progress {
             broken: Vec::new(),
             rummaged_on: 0,
             repaired_on: 0,
+            tally: Default::default(),
+            achievements: Vec::new(),
             season: 1,
             season_start: 1,
         }
@@ -182,6 +188,17 @@ impl Progress {
         self.story[i] += 1;
         self.story_tries[i] = 0;
         self.parcels.retain(|p| *p != i);
+    }
+
+    /// A counter for the achievements.
+    pub fn tally(&self, stat: crate::achievements::Stat) -> u32 {
+        self.tally.get(stat.key()).copied().unwrap_or(0)
+    }
+
+    pub fn count(&mut self, stat: crate::achievements::Stat, n: u32) {
+        if n > 0 {
+            *self.tally.entry(stat.key().to_string()).or_default() += n;
+        }
     }
 
     /// The current chapter of story `i` failed tonight.
@@ -278,6 +295,10 @@ pub struct NightReport {
     pub tips: u32,
     /// Wares a shade stole from the shelves (product ids).
     pub stolen: Vec<String>,
+    /// How many tips were left, orders fulfilled and mishaps fixed tonight.
+    pub tips_given: u32,
+    pub orders_fulfilled: u32,
+    pub mishaps_fixed: u32,
     /// Ghosts turned away because their wish was not in stock.
     pub declined: u32,
     /// Ghosts offered the wrong item.

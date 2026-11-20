@@ -11,7 +11,30 @@ use libloading::Library;
 
 pub(super) struct Language {
     pub name: String,
-    _session: Option<Session>,
+    session: Option<Session>,
+}
+
+impl Language {
+    /// Unlocks a Steam achievement by its API name (no-op without a session).
+    pub(super) fn unlock_achievement(&self, name: &str) {
+        if let Some(s) = &self.session {
+            s.unlock_achievement(name);
+        }
+    }
+
+    /// Sends unlocked achievements to Steam.
+    pub(super) fn store_stats(&self) {
+        if let Some(s) = &self.session {
+            s.store_stats();
+        }
+    }
+
+    /// Lets Steam deliver its callbacks (call regularly).
+    pub(super) fn run_callbacks(&self) {
+        if let Some(s) = &self.session {
+            s.run_callbacks();
+        }
+    }
 }
 
 pub(super) fn current() -> Option<Language> {
@@ -38,7 +61,7 @@ pub(super) fn current() -> Option<Language> {
     {
         return Some(Language {
             name,
-            _session: Some(session),
+            session: Some(session),
         });
     }
     let steamapps = dir.ancestors().find(|p| {
@@ -48,7 +71,7 @@ pub(super) fn current() -> Option<Language> {
     let manifest = fs::read_to_string(steamapps.join(format!("appmanifest_{id}.acf"))).ok()?;
     Some(Language {
         name: manifest_language(&manifest, id)?,
-        _session: None,
+        session: None,
     })
 }
 
@@ -81,7 +104,46 @@ fn manifest_language(text: &str, id: u32) -> Option<String> {
 /// beside this executable (or in its application bundle's Frameworks folder).
 struct Session {
     shutdown: unsafe extern "C" fn(),
+    run_callbacks: Option<unsafe extern "C" fn()>,
+    stats: Option<Stats>,
     _library: Library,
+}
+
+/// The user-stats interface for achievements. The interface pointer is kept
+/// as an address so the session can live in a Bevy resource.
+struct Stats {
+    interface: usize,
+    set_achievement: unsafe extern "C" fn(*mut c_void, *const c_char) -> bool,
+    store: unsafe extern "C" fn(*mut c_void) -> bool,
+}
+
+impl Session {
+    fn unlock_achievement(&self, name: &str) {
+        let (Some(stats), Ok(name)) = (&self.stats, std::ffi::CString::new(name)) else {
+            return;
+        };
+        // SAFETY: the interface came from this initialised session and the
+        // signature matches Valve's flat API; the name outlives the call.
+        unsafe {
+            (stats.set_achievement)(stats.interface as *mut c_void, name.as_ptr());
+        }
+    }
+
+    fn store_stats(&self) {
+        if let Some(stats) = &self.stats {
+            // SAFETY: as above.
+            unsafe {
+                (stats.store)(stats.interface as *mut c_void);
+            }
+        }
+    }
+
+    fn run_callbacks(&self) {
+        if let Some(run) = self.run_callbacks {
+            // SAFETY: the session is initialised and the library is loaded.
+            unsafe { run() }
+        }
+    }
 }
 
 impl Session {
@@ -104,12 +166,60 @@ impl Session {
                 )
                 .ok()?;
             let shutdown = *library.get(b"SteamAPI_Shutdown\0").ok()?;
+            // Achievements (optional: an older library without them still
+            // gives the language).
+            let run_callbacks = library
+                .get::<unsafe extern "C" fn()>(b"SteamAPI_RunCallbacks\0")
+                .ok()
+                .map(|f| *f);
+            let user_stats = library
+                .get::<unsafe extern "C" fn() -> *mut c_void>(b"SteamAPI_SteamUserStats_v013\0")
+                .or_else(|_| library.get(b"SteamAPI_SteamUserStats_v012\0"))
+                .ok()
+                .map(|f| *f);
+            let set_achievement = library
+                .get::<unsafe extern "C" fn(*mut c_void, *const c_char) -> bool>(
+                    b"SteamAPI_ISteamUserStats_SetAchievement\0",
+                )
+                .ok()
+                .map(|f| *f);
+            let store = library
+                .get::<unsafe extern "C" fn(*mut c_void) -> bool>(
+                    b"SteamAPI_ISteamUserStats_StoreStats\0",
+                )
+                .ok()
+                .map(|f| *f);
+            // Older SDKs (v012) need the stats requested before they can be set.
+            let request = library
+                .get::<unsafe extern "C" fn(*mut c_void) -> bool>(
+                    b"SteamAPI_ISteamUserStats_RequestCurrentStats\0",
+                )
+                .ok()
+                .map(|f| *f);
             let mut message = [0 as c_char; 1024];
             if init(message.as_mut_ptr()) != 0 {
                 return None;
             }
+            let stats = match (user_stats, set_achievement, store) {
+                (Some(get), Some(set_achievement), Some(store)) => {
+                    let interface = get();
+                    if !interface.is_null()
+                        && let Some(request) = request
+                    {
+                        request(interface);
+                    }
+                    (!interface.is_null()).then_some(Stats {
+                        interface: interface as usize,
+                        set_achievement,
+                        store,
+                    })
+                }
+                _ => None,
+            };
             let session = Self {
                 shutdown,
+                run_callbacks,
+                stats,
                 _library: library,
             };
             let apps = apps();

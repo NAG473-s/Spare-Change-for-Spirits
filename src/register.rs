@@ -479,6 +479,9 @@ fn make_change(
                 }
                 report.sales += 1;
                 report.revenue += sale.price;
+                if ghosts.get(sale.ghost).is_ok_and(|g| g.ordered) {
+                    report.orders_fulfilled += 1;
+                }
                 report.sold.push(sale.product.clone());
                 report
                     .counterfeits_taken
@@ -529,6 +532,7 @@ fn make_change(
                             };
                         drawer.0.add(coin, 1);
                         report.tips += coin.value();
+                        report.tips_given += 1;
                         cues.write(Cue::Tip(ghost.pos, coin));
                         log.push(lang.f("log.tip", &[("who", &name), ("coin", &coin.name(&lang))]));
                     }
