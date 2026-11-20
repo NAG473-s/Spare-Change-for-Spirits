@@ -184,6 +184,7 @@
     "evening.expected": "Spodziewani goście tej nocy",
     "evening.expected_line": "{ghost} ({percent} %) prosi o: {wishes}",
     "evening.expected_hint": "To, kto przyjdzie, zależy od nastroju i wydarzeń nocy. ×N: tyle masz już w magazynie.",
+    "evening.turn_away": "Tej nocy od razu odejdą: {list}",
     "evening.open": "Otwórz sklep  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Reszta do wydania: {amount}",
     "night.counted": "Odliczono: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · w kasie: {left}",
-    "night.put_back": "Odłóż",
+    "night.put_back": "Odłóż wszystko",
     "register.no_change": "Brak drobnych",
     "register.no_change_hint": "Z kasy nie da się wydać dokładnej reszty ({due}). Poproś ducha o drobniejsze monety.",
     "night.hand_over": "Wydaj",
@@ -229,6 +230,8 @@
     "morning.faded": "Wyblakłe towary",
     "morning.next": "Na wiejski targ  →",
     "morning.to_end": "Do końca dema  →",
+    "morning.tomorrow": "Jutro w nocy: {name}",
+    "morning.order": "Zamówione na jutro – {who}: {item}",
     "morning.to_season_end": "Do końca sezonu  →",
 
     // The ferryman's boat (hover a crate)

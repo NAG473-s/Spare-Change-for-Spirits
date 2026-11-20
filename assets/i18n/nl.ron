@@ -184,6 +184,7 @@
     "evening.expected": "Verwachte gasten vannacht",
     "evening.expected_line": "{ghost} ({percent} %) vraagt om: {wishes}",
     "evening.expected_hint": "Wie er komt, hangt af van de sfeer en de gebeurtenissen van de nacht. ×N: zoveel heb je al in voorraad.",
+    "evening.turn_away": "Keren vannacht meteen om: {list}",
     "evening.open": "Winkel openen  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Wisselgeld: {amount}",
     "night.counted": "Uitgeteld: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} in kassa",
-    "night.put_back": "Terugleggen",
+    "night.put_back": "Alles terugleggen",
     "register.no_change": "Geen passend wisselgeld",
     "register.no_change_hint": "De kassa kan niet precies {due} teruggeven. Vraag de geest om kleinere munten.",
     "night.hand_over": "Overhandigen",
@@ -229,6 +230,8 @@
     "morning.faded": "Vervaagde artikelen",
     "morning.next": "Naar de dorpsmarkt  →",
     "morning.to_end": "Naar het einde van de demo  →",
+    "morning.tomorrow": "Morgennacht: {name}",
+    "morning.order": "Besteld voor morgen – {who}: {item}",
     "morning.to_season_end": "Naar het einde van het seizoen  →",
 
     // The ferryman's boat (hover a crate)

@@ -184,6 +184,7 @@
     "evening.expected": "Очікувані гості цієї ночі",
     "evening.expected_line": "{ghost} ({percent} %) просить: {wishes}",
     "evening.expected_hint": "Хто прийде, залежить від атмосфери та подій ночі. ×N: стільки у вас уже є на складі.",
+    "evening.turn_away": "Цієї ночі одразу підуть: {list}",
     "evening.open": "Відчинити крамницю  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Решта: {amount}",
     "night.counted": "Відраховано: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · у касі: {left}",
-    "night.put_back": "Повернути",
+    "night.put_back": "Повернути все",
     "register.no_change": "Немає відповідної решти",
     "register.no_change_hint": "Каса не може видати рівно {due}. Попросіть у привида дрібніші монети.",
     "night.hand_over": "Віддати",
@@ -229,6 +230,8 @@
     "morning.faded": "Вицвілі товари",
     "morning.next": "На сільський ярмарок  →",
     "morning.to_end": "До кінця демо  →",
+    "morning.tomorrow": "Завтра вночі: {name}",
+    "morning.order": "Замовлено на завтра – {who}: {item}",
     "morning.to_season_end": "До кінця сезону  →",
 
     // The ferryman's boat (hover a crate)

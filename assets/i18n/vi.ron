@@ -184,6 +184,7 @@
     "evening.expected": "Khách có thể đến đêm nay",
     "evening.expected_line": "{ghost} ({percent} %) muốn: {wishes}",
     "evening.expected_hint": "Ai đến phụ thuộc vào bầu không khí và sự kiện của đêm. ×N: bạn đã có chừng ấy trong kho.",
+    "evening.turn_away": "Đêm nay sẽ bỏ đi ngay: {list}",
     "evening.open": "Mở cửa tiệm  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Tiền thối: {amount}",
     "night.counted": "Đã đếm: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · còn {left} trong ngăn",
-    "night.put_back": "Cất lại",
+    "night.put_back": "Cất lại hết",
     "register.no_change": "Không có tiền thối vừa",
     "register.no_change_hint": "Ngăn kéo không thể thối lại đúng {due}. Hãy nhờ hồn ma trả bằng tiền lẻ hơn.",
     "night.hand_over": "Đưa khách",
@@ -229,6 +230,8 @@
     "morning.faded": "Hàng phai mờ",
     "morning.next": "Đến chợ làng  →",
     "morning.to_end": "Đến cuối bản demo  →",
+    "morning.tomorrow": "Đêm mai: {name}",
+    "morning.order": "Đặt cho ngày mai – {who}: {item}",
     "morning.to_season_end": "Đến cuối mùa  →",
 
     // The ferryman's boat (hover a crate)

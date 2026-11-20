@@ -184,6 +184,7 @@
     "evening.expected": "Очаквани гости тази нощ",
     "evening.expected_line": "{ghost} ({percent} %) иска: {wishes}",
     "evening.expected_hint": "Кой ще дойде зависи от атмосферата и събитията през нощта. ×N: толкова вече имаш в склада.",
+    "evening.turn_away": "Тази нощ ще си тръгнат веднага: {list}",
     "evening.open": "Отвори магазина  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Ресто: {amount}",
     "night.counted": "Отброено: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · в касата: {left}",
-    "night.put_back": "Върни",
+    "night.put_back": "Върни всичко",
     "register.no_change": "Няма подходящо ресто",
     "register.no_change_hint": "Касата не може да върне точно {due}. Помоли призрака за по-дребни монети.",
     "night.hand_over": "Подай",
@@ -229,6 +230,8 @@
     "morning.faded": "Избледнели стоки",
     "morning.next": "Към селския пазар  →",
     "morning.to_end": "Към края на демото  →",
+    "morning.tomorrow": "Утре вечер: {name}",
+    "morning.order": "Поръчано за утре – {who}: {item}",
     "morning.to_season_end": "Към края на сезона  →",
 
     // The ferryman's boat (hover a crate)

@@ -184,6 +184,7 @@
     "evening.expected": "Oaspeți probabili în noaptea asta",
     "evening.expected_line": "{ghost} ({percent} %) cere: {wishes}",
     "evening.expected_hint": "Cine vine depinde de atmosferă și de întâmplările nopții. ×N: ai deja atâtea în magazie.",
+    "evening.turn_away": "La noapte pleacă imediat: {list}",
     "evening.open": "Deschide magazinul  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Rest de dat: {amount}",
     "night.counted": "Numărat: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} în sertar",
-    "night.put_back": "Pune înapoi",
+    "night.put_back": "Pune totul înapoi",
     "register.no_change": "Nu am rest potrivit",
     "register.no_change_hint": "Din sertar nu poți da înapoi exact {due}. Cere-i fantomei monede mai mici.",
     "night.hand_over": "Înmânează",
@@ -229,6 +230,8 @@
     "morning.faded": "Produse decolorate",
     "morning.next": "Spre târgul din sat  →",
     "morning.to_end": "Spre finalul demo-ului  →",
+    "morning.tomorrow": "Mâine noapte: {name}",
+    "morning.order": "Comandat pentru mâine – {who}: {item}",
     "morning.to_season_end": "Spre finalul sezonului  →",
 
     // The ferryman's boat (hover a crate)

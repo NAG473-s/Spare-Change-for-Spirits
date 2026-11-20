@@ -184,6 +184,7 @@
     "evening.expected": "แขกที่น่าจะมาคืนนี้",
     "evening.expected_line": "{ghost} ({percent} %) ต้องการ: {wishes}",
     "evening.expected_hint": "ใครจะมาขึ้นอยู่กับบรรยากาศและเหตุการณ์ของคืนนี้ ×N: คุณมีของชิ้นนั้นในคลังอยู่แล้วเท่านี้",
+    "evening.turn_away": "คืนนี้จะกลับไปทันที: {list}",
     "evening.open": "เปิดร้าน  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "เงินทอน: {amount}",
     "night.counted": "นับแล้ว: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · ในลิ้นชัก {left}",
-    "night.put_back": "ใส่คืน",
+    "night.put_back": "ใส่คืนทั้งหมด",
     "register.no_change": "ไม่มีเงินทอนที่พอดี",
     "register.no_change_hint": "เงินในลิ้นชักทอนให้พอดี {due} ไม่ได้ ขอให้ผีจ่ายด้วยเหรียญย่อยแทน",
     "night.hand_over": "ส่งให้",
@@ -229,6 +230,8 @@
     "morning.faded": "สินค้าที่เลือนหาย",
     "morning.next": "ไปตลาดหมู่บ้าน  →",
     "morning.to_end": "ไปยังตอนจบเดโม  →",
+    "morning.tomorrow": "คืนพรุ่งนี้: {name}",
+    "morning.order": "สั่งไว้สำหรับพรุ่งนี้ – {who}: {item}",
     "morning.to_season_end": "ไปยังตอนจบของฤดูกาล  →",
 
     // The ferryman's boat (hover a crate)

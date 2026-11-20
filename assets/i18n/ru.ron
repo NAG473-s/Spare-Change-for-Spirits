@@ -184,6 +184,7 @@
     "evening.expected": "Ожидаемые гости этой ночью",
     "evening.expected_line": "{ghost} ({percent} %) просит: {wishes}",
     "evening.expected_hint": "Кто придёт, зависит от атмосферы и событий ночи. ×N: столько у вас уже есть на складе.",
+    "evening.turn_away": "Сегодня сразу уйдут: {list}",
     "evening.open": "Открыть лавку  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Сдача: {amount}",
     "night.counted": "Отсчитано: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · в кассе: {left}",
-    "night.put_back": "Вернуть",
+    "night.put_back": "Вернуть всё",
     "register.no_change": "Нет подходящей сдачи",
     "register.no_change_hint": "Касса не может выдать ровно {due}. Попросите у призрака монеты помельче.",
     "night.hand_over": "Отдать",
@@ -229,6 +230,8 @@
     "morning.faded": "Поблёкшие товары",
     "morning.next": "На деревенский рынок  →",
     "morning.to_end": "К концу демо  →",
+    "morning.tomorrow": "Завтра ночью: {name}",
+    "morning.order": "Заказано на завтра – {who}: {item}",
     "morning.to_season_end": "К концу сезона  →",
 
     // The ferryman's boat (hover a crate)

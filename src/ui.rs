@@ -69,8 +69,12 @@ impl Plugin for UiPlugin {
                     send_scroll_events,
                     update_log.run_if(resource_changed::<GameLog>),
                     refresh_static_fonts.run_if(resource_changed::<UiFont>),
-                    build_morning_panel
-                        .run_if(in_state(Phase::Morning).and_then(resource_changed::<UiFont>)),
+                    build_morning_panel.run_if(
+                        in_state(Phase::Morning).and_then(
+                            resource_changed::<UiFont>
+                                .or_else(resource_changed::<crate::save::Settings>),
+                        ),
+                    ),
                     build_demo_end_panel
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
@@ -1094,7 +1098,7 @@ fn build_evening_panel(
             ));
         }
         let odds = data.ghost_odds(night, &layout.atmosphere(&data, night), progress.reputation);
-        expected_guests(&mut ui, &lang, &data, &stock, &progress, &odds);
+        expected_guests(&mut ui, &lang, &data, &stock, &progress, &layout, &odds);
         ui.section(&lang.t("evening.shelve"));
         let in_stock: Vec<String> = data
             .products
@@ -1142,7 +1146,7 @@ fn build_evening_panel(
     }
 
     let odds = data.ghost_odds(night, &layout.atmosphere(&data, night), progress.reputation);
-    expected_guests(&mut ui, &lang, &data, &stock, &progress, &odds);
+    expected_guests(&mut ui, &lang, &data, &stock, &progress, &layout, &odds);
 
     ui.section(&lang.f(
         "evening.ferryman",
@@ -1259,6 +1263,7 @@ fn expected_guests(
     data: &GameData,
     stock: &Stock,
     progress: &Progress,
+    layout: &ShopLayout,
     odds: &[f32],
 ) {
     let night = progress.calendar(data);
@@ -1329,6 +1334,21 @@ fn expected_guests(
                 ("wishes", &lang.join(&wishes)),
             ],
         ));
+    }
+    // Ghosts the atmosphere will send away again, and why.
+    let atmosphere = layout.atmosphere(data, night);
+    let away: Vec<String> = data
+        .ghosts
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| odds[*i] > 0.0)
+        .filter_map(|(_, g)| {
+            g.unmet_need(&atmosphere)
+                .map(|n| format!("{} ({})", lang.ghost(&g.id), n.complaint(lang)))
+        })
+        .collect();
+    if !away.is_empty() {
+        ui.dim(&lang.f("evening.turn_away", &[("list", &lang.join(&away))]));
     }
     ui.dim(&lang.t("evening.expected_hint"));
 }
@@ -1630,10 +1650,38 @@ fn build_morning_panel(
     parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    settings: Res<crate::save::Settings>,
 ) {
-    // The accounts are shown in the middle of the screen (`accounts.rs`).
+    // The accounts are shown in the middle of the screen (`accounts.rs`);
+    // beside them: the first night's tip, and what tomorrow brings.
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("morning.title"));
+    if settings.tips && progress.night == 1 {
+        ui.text(&lang.t("tip.morning"));
+        let root = ui.root();
+        ui.button_in(root, &lang.t("tips.hide"), Action::ToggleTips, false, true);
+    }
+    if progress.season_over(&data) {
+        return;
+    }
+    let mut tomorrow = progress.clone();
+    tomorrow.night += 1;
+    let calendar = tomorrow.calendar(&data);
+    if let Some(event) = data.event(calendar) {
+        ui.section(&lang.f(
+            "morning.tomorrow",
+            &[("name", &lang.t(&format!("event.{}.name", event.id)))],
+        ));
+        ui.dim(&lang.t(&format!("event.{}.text", event.id)));
+    }
+    for o in progress.orders.iter().filter(|o| o.night == tomorrow.night) {
+        ui.text(&lang.f(
+            "morning.order",
+            &[("who", &lang.ghost(&o.ghost)), ("item", &lang.product(&o.product))],
+        ));
+    }
 }
 
 fn build_demo_end_panel(

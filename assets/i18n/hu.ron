@@ -184,6 +184,7 @@
     "evening.expected": "Várható vendégek ma éjjel",
     "evening.expected_line": "{ghost} ({percent} %) ezt kéri: {wishes}",
     "evening.expected_hint": "Hogy ki jön, az a hangulattól és az éjszaka eseményeitől függ. ×N: ennyi van már a raktáradban.",
+    "evening.turn_away": "Ma éjjel rögtön távoznak: {list}",
     "evening.open": "Nyisd ki a boltot  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Visszajáró: {amount}",
     "night.counted": "Kiszámolva: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · a kasszában: {left}",
-    "night.put_back": "Vissza",
+    "night.put_back": "Mindet vissza",
     "register.no_change": "Nincs megfelelő apró",
     "register.no_change_hint": "A kasszából nem lehet pontosan visszaadni: {due}. Kérj a szellemtől kisebb érméket.",
     "night.hand_over": "Átadás",
@@ -229,6 +230,8 @@
     "morning.faded": "Megfakult termékek",
     "morning.next": "A falusi piacra  →",
     "morning.to_end": "A demó végére  →",
+    "morning.tomorrow": "Holnap éjjel: {name}",
+    "morning.order": "Holnapra rendelve – {who}: {item}",
     "morning.to_season_end": "Az évad végére  →",
 
     // The ferryman's boat (hover a crate)

@@ -184,6 +184,7 @@
     "evening.expected": "Ospiti probabili stanotte",
     "evening.expected_line": "{ghost} ({percent} %) chiede: {wishes}",
     "evening.expected_hint": "Chi arriva dipende dall’atmosfera e dagli eventi della notte. ×N: ne hai già tanti in magazzino.",
+    "evening.turn_away": "Stanotte se ne andranno subito: {list}",
     "evening.open": "Apri la bottega  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Resto dovuto: {amount}",
     "night.counted": "Contato: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} nel cassetto",
-    "night.put_back": "Rimetti",
+    "night.put_back": "Rimetti tutto",
     "register.no_change": "Nessun resto adatto",
     "register.no_change_hint": "Il cassetto non può restituire esattamente {due}. Chiedi al fantasma monete più piccole.",
     "night.hand_over": "Consegna",
@@ -229,6 +230,8 @@
     "morning.faded": "Articoli sbiaditi",
     "morning.next": "Al mercato del villaggio  →",
     "morning.to_end": "Alla fine della demo  →",
+    "morning.tomorrow": "Domani notte: {name}",
+    "morning.order": "Ordinato per domani – {who}: {item}",
     "morning.to_season_end": "Alla fine della stagione  →",
 
     // The ferryman's boat (hover a crate)

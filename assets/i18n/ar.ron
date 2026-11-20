@@ -184,6 +184,7 @@
     "evening.expected": "الضيوف المتوقعون الليلة",
     "evening.expected_line": "{ghost} ({percent} %) يطلب: {wishes}",
     "evening.expected_hint": "يعتمد من يأتي على الأجواء وأحداث الليلة. ×N: لديك هذا العدد في المخزن بالفعل.",
+    "evening.turn_away": "سيغادرون الليلة فورًا: {list}",
     "evening.open": "افتح المتجر  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "الباقي المستحق: {amount}",
     "night.counted": "المعدود: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} في الدرج",
-    "night.put_back": "إرجاع",
+    "night.put_back": "إرجاع الكل",
     "register.no_change": "لا يوجد باقٍ مناسب",
     "register.no_change_hint": "لا تسمح عملات الدرج بردّ {due} بالضبط. اطلب من الشبح عملات أصغر.",
     "night.hand_over": "تسليم",
@@ -229,6 +230,8 @@
     "morning.faded": "منتجات بهتت",
     "morning.next": "إلى سوق القرية  →",
     "morning.to_end": "إلى نهاية النسخة التجريبية  →",
+    "morning.tomorrow": "ليلة الغد: {name}",
+    "morning.order": "طلب للغد – {who}: {item}",
     "morning.to_season_end": "إلى نهاية الموسم  →",
 
     // The ferryman's boat (hover a crate)

@@ -184,6 +184,7 @@
     "evening.expected": "Forventede gjester i natt",
     "evening.expected_line": "{ghost} ({percent} %) ønsker seg: {wishes}",
     "evening.expected_hint": "Hvem som kommer, avhenger av stemningen og nattens hendelser. ×N: så mange har du allerede på lager.",
+    "evening.turn_away": "Snur i døra i natt: {list}",
     "evening.open": "Åpne butikken  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Vekslepenger: {amount}",
     "night.counted": "Talt opp: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} i skuffen",
-    "night.put_back": "Legg tilbake",
+    "night.put_back": "Legg alt tilbake",
     "register.no_change": "Ingen passende vekslepenger",
     "register.no_change_hint": "Skuffen kan ikke gi tilbake nøyaktig {due}. Be spøkelset om mindre mynter.",
     "night.hand_over": "Overrekk",
@@ -229,6 +230,8 @@
     "morning.faded": "Falmede varer",
     "morning.next": "Til markedet i landsbyen  →",
     "morning.to_end": "Til slutten av demoen  →",
+    "morning.tomorrow": "I morgen natt: {name}",
+    "morning.order": "Bestilt til i morgen – {who}: {item}",
     "morning.to_season_end": "Til slutten av sesongen  →",
 
     // The ferryman's boat (hover a crate)

@@ -584,6 +584,10 @@ fn spawn_ghost(
             Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
         ))
         .id();
+    // Quiet from the start while it comes in and looks round.
+    if matches!(state, GhostState::Entering | GhostState::Browsing) {
+        commands.entity(label).insert(LabelMuted);
+    }
     commands.entity(ghost).insert(GhostLabel(label));
     ghost
 }

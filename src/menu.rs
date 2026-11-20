@@ -805,7 +805,8 @@ fn current_tip(
         Phase::Night if front_waiting => "tip.whisper",
         Phase::Night if report.sales == 0 => "tip.browse",
         Phase::Night => "tip.first_sale",
-        Phase::Morning => "tip.morning",
+        // The accounts cover this corner at dawn: the side panel shows the tip.
+        Phase::Morning => return None,
         Phase::Day => "tip.market",
         Phase::Menu | Phase::DemoEnd => return None,
     })

@@ -184,6 +184,7 @@
     "evening.expected": "Očekávaní hosté dnes v noci",
     "evening.expected_line": "{ghost} ({percent} %) si přeje: {wishes}",
     "evening.expected_hint": "Kdo přijde, záleží na atmosféře a událostech noci. ×N: tolik už máš ve skladu.",
+    "evening.turn_away": "Dnes v noci hned zase odejdou: {list}",
     "evening.open": "Otevřít obchod  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Vrátit: {amount}",
     "night.counted": "Odpočítáno: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · v pokladně {left}",
-    "night.put_back": "Vrátit zpět",
+    "night.put_back": "Vrátit vše",
     "register.no_change": "Chybí drobné",
     "register.no_change_hint": "Pokladna nedokáže vrátit přesnou částku ({due}). Požádej ducha o menší mince.",
     "night.hand_over": "Předat",
@@ -229,6 +230,8 @@
     "morning.faded": "Vybledlé zboží",
     "morning.next": "Na vesnický trh  →",
     "morning.to_end": "Na konec dema  →",
+    "morning.tomorrow": "Zítra v noci: {name}",
+    "morning.order": "Objednáno na zítra – {who}: {item}",
     "morning.to_season_end": "Na konec sezóny  →",
 
     // The ferryman's boat (hover a crate)

@@ -184,6 +184,7 @@
     "evening.expected": "今夜来そうなお客",
     "evening.expected_line": "{ghost}（{percent} %）の望み：{wishes}",
     "evening.expected_hint": "誰が来るかは雰囲気とその夜の出来事しだい。×N：倉庫にすでにある数です。",
+    "evening.turn_away": "今夜はすぐ帰ってしまう：{list}",
     "evening.open": "開店する  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "お釣り：{amount}",
     "night.counted": "数えた分：{coins}（={total}）",
     "night.add_coin": "+ {coin}（{value}） · レジに残り{left}",
-    "night.put_back": "戻す",
+    "night.put_back": "全部戻す",
     "register.no_change": "ちょうどのお釣りがない",
     "register.no_change_hint": "レジのお金では{due}ちょうどを返せません。幽霊に細かいお金で払ってもらいましょう。",
     "night.hand_over": "渡す",
@@ -229,6 +230,8 @@
     "morning.faded": "色あせた品",
     "morning.next": "村の市場へ  →",
     "morning.to_end": "体験版の最後へ  →",
+    "morning.tomorrow": "明日の夜：{name}",
+    "morning.order": "明日の注文 – {who}：{item}",
     "morning.to_season_end": "シーズンの最後へ  →",
 
     // The ferryman's boat (hover a crate)

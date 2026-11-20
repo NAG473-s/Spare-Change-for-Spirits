@@ -184,6 +184,7 @@
     "evening.expected": "Tetamu yang dijangka malam ini",
     "evening.expected_line": "{ghost} ({percent} %) meminta: {wishes}",
     "evening.expected_hint": "Siapa yang datang bergantung pada suasana dan peristiwa malam ini. ×N: anda sudah ada sebanyak itu dalam stor.",
+    "evening.turn_away": "Malam ini akan terus beredar: {list}",
     "evening.open": "Buka kedai  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Baki perlu diberi: {amount}",
     "night.counted": "Dikira: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} dalam laci",
-    "night.put_back": "Letak semula",
+    "night.put_back": "Letak semula semua",
     "register.no_change": "Tiada baki yang sesuai",
     "register.no_change_hint": "Laci tidak dapat memulangkan baki tepat {due}. Minta hantu membayar dengan duit yang lebih kecil.",
     "night.hand_over": "Serahkan",
@@ -229,6 +230,8 @@
     "morning.faded": "Barang yang pudar",
     "morning.next": "Ke pasar kampung  →",
     "morning.to_end": "Ke penghujung demo  →",
+    "morning.tomorrow": "Malam esok: {name}",
+    "morning.order": "Dipesan untuk esok – {who}: {item}",
     "morning.to_season_end": "Ke penghujung musim  →",
 
     // The ferryman's boat (hover a crate)

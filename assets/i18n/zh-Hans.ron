@@ -184,6 +184,7 @@
     "evening.expected": "今晚可能来的客人",
     "evening.expected_line": "{ghost}（{percent} %）想要：{wishes}",
     "evening.expected_hint": "来客取决于氛围和当晚的事件。×N：仓库里已有这么多。",
+    "evening.turn_away": "今晚会马上离开：{list}",
     "evening.open": "开门营业  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "应找零：{amount}",
     "night.counted": "已数出：{coins}（={total}）",
     "night.add_coin": "+ {coin}（{value}） · 钱箱剩{left}",
-    "night.put_back": "放回",
+    "night.put_back": "全部放回",
     "register.no_change": "没有合适的零钱",
     "register.no_change_hint": "钱箱里凑不出正好{due}的找零。请幽灵用小面额的钱付款吧。",
     "night.hand_over": "交给顾客",
@@ -229,6 +230,8 @@
     "morning.faded": "褪色的商品",
     "morning.next": "前往村中集市  →",
     "morning.to_end": "前往演示结尾  →",
+    "morning.tomorrow": "明晚：{name}",
+    "morning.order": "明天的预订 – {who}：{item}",
     "morning.to_season_end": "前往本季结尾  →",
 
     // The ferryman's boat (hover a crate)

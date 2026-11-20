@@ -184,6 +184,7 @@
     "evening.expected": "Likely guests tonight",
     "evening.expected_line": "{ghost} ({percent} %) asks for: {wishes}",
     "evening.expected_hint": "Who comes depends on the atmosphere and tonight's events. ×N: you already have that many in stock.",
+    "evening.turn_away": "Will turn away tonight: {list}",
     "evening.open": "Open the shop  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Change due: {amount}",
     "night.counted": "Counted out: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} in drawer",
-    "night.put_back": "Put back",
+    "night.put_back": "Put all back",
     "register.no_change": "No fitting change",
     "register.no_change_hint": "The drawer cannot give back exactly {due}. Ask the ghost for smaller coins.",
     "night.hand_over": "Hand over",
@@ -229,6 +230,8 @@
     "morning.faded": "Faded items",
     "morning.next": "To the village market  →",
     "morning.to_end": "To the end of the demo  →",
+    "morning.tomorrow": "Tomorrow night: {name}",
+    "morning.order": "Ordered for tomorrow – {who}: {item}",
     "morning.to_season_end": "To the end of the season  →",
 
     // The ferryman's boat (hover a crate)

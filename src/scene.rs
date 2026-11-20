@@ -639,6 +639,10 @@ pub fn world_label(
     )
 }
 
+/// A label whose screen position has been set at least once.
+#[derive(Component)]
+struct LabelPlaced;
+
 fn follow_labels(
     mut commands: Commands,
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -650,10 +654,11 @@ fn follow_labels(
         &mut Node,
         &mut Visibility,
         Has<LabelMuted>,
+        Has<LabelPlaced>,
     )>,
 ) {
     let (camera, cam_transform) = *camera;
-    for (entity, label, mut node, mut visibility, muted) in &mut labels {
+    for (entity, label, mut node, mut visibility, muted, placed) in &mut labels {
         let Ok(target) = targets.get(label.target) else {
             commands.entity(entity).despawn();
             continue;
@@ -669,6 +674,13 @@ fn follow_labels(
                 let pos = pos / ui_scale.0;
                 node.left = px(pos.x - LABEL_WIDTH / 2.0);
                 node.top = px(pos.y);
+                // A new label shows from the next frame on, once the layout has
+                // its place – otherwise it flashes in the top left corner.
+                if !placed {
+                    commands.entity(entity).insert(LabelPlaced);
+                    *visibility = Visibility::Hidden;
+                    continue;
+                }
                 *visibility = if muted {
                     Visibility::Hidden
                 } else {

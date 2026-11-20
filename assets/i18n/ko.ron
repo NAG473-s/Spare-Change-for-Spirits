@@ -184,6 +184,7 @@
     "evening.expected": "오늘 밤 올 것 같은 손님",
     "evening.expected_line": "{ghost} ({percent} %)의 바람: {wishes}",
     "evening.expected_hint": "누가 올지는 분위기와 그날 밤의 사건에 따라 달라집니다. ×N: 창고에 이미 그만큼 있습니다.",
+    "evening.turn_away": "오늘 밤 바로 돌아갈 손님: {list}",
     "evening.open": "가게 열기  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "거스름돈: {amount}",
     "night.counted": "세어 준 돈: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · 남은 개수 {left}",
-    "night.put_back": "되돌리기",
+    "night.put_back": "모두 되돌리기",
     "register.no_change": "맞는 거스름돈 없음",
     "register.no_change_hint": "돈통의 돈으로는 정확히 거슬러 줄 수 없어요 ({due}). 유령에게 더 작은 돈으로 내 달라고 하세요.",
     "night.hand_over": "건네기",
@@ -229,6 +230,8 @@
     "morning.faded": "빛바랜 물건",
     "morning.next": "마을 장터로  →",
     "morning.to_end": "데모 마지막으로  →",
+    "morning.tomorrow": "내일 밤: {name}",
+    "morning.order": "내일 주문 – {who}: {item}",
     "morning.to_season_end": "시즌 마지막으로  →",
 
     // The ferryman's boat (hover a crate)

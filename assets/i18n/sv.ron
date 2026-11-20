@@ -184,6 +184,7 @@
     "evening.expected": "Väntade gäster i natt",
     "evening.expected_line": "{ghost} ({percent} %) önskar sig: {wishes}",
     "evening.expected_hint": "Vilka som kommer beror på stämningen och nattens händelser. ×N: så många har du redan i lagret.",
+    "evening.turn_away": "Vänder i dörren i natt: {list}",
     "evening.open": "Öppna butiken  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Växel tillbaka: {amount}",
     "night.counted": "Uppräknat: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} i kassan",
-    "night.put_back": "Lägg tillbaka",
+    "night.put_back": "Lägg tillbaka allt",
     "register.no_change": "Ingen passande växel",
     "register.no_change_hint": "Kassan kan inte ge tillbaka exakt {due}. Be spöket om mindre mynt.",
     "night.hand_over": "Lämna över",
@@ -229,6 +230,8 @@
     "morning.faded": "Bleknade varor",
     "morning.next": "Till byns marknad  →",
     "morning.to_end": "Till slutet av demon  →",
+    "morning.tomorrow": "I morgon natt: {name}",
+    "morning.order": "Beställt till i morgon – {who}: {item}",
     "morning.to_season_end": "Till säsongens slut  →",
 
     // The ferryman's boat (hover a crate)

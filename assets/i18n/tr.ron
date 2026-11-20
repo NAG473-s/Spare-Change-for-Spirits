@@ -184,6 +184,7 @@
     "evening.expected": "Bu gece beklenen misafirler",
     "evening.expected_line": "{ghost} ({percent} %) şunu istiyor: {wishes}",
     "evening.expected_hint": "Kimin geleceği atmosfere ve gecenin olaylarına bağlı. ×N: depoda zaten bu kadar var.",
+    "evening.turn_away": "Bu gece hemen geri dönecekler: {list}",
     "evening.open": "Dükkânı aç  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Para üstü: {amount}",
     "night.counted": "Sayılan: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · çekmecede {left}",
-    "night.put_back": "Geri koy",
+    "night.put_back": "Hepsini geri koy",
     "register.no_change": "Uygun para üstü yok",
     "register.no_change_hint": "Çekmecedeki paralarla tam {due} para üstü verilemiyor. Hayaletten daha küçük paralar iste.",
     "night.hand_over": "Teslim et",
@@ -229,6 +230,8 @@
     "morning.faded": "Solan ürünler",
     "morning.next": "Köy pazarına  →",
     "morning.to_end": "Demonun sonuna  →",
+    "morning.tomorrow": "Yarın gece: {name}",
+    "morning.order": "Yarın için sipariş – {who}: {item}",
     "morning.to_season_end": "Sezonun sonuna  →",
 
     // The ferryman's boat (hover a crate)

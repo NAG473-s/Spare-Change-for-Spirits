@@ -184,6 +184,7 @@
     "evening.expected": "Πιθανοί επισκέπτες απόψε",
     "evening.expected_line": "{ghost} ({percent} %) ζητά: {wishes}",
     "evening.expected_hint": "Το ποιος θα έρθει εξαρτάται από την ατμόσφαιρα και τα γεγονότα της νύχτας. ×N: τόσα έχεις ήδη στην αποθήκη.",
+    "evening.turn_away": "Απόψε θα φύγουν αμέσως: {list}",
     "evening.open": "Άνοιξε το μαγαζί  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Ρέστα: {amount}",
     "night.counted": "Μετρημένα: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · {left} στο συρτάρι",
-    "night.put_back": "Επιστροφή",
+    "night.put_back": "Επιστροφή όλων",
     "register.no_change": "Δεν υπάρχουν κατάλληλα ρέστα",
     "register.no_change_hint": "Το συρτάρι δεν μπορεί να δώσει πίσω ακριβώς {due}. Ζήτα από το φάντασμα μικρότερα νομίσματα.",
     "night.hand_over": "Δώσε",
@@ -229,6 +230,8 @@
     "morning.faded": "Ξεθωριασμένα είδη",
     "morning.next": "Στο παζάρι του χωριού  →",
     "morning.to_end": "Στο τέλος του demo  →",
+    "morning.tomorrow": "Αύριο το βράδυ: {name}",
+    "morning.order": "Παραγγελία για αύριο – {who}: {item}",
     "morning.to_season_end": "Στο τέλος της σεζόν  →",
 
     // The ferryman's boat (hover a crate)

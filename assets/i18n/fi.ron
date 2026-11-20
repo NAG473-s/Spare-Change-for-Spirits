@@ -184,6 +184,7 @@
     "evening.expected": "Todennäköiset vieraat tänä yönä",
     "evening.expected_line": "{ghost} ({percent} %) toivoo: {wishes}",
     "evening.expected_hint": "Tulijat riippuvat tunnelmasta ja yön tapahtumista. ×N: sinulla on jo näin monta varastossa.",
+    "evening.turn_away": "Kääntyvät tänä yönä takaisin: {list}",
     "evening.open": "Avaa puoti  →",
 
     // Night panel.
@@ -197,7 +198,7 @@
     "night.change_due": "Vaihtorahaa: {amount}",
     "night.counted": "Laskettu: {coins} (= {total})",
     "night.add_coin": "+ {coin} ({value}) · kassassa {left}",
-    "night.put_back": "Palauta",
+    "night.put_back": "Palauta kaikki",
     "register.no_change": "Ei sopivaa vaihtorahaa",
     "register.no_change_hint": "Kassasta ei saa annettua tasan oikeaa vaihtorahaa ({due}). Pyydä haamulta pienempiä kolikoita.",
     "night.hand_over": "Ojenna",
@@ -229,6 +230,8 @@
     "morning.faded": "Haalistuneet tuotteet",
     "morning.next": "Kylän markkinoille  →",
     "morning.to_end": "Demon loppuun  →",
+    "morning.tomorrow": "Huomisyönä: {name}",
+    "morning.order": "Tilattu huomiseksi – {who}: {item}",
     "morning.to_season_end": "Kauden loppuun  →",
 
     // The ferryman's boat (hover a crate)
