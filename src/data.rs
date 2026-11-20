@@ -979,13 +979,14 @@ mod tests {
         assert_eq!(data.crates_tonight(quiet), base);
         assert_eq!(data.price_factor(quiet), 1.0);
         assert_eq!(data.ghost_weight_factor(quiet, "shy"), 1.0);
-        // Every night of the demo has an event, and every later ghost unlocks within the demo.
+        // Every night of this build has an event, and every ghost unlocks within the
+        // full game (the demo stops earlier and leaves the later ghosts locked).
         for night in 1..=data.config.final_night() {
             assert!(data.event(night).is_some(), "night {night} has no event");
         }
         for g in &data.ghosts {
             assert!(
-                g.unlock_night <= data.config.final_night(),
+                g.unlock_night <= data.config.last_night,
                 "{} never appears",
                 g.id
             );
