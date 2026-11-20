@@ -411,23 +411,24 @@ their origin and face −Y.
 | `hourglass` | 0.2 × 0.3 × 0.2 | A brass-framed hourglass with pale sand, standing upright. |
 | `plan` | 0.4 × 0.12 × 0.12 | A rolled-up building plan on yellowed paper, tied with a red ribbon, lying on its side (it stands for the carpenter's work on the shop). |
 
-## Delivery: push every model on its own
+## Delivery
 
-Put each model into the repository **as soon as it is finished** – do not wait for the others.
+Put finished models into the repository **as soon as they are done** – do not wait for the
+others. Several models may share a commit.
 
 - Repository: `https://github.com/NAG473-s/Spare-Change-for-Spirits`, branch `main`
   (commit directly to `main`, no pull requests).
-- **One commit per model:** exactly one `.glb` file per commit, at the path given in its section
-  (e.g. `assets/models/decor/shelf.glb`), file name = the id.
-- Commit message in English: `Add <id> model [skip ci]`, e.g. `Add shelf model [skip ci]`.
+- Each `.glb` at the path given in its section (e.g. `assets/models/decor/shelf.glb`), file
+  name = the id.
+- Commit message in English, e.g. `Add shelf model [skip ci]` or `Add winter keepsake models [skip ci]`.
   Use the repository's existing author identity (see `AGENTS.md`); no co-author lines.
 - Run `git pull --rebase origin main` before each push, then push right away.
 - Commit only the `.glb` (textures embedded); no `.blend` files, renders or other changes.
-- A replacement for an existing model is again one commit: `Update <id> model [skip ci]`.
+- A replacement for an existing model: `Update <id> model [skip ci]`.
 
 ## After generating
 
-1. Each `.glb` is in its folder with the exact id as file name (and pushed on its own, see above).
+1. Each `.glb` is in its folder with the exact id as file name (and pushed, see above).
 2. Check of size, origin and triangle count (the rules were tested with Blender 5.3):
    `python3 tools/check_models.py` (lists every model and flags problems).
 3. Start the game – the model replaces the placeholder.

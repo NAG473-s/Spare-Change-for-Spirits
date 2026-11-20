@@ -96,13 +96,13 @@ The environment textures and their paths are listed under [Water and light](#wat
 If one image looks off next to the others, regenerate it in the same conversation with
 "Same style as the previous images, but …".
 
-## Delivery: push every image on its own
+## Delivery
 
-Put each prepared image into the repository as soon as it is finished: repository
-`https://github.com/NAG473-s/Spare-Change-for-Spirits`, branch `main`, **one commit per image**
-at the path `tools/prepare_sprite.py` wrote, message `Add <id> sprite [skip ci]` (English, the
-repository's author identity from `AGENTS.md`, no co-author lines), `git pull --rebase origin main`
-before each push.
+Put prepared images into the repository as soon as they are finished: repository
+`https://github.com/NAG473-s/Spare-Change-for-Spirits`, branch `main`, at the path
+`tools/prepare_sprite.py` wrote. Several images may share a commit; message in English, e.g.
+`Add <id> sprite [skip ci]` or `Add season 3 icons [skip ci]` (the repository's author identity
+from `AGENTS.md`, no co-author lines), `git pull --rebase origin main` before each push.
 
 ## Style block
 
@@ -189,7 +189,7 @@ Prepare it (trims all frames with the same box so the ghost does not jitter, wri
 python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 48
 ```
 
-`--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
+`--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, e.g.
 `Add <id> sheet [skip ci]`.
 
 ## Ghost gesture sheets – canvas 1024 × 1536 (all ghosts delivered)
@@ -233,8 +233,8 @@ child's pinwheel, Ida's lantern) in every frame. Prepare a download with `--gest
 python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --gesture pay --colors 48
 ```
 
-It writes `assets/sprites/ghosts/<id>_<gesture>.png`. Delivery: one commit per sheet,
-`Add <id> <gesture> sheet [skip ci]`.
+It writes `assets/sprites/ghosts/<id>_<gesture>.png`. Delivery as for sprites, e.g.
+`Add <id> gesture sheets [skip ci]`.
 
 ## First launch at the harbour (done)
 
@@ -299,7 +299,7 @@ One object per image, centred, seen from the front and slightly above, filling m
 the game shows it at 24 px on a button (and products at shelf size while they have no model), so
 keep the silhouette simple and bold. Prepare with kind `product` or `decor` (both 96 × 96):
 `assets/sprites/products/<id>.png` and `assets/sprites/decor/<id>.png`. A button without an icon
-just shows its text. Delivery: one commit per image, `Add <id> icon [skip ci]`.
+just shows its text. Delivery as for sprites, e.g. `Add <id> icon [skip ci]`.
 
 **Delivered furniture icons:**
 
@@ -357,7 +357,7 @@ convert ~/Downloads/image.png -resize 256x256 art/steam/achievements/<id>.png
 convert art/steam/achievements/<id>.png -colorspace Gray -modulate 70 art/steam/achievements/<id>_locked.png
 ```
 
-Delivery: one commit per icon, `Add <id> achievement icon [skip ci]`.
+Delivery as for sprites, e.g. `Add achievement icons [skip ci]`.
 
 | File id | Name | Motif |
 |---|---|---|
@@ -385,7 +385,7 @@ Delivery: one commit per icon, `Add <id> achievement icon [skip ci]`.
 The coin bar at the top and the change buttons at the register show a small picture of each coin:
 `assets/sprites/coins/<coin>.png` (96 × 96). Prepare a painted replacement with
 `python3 tools/prepare_sprite.py ~/Downloads/image.png product <coin> --out assets/sprites/coins/<coin>.png --colors 48`
-and deliver one commit per image, `Add <coin> coin icon [skip ci]`.
+and deliver as for sprites, e.g. `Add <coin> coin icon [skip ci]`.
 
 | File id | Prompt |
 |---|---|

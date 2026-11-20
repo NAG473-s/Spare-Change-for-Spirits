@@ -36,8 +36,8 @@
   translate it into **every** language in `assets/i18n/` in the same change (keep placeholders,
   match each catalog's style). Then run `python3 tools/subset_fonts.py` so the CJK, Thai and
   Arabic fonts contain the new characters. `cargo test` fails on missing keys.
-- New models and images (e.g. from ChatGPT) are committed and pushed **one file per commit** as
-  soon as each is finished (`Add <id> model [skip ci]` / `Add <id> sprite [skip ci]`), see
+- New models and images (e.g. from ChatGPT) are committed and pushed as soon as they are
+  finished; several files may share a commit (e.g. `Add winter models [skip ci]`), see
   `docs/MODEL_PROMPTS.md` and `docs/ART_PROMPTS.md`.
 - The shop is a 3D diorama (`src/scene.rs`); ghosts are sprites. 3D models follow
   `docs/MODEL_PROMPTS.md`; check them with `python3 tools/check_models.py` and repair files with
