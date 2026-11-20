@@ -477,10 +477,12 @@ mod tests {
         );
     }
     /// Plays the stories with one chapter per night, the given nights failing.
+    #[cfg(not(feature = "demo"))]
     fn play(data: &GameData, failures: &[u32]) -> Progress {
         play_from(Progress::new(0), data, failures)
     }
 
+    #[cfg(not(feature = "demo"))]
     fn play_from(mut progress: Progress, data: &GameData, failures: &[u32]) -> Progress {
         loop {
             for i in 0..data.stories.len() {
