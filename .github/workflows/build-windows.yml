@@ -61,12 +61,28 @@ jobs:
             target/
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
+      # The Steam API (achievements, the Steam language) is loaded at launch
+      # from beside the .exe. Take Valve's redistributable from the
+      # steamworks-sys package, pinned and checked against its SHA-256.
+      - name: Fetch the Steam API library
+        shell: pwsh
+        run: |
+          $version = "0.13.0"
+          $sha256 = "ae139f051204a4af015d4f0ed3a1f7a51020d03a44c7cf249168c543d88131e9"
+          Invoke-WebRequest "https://crates.io/api/v1/crates/steamworks-sys/$version/download" -OutFile steamworks-sys.crate
+          if ((Get-FileHash steamworks-sys.crate -Algorithm SHA256).Hash.ToLower() -ne $sha256) {
+            throw "steamworks-sys $version does not match its checksum"
+          }
+          tar -xzf steamworks-sys.crate "steamworks-sys-$version/lib/steam/redistributable_bin/win64/steam_api64.dll"
+          Move-Item "steamworks-sys-$version/lib/steam/redistributable_bin/win64/steam_api64.dll" steam_api64.dll
+
       - name: Package
         shell: pwsh
         run: |
           $out = "dist/SpareChangeForSpirits"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           Copy-Item target/release/spare_change_for_spirits.exe "$out/SpareChangeForSpirits.exe"
+          Copy-Item steam_api64.dll "$out/steam_api64.dll"
           Copy-Item -Recurse assets "$out/assets"
           Copy-Item LICENSE "$out/LICENSE.txt"
           Copy-Item THIRD_PARTY_LICENSES.txt "$out/THIRD_PARTY_LICENSES.txt"

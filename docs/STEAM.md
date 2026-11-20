@@ -3,8 +3,15 @@
 What has to be entered in Steamworks for the full game and the demo. The game itself needs no
 Steamworks SDK at build time: it loads `steam_api` (`steam_api64.dll`, `libsteam_api.so`,
 `libsteam_api.dylib`) at launch if the file lies beside the executable and the game was started
-by Steam (`src/i18n/steam.rs`). Ship that file from the Steamworks SDK (`redistributable_bin`)
-in both depots.
+by Steam (`src/i18n/steam.rs`). Without the file, or started outside Steam, the game simply
+runs without Steam.
+
+The Windows workflow (`.github/workflows/build-windows.yml`) puts `steam_api64.dll` beside
+`SpareChangeForSpirits.exe` by itself: it takes Valve's redistributable from the
+`steamworks-sys` 0.13.0 package on crates.io (checked against its SHA-256), the Steamworks SDK
+version whose flat API the game uses (`SteamAPI_InitFlat`, `SteamUserStats_v013`). Upload the
+packaged folder as it is to both depots. For macOS and Linux builds take `libsteam_api.dylib` /
+`libsteam_api.so` from the same package (`lib/steam/redistributable_bin/osx`, `linux64`).
 
 ## Steam Cloud – full game and demo
 
