@@ -24,7 +24,11 @@ python3 tools/check_models.py
 
 ## To do
 
-- Achievement icons for Steam (full game only), see *Achievement icons* below.
+None. All currently ordered images are delivered.
+
+All 18 Steam achievement icons and their greyed locked versions are in
+`art/steam/achievements/` (256 × 256 PNG, full game only). The motifs and replacement
+workflow are listed under *Achievement icons* below.
 
 Season 3 portraits, icons and animation sheets are delivered:
 
@@ -336,7 +340,10 @@ the later ones:
 | `lifebuoy` | A red-and-white striped ring lifebuoy with a coil of rope. |
 | `apron` | A faded lavender shop apron on a hook, a sprig of dried lavender in its pocket. |
 
-## Achievement icons – canvas 1024 × 1024 (open)
+## Achievement icons – canvas 1024 × 1024 (done)
+
+All 18 icon pairs are delivered in `art/steam/achievements/`. The prompts below can be
+used to redraw them.
 
 For Steam (full game only, list in [STEAM.md](STEAM.md)). One image per achievement in the
 style block's look, a single bold motif on a round dark plum badge with a thin brass rim, no
