@@ -1,124 +1,69 @@
-# Roadmap to the festival and Early Access
+# A complete game by 25 January 2027
 
-**Goal:** show the demo at the Steam shop management festival (registration until
-**2027-01-25**) and open **Early Access right after the festival**, so its attention lands on a
-game that can be bought – not on a wishlist that waits for months while others copy the idea.
+The full game ends when Kasimir pays his own fare and the shopkeeper sees what has changed on both sides of the river. The campaign follows 30 story nights across three seasons. A missed wish can extend a season until its story is resolved. After the credits, the same shop stays open in free play.
 
-The repository stays public until the Steam store page goes live. At publication, switch the
-repository to private and begin promoting the game publicly.
+## Starting point · 20 November 2026
 
-## What goes where
+The market, ferry, shelves, register and morning accounts already form a playable day. The six stories are in the game: Edwin and Ida, Lotte and Anselm, Mira and Kasimir. Their chapters already change the village. The ghost book records encounters and keepsakes, regulars revisit, the apprentice serves customers, and the workbench repairs wares. The plan builds on those systems and their existing art and music.
 
-| | Demo (festival) | Early Access launch | First updates |
-|---|---|---|---|
-| Nights | 1–5, ends with "continue with night 6 in the full game" | 1–10 | 11–15, endless mode |
-| Ghosts | all 10 | + 4 new | more, seasonal ones |
-| Story | Hedda's first letter, Edwin, all 5 chapters | + Ida the lighthouse keeper (nights 6–10), Hedda's letters, finale; season 2 "The Long Winter" (nights 11–20: Lotte and her dog, Anselm and the tower clock); season 3 "The Thaw" (nights 21–30: Mira the gardener, Kasimir the ferryman and his own fare) | a new story every ten nights |
-| Shop | furniture, harbour, ferryman | + shop upgrades (bigger shop, second counter) | decoration sets |
-| Polish | everything shown must look finished | all models in, no placeholders | |
+## November 20–29 · The first sale
 
-**Save games carry over:** the demo and the full game save to the same folder. A save from the
-end of the demo (night 5 played) continues in the full game with the evening of night 6 – shop,
-coins, stock, keepsakes and reputation included. The demo is built with `cargo build --features
-demo` (it stops after `demo_nights` in `assets/data/config.ron`); the full game stops after
-`last_night` – or later, if the finale story is not finished yet: the season lasts until it is
-(story ghosts repeat a failed chapter, name the ware from the second failed night on and get a
-parcel from the ferryman, so no story can get stuck). After the finale the player can keep the
-shop open in free play. From the public demo release on, saves must stay compatible
-between the two (new save fields get `#[serde(default)]` instead of a new save version); until
-then the format may still change.
+- [ ] Guide one real purchase from the ferry to the shelf. Let the first customer wait while the player studies the wish, chooses a ware and gives change. Completing a step independently advances the guide. It can be skipped, resumed after loading or revisited from the book.
+- [ ] Show which coins the customer offered, what change is due with the assist enabled, and which coins the player has returned. Give buttons, candle stubs and spoons distinct sounds and visible silhouettes. Correcting a mistake keeps the transaction open.
+- [ ] End the first morning with a ledger that explains one actual sale and what became of the unsold stock. A fresh profile can reach the next evening using only cues inside the game.
 
-## Week by week
+## November 30–December 6 · A reason to plan tomorrow
 
-Checkboxes are ticked in the commit that finishes them.
+- [ ] Give each next-night order a slip in the ghost book with the customer, ware, quantity and due night. Pinning it marks the matching crate at the ferry. Its status follows stock, sale, expiry and save/load.
+- [ ] Preview what one crate adds, how much money remains and when its contents will fade. On the shop floor, preview which ghost needs a furniture change would satisfy before placing it.
+- [ ] Make a regular's return feel familiar. A returning customer can recall a previous purchase or comment on a keepsake it recognises. The book records the encounter, and an unfamiliar face still gets a readable wish.
 
-### Week 1 · Nov 19 – Nov 29: ready for players
+## December 7–13 · Edwin, Ida and Hedda
 
-- [x] UI scales with the window; fullscreen/windowed; music and effect volume; saved in settings
-- [x] Bankruptcy rule: what happens when the drawer cannot pay for a single crate (the ferryman
-      lends `ferryman_loan` in `config.ron` and takes it back with a surcharge at dawn)
-- [x] Simulation that plays all nights with simple strategies and prints money, reputation and
-      sales per night – the basis for balancing (`cargo run --release -- --simulate [runs]`)
-- [x] First balancing pass in `assets/data/*.ron` (see `docs/BALANCING.md`)
-- [ ] Windows build run and the `.exe` played on a real Windows PC (assets, fonts, saves, sound)
-- [x] Ledger frame (`assets/sprites/ui/ledger_frame.png`) used for the morning accounts
+- [ ] Let a placed keepsake open its page in the ghost book. Edwin’s wedding photograph recalls Margaret. Ida’s logbook records which part of the lighthouse she repaired. Undiscovered chapters stay hidden.
+- [ ] Stage Ida’s restored beam sweeping the water from the fixed quay view. Give Hedda’s farewell a quiet pause before the accounts appear. The scene can be skipped and its letter read again.
+- [ ] Play through the first ten story nights with both well-stocked and struggling shops. Check the demo ending after night five, its save opening on night six in the full game, and a delayed lighthouse finale.
 
-### Week 2 · Nov 30 – Dec 6: first playtests
+## December 14–20 · A village through winter
 
-- [ ] 3–5 people play the demo nights without help; notes on where they get stuck
-- [ ] Fix what they stumbled over (tips, clarity, bugs)
-- [x] All currently ordered models are delivered and checked with `tools/check_models.py`
-- [x] Ghost tooltips (name, mood, wish hint when waiting)
+- [ ] Give Lotte and Pfote an optional lost-and-found errand. Two clues lead to a damaged keepsake, the workbench restores it, and Lotte remembers its return. The errand can wait for another evening.
+- [ ] Let Anselm’s repairs change the sound of the market clock. When it strikes for the first time, show the hands moving and the first snow settling so the moment also reads with audio muted.
+- [ ] Use a winter night to teach preparation. The forecast, ferry capacity and demand for warmth should agree before the player spends a coin.
 
-### Week 3 · Dec 7 – Dec 13: content for Early Access
+## December 21–27 · The last crossing
 
-- [x] Nights 6–10: new events in `events.ron`, rising difficulty
-- [x] 4 new ghosts with wishes, sprites and sheets ordered
-- [x] A second story ghost for nights 6–10: Ida the lighthouse keeper repairs the harbour
-      lighthouse chapter by chapter; Hedda's letters and the finale tell the player's own story
-      (`story.ron`)
-- [x] Shop upgrades (bigger shop, more shelves) as a reason to save money (`upgrades.ron`,
-      sold at the market; old junk blocks part of the floor until it is cleared)
+- [ ] Let Mira’s restored window boxes attract a small returning visitor. Give the garden’s final bloom a place beside her seedling pot in the book.
+- [ ] Follow Kasimir’s last fare down to the quay. Use the restored lighthouse, the working clock and the flowering market in the closing sequence. Let the player choose one earned keepsake for the last page of Hedda’s ledger.
+- [ ] Add credits that can be skipped and reopened. Save campaign completion before the credits, then offer free play in the same profile. Closing the game during the crossing, credits or epilogue must preserve the ending and the shop.
 
-### Week 4 · Dec 14 – Dec 20: store page live
+## December 28–January 3 · Life after the ending
 
-- [ ] Store page text, tags, screenshots (only once the models are in)
-- [ ] Trailer v1 (30–60 s, captured in the game)
-- [ ] Store page submitted for review and set to "coming soon" – wishlists start counting
-- [ ] Switch the repository to private when the Steam store page is publicly visible as "coming soon"
-- [ ] Demo set up as its own app in Steamworks
-- [ ] Steam Cloud (Auto-Cloud, both apps) and the achievements (full game) entered as in
-      `docs/STEAM.md`; achievement icons uploaded
-- [ ] Accessibility features declared in Steamworks (list in `docs/ACCESSIBILITY.md`)
+- [ ] Give free play a repeatable week of market specials, weather and small requests from regulars. Begin it on the night after the actual finale, including when the story ran late.
+- [ ] Add one optional use for a prosperous shop’s savings: restore a row of quay lanterns, one at a time. Show each light in the harbour and record who visited when the work was finished. Keep the next upgrade affordable without requiring it for an ending.
+- [ ] Keep orders, the apprentice, furniture sets, repairs and the collection book useful after the credits. Test a returning night-31 profile and several weeks of play for repeated farewells, expired orders and missing visitors.
 
-### Week 5 · Dec 21 – Jan 3: holidays, buffer
+## January 4–10 · Balance, readability and controls
 
-- [ ] Light polish only, no big features
-- [ ] Translations of the most important languages (German, French, Spanish, Japanese,
-      Simplified Chinese) checked by native speakers if possible
+- [ ] Extend the balancing simulation to cover next-night orders and repairs. Compare the cash drawer, fulfilled wishes, waiting times and loan repayments across all three seasons. Tune the first five nights and the busiest late-game queue separately. [Balancing targets](BALANCING.md)
+- [ ] Make each essential shop action reachable by mouse, controller and keyboard, including selecting crates, serving a ghost and saving. Add a high-contrast panel option and a reduced-motion setting for the new scenes.
+- [ ] Fit long wishes, order slips and ledger entries at 200% interface size on a 1280 × 800 screen. Check the new text in all 31 catalogs, including shaping, line wrapping and right-to-left text. [Accessibility features](ACCESSIBILITY.md)
 
-### Week 6 · Jan 4 – Jan 10: demo build
+## January 11–17 · Complete campaign build
 
-- [ ] Demo build with `--features demo` (nights 1–5); end screen with "continue with night 6"
-      and a wishlist link; check that a finished demo save continues in the full build
-- [x] One workflow builds both editions for Windows, Linux and macOS Universal
-- [ ] Demo build uploaded and submitted for Steam's build review
-- [ ] Second playtest round with the Early Access content
+- [ ] Finish and integrate all required portraits, props, effects, sound cues and translations. Check the entire route from the first ferry to the credits against a clean install with no development files.
+- [ ] Automate the campaign paths most likely to lose progress: missing a story ware, restarting a night with an open order, resuming a finale, and loading the free-play save. Preserve stock, coins, upgrades, book entries and the chosen keepsake.
+- [ ] Build both editions for Windows x86-64, Linux x86-64 and macOS Universal. Check the packaged assets, fonts and saves. Freeze campaign content at the end of the week.
 
-### Week 7 · Jan 11 – Jan 17: Early Access build
+## January 18–25 · Finish
 
-- [ ] Nights 1–10 complete and balanced, no placeholders left
-- [ ] Early Access FAQ on the store page (what is planned, how long, price)
-- [ ] Price and Early Access release date set
+- [ ] Run the full campaign and the five-night demo from the packaged builds. Repeat the first sale muted, a late-game night with patient ghosts, and a save/load during each seasonal transition.
+- [ ] Fix progression blockers, incorrect payments, unreadable screens, missing art and audio, and performance drops in the busiest shop. Re-run each affected sequence and the automated tests.
+- [ ] **January 25 completion check.** A new profile can finish all six stories, see the credits and resume the same shop in free play. A finished demo profile continues in the full game. The release packages and their regression results come from the same revision.
 
-### Week 8 · Jan 18 – Jan 25: festival registration
+## Extra ideas if the campaign is ready early
 
-- [ ] Registered for the festival by **Jan 25** with the approved demo
-- [ ] List of streamers and press for cozy and management games; short mail with a key
-- [ ] Social posts: a few short clips (the ferryman, the sign at midnight, a ghost passing
-      into the light)
-
-### Week 9 · Jan 26 – Jan 31: launch ready
-
-- [ ] Early Access build uploaded and approved, release button ready for right after the festival
-- [ ] Plan for the next updates (season 4: nights 31–40 with its own story). Seasons 2 and 3
-      (nights 11–30) are in, with orders for the next night, mishaps during the night and the
-      workbench.
-
-## Steam rules to check in Steamworks
-
-Check these against the current Steamworks documentation, they change:
-
-- How long the store page and each build take to review (plan with about a week).
-- How long a page has to be visible as "coming soon" before release.
-- What the festival requires from the demo (its own app, release date, page language).
-- The disclosure of AI-generated content in the content survey.
-
-## Risks
-
-- **Models arrive late:** every model has a placeholder, but screenshots and the trailer need
-  the real ones – order them first, store page assets after.
-- **Balancing:** nights 6–10 are new; without the simulation and playtests they will be too easy
-  or too hard.
-- **Holidays:** week 5 is deliberately light; anything that slips moves there, not into
-  week 8.
+- Rain on the shop glass briefly reveals the silhouette of a ghost waiting outside.
+- A regular sends a postcard after its last wish. The postcard can be turned over and displayed by the till.
+- Pfote chooses a favourite rug and greets Lotte there when she visits.
+- A listening page in the ghost book replays the ferry bell, the winter waltz and the first spring chorus.
+- A quiet evening mode lets the player arrange shelves and photograph the shop between nights.

@@ -6,7 +6,7 @@ and hand out change in buttons, candle stubs and silver spoons.
 
 - Engine: [Bevy](https://bevy.org) 0.20
 - Steam App ID: 5657500
-- Target: Steam shop management festival (registration deadline 2027-01-25)
+- Full game target: 25 January 2027
 
 ## Running
 
@@ -338,7 +338,7 @@ Gameplay triggers sounds and effects through the `Cue` message.
 
 ## Next steps (ideas)
 
-The plan up to the festival and the Early Access launch is in [docs/ROADMAP.md](docs/ROADMAP.md).
+The [game roadmap](docs/ROADMAP.md) covers the complete campaign, its ending and free play through 25 January 2027.
 What to enter in Steamworks (Steam Cloud for both apps, achievements for the full game) is in
 [docs/STEAM.md](docs/STEAM.md).
 

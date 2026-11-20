@@ -1,5 +1,8 @@
 # Steam setup
 
+The repository stays public until the Steam store page becomes publicly visible as “coming soon”.
+At that point the repository becomes private.
+
 What has to be entered in Steamworks for the full game and the demo. The game itself needs no
 Steamworks SDK at build time: it loads `steam_api` (`steam_api64.dll`, `libsteam_api.so`,
 `libsteam_api.dylib`) at launch if the file lies beside the executable and the game was started
