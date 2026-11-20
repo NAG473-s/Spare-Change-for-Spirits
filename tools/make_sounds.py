@@ -267,22 +267,26 @@ def intro_music():
     return normalise(score, 0.40)
 
 
-def evening_music():
-    beat = 60 / 76
-    loop = int(len(MELODY) * 3 * beat * SR)
+def music_box_loop(melody, harmony, bpm, shift=12, bass_shift=12, wet=0.5, extra=None):
+    """A looping 3/4 music box tune: melody notes on the beat, bass on one,
+    chord on two and three. `extra(out, bar, start, beat)` adds more per bar."""
+    beat = 60 / bpm
+    loop = int(len(melody) * 3 * beat * SR)
     out = np.zeros(loop + 4 * SR)
-    for bar, notes in enumerate(MELODY):
+    for bar, notes in enumerate(melody):
         start = bar * 3 * beat
         at = start
         for note, beats in notes:
-            place(out, music_box_note(note + 12, 0.9), at)
+            place(out, music_box_note(note + shift, 0.9), at)
             at += beats * beat
-        bass, chord = HARMONY[bar]
-        place(out, music_box_note(bass + 12, 0.5), start)
+        bass, chord = harmony[bar]
+        place(out, music_box_note(bass + bass_shift, 0.5), start)
         for b in (1, 2):
             for c in chord:
-                place(out, music_box_note(c + 12, 0.22), start + b * beat)
-    out = reverb(out, 0.5)
+                place(out, music_box_note(c + shift, 0.22), start + b * beat)
+        if extra:
+            extra(out, bar, start, beat)
+    out = reverb(out, wet)
     # Wrap the tail onto the start so the loop is seamless.
     looped = out[:loop].copy()
     tail = out[loop:]
@@ -290,19 +294,118 @@ def evening_music():
     return normalise(looped, 0.35)
 
 
-def night_ambience():
-    seconds = 40
+def evening_music():
+    return music_box_loop(MELODY, HARMONY, 76)
+
+
+# Season 2, the long winter: a slower waltz in D minor with sleigh bells.
+WINTER_MELODY = [
+    [(69, 1.5), (67, 0.5), (65, 1)], [(62, 2), (65, 1)], [(64, 1), (65, 1), (67, 1)], [(69, 3)],
+    [(70, 1.5), (69, 0.5), (67, 1)], [(65, 2), (62, 1)], [(64, 1), (61, 1), (64, 1)], [(62, 3)],
+    [(65, 1.5), (67, 0.5), (69, 1)], [(74, 2), (72, 1)], [(70, 1), (69, 1), (67, 1)], [(69, 3)],
+    [(70, 1.5), (69, 0.5), (67, 1)], [(65, 2), (64, 1)], [(62, 1), (61, 1), (64, 1)], [(62, 3)],
+]
+WINTER_HARMONY = [
+    (50, (62, 65)), (46, (62, 65)), (48, (64, 67)), (45, (61, 64)),
+    (43, (62, 67)), (50, (62, 65)), (45, (61, 64)), (50, (62, 65)),
+    (53, (65, 69)), (46, (65, 70)), (43, (62, 67)), (45, (61, 64)),
+    (43, (62, 67)), (50, (62, 65)), (45, (61, 64)), (50, (62, 65)),
+]
+
+# Season 3, the thaw: a brighter, quicker tune in G major with birdsong.
+SPRING_MELODY = [
+    [(71, 1), (74, 1), (79, 1)], [(78, 2), (76, 1)], [(74, 1), (72, 1), (71, 1)], [(69, 3)],
+    [(72, 1), (76, 1), (79, 1)], [(81, 2), (79, 1)], [(78, 1), (76, 1), (74, 1)], [(74, 3)],
+    [(71, 1), (74, 1), (79, 1)], [(83, 2), (81, 1)], [(79, 1), (76, 1), (72, 1)], [(74, 3)],
+    [(76, 1), (78, 1), (79, 1)], [(81, 1.5), (79, 0.5), (76, 1)], [(74, 1), (72, 1), (69, 1)], [(67, 3)],
+]
+SPRING_HARMONY = [
+    (43, (59, 62)), (50, (62, 66)), (43, (59, 62)), (50, (62, 66)),
+    (48, (60, 64)), (50, (62, 66)), (50, (62, 66)), (43, (59, 62)),
+    (43, (59, 62)), (52, (59, 64)), (48, (60, 64)), (50, (62, 66)),
+    (48, (60, 64)), (50, (62, 66)), (50, (60, 66)), (43, (59, 62)),
+]
+
+
+def sleigh_bells(seconds, seed):
+    """A soft shake of tiny bells: bright, quickly fading noise."""
+    local = np.random.default_rng(seed)
+    t = t_axis(seconds)
+    noise = bandpass_fft(local.standard_normal(len(t)), 5000, 9000)
+    jingle = sum(np.sin(2 * np.pi * f * t) for f in (4186, 5274, 6272)) * 0.15
+    return (normalise(noise, 1.0) + jingle) * np.exp(-t / 0.09)
+
+
+def bird_chirp(start_hz, end_hz, seconds=0.11):
+    t = t_axis(seconds)
+    freq = np.linspace(start_hz, end_hz, len(t))
+    phase = 2 * np.pi * np.cumsum(freq) / SR
+    return np.sin(phase) * np.sin(np.pi * t / seconds) ** 2
+
+
+def evening_music_winter():
+    def bells(out, bar, start, beat):
+        for b in (1, 2):
+            place(out, 0.05 * sleigh_bells(0.35, bar * 3 + b), start + b * beat)
+
+    return music_box_loop(WINTER_MELODY, WINTER_HARMONY, 66, wet=0.6, extra=bells)
+
+
+def evening_music_spring():
+    def birds(out, bar, start, beat):
+        # Now and then a little bird answers the tune.
+        if bar % 4 == 3:
+            for i, (a, b) in enumerate([(3200, 4200), (3400, 4600), (4400, 3000)]):
+                place(out, 0.06 * bird_chirp(a, b), start + 1.2 * beat + i * 0.16)
+
+    return music_box_loop(SPRING_MELODY, SPRING_HARMONY, 88, shift=0, wet=0.4, extra=birds)
+
+
+def wind(seconds, cutoff, swells):
+    """Low-passed noise with slow swells (whole cycles per loop: seamless)."""
     n = seconds * SR
     t = np.arange(n) / SR
-    # Wind: low-passed noise with slow swells. All modulation frequencies are
-    # whole cycles per loop, so the loop is seamless.
-    wind = lowpass_fft(rng.standard_normal(n), 350, order=2)
-    swell = 0.55 + 0.3 * np.sin(2 * np.pi * 2 / seconds * t) + 0.15 * np.sin(2 * np.pi * 5 / seconds * t + 1.3)
-    wind = normalise(wind, 1.0) * swell
+    air = normalise(lowpass_fft(rng.standard_normal(n), cutoff, order=2), 1.0)
+    swell = 0.55 + sum(a * np.sin(2 * np.pi * k / seconds * t + p) for k, a, p in swells)
+    return air * swell, t
+
+
+def night_ambience():
+    seconds = 40
+    air, t = wind(seconds, 350, [(2, 0.3, 0.0), (5, 0.15, 1.3)])
     # A faint, slowly beating drone.
     drone = 0.12 * np.sin(2 * np.pi * (2200 / seconds) * t) + 0.08 * np.sin(2 * np.pi * (3302 / seconds) * t)
     drone *= 0.6 + 0.4 * np.sin(2 * np.pi * 3 / seconds * t)
-    return normalise(wind * 0.8 + drone, 0.3)
+    return normalise(air * 0.8 + drone, 0.3)
+
+
+def night_ambience_winter():
+    """Colder, gustier wind that whistles round the corners."""
+    seconds = 40
+    air, t = wind(seconds, 650, [(3, 0.35, 0.4), (7, 0.2, 2.1)])
+    whistle_noise = bandpass_fft(rng.standard_normal(len(t)), 700, 1100)
+    gusts = np.clip(np.sin(2 * np.pi * 4 / seconds * t + 0.7), 0, 1) ** 3
+    whistle = normalise(whistle_noise, 1.0) * gusts * 0.25
+    return normalise(air * 0.8 + whistle, 0.3)
+
+
+def night_ambience_spring():
+    """A mild breeze, crickets in the grass and a frog now and then."""
+    seconds = 40
+    air, t = wind(seconds, 260, [(2, 0.2, 0.0), (3, 0.1, 0.9)])
+    crickets = np.zeros(len(t))
+    chirp = bird_chirp(4600, 4700, 0.035)
+    for i in range(seconds * 2):
+        at = i * 0.5
+        loud = 0.6 + 0.4 * np.sin(2 * np.pi * 3 * at / seconds)
+        for k in range(3):
+            place(crickets, loud * chirp, at + k * 0.06)
+    frogs = np.zeros(len(t))
+    for at in (6.0, 6.45, 23.5, 31.0, 31.4):
+        ft = t_axis(0.22)
+        croak = np.sin(2 * np.pi * 180 * ft) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 30 * ft)))
+        place(frogs, croak * np.sin(np.pi * ft / 0.22), at)
+    return normalise(air * 0.6 + 0.08 * crickets + 0.12 * lowpass_fft(frogs, 900), 0.3)
 
 
 SOUNDS = {
@@ -322,10 +425,21 @@ SOUNDS = {
     "intro_music": intro_music,
     "evening_music": evening_music,
     "night_ambience": night_ambience,
+    "evening_music_winter": evening_music_winter,
+    "night_ambience_winter": night_ambience_winter,
+    "evening_music_spring": evening_music_spring,
+    "night_ambience_spring": night_ambience_spring,
 }
 
 
-LOOPS = {"evening_music", "night_ambience"}
+LOOPS = {
+    "evening_music",
+    "night_ambience",
+    "evening_music_winter",
+    "night_ambience_winter",
+    "evening_music_spring",
+    "night_ambience_spring",
+}
 
 
 def write_ogg(name, samples):

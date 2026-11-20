@@ -4,13 +4,18 @@
 use bevy::audio::Volume;
 use bevy::prelude::*;
 
-use crate::day_cycle::Phase;
+use crate::data::asset_exists;
+use crate::day_cycle::{Phase, Progress};
 use crate::fx::{Cue, Voice};
 use crate::rng::Rng;
 use crate::save::Settings;
 use crate::title::Opening;
 
 const MUSIC_FADE_SECS: f32 = 2.0;
+/// Seasons with music of their own: `evening_music_<name>.ogg` and
+/// `night_ambience_<name>.ogg`. Every other season, or a missing file, plays
+/// the first season's tracks.
+const SEASON_MUSIC: &[(u32, &str)] = &[(2, "winter"), (3, "spring")];
 /// Seconds between two ghost "wooos" or hums, so several ghosts never
 /// turn into a choir. Whispers and startled sounds always play.
 const VOICE_GAP_SECS: f32 = 2.5;
@@ -124,8 +129,24 @@ fn play_cues(
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Track {
-    Evening,
-    Night,
+    Evening(u32),
+    Night(u32),
+}
+
+impl Track {
+    /// The file to play: the season's own, if there is one.
+    fn path(self) -> String {
+        let (base, season) = match self {
+            Track::Evening(s) => ("evening_music", s),
+            Track::Night(s) => ("night_ambience", s),
+        };
+        SEASON_MUSIC
+            .iter()
+            .find(|(n, _)| *n == season)
+            .map(|(_, name)| format!("sounds/{base}_{name}.ogg"))
+            .filter(|p| asset_exists(p))
+            .unwrap_or_else(|| format!("sounds/{base}.ogg"))
+    }
 }
 
 #[derive(Resource, Default)]
@@ -143,13 +164,21 @@ fn choose_music(
     phase: Res<State<Phase>>,
     settings: Res<Settings>,
     sounds: Res<Sounds>,
+    asset_server: Res<AssetServer>,
+    progress: Res<Progress>,
     opening: Option<Res<Opening>>,
     mut current: ResMut<CurrentMusic>,
     mut playing: Query<&mut Music>,
 ) {
+    // The title screen keeps the first season's tune.
+    let season = if *phase.get() == Phase::Menu {
+        1
+    } else {
+        progress.season
+    };
     let wanted = (settings.sound && opening.is_none()).then(|| match phase.get() {
-        Phase::Night => Track::Night,
-        _ => Track::Evening,
+        Phase::Night => Track::Night(season),
+        _ => Track::Evening(season),
     });
     if wanted == current.0 {
         return;
@@ -159,12 +188,19 @@ fn choose_music(
         music.target = 0.0;
     }
     let Some(track) = wanted else { return };
+    let path = track.path();
     let (handle, target) = match track {
-        Track::Evening => (&sounds.evening_music, 0.6),
-        Track::Night => (&sounds.night_ambience, 0.8),
+        Track::Evening(_) if path == "sounds/evening_music.ogg" => {
+            (sounds.evening_music.clone(), 0.6)
+        }
+        Track::Night(_) if path == "sounds/night_ambience.ogg" => {
+            (sounds.night_ambience.clone(), 0.8)
+        }
+        Track::Evening(_) => (asset_server.load(path), 0.6),
+        Track::Night(_) => (asset_server.load(path), 0.8),
     };
     commands.spawn((
-        AudioPlayer::new(handle.clone()),
+        AudioPlayer::new(handle),
         PlaybackSettings {
             volume: Volume::SILENT,
             ..PlaybackSettings::LOOP
@@ -191,5 +227,19 @@ fn fade_music(
         if music.target == 0.0 && music.volume <= 0.0 {
             commands.entity(entity).despawn();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn seasons_play_their_own_music() {
+        assert_eq!(Track::Evening(1).path(), "sounds/evening_music.ogg");
+        assert_eq!(Track::Evening(2).path(), "sounds/evening_music_winter.ogg");
+        assert_eq!(Track::Night(3).path(), "sounds/night_ambience_spring.ogg");
+        // A season without its own music keeps the first season's.
+        assert_eq!(Track::Night(9).path(), "sounds/night_ambience.ogg");
     }
 }

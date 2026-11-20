@@ -278,7 +278,11 @@ shown on the shelf while the product has no model. The floor texture is
 ## Sound and effects
 
 `tools/make_sounds.py` synthesises the sound effects and instrumental music into
-`assets/sounds/*.ogg`, including the evening music box, night ambience and four-bar ferry score.
+`assets/sounds/*.ogg`, including the evening music box, night ambience and four-bar ferry score. The long winter
+(season 2) has a slower waltz with sleigh bells and a gusty, whistling night wind; the thaw
+(season 3) a brighter tune with birdsong and a night of crickets and frogs
+(`evening_music_<season>.ogg`, `night_ambience_<season>.ogg`; other seasons keep the first
+season's tracks).
 On the first launch the ferryman tells a short story in the active language.
 Each of the 31 game languages has a recorded reading and timed captions. The game plays the local
 `intro_voice_<language>.ogg` alongside `intro_music.ogg`. Skipping ends both tracks. Music,
