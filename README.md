@@ -158,6 +158,9 @@ src/
   market.rs      the village market by day: stalls, traders, wares, coin changing
   upgrades.rs    shop improvements bought at the market, junk still on the floor
   loan.rs        the bankruptcy rule: the ferryman's loan for a fresh start
+  workbench.rs   repairing Hedda's broken junk at the workbench into wares
+  incidents.rs   small mishaps during the night (draught, crow, leak) to click away
+  winter.rs      season 2: the tower clock on the market square and the snow
   tooltip.rs     the tooltip that follows the pointer (market wares, shelf products)
   audio.rs       sound effects and music
   fx.rs          flickering lights, particles, the Cue message
@@ -169,7 +172,7 @@ src/
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
-                 props.ron, market.ron, upgrades.ron
+                 props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)
   models/        3D models (.glb), see docs/MODEL_PROMPTS.md
