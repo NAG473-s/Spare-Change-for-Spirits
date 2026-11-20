@@ -24,16 +24,15 @@ python3 tools/check_models.py
 
 ## To do
 
-- Ghost sprites (and later their 2 × 2 idle sheets) for the story ghosts `ida` and `hedda`,
-  see *Ghosts introduced in later nights* below.
-- Icons for the keepsakes `logbook`, `ship_bell`, `sea_chart`, `lifebuoy` and `apron`, see
-  *Icons* below.
+There are no open image orders. Ida and Hedda have portraits and four-frame idle sheets
+in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
+apron are in `assets/sprites/decor/`.
 
-Everything else is delivered. The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
+The sign emblems and the shop door’s porthole light are included. The market nameplates reuse the [painted interface frame](../assets/sprites/ui/ledger_frame.png).
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
 floor, market street map and quay paving. The opening score and all 31 readings are in
-`assets/sounds/`. All ten ghost portraits have gestures for nine activities.
+`assets/sounds/`. All twelve ghost portraits have gestures for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models and icons on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -92,7 +91,7 @@ Ghosts are friendly, semi-transparent, softly glowing and float slightly; no leg
 Keep the same body shape and size as the existing ghosts; vary colour, face and one accessory.
 In the game they are about 1.35 m tall and face the camera.
 
-All ten sprites are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
+All twelve sprites are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
 
 **Ghosts introduced in later nights:**
 
@@ -118,13 +117,14 @@ All ten sprites are included in `assets/sprites/ghosts/`. The prompts below can 
 
 ## Ghost animation sheets – canvas 1024 × 1536
 
-The ten portraits move differently as a ghost peeks in, reaches towards a shelf, glides to the
+The portraits move differently as a ghost peeks in, reaches towards a shelf, glides to the
 counter, waits, grows impatient, pays, waves goodbye, flees or rises into the light. The game
 places the head, hand and hem movements on each portrait separately, including the cat's paw
-and the knight's carried helmet. The four drawn frames in `<id>_sheet.png` add an idle loop at
+and the knight's carried helmet. Ida holds her lantern by its handle and base, and Hedda folds
+her hands over her apron. The four drawn frames in `<id>_sheet.png` add an idle loop at
 8 frames per second. A single `<id>.png` can perform all nine gestures on its own.
 
-All ten ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
+All twelve ghosts have four-frame sheets. To redraw a sheet, ask for a **2 × 2 grid** on one
 1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
 attached as reference:
 
@@ -244,7 +244,7 @@ the later ones:
 | `stove` | A little round cast-iron stove on four feet with a short chimney pipe, its small door glowing warm orange. |
 | `vanity` | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
 
-**Open keepsake icons** (kind `decor`):
+**Delivered keepsake icons** (kind `decor`):
 
 | File id | Prompt |
 |---|---|
