@@ -23,11 +23,12 @@ pub struct WinterPlugin;
 
 impl Plugin for WinterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Startup,
-            (spawn_clock_tower, spawn_snow, spawn_window_flowers),
-        )
-        .add_systems(Update, (turn_clock_hands, fall_snow, show_window_flowers));
+        app.add_systems(Startup, spawn_clock_tower)
+            .add_systems(Update, turn_clock_hands);
+        if !cfg!(feature = "demo") {
+            app.add_systems(Startup, (spawn_snow, spawn_window_flowers))
+                .add_systems(Update, (fall_snow, show_window_flowers));
+        }
     }
 }
 
@@ -67,7 +68,7 @@ pub fn clock_level(data: &GameData, progress: &Progress) -> f32 {
         .iter()
         .enumerate()
         .find(|(_, s)| s.tower_clock)
-        .map_or(1.0, |(i, s)| {
+        .map_or(0.0, |(i, s)| {
             progress.chapter(i).min(s.chapters.len()) as f32 / s.chapters.len() as f32
         })
 }

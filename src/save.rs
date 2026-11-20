@@ -26,7 +26,7 @@ use crate::shop::{CellContent, ShopLayout, Storeroom};
 use crate::upgrades::Upgrades;
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 6;
+pub const SAVE_VERSION: u32 = 7;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -50,6 +50,12 @@ impl Plugin for SavePlugin {
                 save_completed_first_sale
                     .after(crate::register::make_change)
                     .run_if(in_state(Phase::Night)),
+            )
+            .add_systems(
+                PostUpdate,
+                autosave_discoveries
+                    .run_if(in_state(Phase::Night))
+                    .run_if(resource_changed::<Progress>),
             )
             // Keeping the shop open after the season: continue at that market.
             .add_systems(OnExit(Phase::DemoEnd), autosave_next_season)
@@ -321,7 +327,10 @@ fn read_save_at(path: &Path) -> Option<SaveGame> {
     let text = std::fs::read_to_string(path).ok()?;
     match ron::from_str::<SaveGame>(&text) {
         Ok(mut save) if (4..=SAVE_VERSION).contains(&save.version) => {
-            // The first-sale guide and the order book added only defaulted fields in versions 5 and 6.
+            // Later versions add only defaulted guide, order and ghost-book fields.
+            if save.version < 7 {
+                save.journal.recover_recorded_sales();
+            }
             save.version = SAVE_VERSION;
             Some(save)
         }
@@ -496,6 +505,20 @@ impl GameState<'_> {
             season_start: save.season_start,
             journal: save.journal.clone(),
         };
+        // Completed chapters prove which wares the customer received even in
+        // older profiles. The ferryman's fare was a coin, not a ware.
+        for (story, &done) in data.stories.iter().zip(&save.story) {
+            for chapter in story
+                .chapters
+                .iter()
+                .take(done)
+                .filter(|chapter| !chapter.fare)
+            {
+                self.progress
+                    .journal
+                    .note_fulfilled(&story.ghost, &chapter.wish);
+            }
+        }
         self.drawer.0 = save.drawer;
         *self.stock = Stock::from_units(save.stock.clone());
         let mut layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
@@ -606,6 +629,26 @@ fn save_completed_first_sale(
     start.0 = Some(save);
 }
 
+/// Newly observed ghosts and wishes survive closing the window between nightly saves.
+/// The replay point keeps its original counts, wares, coins and story progress.
+fn autosave_discoveries(
+    progress: Res<Progress>,
+    register: Res<crate::register::Register>,
+    profile: Res<ActiveProfile>,
+    mut start: ResMut<NightStart>,
+) {
+    let Some(start) = start.0.as_mut() else {
+        return;
+    };
+    if start.journal.remember_discoveries(&progress.journal) {
+        write_slot(
+            profile.0,
+            Slot::Auto,
+            &night_snapshot(start, &progress, &register),
+        );
+    }
+}
+
 fn autosave_next_season(state: GameState, profile: Res<ActiveProfile>) {
     // Only when the next season has just begun (not when quitting to the menu).
     let p = &state.progress;
@@ -658,6 +701,7 @@ fn night_snapshot(
 ) -> SaveGame {
     use crate::guide::FirstSaleCheckpoint;
     let mut save = start.clone();
+    save.journal.remember_discoveries(&progress.journal);
     // Night saves restore the opening stock and promises. Keep pin choices for slips
     // that existed at that point, even if their guest has already collected the ware.
     for (order, live) in save.orders.iter_mut().zip(&progress.orders) {
@@ -855,6 +899,79 @@ mod tests {
     }
 
     #[test]
+    fn a_night_rewind_keeps_knowledge_without_replaying_the_sale_or_visit_counts() {
+        let mut start = sample(4);
+        start.journal.met("shy", "lavender");
+        start.journal.served("shy", "lavender", None);
+        start
+            .orders
+            .push(crate::orders::Order::new("shy", "lavender", 4, None));
+        let mut live = Progress::new(0);
+        live.night = 4;
+        live.journal = start.journal.clone();
+        live.orders = start.orders.clone();
+        live.orders[0].pinned = true;
+        live.journal.met("shade", "");
+        live.journal.met("shy", "letter_paper");
+        live.journal.served("shy", "letter_paper", None);
+        let register = crate::register::Register::default();
+        let saved = night_snapshot(&start, &live, &register);
+        let saved: SaveGame = ron::from_str(&ron::to_string(&saved).unwrap()).unwrap();
+        assert!(saved.orders[0].pinned);
+        assert_eq!(saved.stock, start.stock);
+        assert_eq!(saved.drawer, start.drawer);
+        let shy = &saved.journal.book["shy"];
+        assert_eq!((shy.met, shy.served), (1, 1));
+        assert_eq!(shy.wishes, ["lavender", "letter_paper"]);
+        assert_eq!(shy.fulfilled_wishes, ["lavender", "letter_paper"]);
+        assert!(saved.journal.has_seen("shade"));
+        assert_eq!(saved.journal.book["shade"].met, 0);
+        assert_eq!(night_snapshot(&saved, &live, &register), saved);
+        let mut replay = saved.journal;
+        replay.met("shy", "letter_paper");
+        replay.served("shy", "letter_paper", None);
+        assert_eq!(replay.book["shy"], live.journal.book["shy"]);
+        assert!(!replay.remember_discoveries(&live.journal));
+    }
+
+    #[test]
+    fn version_six_does_not_guess_which_of_several_wishes_was_fulfilled() {
+        let mut old = sample(4);
+        old.version = 6;
+        for product in ["lavender", "letter_paper"] {
+            old.journal.met("shy", product);
+        }
+        old.journal.book.get_mut("shy").unwrap().served = 1;
+        old.journal.met("child", "marbles");
+        old.journal.book.get_mut("child").unwrap().served = 1;
+        old.journal.regulars.push(ron::from_str(r#"(ghost:"forgetful",name:1,visits:5,favourite:"rain_jar",last_purchase:Some("rusty_key"),encounters:[(night:3,wish:"rusty_key",memory:Purchase("pocket_watch"))])"#).unwrap());
+        let mut order = crate::orders::Order::new("cat", "fish_bone", 3, None);
+        order.state = crate::orders::OrderState::Collected;
+        old.journal.order_history.push(order);
+        let dir = temp_dir("known-sales");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("save.ron");
+        std::fs::write(
+            &path,
+            ron::to_string(&old)
+                .unwrap()
+                .replace(",fulfilled_wishes:[]", ""),
+        )
+        .unwrap();
+        let loaded = read_save_at(&path).unwrap();
+        let book = &loaded.journal.book;
+        assert!(loaded.journal.has_seen("shy"));
+        assert!(book["shy"].fulfilled_wishes.is_empty());
+        assert_eq!(book["child"].fulfilled_wishes, ["marbles"]);
+        assert_eq!(
+            book["forgetful"].fulfilled_wishes,
+            ["rain_jar", "pocket_watch", "rusty_key"]
+        );
+        assert_eq!(book["cat"].fulfilled_wishes, ["fish_bone"]);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn version_four_profiles_load_without_starting_the_guide() {
         let mut original = sample(1);
         original.version = 4;
@@ -928,13 +1045,16 @@ mod tests {
         );
 
         progress.journal.first_sale = FirstSale::Skipped;
+        progress.journal.met("shade", "");
         let skipped = night_snapshot(&wish, &progress, &register);
         assert!(skipped.journal.first_sale_checkpoint.is_none());
+        assert!(skipped.journal.has_seen("shade"));
         assert_eq!(skipped.resume_at(5), Some((Phase::Evening, 1)));
 
         let mut report = crate::day_cycle::NightReport::default();
         report.record_sale("marbles", 3, 4, 1);
         progress.journal.first_sale = FirstSale::Complete;
+        start.journal.remember_discoveries(&progress.journal);
         start.journal.first_sale = FirstSale::Complete;
         start.journal.first_sale_checkpoint =
             Some(FirstSaleCheckpoint::AfterSale(Box::new(report)));

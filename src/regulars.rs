@@ -40,6 +40,13 @@ pub struct Encounter {
 }
 
 impl Encounter {
+    pub(crate) fn recalled_purchase(&self) -> Option<&str> {
+        match &self.memory {
+            Memory::Purchase(product) => Some(product),
+            Memory::Keepsake(_) => None,
+        }
+    }
+
     pub fn entry(&self, lang: &Lang) -> String {
         lang.f(
             "regular.encounter",

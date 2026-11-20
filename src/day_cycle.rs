@@ -427,7 +427,12 @@ pub fn deliver_parcels(
         let wish = &chapter.wish;
         if stock.count(wish) == 0 || progress.tries(i) > 0 {
             progress.parcels.push(i);
-            log.push(lang.f("log.parcel", &[("name", &lang.ghost(&story.ghost))]));
+            let message = if progress.journal.has_seen(&story.ghost) {
+                lang.f("log.parcel", &[("name", &lang.ghost(&story.ghost))])
+            } else {
+                lang.t("discovery.parcel_waits")
+            };
+            log.push(message);
         }
     }
 }

@@ -685,7 +685,7 @@ fn follow_labels(
     let (camera, cam_transform) = *camera;
     for (entity, label, mut node, mut visibility, muted, placed) in &mut labels {
         let Ok(target) = targets.get(label.target) else {
-            commands.entity(entity).despawn();
+            commands.entity(entity).try_despawn();
             continue;
         };
         // A target spawned this frame has no place in the world yet.
@@ -702,7 +702,8 @@ fn follow_labels(
                 // A new label shows from the next frame on, once the layout has
                 // its place – otherwise it flashes in the top left corner.
                 if !placed {
-                    commands.entity(entity).insert(LabelPlaced);
+                    // Phase changes can remove this label before commands are applied.
+                    commands.entity(entity).try_insert(LabelPlaced);
                     *visibility = Visibility::Hidden;
                     continue;
                 }

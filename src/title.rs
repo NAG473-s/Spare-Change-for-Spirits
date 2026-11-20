@@ -1,11 +1,10 @@
 //! Title screen: a painted background of its own behind the main menu, with
-//! flickering lamp light, drifting dust and now and then a ghost floating past.
+//! flickering lamp light and drifting dust.
 //! It covers the shop completely while the game is in `Phase::Menu`.
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use crate::data::{GameData, asset_exists};
 use crate::day_cycle::Phase;
 use crate::rng::Rng;
 
@@ -32,14 +31,7 @@ impl Plugin for TitlePlugin {
             .add_systems(Update, fade_in)
             .add_systems(
                 Update,
-                (
-                    cover_window,
-                    flicker_glows,
-                    drift_motes,
-                    float_ghost,
-                    bob_logo,
-                )
-                    .run_if(in_state(Phase::Menu)),
+                (cover_window, flicker_glows, drift_motes, bob_logo).run_if(in_state(Phase::Menu)),
             );
     }
 }
@@ -83,7 +75,6 @@ const GLOWS: [(Vec2, f32, Glow); 3] = [
     ),
 ];
 const MOTES: usize = 28;
-const GHOST_SIZE: Vec2 = Vec2::new(84.0, 126.0);
 const FADE_SECS: f32 = 1.2;
 
 /// Root of the title screen, under the menu.
@@ -107,16 +98,6 @@ struct TitleMote {
     pos: Vec2,
     speed: f32,
     phase: f32,
-}
-
-/// A ghost floating across the screen; waits between passes.
-#[derive(Component)]
-struct TitleGhost {
-    /// Fraction of the way across, < 0 while waiting.
-    progress: f32,
-    speed: f32,
-    height: f32,
-    to_right: bool,
 }
 
 /// Bobs gently (the logo above the menu).
@@ -242,27 +223,6 @@ fn spawn_title(mut commands: Commands, asset_server: Res<AssetServer>, mut rng: 
             ChildOf(root),
         ));
     }
-
-    commands.spawn((
-        TitleGhost {
-            progress: -0.3,
-            speed: 0.0,
-            height: 0.0,
-            to_right: true,
-        },
-        ImageNode::default(),
-        Node {
-            position_type: PositionType::Absolute,
-            width: px(GHOST_SIZE.x),
-            height: px(GHOST_SIZE.y),
-            ..default()
-        },
-        Visibility::Hidden,
-        UiTransform::IDENTITY,
-        Pickable::IGNORE,
-        ChildOf(root),
-    ));
-
     spawn_fade(&mut commands, FADE_SECS);
 }
 
@@ -345,78 +305,6 @@ fn drift_motes(
         node.top = percent(mote.pos.y * 100.0);
         let twinkle = 0.5 + 0.5 * (t * 1.3 + mote.phase * 3.0).sin();
         color.0 = Color::srgba(1.0, 0.86, 0.6, 0.12 + 0.4 * twinkle);
-    }
-}
-
-/// Now and then one of the shop's ghosts floats across the top of the screen.
-fn float_ghost(
-    time: Res<Time>,
-    window: Single<&Window, With<PrimaryWindow>>,
-    ui_scale: Res<UiScale>,
-    data: Res<GameData>,
-    asset_server: Res<AssetServer>,
-    mut rng: ResMut<Rng>,
-    mut ghosts: Query<(
-        &mut TitleGhost,
-        &mut ImageNode,
-        &mut Node,
-        &mut UiTransform,
-        &mut Visibility,
-    )>,
-) {
-    let dt = time.delta_secs();
-    let t = time.elapsed_secs();
-    let width = window.width() / ui_scale.0;
-    for (mut ghost, mut image, mut node, mut transform, mut visibility) in &mut ghosts {
-        if ghost.progress < 0.0 {
-            // Waiting: a negative progress counts up to the next pass.
-            ghost.progress += dt * 0.1;
-            *visibility = Visibility::Hidden;
-            if ghost.progress < 0.0 {
-                continue;
-            }
-            let ids: Vec<&str> = data
-                .ghosts
-                .iter()
-                .map(|g| g.id.as_str())
-                .filter(|id| asset_exists(&format!("sprites/ghosts/{id}.png")))
-                .collect();
-            if ids.is_empty() {
-                ghost.progress = -1.0;
-                continue;
-            }
-            let id = ids[rng.index(ids.len())];
-            image.image = asset_server.load(format!("sprites/ghosts/{id}.png"));
-            ghost.progress = 0.0;
-            ghost.speed = rng.range(0.035, 0.05);
-            ghost.height = rng.range(0.05, 0.3);
-            ghost.to_right = rng.chance(0.5);
-        }
-        ghost.progress += ghost.speed * dt;
-        if ghost.progress > 1.0 {
-            ghost.progress = -rng.range(0.4, 1.0);
-            continue;
-        }
-        *visibility = Visibility::Inherited;
-        let p = if ghost.to_right {
-            ghost.progress
-        } else {
-            1.0 - ghost.progress
-        };
-        let x = -GHOST_SIZE.x + p * (width + GHOST_SIZE.x);
-        let bob = 10.0 * (t * 1.7).sin();
-        node.left = px(x);
-        node.top = percent(ghost.height * 100.0);
-        transform.translation = Val2::px(0.0, bob);
-        // Sprites are drawn looking right (as in the shop); mirror them to float left.
-        let flip = if ghost.to_right { 1.0 } else { -1.0 };
-        transform.scale = Vec2::new(flip, 1.0);
-        transform.rotation = Rot2::radians(0.06 * (t * 1.1).sin());
-        // Fade in and out at the edges, and stay half transparent.
-        let edge = (ghost.progress * 6.0)
-            .min((1.0 - ghost.progress) * 6.0)
-            .min(1.0);
-        image.color = Color::srgba(1.0, 1.0, 1.0, 0.7 * edge);
     }
 }
 

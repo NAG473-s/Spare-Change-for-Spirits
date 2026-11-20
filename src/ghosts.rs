@@ -289,10 +289,12 @@ fn spawn_ghosts(
         wish = crate::regulars::wish(&data, r, &wishes, wish.clone(), &mut rng);
         crate::regulars::greet(i, &mut progress, &wish, &data, &layout, &lang, &mut log)
     });
-    let unfamiliar = !progress.journal.book.contains_key(&def.id);
-    if unmet.is_none() {
-        progress.journal.met(&def.id, &wish);
-    }
+    // A silent sighting at the door has not taught the player this guest's wishes yet.
+    let unfamiliar = progress
+        .journal
+        .book
+        .get(&def.id)
+        .is_none_or(|entry| entry.wishes.is_empty());
     let hints = lang.count(&format!("product.{wish}.hint."));
     let hint_number = if first_customer {
         1
@@ -312,6 +314,7 @@ fn spawn_ghosts(
         report.fled += 1;
     }
     let visit = Visit {
+        kind: VisitKind::Customer,
         first_customer,
         def_idx,
         wish,
@@ -333,6 +336,7 @@ fn spawn_ghosts(
         &mut art.meshes,
         &mut art.materials,
         &mut rng,
+        &mut progress.journal,
         visit,
     );
     cues.write(Cue::GhostEnters);
@@ -405,7 +409,7 @@ const PATIENCE_IMPATIENT: f32 = 0.3;
 #[allow(clippy::too_many_arguments)]
 fn ghost_tooltip(
     hovered: Res<HoveredGhost>,
-    ghosts: Query<&Ghost>,
+    ghosts: Query<(&Ghost, Has<Thief>, Has<Farewell>)>,
     queue: Res<Queue>,
     data: Res<GameData>,
     lang: Res<Lang>,
@@ -420,7 +424,8 @@ fn ghost_tooltip(
         *shown = None;
     }
     let ghost = hovered.0.and_then(|e| ghosts.get(e).ok().map(|g| (e, g)));
-    let Some((entity, g)) = ghost.filter(|_| shown.is_some() || tip.is_empty()) else {
+    let Some((entity, (g, thief, farewell))) = ghost.filter(|_| shown.is_some() || tip.is_empty())
+    else {
         if shown.take().is_some() {
             HoverTip::hide(&mut tip);
         }
@@ -440,22 +445,15 @@ fn ghost_tooltip(
         },
         lines: Vec::new(),
     };
-    if let Some(r) = regular {
-        t.line(
-            TipKind::Good,
-            lang.f(
-                "ghost_tip.regular",
-                &[("visits", &r.visits), ("item", &lang.product(&r.favourite))],
-            ),
-        );
-    }
     let patience = (g.patience / g.max_patience.max(0.01)).clamp(0.0, 1.0);
     let (kind, mood) = match g.state {
         GhostState::Entering | GhostState::Browsing => {
             (TipKind::Text, lang.t("ghost_tip.browsing"))
         }
         GhostState::ToCounter => (TipKind::Text, lang.t("ghost_tip.coming")),
-        GhostState::Waiting if settings.patient_ghosts => {
+        GhostState::Waiting
+            if settings.patient_ghosts || (g.first_customer && progress.guiding_first_sale()) =>
+        {
             (TipKind::Good, lang.t("ghost_tip.patient"))
         }
         GhostState::Waiting if patience > PATIENCE_CALM => {
@@ -472,62 +470,30 @@ fn ghost_tooltip(
     };
     t.line(kind, mood);
     let at_counter = matches!(g.state, GhostState::Waiting | GhostState::AtRegister);
-    if def.id == THIEF_GHOST {
-        t.line(TipKind::Bad, lang.t("ghost_tip.thief"));
-    } else if g.order.is_some() && g.carrying.is_none() {
-        t.line(
-            TipKind::Good,
-            lang.f("ghost_tip.ordered", &[("item", &lang.product(&g.wish))]),
-        );
-    } else if let Some(ware) = &g.carrying {
-        t.line(
-            TipKind::Good,
-            lang.f("ghost_tip.carries", &[("item", &lang.product(ware))]),
-        );
-    } else if at_counter && queue.front() == Some(entity) {
-        t.line(
-            TipKind::Text,
-            lang.f(
-                "ghost_tip.whispers",
-                &[("quote", &lang.f("quote", &[("text", &g.whisper(&lang))]))],
-            ),
-        );
-    } else if !matches!(
-        g.state,
-        GhostState::Fleeing | GhostState::Leaving | GhostState::Ascending
-    ) {
-        t.line(TipKind::Hint, lang.t("ghost_tip.wish_later"));
-    }
-    for need in &def.needs {
-        t.line(TipKind::Text, need.describe(&lang));
-    }
-    if !def.pays_with.is_empty() {
-        let coins: Vec<String> = def.pays_with.iter().map(|c| c.name(&lang)).collect();
-        t.line(
-            TipKind::Text,
-            lang.f("ghost_tip.pays_with", &[("coins", &lang.join(&coins))]),
-        );
-    }
-    let percent = ((def.pay_multiplier - 1.0) * 100.0).round() as i32;
-    if percent > 0 {
-        t.line(
-            TipKind::Good,
-            lang.f("ghost_tip.pays_more", &[("percent", &percent)]),
-        );
-    } else if percent < 0 {
-        t.line(
-            TipKind::Bad,
-            lang.f("ghost_tip.pays_less", &[("percent", &-percent)]),
-        );
-    }
-    let quirks = &def.quirks;
-    for (chance, key) in [
-        (quirks.knock_chance, "ghost_tip.knocks"),
-        (quirks.counterfeit_chance, "ghost_tip.counterfeit"),
-        (quirks.double_pay_chance, "ghost_tip.double_pay"),
-    ] {
-        if chance > 0.0 {
-            t.line(TipKind::Hint, lang.t(key));
+    if !thief && !farewell {
+        if g.order.is_some() && g.carrying.is_none() {
+            t.line(
+                TipKind::Good,
+                lang.f("ghost_tip.ordered", &[("item", &lang.product(&g.wish))]),
+            );
+        } else if let Some(ware) = &g.carrying {
+            t.line(
+                TipKind::Good,
+                lang.f("ghost_tip.carries", &[("item", &lang.product(ware))]),
+            );
+        } else if at_counter && queue.front() == Some(entity) {
+            t.line(
+                TipKind::Text,
+                lang.f(
+                    "ghost_tip.whispers",
+                    &[("quote", &lang.f("quote", &[("text", &g.whisper(&lang))]))],
+                ),
+            );
+        } else if !matches!(
+            g.state,
+            GhostState::Fleeing | GhostState::Leaving | GhostState::Ascending
+        ) {
+            t.line(TipKind::Hint, lang.t("ghost_tip.wish_later"));
         }
     }
     *shown = Some(t.title.clone());
@@ -543,8 +509,16 @@ struct GhostArt<'w> {
     materials: ResMut<'w, Assets<StandardMaterial>>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum VisitKind {
+    Customer,
+    Thief,
+    Farewell,
+}
+
 /// What a newly arriving ghost comes for.
 struct Visit {
+    kind: VisitKind,
     first_customer: bool,
     def_idx: usize,
     wish: String,
@@ -568,9 +542,18 @@ fn spawn_ghost(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
     rng: &mut Rng,
+    journal: &mut crate::book::Journal,
     visit: Visit,
-) -> Entity {
+) {
     let def: &GhostDef = &data.ghosts[visit.def_idx];
+    // Only a returning order customer has already asked for the chosen product.
+    // Other customers reveal their wish at the shelf or the counter.
+    let wish = if visit.order.is_some() {
+        visit.wish.as_str()
+    } else {
+        ""
+    };
+    journal.met(&def.id, wish);
     // A ghost goes straight to the shelf that shows its wish; otherwise it
     // looks around a shelf at random.
     let shelves = layout.shelf_cells(data);
@@ -637,6 +620,15 @@ fn spawn_ghost(
             DespawnOnExit(Phase::Night),
         ))
         .id();
+    match visit.kind {
+        VisitKind::Thief => {
+            commands.entity(ghost).insert(Thief);
+        }
+        VisitKind::Farewell => {
+            commands.entity(ghost).insert(Farewell);
+        }
+        VisitKind::Customer => {}
+    }
     // The visible body is a child, so it can sway and squash while the
     // parent keeps facing the camera.
     let body = commands
@@ -704,7 +696,6 @@ fn spawn_ghost(
         commands.entity(label).insert(LabelMuted);
     }
     commands.entity(ghost).insert(GhostLabel(label));
-    ghost
 }
 
 /// A ghost that already shows the ware it carries.
@@ -846,6 +837,7 @@ fn spawn_ordering(
         ))
     });
     let visit = Visit {
+        kind: VisitKind::Customer,
         first_customer: false,
         def_idx,
         wish: order.product.clone(),
@@ -857,7 +849,6 @@ fn spawn_ordering(
         patience_factor: upgrades.patience_factor(&data),
         regular,
     };
-    progress.journal.met(&data.ghosts[def_idx].id, &visit.wish);
     spawn_ghost(
         &mut commands,
         &data,
@@ -868,6 +859,7 @@ fn spawn_ordering(
         &mut art.meshes,
         &mut art.materials,
         &mut rng,
+        &mut progress.journal,
         visit,
     );
     cues.write(Cue::GhostEnters);
@@ -905,7 +897,7 @@ fn spawn_thief(
     data: Res<GameData>,
     layout: Res<ShopLayout>,
     clock: Res<NightClock>,
-    progress: Res<Progress>,
+    mut progress: ResMut<Progress>,
     lang: Res<Lang>,
     mut art: GhostArt,
     mut rng: ResMut<Rng>,
@@ -933,6 +925,7 @@ fn spawn_thief(
         return;
     }
     let visit = Visit {
+        kind: VisitKind::Thief,
         first_customer: false,
         def_idx,
         wish: wares[rng.index(wares.len())].clone(),
@@ -944,7 +937,7 @@ fn spawn_thief(
         patience_factor: 1.0,
         regular: None,
     };
-    let ghost = spawn_ghost(
+    spawn_ghost(
         &mut commands,
         &data,
         &layout,
@@ -954,9 +947,9 @@ fn spawn_thief(
         &mut art.meshes,
         &mut art.materials,
         &mut rng,
+        &mut progress.journal,
         visit,
     );
-    commands.entity(ghost).insert(Thief);
     cues.write(Cue::GhostEnters);
 }
 
@@ -998,6 +991,7 @@ fn come_home(
     mut finale: MessageReader<Finale>,
     mut commands: Commands,
     data: Res<GameData>,
+    mut progress: ResMut<Progress>,
     layout: Res<ShopLayout>,
     lang: Res<Lang>,
     mut art: GhostArt,
@@ -1021,6 +1015,7 @@ fn come_home(
         ));
         report.story_lines.push((guest.clone(), farewell.clone()));
         let visit = Visit {
+            kind: VisitKind::Farewell,
             first_customer: false,
             def_idx,
             wish: def.wishes[0].clone(),
@@ -1032,7 +1027,7 @@ fn come_home(
             patience_factor: 1.0,
             regular: None,
         };
-        let ghost = spawn_ghost(
+        spawn_ghost(
             &mut commands,
             &data,
             &layout,
@@ -1042,9 +1037,9 @@ fn come_home(
             &mut art.meshes,
             &mut art.materials,
             &mut rng,
+            &mut progress.journal,
             visit,
         );
-        commands.entity(ghost).insert(Farewell);
         cues.write(Cue::GhostEnters);
     }
 }
@@ -1089,9 +1084,9 @@ fn spawn_story_ghost(
         report.story_arrived.push(i);
         let chapter = progress.chapter(i);
         let c = &story.chapters[chapter];
-        progress.journal.met(&story.ghost, &c.wish);
         log.push(lang.t(&format!("story.{}.arrives", story.ghost)));
         let visit = Visit {
+            kind: VisitKind::Customer,
             first_customer: false,
             def_idx,
             wish: c.wish.clone(),
@@ -1113,6 +1108,7 @@ fn spawn_story_ghost(
             &mut art.meshes,
             &mut art.materials,
             &mut rng,
+            &mut progress.journal,
             visit,
         );
         cues.write(Cue::GhostEnters);
@@ -1142,6 +1138,7 @@ fn ghost_ai(
             && progress.journal.first_sale_checkpoint.is_some()
         {
             g.state = GhostState::Waiting;
+            progress.journal.heard(&data.ghosts[g.def].id, &g.wish);
             g.pos = layout.queue_pos(0, 1);
             g.target = g.pos;
             queue.0.push(entity);
@@ -1189,6 +1186,7 @@ fn ghost_ai(
                         && !(g.first_customer && progress.guiding_first_sale())
                     {
                         g.carrying = Some(g.wish.clone());
+                        progress.journal.heard(&data.ghosts[g.def].id, &g.wish);
                         log.push(lang.f(
                             "log.takes_from_shelf",
                             &[
@@ -1208,6 +1206,7 @@ fn ghost_ai(
                 // At the front of the line it whispers what it is looking for
                 // (unless it brings the ware itself).
                 if queue.front() == Some(entity) && g.carrying.is_none() {
+                    progress.journal.heard(&data.ghosts[g.def].id, &g.wish);
                     cues.write(Cue::GhostVoice(Voice::Whisper, data.ghosts[g.def].voice));
                 }
             }
@@ -1528,6 +1527,102 @@ mod tests {
             .init_resource::<GameLog>()
             .add_systems(Update, spawn_ordering);
         (app, progress)
+    }
+
+    #[test]
+    fn first_sight_records_fleeing_special_and_story_visitors_without_imaginary_wishes() {
+        let (mut app, mut progress) = ordering_fixture();
+        progress.orders.clear();
+        progress.journal = Default::default();
+        app.insert_resource(progress)
+            .init_resource::<NightReport>()
+            .init_resource::<Stock>()
+            .init_resource::<Queue>()
+            .init_resource::<crate::save::Settings>()
+            .init_resource::<HoveredGhost>()
+            .init_resource::<HoverTip>()
+            .insert_resource(SpawnTimer(0.0))
+            .insert_resource(ThiefTonight(Some(0.0)))
+            .add_message::<Finale>()
+            .add_systems(
+                Update,
+                (
+                    spawn_ghosts,
+                    spawn_story_ghost,
+                    spawn_thief,
+                    come_home,
+                    ghost_ai,
+                    ghost_tooltip,
+                )
+                    .chain(),
+            );
+        let mut data = app.world_mut().resource_mut::<GameData>();
+        for ghost in &mut data.ghosts {
+            ghost.spawn_weight = if ghost.id == "vain" { 1.0 } else { 0.0 };
+        }
+        app.update();
+        let world = app.world_mut();
+        let journal = &world.resource::<Progress>().journal;
+        assert!(journal.has_seen("vain") && journal.has_seen("edwin"));
+        assert!(journal.book["vain"].wishes.is_empty() && journal.book["edwin"].wishes.is_empty());
+        assert!(
+            !journal.has_seen(THIEF_GHOST)
+                && !journal.has_seen("hedda")
+                && !journal.has_seen("lotte")
+        );
+
+        let vain = world.resource::<GameData>().ghost_index("vain").unwrap();
+        let edwin = world.resource::<GameData>().ghost_index("edwin").unwrap();
+        let mut guests = world.query::<(Entity, &mut Ghost)>();
+        let mut queue = Queue::default();
+        let mut hovered = None;
+        for (e, mut ghost) in guests.iter_mut(world) {
+            if ghost.def == edwin {
+                ghost.state = GhostState::ToCounter;
+                ghost.pos = ghost.target;
+                queue.0.push(e);
+            } else if ghost.def == vain {
+                hovered = Some(e);
+            }
+        }
+        assert!(hovered.is_some());
+        world.insert_resource(HoveredGhost(hovered));
+        world.insert_resource(queue);
+        world.resource_mut::<ShopLayout>().cells[12]
+            .products
+            .push("lavender".into());
+        world
+            .resource_mut::<GameData>()
+            .config
+            .thief
+            .scared_by_light = i32::MAX;
+        world.insert_resource(ThiefTonight(Some(0.0)));
+        world.write_message(Finale("hedda".into()));
+        app.update();
+        let world = app.world_mut();
+        let journal = &world.resource::<Progress>().journal;
+        assert_eq!(journal.book["edwin"].wishes, ["rain_jar"]);
+        for id in [THIEF_GHOST, "hedda", "vain"] {
+            assert!(journal.has_seen(id));
+            let entry = &journal.book[id];
+            assert_eq!((entry.met, entry.served), (1, 0));
+            assert!(entry.wishes.is_empty() && entry.fulfilled_wishes.is_empty());
+        }
+        assert_eq!(world.resource::<HoverTip>().lines.len(), 1);
+        assert_eq!(
+            world
+                .query_filtered::<&Ghost, With<Thief>>()
+                .iter(world)
+                .count(),
+            1
+        );
+        assert_eq!(
+            world
+                .query_filtered::<&Ghost, With<Farewell>>()
+                .iter(world)
+                .count(),
+            1
+        );
     }
 
     #[test]
@@ -1959,6 +2054,8 @@ mod tests {
         world.write_message(Action::GiveChange);
         app.update();
         let report = app.world().resource::<NightReport>();
+        let entry = &app.world().resource::<Progress>().journal.book["shy"];
+        assert_eq!(entry.fulfilled_wishes, ["lavender"]);
         assert_eq!(report.sales, 1);
         assert_eq!(report.change_correct, 1);
         let receipt = &report.receipts[0];

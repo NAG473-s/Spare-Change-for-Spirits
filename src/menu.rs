@@ -25,6 +25,7 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Paused>()
+            .init_resource::<BookOrigin>()
             .init_resource::<LanguageMenu>()
             .init_resource::<SettingsMenu>()
             .init_resource::<SaveMenu>()
@@ -86,6 +87,8 @@ pub enum SaveMenu {
     Achievements,
     /// The ghost book (pause menu).
     Book,
+    GhostProfile(usize),
+    BookArchive,
     RegularHistory(u32, usize),
     FirstSale,
     Orders(usize),
@@ -94,6 +97,46 @@ pub enum SaveMenu {
 /// The game is paused and the pause menu is open.
 #[derive(Resource, Default)]
 pub struct Paused(pub bool);
+
+/// The first book page opened directly from play. Closing it returns to the
+/// same shop or harbour view; a book opened from Pause leads back to Pause.
+#[derive(Resource, Default)]
+struct BookOrigin(Option<SaveMenu>);
+
+impl BookOrigin {
+    fn open(&mut self, page: SaveMenu, paused: &mut Paused, menu: &mut SaveMenu) {
+        if !paused.0 {
+            self.0 = Some(page);
+        } else if *menu == SaveMenu::Closed {
+            self.0 = None;
+        }
+        paused.0 = true;
+        *menu = page;
+    }
+
+    fn back(
+        &mut self,
+        paused: &mut Paused,
+        menu: &mut SaveMenu,
+        journal: &crate::book::Journal,
+        data: &GameData,
+    ) -> bool {
+        if !paused.0 {
+            return false;
+        }
+        if self.0 == Some(*menu) {
+            *menu = SaveMenu::Closed;
+            paused.0 = false;
+            self.0 = None;
+            return true;
+        }
+        if let Some(parent) = book_parent(*menu, journal, data) {
+            *menu = parent;
+            return true;
+        }
+        false
+    }
+}
 
 #[derive(Component)]
 struct MenuRoot;
@@ -283,6 +326,8 @@ fn build_main_menu(
         SaveMenu::Closed
         | SaveMenu::Save
         | SaveMenu::Book
+        | SaveMenu::GhostProfile(_)
+        | SaveMenu::BookArchive
         | SaveMenu::FirstSale
         | SaveMenu::Orders(_) => {}
     }
@@ -659,11 +704,42 @@ fn toggle_pause(
     mut paused: ResMut<Paused>,
     mut save_menu: ResMut<SaveMenu>,
     mut settings_menu: ResMut<SettingsMenu>,
+    progress: Res<Progress>,
+    data: Res<GameData>,
+    mut origin: ResMut<BookOrigin>,
 ) {
     if keys.just_pressed(KeyCode::Escape) || crate::gamepad::start_pressed(&gamepads) {
+        if origin.back(&mut paused, &mut save_menu, &progress.journal, &data) {
+            return;
+        }
         paused.0 = !paused.0;
         *save_menu = SaveMenu::Closed;
         settings_menu.0 = false;
+    }
+}
+
+fn book_parent(
+    page: SaveMenu,
+    journal: &crate::book::Journal,
+    data: &GameData,
+) -> Option<SaveMenu> {
+    match page {
+        SaveMenu::Book => Some(SaveMenu::Closed),
+        SaveMenu::GhostProfile(_)
+        | SaveMenu::BookArchive
+        | SaveMenu::FirstSale
+        | SaveMenu::Orders(0) => Some(SaveMenu::Book),
+        SaveMenu::Orders(page) => Some(SaveMenu::Orders(page - 1)),
+        SaveMenu::RegularHistory(name, 0) => Some(
+            journal
+                .regulars
+                .iter()
+                .find(|r| r.name == name && journal.has_seen(&r.ghost))
+                .and_then(|r| data.ghost_index(&r.ghost))
+                .map_or(SaveMenu::Book, SaveMenu::GhostProfile),
+        ),
+        SaveMenu::RegularHistory(name, page) => Some(SaveMenu::RegularHistory(name, page - 1)),
+        _ => None,
     }
 }
 
@@ -678,6 +754,7 @@ fn pause_actions(
     mut save_menu: ResMut<SaveMenu>,
     mut log: ResMut<GameLog>,
     mut paused: ResMut<Paused>,
+    mut origin: ResMut<BookOrigin>,
     mut next: ResMut<NextState<Phase>>,
     mut exit: MessageWriter<AppExit>,
 ) {
@@ -741,12 +818,38 @@ fn pause_actions(
             }
             // From the pause menu or straight from the evening panel.
             Action::RegularHistory(name, page) => {
-                *save_menu = SaveMenu::RegularHistory(*name, *page);
+                if state
+                    .progress
+                    .journal
+                    .regulars
+                    .iter()
+                    .any(|r| r.name == *name && state.progress.journal.has_seen(&r.ghost))
+                {
+                    *save_menu = SaveMenu::RegularHistory(*name, *page);
+                }
+                continue;
+            }
+            Action::GhostProfile(index) => {
+                if data
+                    .ghosts
+                    .get(*index)
+                    .is_some_and(|g| state.progress.journal.has_seen(&g.id))
+                {
+                    origin.open(SaveMenu::GhostProfile(*index), &mut paused, &mut save_menu);
+                }
+                continue;
+            }
+            Action::BookArchive => {
+                paused.0 = true;
+                *save_menu = SaveMenu::BookArchive;
                 continue;
             }
             Action::OpenBook => {
-                paused.0 = true;
-                *save_menu = SaveMenu::Book;
+                origin.open(SaveMenu::Book, &mut paused, &mut save_menu);
+                continue;
+            }
+            Action::BookBack => {
+                origin.back(&mut paused, &mut save_menu, &state.progress.journal, &data);
                 continue;
             }
             Action::CloseSaveMenu => {
@@ -824,9 +927,14 @@ fn sync_pause(
     time.pause();
     let width = if matches!(
         *save_menu,
-        SaveMenu::Book | SaveMenu::FirstSale | SaveMenu::Orders(_) | SaveMenu::RegularHistory(_, _)
+        SaveMenu::Book
+            | SaveMenu::GhostProfile(_)
+            | SaveMenu::BookArchive
+            | SaveMenu::FirstSale
+            | SaveMenu::Orders(_)
+            | SaveMenu::RegularHistory(_, _)
     ) {
-        520.0
+        580.0
     } else {
         420.0
     };
@@ -853,16 +961,16 @@ fn sync_pause(
         crate::book::regular_history_page(&mut ui, &lang, &progress.journal, name, page);
         return;
     }
+    if let SaveMenu::GhostProfile(index) = *save_menu {
+        crate::book::ghost_profile(&mut ui, &lang, &data, &progress.journal, index, &shop.3);
+        return;
+    }
+    if *save_menu == SaveMenu::BookArchive {
+        crate::book::archive_page(&mut ui, &lang, &data, &shop.0, &shop.1, &shop.2);
+        return;
+    }
     if *save_menu == SaveMenu::Book {
-        let (layout, storeroom, upgrades, assets, _) = &shop;
-        crate::book::book_page(
-            &mut ui,
-            &lang,
-            &data,
-            &progress,
-            (layout, storeroom, upgrades),
-            assets,
-        );
+        crate::book::book_page(&mut ui, &lang, &data, &progress.journal);
         return;
     }
     if *save_menu == SaveMenu::Save {
@@ -1010,6 +1118,67 @@ fn update_tips(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn back_returns_to_the_running_view_only_at_its_book_entry_point() {
+        let data = GameData::load();
+        let mut journal = crate::book::Journal::default();
+        journal.met("shy", "lavender");
+        journal.regulars.push(
+            ron::from_str(r#"(ghost:"shy", name:1, visits:4, favourite:"lavender")"#).unwrap(),
+        );
+        let profile = SaveMenu::GhostProfile(data.ghost_index("shy").unwrap());
+        let mut origin = BookOrigin::default();
+        let mut paused = Paused::default();
+        let mut page = SaveMenu::Closed;
+
+        // The expected guest in the evening panel opens its profile directly.
+        origin.open(profile, &mut paused, &mut page);
+        assert!(paused.0 && page == profile);
+        page = SaveMenu::RegularHistory(1, 0);
+        assert!(origin.back(&mut paused, &mut page, &journal, &data));
+        assert!(paused.0 && page == profile);
+        assert!(origin.back(&mut paused, &mut page, &journal, &data));
+        assert!(!paused.0 && page == SaveMenu::Closed);
+
+        // The same links work from an index opened during play or from Pause.
+        for from_pause in [false, true] {
+            paused.0 = from_pause;
+            origin.open(SaveMenu::Book, &mut paused, &mut page);
+            origin.open(profile, &mut paused, &mut page);
+            assert!(origin.back(&mut paused, &mut page, &journal, &data));
+            assert!(paused.0 && page == SaveMenu::Book);
+            page = SaveMenu::Orders(1);
+            assert!(origin.back(&mut paused, &mut page, &journal, &data));
+            assert!(paused.0 && page == SaveMenu::Orders(0));
+            assert!(origin.back(&mut paused, &mut page, &journal, &data));
+            assert!(paused.0 && page == SaveMenu::Book);
+            assert!(origin.back(&mut paused, &mut page, &journal, &data));
+            assert!(page == SaveMenu::Closed);
+            assert_eq!(paused.0, from_pause);
+        }
+    }
+
+    #[test]
+    fn back_from_a_regulars_history_retraces_the_profile_and_index() {
+        let data = GameData::load();
+        let mut journal = crate::book::Journal::default();
+        journal.regulars.push(
+            ron::from_str(r#"(ghost:"shy", name:1, visits:4, favourite:"lavender")"#).unwrap(),
+        );
+        assert!(
+            book_parent(SaveMenu::RegularHistory(1, 0), &journal, &data) == Some(SaveMenu::Book)
+        );
+        journal.met("shy", "lavender");
+        let ghost = SaveMenu::GhostProfile(data.ghost_index("shy").unwrap());
+        assert!(
+            book_parent(SaveMenu::RegularHistory(1, 1), &journal, &data)
+                == Some(SaveMenu::RegularHistory(1, 0))
+        );
+        assert!(book_parent(SaveMenu::RegularHistory(1, 0), &journal, &data) == Some(ghost));
+        assert!(book_parent(ghost, &journal, &data) == Some(SaveMenu::Book));
+        assert!(book_parent(SaveMenu::Book, &journal, &data) == Some(SaveMenu::Closed));
+    }
 
     /// The main menu calls the build a demo only when it is one.
     #[test]

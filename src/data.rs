@@ -706,7 +706,11 @@ impl GameData {
             incidents: load_ron("data/incidents.ron"),
             sets: load_ron("data/sets.ron"),
             workbench: load_ron("data/workbench.ron"),
-            achievements: load_ron("data/achievements.ron"),
+            achievements: if cfg!(feature = "demo") {
+                Vec::new()
+            } else {
+                load_ron("data/achievements.ron")
+            },
             events: load_ron("data/events.ron"),
             props: load_ron("data/props.ron"),
             vendors: load_ron("data/market.ron"),
@@ -866,6 +870,13 @@ impl GameData {
             }
         }
         for a in &self.achievements {
+            if let Some(id) = &a.reveal_after {
+                assert!(
+                    self.ghost_index(id).is_some(),
+                    "achievement '{}' references unknown guest '{id}'",
+                    a.id
+                );
+            }
             if let crate::achievements::Goal::Story(g) = &a.goal {
                 assert!(
                     self.stories.iter().any(|s| &s.ghost == g),
@@ -980,26 +991,6 @@ impl GameData {
         self.config.night_length_secs * self.event(night).map_or(1.0, |e| e.length_factor)
     }
 
-    /// Ids of products, decor and ghosts that become available on this night.
-    pub fn unlocked_on(&self, night: u32) -> (Vec<&str>, Vec<&str>, Vec<&str>) {
-        let products = self
-            .products
-            .iter()
-            .filter(|p| p.unlock_night == night)
-            .map(|p| p.id.as_str());
-        let decor = self
-            .decor
-            .iter()
-            .filter(|d| d.unlock_night == night)
-            .map(|d| d.id.as_str());
-        let ghosts = self
-            .ghosts
-            .iter()
-            .filter(|g| g.unlock_night == night)
-            .map(|g| g.id.as_str());
-        (products.collect(), decor.collect(), ghosts.collect())
-    }
-
     pub fn ghost_index(&self, id: &str) -> Option<usize> {
         self.ghosts.iter().position(|g| g.id == id)
     }
@@ -1051,6 +1042,37 @@ pub fn rgb((r, g, b): (f32, f32, f32)) -> Color {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_five_night_catalog_keeps_the_unrepaired_harbor_and_edwins_full_story() {
+        let mut data = GameData::load();
+        let limit = data.config.demo_nights;
+        data.stories.retain(|s| s.start_night <= limit);
+        data.achievements.clear();
+        data.validate();
+        let [edwin] = data.stories.as_slice() else {
+            panic!("expected Edwin's demo story")
+        };
+        assert_eq!(edwin.ghost, "edwin");
+        assert_eq!(edwin.chapters.len(), limit as usize);
+        let mut progress = crate::day_cycle::Progress::new(0);
+        for night in 1..=limit {
+            progress.night = night;
+            assert!(progress.story_due(&data, 0));
+            assert_eq!(crate::harbor::lighthouse_level(&data, &progress), 0.0);
+            assert_eq!(crate::winter::clock_level(&data, &progress), 0.0);
+            assert!(!crate::winter::snowing(&data, &progress));
+            assert_eq!(crate::winter::blossom_level(&data, &progress), 0.0);
+            progress.finish_chapter(0);
+        }
+        assert!(!progress.story_due(&data, 0));
+        if cfg!(feature = "demo") {
+            assert!(progress.season_over(&data));
+            progress.story[0] -= 1;
+            assert!(progress.season_over(&data));
+            assert!(progress.story_due(&data, 0));
+        }
+    }
 
     #[test]
     fn reputation_brings_tips_and_picky_guests() {
@@ -1106,8 +1128,8 @@ mod tests {
                 g.id
             );
         }
-        let (products, _, ghosts) = data.unlocked_on(2);
-        assert!(!products.is_empty() && !ghosts.is_empty());
+        assert!(data.products.iter().any(|p| p.unlock_night == 2));
+        assert!(data.ghosts.iter().any(|g| g.unlock_night == 2));
     }
 
     /// Loads the real data files, so a broken RON file fails `cargo test`.
@@ -1131,7 +1153,9 @@ mod tests {
         }
         for g in &data.ghosts {
             assert!(
-                has(format!("ghost.{}.name", g.id)) && has(format!("ghost.{}.the", g.id)),
+                has(format!("ghost.{}.name", g.id))
+                    && has(format!("ghost.{}.the", g.id))
+                    && has(format!("book.note.{}", g.id)),
                 "texts for {}",
                 g.id
             );

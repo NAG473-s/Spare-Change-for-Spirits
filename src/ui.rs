@@ -144,6 +144,9 @@ pub enum Action {
     OpenAchievements,
     /// The ghost book (pauses the game).
     OpenBook,
+    BookBack,
+    GhostProfile(usize),
+    BookArchive,
     RegularHistory(u32, usize),
     OpenGuide,
     OpenOrders(usize),
@@ -879,24 +882,6 @@ fn reputation_tooltip(
             lang.f("rep_tip.tips_from", &[("min", &perks.tip_from)]),
         );
     }
-    for g in data
-        .ghosts
-        .iter()
-        .filter(|g| g.unlock_night <= progress.calendar(&data))
-    {
-        let Some(min) = g.min_reputation else {
-            continue;
-        };
-        let name = lang.ghost(&g.id);
-        if rep >= min {
-            t.line(TipKind::Good, lang.f("rep_tip.guest", &[("ghost", &name)]));
-        } else {
-            t.line(
-                TipKind::Text,
-                lang.f("rep_tip.guest_from", &[("ghost", &name), ("min", &min)]),
-            );
-        }
-    }
     if rep >= perks.rare_from {
         t.line(TipKind::Good, lang.t("rep_tip.rare"));
     } else {
@@ -904,9 +889,6 @@ fn reputation_tooltip(
             TipKind::Text,
             lang.f("rep_tip.rare_from", &[("min", &perks.rare_from)]),
         );
-    }
-    if progress.calendar(&data) >= data.config.thief.from_night && rep < data.config.thief.below {
-        t.line(TipKind::Bad, lang.t("rep_tip.thief"));
     }
     t.line(TipKind::Hint, lang.t("rep_tip.earn"));
     HoverTip::show(&mut tip, t);
@@ -943,7 +925,9 @@ fn update_hud(
     } else {
         progress.season_end(&data)
     };
-    let key = if progress.season_has_finale(&data) && progress.night <= season_end {
+    let key = if (cfg!(feature = "demo") || progress.season_has_finale(&data))
+        && progress.night <= season_end
+    {
         "hud"
     } else {
         "hud_open"
@@ -1195,6 +1179,7 @@ fn build_evening_panel(
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     let max_crates = upgrades.crates_tonight(&data, night);
     let bought_units = bought.units(&data);
+    let odds = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
 
     if *location == Location::Harbor {
         ui.heading(&lang.t("harbor.title"));
@@ -1240,19 +1225,7 @@ fn build_evening_panel(
                 )],
             ));
         }
-        let odds = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
-        expected_guests(&mut ui, &lang, &data, &stock, &progress, &layout, &odds);
-        ui.section(&lang.t("evening.shelve"));
-        let in_stock: Vec<String> = data
-            .products
-            .iter()
-            .flat_map(|p| std::iter::repeat_n(p.id.clone(), stock.count(&p.id) as usize))
-            .collect();
-        if in_stock.is_empty() {
-            ui.dim(&lang.t("evening.storeroom_empty"));
-        } else {
-            ui.text(&count_list(&lang, &in_stock, |p| lang.product(p)));
-        }
+        evening_visits(&mut ui, &lang, &data, &progress, &odds);
         ui.spacer();
         ui.primary(&lang.t("harbor.back"), Action::BackToShop);
         return;
@@ -1318,25 +1291,9 @@ fn build_evening_panel(
             "evening.tonight",
             &[("name", &lang.t(&format!("event.{}.name", event.id)))],
         ));
-        ui.dim(&lang.t(&format!("event.{}.text", event.id)));
+        event_detail(&mut ui, &lang, event, &progress);
     }
-    if night > 1 {
-        let (products, decor, ghosts) = data.unlocked_on(night);
-        let names: Vec<String> = ghosts
-            .iter()
-            .map(|g| lang.ghost(g))
-            .chain(products.iter().map(|p| lang.product(p)))
-            .chain(decor.iter().map(|d| lang.decor(d)))
-            .collect();
-        if !names.is_empty() {
-            ui.dim(&lang.f("evening.new_tonight", &[("items", &lang.join(&names))]));
-        }
-    }
-
-    let odds = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
-    expected_guests(&mut ui, &lang, &data, &stock, &progress, &layout, &odds);
-    let root = ui.root();
-    ui.button_in(root, &lang.t("book.open"), Action::OpenBook, false, true);
+    evening_visits(&mut ui, &lang, &data, &progress, &odds);
 
     ui.section(&lang.f(
         "evening.ferryman",
@@ -1445,105 +1402,119 @@ fn build_evening_panel(
     ui.primary(&lang.t("evening.open"), Action::StartNight);
 }
 
-/// How many ghost types the evening forecast lists.
-const EXPECTED_GUESTS: usize = 3;
-
-/// The ghost types most likely to come tonight, how likely, and what they
-/// ask for – so the player knows what to order and put on the shelves.
-fn expected_guests(
+/// Scheduled callers and the three likeliest regular visitors are shown once
+/// each. Several undiscovered identities share one anonymous line.
+fn evening_visits(
     ui: &mut PanelBuilder,
     lang: &Lang,
     data: &GameData,
-    stock: &Stock,
     progress: &Progress,
-    layout: &ShopLayout,
     odds: &[f32],
 ) {
-    let night = progress.calendar(data);
-    let total: f32 = odds.iter().sum();
-    let mut likely: Vec<usize> = (0..odds.len()).filter(|&i| odds[i] > 0.0).collect();
-    likely.sort_by(|&a, &b| odds[b].total_cmp(&odds[a]));
-    ui.section(&lang.t("evening.expected"));
-    // Orders for tonight: these ghosts come for sure.
-    for order in progress.orders.iter().filter(|order| {
-        order.night == progress.night && order.state == crate::orders::OrderState::Open
-    }) {
-        ui.text(&lang.f(
-            "evening.order",
-            &[
-                ("who", &order.customer(lang)),
-                ("item", &order.ordered_ware(lang)),
-            ],
-        ));
-    }
-    // Story ghosts come every night until they have what they need: their
-    // wish is announced, and the ferryman's parcel is mentioned.
-    for (i, story) in data.stories.iter().enumerate() {
-        if !progress.story_due(data, i) {
-            continue;
-        }
-        let name = lang.ghost(&story.ghost);
-        let chapter = progress.chapter(i);
-        let mut wish = lang.t(&format!("story.{}.{}.intro", story.ghost, chapter + 1));
-        if progress.asks_plainly(i) {
-            let c = &story.chapters[chapter];
-            let plainly = if c.fare {
-                lang.t("story.fare_plainly")
-            } else {
-                lang.f("story.plainly", &[("item", &lang.product(&c.wish))])
-            };
-            wish = format!("{wish} {plainly}");
-        }
-        ui.text(&lang.f(
-            "evening.story_comes",
-            &[
-                ("name", &name),
-                ("text", &lang.f("quote", &[("text", &wish)])),
-            ],
-        ));
-        if progress.parcels.contains(&i) {
-            ui.dim(&lang.f("evening.parcel_waits", &[("name", &name)]));
-        }
-    }
-    for &i in likely.iter().take(EXPECTED_GUESTS) {
-        let ghost = &data.ghosts[i];
-        let wishes: Vec<String> = data
-            .wishes_tonight(ghost, night)
-            .into_iter()
-            .map(|w| match stock.count(w) {
-                0 => lang.product(w),
-                n => lang.f(
-                    "evening.stock_button",
-                    &[("item", &lang.product(w)), ("count", &n)],
-                ),
-            })
-            .collect();
-        let percent = (odds[i] / total * 100.0).round() as u32;
-        ui.text(&lang.f(
-            "evening.expected_line",
-            &[
-                ("ghost", &lang.ghost(&ghost.id)),
-                ("percent", &percent),
-                ("wishes", &lang.join(&wishes)),
-            ],
-        ));
-    }
-    // Ghosts the atmosphere will send away again, and why.
-    let atmosphere = layout.atmosphere(data, night);
-    let away: Vec<String> = data
-        .ghosts
+    let mut likely: Vec<_> = odds
         .iter()
         .enumerate()
-        .filter(|(i, _)| odds[*i] > 0.0)
-        .filter_map(|(_, g)| {
-            g.unmet_need(&atmosphere)
-                .map(|n| format!("{} ({})", lang.ghost(&g.id), n.complaint(lang)))
-        })
+        .filter(|(_, weight)| **weight > 0.)
         .collect();
-    if !away.is_empty() {
-        ui.dim(&lang.f("evening.turn_away", &[("list", &lang.join(&away))]));
+    likely.sort_by(|a, b| b.1.total_cmp(a.1));
+    let orders: Vec<_> = progress
+        .orders
+        .iter()
+        .filter(|o| o.night == progress.night && o.state == crate::orders::OrderState::Open)
+        .collect();
+    let stories: Vec<_> = data
+        .stories
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| progress.story_due(data, *i))
+        .collect();
+    let expected = orders
+        .iter()
+        .filter_map(|o| data.ghost_index(&o.ghost))
+        .chain(
+            stories
+                .iter()
+                .filter_map(|(_, story)| data.ghost_index(&story.ghost)),
+        )
+        .chain(likely.into_iter().take(3).map(|(index, _)| index));
+    let mut known = Vec::new();
+    let mut unfamiliar = false;
+    for index in expected {
+        if progress.journal.has_seen(&data.ghosts[index].id) {
+            if !known.contains(&index) {
+                known.push(index);
+            }
+        } else {
+            unfamiliar = true;
+        }
     }
-    ui.dim(&lang.t("evening.expected_hint"));
+    if !orders.is_empty() {
+        ui.button_in(
+            ui.root(),
+            &lang.t("order_slips.title"),
+            Action::OpenOrders(0),
+            false,
+            true,
+        );
+    }
+    if stories.iter().any(|(i, _)| progress.parcels.contains(i)) {
+        ui.text(&lang.t("discovery.parcel_waits"));
+    }
+    if !known.is_empty() || unfamiliar {
+        ui.section(&lang.t("evening.expected"));
+        if !known.is_empty() {
+            let row = ui.row();
+            for index in known {
+                ui.button_in(
+                    row,
+                    &lang.ghost(&data.ghosts[index].id),
+                    Action::GhostProfile(index),
+                    false,
+                    true,
+                );
+            }
+        }
+        if unfamiliar {
+            ui.dim(&lang.t("discovery.unknown_guest"));
+        }
+    }
+    ui.button_in(
+        ui.root(),
+        &lang.t("discovery.more_in_book"),
+        Action::OpenBook,
+        false,
+        true,
+    );
+}
+
+fn event_detail(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    event: &crate::data::NightEvent,
+    progress: &Progress,
+) {
+    // The prose sometimes names the species attracted by this weather.
+    if event
+        .ghost_weights
+        .iter()
+        .all(|(id, _)| progress.journal.has_seen(id))
+    {
+        ui.dim(&lang.t(&format!("event.{}.text", event.id)));
+    } else {
+        let change = event.atmosphere.changes(lang);
+        if !change.is_empty() {
+            ui.dim(&change);
+        }
+        if event.price_factor != 1.0 || event.crate_bonus != 0 {
+            ui.dim(&lang.f(
+                "discovery.weather_trade",
+                &[
+                    ("price", &(event.price_factor * 100.0).round()),
+                    ("crates", &crate::ferry::signed(event.crate_bonus.into())),
+                ],
+            ));
+        }
+    }
 }
 
 /// The shop window: one ware from stock draws the ghosts who wish for it.
@@ -1607,7 +1578,6 @@ fn sets_section(
     ui.section(&lang.t("sets.title"));
     for set in started {
         let name = lang.t(&format!("set.{}.name", set.id));
-        let pieces: Vec<String> = set.decor.iter().map(|d| lang.decor(d)).collect();
         let bonus = set_bonus(lang, set);
         if set.complete(layout) {
             ui.text(&lang.f("sets.complete", &[("name", &name), ("bonus", &bonus)]));
@@ -1622,20 +1592,14 @@ fn sets_section(
                 ],
             ));
         }
-        ui.dim(&lang.f("sets.pieces", &[("items", &lang.join(&pieces))]));
     }
 }
 
 /// What a complete set brings, in words.
 pub fn set_bonus(lang: &Lang, set: &crate::sets::SetDef) -> String {
-    let ghosts: Vec<String> = set
-        .ghost_weights
-        .iter()
-        .map(|(g, _)| lang.ghost(g))
-        .collect();
     let mut parts = Vec::new();
-    if !ghosts.is_empty() {
-        parts.push(lang.f("sets.draws", &[("ghosts", &lang.join(&ghosts))]));
+    if !set.ghost_weights.is_empty() {
+        parts.push(lang.t("discovery.set_draws"));
     }
     let atmosphere = set.atmosphere.changes(lang);
     if !atmosphere.is_empty() {
@@ -2178,7 +2142,7 @@ fn build_morning_panel(
             "morning.tomorrow",
             &[("name", &lang.t(&format!("event.{}.name", event.id)))],
         ));
-        ui.dim(&lang.t(&format!("event.{}.text", event.id)));
+        event_detail(&mut ui, &lang, event, &progress);
     }
     for o in progress.orders.iter().filter(|o| o.night == tomorrow.night) {
         ui.text(&lang.f(
@@ -2208,6 +2172,7 @@ fn build_demo_end_panel(
         // This season's stories only.
         if data.season_of(story.start_night) != progress.season
             || progress.calendar(&data) < story.start_night
+            || (left > 0 && !progress.journal.has_seen(&story.ghost))
         {
             continue;
         }
@@ -2679,6 +2644,126 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn expected_visits_link_known_profiles_once_and_group_strangers() {
+        #[derive(Resource)]
+        struct Odds(Vec<f32>);
+
+        let lang = Lang::load("en");
+        let anonymous = lang.t("discovery.unknown_guest");
+        let heading = lang.t("evening.expected");
+        let parcel = lang.t("discovery.parcel_waits");
+        let edwin_name = lang.ghost("edwin");
+        let shy_name = lang.ghost("shy");
+        let data = GameData::load();
+        let edwin = data.ghost_index("edwin").unwrap();
+        let shy = data.ghost_index("shy").unwrap();
+        let child = data.ghost_index("child").unwrap();
+        let vain = data.ghost_index("vain").unwrap();
+        let mut odds = vec![0.; data.ghosts.len()];
+        for (i, weight) in [(edwin, 9.), (shy, 8.), (child, 7.), (vain, 3.)] {
+            odds[i] = weight;
+        }
+        let mut progress = Progress::new(0);
+        progress.parcels.push(
+            data.stories
+                .iter()
+                .position(|s| s.ghost == "edwin")
+                .unwrap(),
+        );
+        progress.orders.push(crate::orders::Order::new(
+            "edwin",
+            "rain_jar",
+            progress.night,
+            None,
+        ));
+        // Known fourth-ranked type still doesn't belong in the three likeliest.
+        progress.journal.met("vain", "");
+        let mut app = App::new();
+        let root = app.world_mut().spawn_empty().id();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()))
+            .init_asset::<Font>()
+            .insert_resource(lang)
+            .init_resource::<UiFont>()
+            .insert_resource(data)
+            .insert_resource(progress)
+            .insert_resource(Odds(odds))
+            .add_systems(
+                Update,
+                move |mut commands: Commands,
+                      font: Res<UiFont>,
+                      lang: Res<Lang>,
+                      data: Res<GameData>,
+                      progress: Res<Progress>,
+                      odds: Res<Odds>| {
+                    evening_visits(
+                        &mut PanelBuilder::new(&mut commands, root, &font),
+                        &lang,
+                        &data,
+                        &progress,
+                        &odds.0,
+                    );
+                },
+            );
+        let lines = |world: &mut World| {
+            world
+                .query::<&Text>()
+                .iter(world)
+                .map(|t| t.0.clone())
+                .collect::<Vec<_>>()
+        };
+        let actions = |world: &mut World| {
+            world
+                .query::<&ActionButton>()
+                .iter(world)
+                .map(|b| b.0.clone())
+                .collect::<Vec<_>>()
+        };
+        app.update();
+        let texts = lines(app.world_mut());
+        assert_eq!(texts.iter().filter(|t| *t == &anonymous).count(), 1);
+        assert!(texts.contains(&parcel) && texts.contains(&heading));
+        assert!(!texts.contains(&edwin_name) && !texts.contains(&shy_name));
+        let buttons = actions(app.world_mut());
+        assert!(buttons.contains(&Action::OpenBook) && buttons.contains(&Action::OpenOrders(0)));
+        assert!(!buttons.iter().any(|b| matches!(b, Action::GhostProfile(_))));
+
+        let mut progress = app.world_mut().resource_mut::<Progress>();
+        progress.journal.met("edwin", "rain_jar");
+        progress.journal.met("shy", "");
+        app.update();
+        let buttons = actions(app.world_mut());
+        // One profile link even for a type present in the odds, story and orders.
+        assert_eq!(
+            buttons
+                .iter()
+                .filter(|b| **b == Action::GhostProfile(edwin))
+                .count(),
+            1
+        );
+        assert!(buttons.contains(&Action::GhostProfile(shy)));
+        assert!(!buttons.contains(&Action::GhostProfile(vain)));
+        let texts = lines(app.world_mut());
+        assert!(
+            texts.contains(&edwin_name) && texts.contains(&shy_name) && texts.contains(&anonymous)
+        );
+
+        app.world_mut().resource_mut::<Odds>().0.fill(0.);
+        app.update();
+        let buttons = actions(app.world_mut());
+        assert!(buttons.contains(&Action::GhostProfile(edwin)));
+        assert!(!buttons.contains(&Action::GhostProfile(shy)));
+        assert!(!lines(app.world_mut()).contains(&anonymous));
+        app.world_mut().resource_mut::<Progress>().orders.clear();
+        app.world_mut().resource_mut::<GameData>().stories.clear();
+        app.update();
+        assert_eq!(actions(app.world_mut()), [Action::OpenBook]);
+        let texts = lines(app.world_mut());
+        assert!(
+            !texts.contains(&heading) && !texts.contains(&anonymous) && !texts.contains(&parcel)
+        );
+    }
 
     #[test]
     fn count_list_groups_in_order() {

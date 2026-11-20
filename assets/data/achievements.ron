@@ -9,11 +9,12 @@
 //   JunkCleared      all of Hedda's old junk is cleared
 // Texts: assets/i18n/<language>.ron (achievement.<id>.name, achievement.<id>.text).
 // Icons for Steam: docs/ART_PROMPTS.md.
+// reveal_after: a guest named in the description must have been encountered.
 [
     (id: "first_sale", goal: Count(Sales, 1)),
     (id: "exact_change", goal: Count(ExactChange, 50)),
     (id: "into_the_light", goal: Count(IntoTheLight, 100)),
-    (id: "honest", goal: Count(Honest, 10)),
+    (id: "honest", goal: Count(Honest, 10), reveal_after: Some("forgetful")),
     (id: "sharp_eye", goal: Count(Counterfeits, 10)),
     (id: "well_liked", goal: Count(Tips, 25)),
     (id: "on_order", goal: Count(Orders, 10)),

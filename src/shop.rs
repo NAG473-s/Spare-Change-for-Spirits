@@ -845,6 +845,7 @@ fn furnishing_preview(
     }
     let odds = data.ghost_odds(night, &before, progress.reputation);
     let mut groups: BTreeMap<(bool, String), Vec<String>> = BTreeMap::new();
+    let mut needs_changed = false;
     for (ghost, _) in data
         .ghosts
         .iter()
@@ -854,14 +855,17 @@ fn furnishing_preview(
         for need in &ghost.needs {
             let met = need.is_met(&after);
             if met != need.is_met(&before) {
-                groups
-                    .entry((!met, need.describe(lang)))
-                    .or_default()
-                    .push(lang.ghost(&ghost.id));
+                needs_changed = true;
+                if progress.journal.has_seen(&ghost.id) {
+                    groups
+                        .entry((!met, need.describe(lang)))
+                        .or_default()
+                        .push(lang.ghost(&ghost.id));
+                }
             }
         }
     }
-    if groups.is_empty() {
+    if !needs_changed {
         tip.line(TipKind::Hint, lang.t("preview.needs_same"));
     }
     for ((lost, need), ghosts) in groups {
@@ -1232,6 +1236,19 @@ mod tests {
             .resource_mut::<Upgrades>()
             .0
             .insert("clear_corner".into());
+        app.update();
+        let tip = app.world().resource::<HoverTip>();
+        assert!(tip.lines.iter().any(|line| line.kind == TipKind::Text));
+        assert!(
+            tip.lines
+                .iter()
+                .all(|line| !line.text.contains(&vain) && !line.text.contains(&child))
+        );
+        {
+            let mut progress = app.world_mut().resource_mut::<Progress>();
+            progress.journal.met("vain", "");
+            progress.journal.met("child", "");
+        }
         app.update();
         let world = app.world();
         let tip = world.resource::<HoverTip>();

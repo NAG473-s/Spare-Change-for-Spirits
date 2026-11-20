@@ -56,6 +56,8 @@ impl Plugin for AchievementsPlugin {
 pub struct AchievementDef {
     pub id: String,
     pub goal: Goal,
+    #[serde(default)]
+    pub reveal_after: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -103,6 +105,15 @@ impl Stat {
 }
 
 impl AchievementDef {
+    fn visible_in_menu(&self, progress: &Progress) -> bool {
+        let guest = match &self.goal {
+            Goal::Story(ghost) => Some(ghost.as_str()),
+            _ => self.reveal_after.as_deref(),
+        };
+        guest.is_none_or(|id| progress.journal.has_seen(id))
+            || progress.achievements.contains(&self.id)
+    }
+
     /// The Steamworks API name.
     pub fn steam_name(&self) -> String {
         self.id.to_ascii_uppercase()
@@ -160,7 +171,11 @@ pub fn achievements_page(
         crate::ui::Action::CloseSaveMenu,
         false,
     );
-    for a in &data.achievements {
+    for a in data
+        .achievements
+        .iter()
+        .filter(|a| a.visible_in_menu(progress))
+    {
         let unlocked = progress.achievements.contains(&a.id);
         let state = if unlocked {
             lang.t("achievements.unlocked")
@@ -259,11 +274,32 @@ fn sync_steam(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "demo")))]
 mod tests {
     use super::*;
 
-    #[cfg(not(feature = "demo"))]
+    #[test]
+    fn a_story_achievement_only_names_a_seen_guest_or_an_earned_achievement() {
+        let data = GameData::load();
+        let achievement = data
+            .achievements
+            .iter()
+            .find(|a| a.id == "lighthouse")
+            .unwrap();
+        let honest = data.achievements.iter().find(|a| a.id == "honest").unwrap();
+        let mut profile = Progress::new(0);
+        assert!(!achievement.visible_in_menu(&profile));
+        assert!(!honest.visible_in_menu(&profile));
+        profile.journal.met("ida", "");
+        assert!(achievement.visible_in_menu(&profile));
+        assert!(!honest.visible_in_menu(&profile));
+        profile.journal.met("forgetful", "");
+        assert!(honest.visible_in_menu(&profile));
+        let mut legacy = Progress::new(0);
+        legacy.achievements.push("lighthouse".into());
+        assert!(achievement.visible_in_menu(&legacy));
+    }
+
     #[test]
     fn first_sale_is_unlocked_before_leaving_the_dawn_schedule() {
         let mut app = App::new();

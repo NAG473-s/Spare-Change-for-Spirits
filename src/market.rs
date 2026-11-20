@@ -367,6 +367,9 @@ fn spawn_market(
 
     // The stalls and their traders.
     for (i, v) in data.vendors.iter().enumerate() {
+        if cfg!(feature = "demo") && v.from_night > data.config.final_night() {
+            continue;
+        }
         let at = Transform::from_xyz(v.pos.0, 0.0, v.pos.1)
             .with_rotation(Quat::from_rotation_y(v.turn.to_radians()));
         let stall = k.node(Some(root), at);
@@ -666,14 +669,21 @@ impl MarketDay {
         upgrades: &Upgrades,
         rng: &mut Rng,
     ) {
-        if self.night == progress.night && self.offers.len() == data.vendors.len() {
-            return;
+        let night = progress.calendar(data);
+        if self.night == progress.night {
+            // The full catalog appends seasonal traders after those in the demo.
+            // A saved trading day keeps its offers and purchases in either build.
+            let added = data.vendors.get(self.offers.len()..).unwrap_or_default();
+            let removed = self.offers.get(data.vendors.len()..).unwrap_or_default();
+            if added.iter().all(|v| !v.in_season(night)) && removed.iter().all(Vec::is_empty) {
+                self.offers.resize_with(data.vendors.len(), Vec::new);
+                return;
+            }
         }
         *self = Self {
             night: progress.night,
             ..default()
         };
-        let night = progress.calendar(data);
         // The Reaper's single pieces: different products every day.
         let mut pool: Vec<String> = data
             .products
@@ -1573,6 +1583,55 @@ mod tests {
         assert!(resumed.bought.is_empty());
         assert!(resumed.letter.is_none());
         assert!(!resumed.hourglass);
+    }
+
+    #[test]
+    fn a_market_day_survives_crossing_between_the_demo_and_full_catalogs() {
+        let mut full = GameData::load();
+        full.vendors = ron::from_str(include_str!("../assets/data/market.ron")).unwrap();
+        let mut demo = GameData::load();
+        let limit = demo.config.demo_nights;
+        demo.vendors.retain(|v| v.from_night <= limit);
+        let count = demo.vendors.len();
+        assert!(count < full.vendors.len());
+        assert!(
+            demo.vendors
+                .iter()
+                .zip(&full.vendors)
+                .all(|(d, f)| d.id == f.id)
+        );
+
+        let mut progress = Progress::new(0);
+        progress.night = 4;
+        let upgrades = Upgrades::default();
+        let mut rng = Rng::new(29);
+        let mut day = MarketDay::default();
+        day.prepare(&demo, &progress, &upgrades, &mut rng);
+        day.bought.push("mirror".into());
+        day.letter = Some(3);
+        day.hourglass = true;
+        let reaper = demo.vendors.iter().position(|v| v.id == "reaper").unwrap();
+        let sold = day.offers[reaper]
+            .iter()
+            .find_map(|(ware, _)| match ware {
+                WareKind::Rare(id) => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        day.rare_sold.push((reaper, sold));
+
+        let mut imported: MarketDay = ron::from_str(&ron::to_string(&day).unwrap()).unwrap();
+        imported.prepare(&full, &progress, &upgrades, &mut rng);
+        assert_eq!(imported.offers.len(), full.vendors.len());
+        assert!(imported.offers[count..].iter().all(Vec::is_empty));
+        let mut expected = day.clone();
+        expected.offers.resize_with(full.vendors.len(), Vec::new);
+        assert_eq!(imported, expected);
+
+        // Early saves from older builds also carry the unoccupied seasonal stalls.
+        let mut older: MarketDay = ron::from_str(&ron::to_string(&imported).unwrap()).unwrap();
+        older.prepare(&demo, &progress, &upgrades, &mut rng);
+        assert_eq!(older, day);
     }
 
     #[test]

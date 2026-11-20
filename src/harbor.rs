@@ -135,13 +135,13 @@ const BEAM_INTENSITY: f32 = 430_000.0;
 
 /// How far the lighthouse is repaired, from 0 (dark) to 1 (shining): the
 /// story marked `lighthouse` in story.ron lights it chapter by chapter.
-/// Without such a story it simply shines.
+/// The demo ends before the first repair.
 pub fn lighthouse_level(data: &GameData, progress: &Progress) -> f32 {
     data.stories
         .iter()
         .enumerate()
         .find(|(_, s)| s.lighthouse)
-        .map_or(1.0, |(i, s)| {
+        .map_or(0.0, |(i, s)| {
             progress.chapter(i).min(s.chapters.len()) as f32 / s.chapters.len() as f32
         })
 }
