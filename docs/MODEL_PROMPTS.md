@@ -9,12 +9,11 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- Season 3, "The Thaw":
-  - the products `seed_packet`, `watering_can` and `storm_lantern` (*Products*);
-  - the keepsakes `seedling_pot`, `flower_box`, `nameplate` and `oar` (*Keepsakes*);
-  - the market's flower boxes `window_flowers` (*The village market*).
 None. All currently ordered models are delivered, including:
 
+- Season 3, "The Thaw": the products `seed_packet`, `watering_can` and `storm_lantern`
+  in `assets/models/products/`; the keepsakes `seedling_pot`, `flower_box`, `nameplate`
+  and `oar` in `assets/models/decor/`; the market's `window_flowers` in `assets/models/market/`.
 - Season 2, "The Long Winter": the five products `gear`, `clock_key`, `little_bell`, `leash`
   and `snow_globe` in `assets/models/products/`; the four keepsakes `chalk_drawing`,
   `dog_basket`, `cog_wheel` and `cuckoo_clock` in `assets/models/decor/`.
@@ -186,6 +185,11 @@ Season 2 products:
 | `little_bell` | A small silver bell on a red ribbon tied in a bow. |
 | `leash` | A coiled red dog leash with a brass clip and a looped handle. |
 | `snow_globe` | A snow globe on a wooden base with a tiny house and a pine tree inside, a few white flakes floating. |
+
+Season 3 products:
+
+| id | Prompt |
+|---|---|
 | `seed_packet` | A small paper seed packet with a flower drawn on it, folded at the top, a few seeds spilled beside it. |
 | `watering_can` | A little green tin watering can with a long spout and a rose on the end. |
 | `storm_lantern` | A sturdy iron storm lantern with a glass chimney and a carrying handle; the flame glows warm (emissive). |
