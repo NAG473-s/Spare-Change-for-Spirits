@@ -22,11 +22,11 @@ See what is still missing (models, ghost sprites, icons):
 python3 tools/check_models.py
 ```
 
-## To do
+## Delivery status
 
-- The apprentice portrait `apprentice` (see *Helpers* under *Ghosts* below): one PNG,
-  `assets/sprites/ghosts/apprentice.png`, prepared like the other portraits (176 × 264,
-  transparent). Until it arrives the game shows a pale placeholder behind the counter.
+All current image orders are delivered. The helper behind the counter uses
+`assets/sprites/ghosts/apprentice.png`, a transparent 176 × 264 portrait. Its replacement
+prompt is listed under *Helpers* below.
 
 The seasonal furniture icons `fairy_lights`, `fur_rug`, `flower_pot` and `birdhouse` are in
 `assets/sprites/decor/` (96 × 96, transparent PNG). Their replacement prompts are listed
