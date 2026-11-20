@@ -24,11 +24,18 @@ python3 tools/check_models.py
 
 ## To do
 
-- Season 3, "The Thaw": portraits (then idle and gesture sheets) for `frog`, `butterfly`,
-  `mira` and `kasimir` (*Ghosts introduced in later nights*); icons for the products
-  `seed_packet`, `watering_can`, `storm_lantern` and the keepsakes `seedling_pot`,
-  `flower_box`, `nameplate`, `oar` (prompts as for their models in
-  [MODEL_PROMPTS.md](MODEL_PROMPTS.md)).
+- Season 3, "The Thaw": four idle sheets and 32 gesture sheets for `frog`, `butterfly`,
+  `mira` and `kasimir`. Their portraits are delivered; use them as the references for
+  *Ghost animation sheets* and *Ghost gesture sheets* below.
+
+Season 3 portraits and icons are delivered:
+
+- Portraits for `frog`, `butterfly`, `mira` and `kasimir` in `assets/sprites/ghosts/`
+  (176 × 264, transparent PNG).
+- Product icons for `seed_packet`, `watering_can` and `storm_lantern` in
+  `assets/sprites/products/` (96 × 96, transparent PNG).
+- Keepsake icons for `seedling_pot`, `flower_box`, `nameplate` and `oar` in
+  `assets/sprites/decor/` (96 × 96, transparent PNG).
 
 Season 2 portraits, icons and animation sheets are delivered:
 
@@ -112,7 +119,7 @@ Ghosts are friendly, semi-transparent, softly glowing and float slightly; no leg
 Keep the same body shape and size as the existing ghosts; vary colour, face and one accessory.
 In the game they are about 1.35 m tall and face the camera.
 
-All seventeen portraits are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
+All twenty-one portraits are included in `assets/sprites/ghosts/`. The prompts below can be used to redraw them.
 
 **Ghosts introduced in later nights:**
 
