@@ -4,8 +4,8 @@
 **2027-01-25**) and open **Early Access right after the festival**, so its attention lands on a
 game that can be bought – not on a wishlist that waits for months while others copy the idea.
 
-Until the store page goes live the repository stays private and nothing about the game is shown
-publicly.
+The repository stays public until the Steam store page goes live. At publication, switch the
+repository to private and begin promoting the game publicly.
 
 ## What goes where
 
@@ -42,7 +42,6 @@ Checkboxes are ticked in the commit that finishes them.
 - [x] First balancing pass in `assets/data/*.ron` (see `docs/BALANCING.md`)
 - [ ] Windows build run and the `.exe` played on a real Windows PC (assets, fonts, saves, sound)
 - [x] Ledger frame (`assets/sprites/ui/ledger_frame.png`) used for the morning accounts
-- [ ] Repository private
 
 ### Week 2 · Nov 30 – Dec 6: first playtests
 
@@ -66,6 +65,7 @@ Checkboxes are ticked in the commit that finishes them.
 - [ ] Store page text, tags, screenshots (only once the models are in)
 - [ ] Trailer v1 (30–60 s, captured in the game)
 - [ ] Store page submitted for review and set to "coming soon" – wishlists start counting
+- [ ] Switch the repository to private when the Steam store page is publicly visible as "coming soon"
 - [ ] Demo set up as its own app in Steamworks
 - [ ] Steam Cloud (Auto-Cloud, both apps) and the achievements (full game) entered as in
       `docs/STEAM.md`; achievement icons uploaded
