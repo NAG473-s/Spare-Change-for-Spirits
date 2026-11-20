@@ -10,6 +10,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
   and the traders' nameplates at the village market.
 - **Surface textures and light** – the shop floor, market cobblestones and the soft halo around harbour lamps.
 - **The opening and title screen** – a painted harbour, a punt with an articulated ferryman, the menu background and the game logo.
+- **Story endings** – three original paintings per ghost for the six narrated films.
 - **The desktop icon** – the same ghost and brass button in the Linux, macOS and Windows launchers.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
@@ -462,3 +463,16 @@ Steamworks before uploading (header 920 × 430, small 462 × 174, main 1232 × 7
 748 × 896, library capsule 600 × 900, library hero 3840 × 1240, library logo 1280 × 720).
 
 **Steam requires AI-generated content to be disclosed** in the Steamworks content survey.
+
+## The six story films
+
+Each film has three landscape paintings. The opening and closing shots share a full-bleed master. The detail shot has its own master in `art/endings/`. Follow the face, clothes, colouring and wispy silhouette of the corresponding ghost portrait. Use gouache, coloured pencil and visible paper grain. Frame each painting for 16:9 playback and leave subtitles to the game. Keep the camera still during the two short dissolves.
+
+| Ghost | Opening shot | Detail shot | Closing shot |
+| --- | --- | --- | --- |
+| Edwin | Edwin folds the letter beside the rain-streaked shop window. | Raindrops catch the light behind the framed wedding photograph. | The letter tucked into his coat, he steps through the lit doorway. |
+| Ida | Ida carries her lantern up the dark spiral stairs. | Her hand opens the brass shutter of the lighthouse lamp. | The restored beam guides the drowned sailors into the ferry. |
+| Lotte | Lotte watches Pfote turn beside the wicker basket. | The little dog lifts its head, its brass bell resting against the scarf. | Pfote sleeps curled up while Lotte waves from the doorway. |
+| Anselm | Anselm stands among the tower's brass gears. | Snow settles on the face of the clock as it strikes midnight. | Fresh snow covers the market as he walks into the light. |
+| Mira | Soft rain catches the gardener’s hat beside the window boxes. | A bee rests in a crocus above the damp earth. | Mira walks through the flowering market. |
+| Kasimir | His fare paid, Kasimir rows into the fog. | The last coin and the storm lantern rest on the wet bench. | At dawn he smiles and waves from the quay. |

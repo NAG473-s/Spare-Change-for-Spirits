@@ -245,6 +245,13 @@
     "night.put_back": "全部戻す",
     "register.no_change": "ちょうどのお釣りがない",
     "register.no_change_hint": "レジのお金では{due}ちょうどを返せません。幽霊に細かいお金で払ってもらいましょう。",
+    "register.ask_smaller": "もっと細かいお金で払ってもらう",
+    "register.change_tray": "お釣りのトレイ · {total}",
+    "register.return_one": "{coin} ×{count} · ひとつ戻す",
+    "register.undo_hint": "硬貨を右クリックすると、その種類の硬貨を1枚戻せます。",
+    "register.change_short": "お釣りが足りません。お金をひとつ足して、もう一度渡してみましょう。",
+    "register.change_over": "お釣りが多すぎます。お金をひとつ戻して、もう一度渡してみましょう。",
+    "register.give_anyway": "この金額のまま渡す",
     "night.give_fare": "レジから硬貨を1枚渡す（{coin}）",
     "night.fare_empty": "レジは空っぽだ – 渡せる硬貨が1枚もない。",
     "night.hand_over": "渡す",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "いちばん古い品が色あせるまで（夜）：{nights}",
-    "shelf.tip_evening": "クリック：棚から下ろす",
+    "shelf.tip_evening": "右クリックでこの商品を棚から下ろします。在庫には残ります。",
     "shelf.tip_night": "クリック：カウンターの幽霊に渡す",
     "shelf.tip_no_ghost": "カウンターで待っている幽霊はいない。",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "市場へ",
 
     // Accounts at dawn
+    "accounts.first_sale": "「{item}」が{price}で売れました。お客さんの支払いは{paid}、お釣りは{given}でした。金額はすべてボタン換算です。",
+    "accounts.no_first_sale": "昨夜は商品が売れませんでした。",
+    "accounts.stock_kept": "次の夕方に持ち越す在庫：{items}。",
+    "accounts.stock_empty": "次の夕方に持ち越す在庫はありません。",
+    "accounts.first_market": "村の市場に立ち寄ってから、お店に戻って次の夕方に備えましょう。市場では何も買わずに帰ってもかまいません。",
+
     "accounts.title": "夜明け – {night}夜目の収支",
     "accounts.cash": "レジ",
     "accounts.opening": "一日の始まりのレジ残高",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "死神が口を利いてくれる。これからは毎夕、渡し守が木箱を2つ多く運んでくる。",
     "upgrade.apprentice.name": "見習い店員",
     "upgrade.apprentice.text": "カウンターの後ろにいる小さなお手伝い幽霊。混み合う夜には、棚の商品を持って列に並ぶお客を最大3人まで接客する。代金はぴったりしか受け取らないので、おつりは要らない。",
+
+    "guide_title": "ヘッダの初商い",
+    "guide_buy": "船着き場へ行き、渡し守の舟から木箱をひとつ買いましょう。好きな商品を選んでかまいません。",
+    "guide_shelf": "お店に戻ったら「棚に商品を並べる」で商品を選び、並べたい棚をクリックしましょう。",
+    "guide_open": "棚の準備ができました。最初のお客さんを迎える準備ができたら、お店を開けましょう。",
+    "guide_wish": "最初のお客さんは待ってくれます。カウンターで願いを読み、ぴったりの商品を棚か一覧から選びましょう。",
+    "guide_change": "受け取った金額を値段と比べましょう。お釣りを数えたら、お客さんに渡します。お金を戻して数え直すこともできます。",
+    "guide_skip": "案内をスキップ",
+    "guide_resume": "案内を再開",
+    "guide_retry": "お客さんはまだ待っています。願いを読み返して、別の商品を選んでみましょう。",
 
     // Tips during the first night.
     "tip.order": "毎日夕方になると、渡し守が木箱を最大{count}個まで運んできます。扉から船着き場へ出て、舟の上の木箱をクリックすると購入でき、代金はレジから支払います。",

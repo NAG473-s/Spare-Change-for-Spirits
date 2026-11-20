@@ -577,7 +577,7 @@ fn on_cell_click(
     lang: Res<Lang>,
     upgrades: Res<Upgrades>,
 ) {
-    if *phase.get() != Phase::Evening {
+    if *phase.get() != Phase::Evening || click.button != PointerButton::Primary {
         return;
     }
     let Ok(GridCell(idx)) = cells.get(click.entity) else {
@@ -666,21 +666,22 @@ fn on_shelf_item_click(
     mut layout: ResMut<ShopLayout>,
     mut actions: MessageWriter<Action>,
 ) {
-    if click.button != PointerButton::Primary {
-        return;
-    }
     let Ok(item) = items.get(click.event_target()) else {
         return;
     };
     match phase.get() {
-        // With the furnishing tools the click is meant for the cell.
-        Phase::Evening if matches!(*tool, Tool::None | Tool::Stock(_)) => {
+        // A primary click with a furnishing tool belongs to the cell below.
+        Phase::Evening
+            if click.button == PointerButton::Secondary
+                || (click.button == PointerButton::Primary
+                    && matches!(*tool, Tool::None | Tool::Stock(_))) =>
+        {
             click.propagate(false);
             layout.cells[item.cell]
                 .products
                 .retain(|p| *p != item.product);
         }
-        Phase::Night => {
+        Phase::Night if click.button == PointerButton::Primary => {
             click.propagate(false);
             actions.write(Action::Offer(item.product.clone()));
         }
@@ -1037,6 +1038,101 @@ pub(crate) fn product_model(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn secondary_click_removes_only_the_targeted_ware_in_the_evening() {
+        use bevy::camera::NormalizedRenderTarget;
+        use bevy::picking::{
+            backend::HitData,
+            events::Pointer,
+            pointer::{Location, PointerId},
+        };
+        use bevy::window::WindowRef;
+
+        let mut world = World::new();
+        let mut layout = ShopLayout::new(4, 4);
+        layout.cells[0].decor = Some("shelf".into());
+        world.insert_resource(layout);
+        world.insert_resource(State::new(Phase::Evening));
+        world.insert_resource(GameData::load());
+        world.insert_resource(Lang::load("en"));
+        world.init_resource::<Upgrades>();
+        world.init_resource::<GameLog>();
+        world.init_resource::<Messages<Action>>();
+        world.init_resource::<Storeroom>();
+        world.resource_mut::<Storeroom>().give("rug");
+        world.init_resource::<Stock>();
+        world.resource_mut::<Stock>().add("tea_tin", 3);
+        let window = world.spawn(Window::default()).id();
+        let shelf = world.spawn(GridCell(0)).observe(on_cell_click).id();
+        let empty = world.spawn(GridCell(1)).observe(on_cell_click).id();
+        let ware = world
+            .spawn((
+                ShelfItem {
+                    cell: 0,
+                    product: "tea_tin".into(),
+                    slot: 1,
+                },
+                ChildOf(shelf),
+            ))
+            .observe(on_shelf_item_click)
+            .id();
+        // The ray hits the pickable box, which is a child of the ware model.
+        let hitbox = world.spawn(ChildOf(ware)).id();
+        world.flush();
+        let click = |world: &mut World, entity, button| {
+            world.trigger(PointerClick {
+                entity,
+                pointer: Pointer::new(
+                    PointerId::Mouse,
+                    Location {
+                        target: NormalizedRenderTarget::Window(
+                            WindowRef::Entity(window).normalize(Some(window)).unwrap(),
+                        ),
+                        position: Vec2::ZERO,
+                    },
+                ),
+                button,
+                hit: HitData::new(window, 0.0, None, None),
+                duration: Default::default(),
+                count: 1,
+            });
+        };
+
+        for tool in [
+            Tool::None,
+            Tool::Stock("tea_tin".into()),
+            Tool::Place("rug".into()),
+            Tool::Remove,
+        ] {
+            world.insert_resource(tool);
+            world.resource_mut::<ShopLayout>().cells[0].products =
+                vec!["marbles".into(), "tea_tin".into()];
+            click(&mut world, empty, PointerButton::Secondary);
+            click(&mut world, shelf, PointerButton::Secondary);
+            click(&mut world, hitbox, PointerButton::Secondary);
+            let layout = world.resource::<ShopLayout>();
+            assert_eq!(layout.cells[0].decor.as_deref(), Some("shelf"));
+            assert_eq!(layout.cells[0].products, ["marbles"]);
+            assert_eq!(layout.cells[1], CellContent::default());
+            assert_eq!(world.resource::<Storeroom>().count("rug"), 1);
+            assert_eq!(world.resource::<Stock>().count("tea_tin"), 3);
+        }
+        // At night only the primary button offers the ware to the customer.
+        world.resource_mut::<ShopLayout>().cells[0]
+            .products
+            .push("tea_tin".into());
+        world.insert_resource(State::new(Phase::Night));
+        click(&mut world, hitbox, PointerButton::Secondary);
+        assert!(world.resource::<Messages<Action>>().is_empty());
+        assert_eq!(
+            world.resource::<ShopLayout>().cells[0].products,
+            ["marbles", "tea_tin"]
+        );
+        click(&mut world, hitbox, PointerButton::Primary);
+        let actions: Vec<_> = world.resource_mut::<Messages<Action>>().drain().collect();
+        assert_eq!(actions, [Action::Offer("tea_tin".into())]);
+    }
 
     #[test]
     fn sold_out_wares_leave_the_shelves() {

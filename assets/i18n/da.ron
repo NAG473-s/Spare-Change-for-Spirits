@@ -245,6 +245,13 @@
     "night.put_back": "Læg alt tilbage",
     "register.no_change": "Ingen passende byttepenge",
     "register.no_change_hint": "Kassen kan ikke give præcist {due} tilbage. Bed spøgelset om mindre mønter.",
+    "register.ask_smaller": "Bed om mindre mønter",
+    "register.change_tray": "På byttepengebakken · {total}",
+    "register.return_one": "{coin} ×{count} · læg én tilbage",
+    "register.undo_hint": "Højreklik på en mønt for at lægge én tilbage.",
+    "register.change_short": "Der er for få byttepenge. Læg en mønt mere på, og prøv igen.",
+    "register.change_over": "Der er for mange byttepenge. Læg en mønt tilbage, og prøv igen.",
+    "register.give_anyway": "Giv beløbet alligevel",
     "night.give_fare": "Giv ham en mønt fra kassen ({coin})",
     "night.fare_empty": "Din kasse er tom – der er ingen mønt at give.",
     "night.hand_over": "Overræk",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nætter, til den ældste falmer: {nights}",
-    "shelf.tip_evening": "Klik: tag den ned fra hylden",
+    "shelf.tip_evening": "Højreklik for at tage varen ned fra hylden. Den bliver på lageret.",
     "shelf.tip_night": "Klik: giv den til spøgelset ved disken",
     "shelf.tip_no_ghost": "Intet spøgelse venter ved disken.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Til markedet",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} blev solgt for {price}. Kunden betalte {paid} og fik {given} tilbage. Alle beløb er i knapper.",
+    "accounts.no_first_sale": "Der blev ikke solgt noget i nat.",
+    "accounts.stock_kept": "Tilbage på lager til næste aften: {items}.",
+    "accounts.stock_empty": "Der er ingen varer tilbage til næste aften.",
+    "accounts.first_market": "Besøg landsbyens marked, og vend tilbage til butikken til næste aften. Du kan også bare se dig omkring på markedet.",
+
     "accounts.title": "Daggry – Regnskab for nat {night}",
     "accounts.cash": "Kassen",
     "accounts.opening": "I kassen ved dagens start",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Manden med leen lægger et godt ord ind. Fra nu af kommer færgemanden med to kasser mere hver aften.",
     "upgrade.apprentice.name": "En lærling",
     "upgrade.apprentice.text": "Et lille hjælpespøgelse bag disken. På travle nætter betjener det op til tre kunder i køen, der kommer med en vare fra hylderne, og tager præcis prisen, så der skal ikke gives byttepenge.",
+
+    "guide_title": "Det første salg med Hedda",
+    "guide_buy": "Gå ned til havnen, og køb en kasse fra færgemandens båd. Vælg en vare, du kan lide.",
+    "guide_shelf": "Tilbage i butikken vælger du en vare under »Sæt varer på hylderne«. Klik derefter på en hylde for at stille varen frem.",
+    "guide_open": "Din hylde er klar. Åbn butikken, når du vil tage imod din første kunde.",
+    "guide_wish": "Din første kunde venter gerne. Læs ønsket ved disken, og vælg den rette vare på hylden eller listen.",
+    "guide_change": "Sammenlign betalingen med prisen. Tæl byttepengene op, og giv dem til kunden. Du kan lægge mønter tilbage og prøve igen.",
+    "guide_skip": "Spring vejledningen over",
+    "guide_resume": "Fortsæt vejledningen",
+    "guide_retry": "Kunden venter stadig. Læs ønsket, og prøv med en anden vare.",
 
     // Tips during the first night.
     "tip.order": "Hver aften kommer færgemanden med op til {count} kasser. Gå ud ad døren til havnen, og klik på en kasse i hans båd for at købe den – du betaler fra kassen.",

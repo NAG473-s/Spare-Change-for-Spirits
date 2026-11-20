@@ -245,6 +245,13 @@
     "night.put_back": "Rimetti tutto",
     "register.no_change": "Nessun resto adatto",
     "register.no_change_hint": "Il cassetto non può restituire esattamente {due}. Chiedi al fantasma monete più piccole.",
+    "register.ask_smaller": "Chiedi monete di taglio più piccolo",
+    "register.change_tray": "Sul vassoio del resto · {total}",
+    "register.return_one": "{coin} ×{count} · rimettine una nel cassetto",
+    "register.undo_hint": "Fai clic destro su una moneta per rimetterne una nel cassetto.",
+    "register.change_short": "Il resto è troppo poco. Aggiungi una moneta e riprova.",
+    "register.change_over": "Il resto è troppo. Rimetti una moneta nel cassetto e riprova.",
+    "register.give_anyway": "Consegna comunque questa somma",
     "night.give_fare": "Dargli una moneta dal cassetto ({coin})",
     "night.fare_empty": "Il tuo cassetto è vuoto – non c'è nessuna moneta da dare.",
     "night.hand_over": "Consegna",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Notti prima che il più vecchio sbiadisca: {nights}",
-    "shelf.tip_evening": "Clic: togli dallo scaffale",
+    "shelf.tip_evening": "Fai clic destro per togliere questa merce dallo scaffale. Rimane in magazzino.",
     "shelf.tip_night": "Clic: consegnalo al fantasma al bancone",
     "shelf.tip_no_ghost": "Nessun fantasma aspetta al bancone.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Al mercato",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item}: prezzo di vendita {price}. Il cliente ha pagato {paid} e ha ricevuto {given} di resto. Tutte le somme sono in bottoni.",
+    "accounts.no_first_sale": "La notte scorsa non hai concluso vendite.",
+    "accounts.stock_kept": "Merci rimaste per la prossima sera: {items}.",
+    "accounts.stock_empty": "Non restano merci per la prossima sera.",
+    "accounts.first_market": "Visita il mercato del villaggio e torna in bottega per la prossima sera. Al mercato puoi anche solo dare un’occhiata.",
+
     "accounts.title": "Alba – Conti della notte {night}",
     "accounts.cash": "Cassetto",
     "accounts.opening": "Nel cassetto a inizio giornata",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Il Tristo Mietitore mette una buona parola. D'ora in poi il traghettatore porta due casse in più ogni sera.",
     "upgrade.apprentice.name": "Un apprendista",
     "upgrade.apprentice.text": "Un piccolo fantasma aiutante dietro il bancone. Nelle notti affollate serve fino a tre clienti in fila che portano una merce dagli scaffali e incassa il prezzo esatto, così non c'è resto da dare.",
+
+    "guide_title": "La prima vendita con Hedda",
+    "guide_buy": "Vai al porto e compra una cassa dalla barca del traghettatore. Scegli la merce che preferisci.",
+    "guide_shelf": "Torna in bottega, scegli una merce sotto «Rifornisci gli scaffali» e clicca su uno scaffale per esporla.",
+    "guide_open": "Lo scaffale è pronto. Apri la bottega quando vuoi accogliere il tuo primo cliente.",
+    "guide_wish": "Il primo cliente ti aspetterà. Leggi il suo desiderio al bancone e scegli la merce giusta dallo scaffale o dall’elenco.",
+    "guide_change": "Confronta la somma pagata con il prezzo. Conta il resto e consegnalo. Puoi rimettere le monete nel cassetto e riprovare.",
+    "guide_skip": "Salta la guida",
+    "guide_resume": "Riprendi la guida",
+    "guide_retry": "Il cliente aspetta ancora. Rileggi il suo desiderio e prova con un’altra merce.",
 
     // Tips during the first night.
     "tip.order": "Ogni sera il traghettatore porta fino a {count} casse. Esci dalla porta fino al porto e clicca su una cassa sulla sua barca per comprarla – paghi con i soldi del cassetto.",

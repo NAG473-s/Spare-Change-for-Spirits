@@ -245,6 +245,13 @@
     "night.put_back": "모두 되돌리기",
     "register.no_change": "맞는 거스름돈 없음",
     "register.no_change_hint": "돈통의 돈으로는 정확히 거슬러 줄 수 없어요 ({due}). 유령에게 더 작은 돈으로 내 달라고 하세요.",
+    "register.ask_smaller": "더 작은 단위의 돈으로 부탁하기",
+    "register.change_tray": "거스름돈 쟁반 · {total}",
+    "register.return_one": "{coin} ×{count} · 하나 되돌리기",
+    "register.undo_hint": "동전을 마우스 오른쪽 버튼으로 클릭하면 한 개를 도로 넣습니다.",
+    "register.change_short": "거스름돈이 모자라요. 동전을 하나 더 올리고 다시 시도해 보세요.",
+    "register.change_over": "거스름돈이 너무 많아요. 동전을 하나 되돌리고 다시 시도해 보세요.",
+    "register.give_anyway": "그래도 이 금액으로 건네기",
     "night.give_fare": "돈통에서 동전 하나 건네기 ({coin})",
     "night.fare_empty": "돈통이 텅 비었다 – 건넬 동전이 하나도 없다.",
     "night.hand_over": "건네기",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "가장 오래된 물건이 빛바래기까지 (밤): {nights}",
-    "shelf.tip_evening": "클릭: 선반에서 내리기",
+    "shelf.tip_evening": "마우스 오른쪽 버튼으로 클릭하면 이 물건을 선반에서 내립니다. 재고에는 그대로 남습니다.",
     "shelf.tip_night": "클릭: 카운터의 유령에게 건네기",
     "shelf.tip_no_ghost": "카운터에서 기다리는 유령이 없어요.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "장터로",
 
     // Accounts at dawn
+    "accounts.first_sale": "판매한 상품: {item}. 판매 가격: {price}, 손님이 낸 돈: {paid}, 건넨 거스름돈: {given}. 모두 단추로 환산한 금액이에요.",
+    "accounts.no_first_sale": "지난밤에는 판매를 마친 상품이 없어요.",
+    "accounts.stock_kept": "다음 저녁까지 남겨 둔 상품: {items}.",
+    "accounts.stock_empty": "다음 저녁까지 남겨 둔 상품이 없어요.",
+    "accounts.first_market": "마을 시장에 들렀다가 가게로 돌아와 다음 저녁을 준비하세요. 시장에서 꼭 물건을 살 필요는 없어요.",
+
     "accounts.title": "새벽 – {night}번째 밤 정산",
     "accounts.cash": "돈통",
     "accounts.opening": "하루 시작 때 돈통",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "사신이 좋은 말을 해 준다. 이제부터 뱃사공이 매일 저녁 상자를 두 개 더 가져온다.",
     "upgrade.apprentice.name": "견습생",
     "upgrade.apprentice.text": "카운터 뒤의 작은 도우미 유령이에요. 바쁜 밤에는 선반에서 물건을 골라 줄 서 있는 손님을 최대 세 명까지 응대하고, 딱 가격만큼만 받아서 거스름돈이 필요 없어요.",
+
+    "guide_title": "헤다의 첫 판매",
+    "guide_buy": "선착장에 가서 뱃사공의 배에서 상자 하나를 사세요. 마음에 드는 상품을 고르면 돼요.",
+    "guide_shelf": "가게로 돌아와 ‘상품 진열하기’에서 상품을 고른 다음, 진열할 선반을 클릭하세요.",
+    "guide_open": "선반이 준비됐어요. 첫 손님을 맞이할 준비가 되면 가게를 여세요.",
+    "guide_wish": "첫 손님은 기다려 줘요. 계산대에서 소원을 읽고 선반이나 목록에서 알맞은 상품을 고르세요.",
+    "guide_change": "받은 돈과 가격을 비교하세요. 거스름돈을 센 다음 손님에게 건네세요. 동전을 되돌려 놓고 다시 세어도 돼요.",
+    "guide_skip": "안내 건너뛰기",
+    "guide_resume": "안내 이어서 보기",
+    "guide_retry": "손님은 아직 기다리고 있어요. 소원을 다시 읽고 다른 상품을 골라 보세요.",
 
     // Tips during the first night.
     "tip.order": "매일 저녁 뱃사공이 상자를 최대 {count}개까지 가져다줘요. 문으로 나가 선착장에서 배 위의 상자를 클릭하면 살 수 있어요 – 대금은 돈통에서 나가요.",

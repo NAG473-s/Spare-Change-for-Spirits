@@ -245,6 +245,13 @@
     "night.put_back": "Hepsini geri koy",
     "register.no_change": "Uygun para üstü yok",
     "register.no_change_hint": "Çekmecedeki paralarla tam {due} para üstü verilemiyor. Hayaletten daha küçük paralar iste.",
+    "register.ask_smaller": "Daha küçük paralar iste",
+    "register.change_tray": "Para üstü tepsin · {total}",
+    "register.return_one": "{coin} ×{count} · birini geri koy",
+    "register.undo_hint": "Bir parayı çekmeceye geri koymak için o para türüne sağ tıkla.",
+    "register.change_short": "Para üstü eksik. Bir para daha ekle ve tekrar dene.",
+    "register.change_over": "Para üstü fazla. Bir parayı geri koy ve tekrar dene.",
+    "register.give_anyway": "Yine de bu tutarı teslim et",
     "night.give_fare": "Ona çekmeceden bir sikke ver ({coin})",
     "night.fare_empty": "Çekmecen boş – verecek bir sikke yok.",
     "night.hand_over": "Teslim et",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "En eskisinin solmasına kalan gece: {nights}",
-    "shelf.tip_evening": "Tıkla: raftan kaldır",
+    "shelf.tip_evening": "Bu ürünü raftan almak için sağ tıkla. Ürün stokta kalır.",
     "shelf.tip_night": "Tıkla: tezgâhtaki hayalete ver",
     "shelf.tip_no_ghost": "Tezgâhta bekleyen hayalet yok.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Pazara",
 
     // Accounts at dawn
+    "accounts.first_sale": "Satılan ürün: {item}. Fiyatı {price}, müşterinin ödediği tutar {paid}, aldığı para üstü {given}. Tüm tutarlar düğme cinsinden.",
+    "accounts.no_first_sale": "Dün gece hiç satış tamamlanmadı.",
+    "accounts.stock_kept": "Ertesi akşama kalan ürünler: {items}.",
+    "accounts.stock_empty": "Ertesi akşama stokta hiç ürün kalmadı.",
+    "accounts.first_market": "Köy pazarına uğra, sonra ertesi akşama hazırlanmak için dükkâna dön. Pazardan bir şey almak zorunda değilsin.",
+
     "accounts.title": "Şafak – {night}. gecenin hesapları",
     "accounts.cash": "Kasa çekmecesi",
     "accounts.opening": "Gün başında çekmecede",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Tırpanlı Ölüm senin için araya giriyor. Bundan böyle kayıkçı her akşam iki sandık fazla getirir.",
     "upgrade.apprentice.name": "Bir çırak",
     "upgrade.apprentice.text": "Tezgâhın arkasında küçük bir yardımcı hayalet. Yoğun gecelerde, raflardan bir ürün getirip sırada bekleyen en fazla üç müşteriyle ilgilenir ve tam fiyatı alır, böylece para üstü gerekmez.",
+
+    "guide_title": "Hedda’nın ilk satışı",
+    "guide_buy": "İskeleye git ve kayıkçının kayığından bir sandık al. İstediğin ürünü seçebilirsin.",
+    "guide_shelf": "Dükkâna döndüğünde “Ürünleri raflara diz” başlığı altından bir ürün seç, sonra ürünü sergilemek istediğin rafa tıkla.",
+    "guide_open": "Rafın hazır. İlk müşterini karşılamaya hazır olduğunda dükkânı aç.",
+    "guide_wish": "İlk müşterin seni bekleyecek. Tezgâhta dileğini oku, sonra raftan ya da listeden uygun ürünü seç.",
+    "guide_change": "Ödenen tutarı fiyatla karşılaştır. Para üstünü sayıp müşteriye ver. Paraları geri koyup tekrar sayabilirsin.",
+    "guide_skip": "Rehberi atla",
+    "guide_resume": "Rehbere devam et",
+    "guide_retry": "Müşteri hâlâ bekliyor. Dileğini tekrar oku ve başka bir ürün dene.",
 
     // Tips during the first night.
     "tip.order": "Kayıkçı her akşam en fazla {count} sandık getirir. Kapıdan iskeleye çık ve satın almak için kayığındaki bir sandığa tıkla – parasını kasa çekmecesinden ödersin.",

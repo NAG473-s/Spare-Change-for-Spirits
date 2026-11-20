@@ -17,6 +17,8 @@ import struct
 import sys
 from pathlib import Path
 
+from i18n_sync import read_catalog
+
 ROOT = Path(__import__('os').environ.get('SCFS_ROOT', Path(__file__).resolve().parent.parent))
 # Activities a ghost can have a drawn sheet for (src/ghosts/motion.rs, Act::file), in the order
 # they are worth ordering: the ones seen most often first.
@@ -147,6 +149,42 @@ def prop_sizes():
 
 def ids(path, pattern):
     return re.findall(pattern, (ROOT / path).read_text(encoding="utf-8"))
+
+
+def check_ending_reading(path, language, line):
+    """Check the Vorbis stream, its final playback time and its recorded script."""
+    if not path.is_file():
+        return "missing"
+    data = path.read_bytes()
+    offset = 0
+    first_packet = b""
+    last_page = b""
+    while offset < len(data):
+        header = data[offset:offset + 27]
+        if len(header) != 27 or header[:5] != b"OggS\x00":
+            return "invalid Ogg page"
+        lacing = data[offset + 27:offset + 27 + header[26]]
+        payload = offset + 27 + len(lacing)
+        end = payload + sum(lacing)
+        if len(lacing) != header[26] or end > len(data):
+            return "truncated Ogg page"
+        if offset == 0:
+            first_packet = data[payload:end]
+        last_page = header
+        offset = end
+    if len(first_packet) != 30 or not first_packet.startswith(b"\x01vorbis"):
+        return "missing Vorbis identification"
+    rate = int.from_bytes(first_packet[12:16], "little")
+    samples = int.from_bytes(last_page[6:14], "little", signed=True)
+    if not last_page[5] & 4 or not rate or samples < rate:
+        return "incomplete or empty reading"
+    # Vorbis comments are length-prefixed, which also distinguishes regional language codes.
+    comments = data.partition(b"\x03vorbis")[2].partition(b"\x05vorbis")[0]
+    for tag in (f"language={language}", f"lyrics={line}"):
+        encoded = tag.encode("utf-8")
+        if struct.pack("<I", len(encoded)) + encoded not in comments:
+            return "language or script mismatch"
+    return None
 
 
 def incident_sizes():
@@ -373,14 +411,43 @@ def main():
         present = icon.is_file()
         print(("  ok       " if present else "  no icon  ") + str(icon.relative_to(ROOT)))
         failures += not present
-    # The crossing has an instrumental track and a separate reading per menu language.
+    # The register has a sound for each coin; the crossing has a score and one reading per language.
     print()
     languages = ids("assets/i18n/languages.ron", r'code: "([^"]+)"')
-    for name in ["intro_music", *(f"intro_voice_{code}" for code in languages)]:
+    for name in ["coin_button", "coin_candle", "coin_spoon", "intro_music", *(f"intro_voice_{code}" for code in languages)]:
         clip = ROOT / "assets" / "sounds" / f"{name}.ogg"
         present = clip.is_file()
         print(("  ok       " if present else "  missing  ") + f"sounds/{clip.name}")
         failures += not present
+    stories = ids("assets/data/story.ron", r'ghost: "([^"]+)"')
+    catalogs = {code: read_catalog(ROOT / "assets/i18n" / f"{code}.ron") for code in languages}
+    for ghost in stories:
+        video = Path("videos/endings") / f"{ghost}.avi"
+        path = ROOT / "assets" / video
+        header = b""
+        if path.is_file():
+            with path.open("rb") as stream:
+                header = stream.read(12)
+        valid = (
+            header[:4] == b"RIFF" and header[8:12] == b"AVI "
+            and int.from_bytes(header[4:8], "little") + 8 == path.stat().st_size
+        )
+        print(("  ok       " if valid else "  missing or invalid  ") + video.as_posix())
+        failures += not valid
+        matches = 0
+        for language, catalog in catalogs.items():
+            path = Path("sounds/endings") / ghost / f"{language}.ogg"
+            key = f"story.{ghost}.ending"
+            error = "missing catalog text"
+            if key in catalog:
+                line = json.loads('"' + catalog[key] + '"')
+                error = check_ending_reading(ROOT / "assets" / path, language, line)
+            if error:
+                print(f"  {error}  {path.as_posix()}")
+            else:
+                matches += 1
+        failures += len(languages) - matches
+        print(f"  {matches}/{len(languages)} ending readings for {ghost}")
     return 1 if failures else 0
 
 

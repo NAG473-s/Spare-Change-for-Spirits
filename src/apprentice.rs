@@ -42,7 +42,12 @@ impl Plugin for ApprenticePlugin {
             .add_systems(OnEnter(Phase::Night), |mut t: ResMut<Tonight>| {
                 *t = Tonight::default()
             })
-            .add_systems(Update, serve.run_if(in_state(Phase::Night)))
+            .add_systems(
+                Update,
+                serve
+                    .run_if(in_state(Phase::Night))
+                    .run_if(crate::story_film::outside_film),
+            )
             .add_systems(
                 Update,
                 (show_apprentice, bob).run_if(not(in_state(Phase::Menu))),
@@ -123,9 +128,7 @@ fn serve(
         let factor = def.pay_multiplier * data.price_factor(progress.calendar(&data));
         let price = ((base as f32 * factor).round() as u32).max(1);
         drawer.merge(&Purse::greedy(price));
-        report.sales += 1;
-        report.revenue += price;
-        report.sold.push(ware.clone());
+        report.record_sale(&ware, price, price, 0);
         report.redeemed.push(def.id.clone());
         report.apprentice_served += 1;
         progress.journal.served(&def.id);

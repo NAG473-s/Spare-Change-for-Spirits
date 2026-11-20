@@ -16,6 +16,8 @@ pub enum Cue {
     GhostEnters,
     Paid,
     ChangeGiven,
+    /// One denomination is counted into the change tray or inspected.
+    CoinHandled(crate::economy::Coin),
     /// A ghost passes into the light at this floor position.
     Ascend(Vec2),
     /// Something was knocked off a shelf at this floor position.

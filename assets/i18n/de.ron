@@ -245,6 +245,13 @@
     "night.put_back": "Alles zurücklegen",
     "register.no_change": "Kein passendes Wechselgeld",
     "register.no_change_hint": "Die Kasse kann nicht genau {due} herausgeben. Bitte den Geist um kleinere Münzen.",
+    "register.ask_smaller": "Um kleinere Münzen bitten",
+    "register.change_tray": "Auf dem Wechselgeldteller · {total}",
+    "register.return_one": "{coin} ×{count} · eine zurücklegen",
+    "register.undo_hint": "Rechtsklick auf eine Münzsorte legt ein Stück zurück.",
+    "register.change_short": "Zu wenig Wechselgeld. Leg noch eine Münze dazu und versuch es erneut.",
+    "register.change_over": "Zu viel Wechselgeld. Leg eine Münze zurück und versuch es erneut.",
+    "register.give_anyway": "Diesen Betrag trotzdem übergeben",
     "night.give_fare": "Ihm eine Münze aus der Kasse geben ({coin})",
     "night.fare_empty": "Deine Kasse ist leer – es ist keine Münze da, die du ihm geben könntest.",
     "night.hand_over": "Übergeben",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nächte bis zum Verblassen der ältesten Ware: {nights}",
-    "shelf.tip_evening": "Klick: aus dem Regal nehmen",
+    "shelf.tip_evening": "Mit Rechtsklick nimmst du diese Ware vom Regal. Sie bleibt im Lager.",
     "shelf.tip_night": "Klick: dem Geist an der Theke überreichen",
     "shelf.tip_no_ghost": "An der Theke wartet kein Geist.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Zum Markt",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} ging für {price} über die Theke. Bezahlt wurden {paid}, zurück gingen {given}. Alle Beträge sind in Knöpfen angegeben.",
+    "accounts.no_first_sale": "Letzte Nacht wurde nichts verkauft.",
+    "accounts.stock_kept": "Für den nächsten Abend auf Lager: {items}.",
+    "accounts.stock_empty": "Für den nächsten Abend sind keine Waren mehr auf Lager.",
+    "accounts.first_market": "Besuch den Dorfmarkt und kehr zum nächsten Abend in den Laden zurück. Du kannst dich auf dem Markt auch einfach nur umsehen.",
+
     "accounts.title": "Morgengrauen – Abrechnung der Nacht {night}",
     "accounts.cash": "Kasse",
     "accounts.opening": "In der Kasse zu Tagesbeginn",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Der Sensenmann legt ein gutes Wort ein. Ab jetzt bringt der Fährmann jeden Abend zwei Kisten mehr.",
     "upgrade.apprentice.name": "Ein Lehrling",
     "upgrade.apprentice.text": "Ein kleiner Hilfsgeist hinter der Theke. In vollen Nächten bedient er bis zu drei Gäste in der Schlange, die eine Ware aus den Regalen bringen, und nimmt genau den Preis – Wechselgeld ist also nicht nötig.",
+
+    "guide_title": "Heddas Anleitung zum ersten Verkauf",
+    "guide_buy": "Geh zum Hafen und kauf eine Kiste vom Boot des Fährmanns. Such dir eine Ware aus, die dir gefällt.",
+    "guide_shelf": "Wähle zurück im Laden unter „Waren einräumen“ eine Ware. Klick dann auf ein Regal, um sie auszustellen.",
+    "guide_open": "Dein Regal ist bereit. Öffne den Laden, wenn du deinen ersten Gast empfangen möchtest.",
+    "guide_wish": "Dein erster Gast hat Zeit. Lies den Wunsch an der Theke und wähle die passende Ware im Regal oder in der Liste.",
+    "guide_change": "Vergleiche den gezahlten Betrag mit dem Preis. Zähl das Wechselgeld ab und übergib es. Du kannst Münzen zurücklegen und es erneut versuchen.",
+    "guide_skip": "Einführung überspringen",
+    "guide_resume": "Einführung fortsetzen",
+    "guide_retry": "Dein Gast wartet noch. Lies den Wunsch und versuch es mit einer anderen Ware.",
 
     // Tips during the first night.
     "tip.order": "Jeden Abend bringt der Fährmann bis zu {count} Kisten. Geh durch die Tür hinaus zum Hafen und klick auf eine Kiste in seinem Boot, um sie zu kaufen – bezahlt wird aus der Kasse.",

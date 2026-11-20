@@ -199,9 +199,19 @@ fn start_opening(
     mut actions: MessageReader<Action>,
     mut opening: ResMut<Opening>,
     mut location: ResMut<Location>,
+    progress: Res<crate::day_cycle::Progress>,
+    stock: Res<crate::inventory::Stock>,
+    layout: Res<crate::shop::ShopLayout>,
+    lang: Res<Lang>,
+    mut log: ResMut<crate::ui::GameLog>,
     mut cues: MessageWriter<Cue>,
 ) {
     if actions.read().any(|a| *a == Action::StartNight) && opening.0.is_none() {
+        if progress.guiding_first_sale() && crate::guide::displayed_ware(&layout, &stock).is_none()
+        {
+            log.push(lang.t(crate::guide::evening_step(&layout, &stock)));
+            return;
+        }
         opening.0 = Some(0.0);
         if *location != Location::Shop {
             *location = Location::Shop;

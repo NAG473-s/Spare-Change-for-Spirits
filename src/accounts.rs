@@ -23,12 +23,7 @@ impl Plugin for AccountsPlugin {
         app.init_resource::<Accounts>()
             .add_systems(OnEnter(Phase::Day), open_books)
             .add_systems(OnEnter(Phase::Evening), open_books)
-            .add_systems(
-                OnEnter(Phase::Night),
-                |drawer: Res<Drawer>, mut a: ResMut<Accounts>| {
-                    a.night_start = drawer.total();
-                },
-            )
+            .add_systems(OnEnter(Phase::Night), open_register)
             .add_systems(
                 OnEnter(Phase::Morning),
                 (close_books, build_ledger).chain().after(repay),
@@ -141,6 +136,21 @@ pub fn wares_value(stock: &Stock, data: &GameData) -> u32 {
         })
         .sum();
     value.round() as u32
+}
+
+pub(crate) fn open_register(
+    drawer: Res<Drawer>,
+    mut accounts: ResMut<Accounts>,
+    progress: Res<Progress>,
+) {
+    if !progress
+        .journal
+        .first_sale_checkpoint
+        .as_ref()
+        .is_some_and(|c| c.settled_report().is_some())
+    {
+        accounts.night_start = drawer.total();
+    }
 }
 
 /// Runs after `start_morning` has removed the counterfeits from the drawer
@@ -450,6 +460,11 @@ fn build_ledger(
     );
     ui.display_text(right, &lang.t("accounts.night"), 18.0, TEXT);
     let text = |ui: &mut PanelBuilder, s: String| ui.add_text(right, &s, false, 13.0, TEXT);
+    if progress.night == 1 {
+        for note in first_morning_notes(&report, &stock, &lang) {
+            text(&mut ui, note);
+        }
+    }
     text(
         &mut ui,
         lang.f(
@@ -553,29 +568,21 @@ fn build_ledger(
             }
         };
     let icon = Vec2::splat(22.0);
-    let product_chips = |ids: &[String]| -> Vec<(Option<Handle<Image>>, Vec2, String)> {
-        let mut counts: Vec<(String, u32)> = Vec::new();
-        for id in ids {
-            match counts.iter_mut().find(|(i, _)| i == id) {
-                Some((_, n)) => *n += 1,
-                None => counts.push((id.clone(), 1)),
-            }
-        }
+    let product_chips = |counts: Vec<(&str, u32)>| -> Vec<(Option<Handle<Image>>, Vec2, String)> {
         counts
             .into_iter()
             .map(|(id, n)| {
-                let label = lang.f(
-                    "count.entry",
-                    &[("count", &n), ("item", &lang.product(&id))],
-                );
-                (icons.product(&id), icon, label)
+                let label = lang.f("count.entry", &[("count", &n), ("item", &lang.product(id))]);
+                (icons.product(id), icon, label)
             })
             .collect()
     };
     chips(
         &mut ui,
         &lang.t("accounts.sold"),
-        product_chips(&report.sold),
+        product_chips(counted_wares(
+            report.receipts.iter().map(|r| r.product.as_str()),
+        )),
     );
     let ghosts: Vec<_> = report
         .redeemed
@@ -590,26 +597,31 @@ fn build_ledger(
     chips(
         &mut ui,
         &lang.t("morning.knocked_title"),
-        product_chips(&report.knocked),
+        product_chips(counted_wares(report.knocked.iter().map(String::as_str))),
     );
     chips(
         &mut ui,
         &lang.t("morning.stolen_title"),
-        product_chips(&report.stolen),
+        product_chips(counted_wares(report.stolen.iter().map(String::as_str))),
     );
-    let faded: Vec<String> = report
+    let faded = report
         .faded
         .iter()
-        .flat_map(|(id, n)| std::iter::repeat_n(id.clone(), *n as usize))
+        .map(|(id, n)| (id.as_str(), *n))
         .collect();
-    chips(&mut ui, &lang.t("morning.faded"), product_chips(&faded));
+    chips(&mut ui, &lang.t("morning.faded"), product_chips(faded));
+    let fading = fading_next_dawn(&stock, &data, upgrades.fade_bonus(&data));
     chips(
         &mut ui,
         &lang.t("accounts.fading_soon"),
-        product_chips(&fading_next_dawn(&stock, &data, upgrades.fade_bonus(&data))),
+        product_chips(counted_wares(fading.iter().map(String::as_str))),
     );
 
     // Footer.
+    let last = progress.season_over(&data);
+    if progress.night == 1 && !last {
+        ui.text(&lang.t("accounts.first_market"));
+    }
     let footer = ui.node(
         root,
         Node {
@@ -620,7 +632,6 @@ fn build_ledger(
         },
     );
     let mut ui = ui.with_footer(footer);
-    let last = progress.season_over(&data);
     let label = if last && cfg!(feature = "demo") {
         "morning.to_end"
     } else if last {
@@ -629,6 +640,50 @@ fn build_ledger(
         "morning.next"
     };
     ui.primary(&lang.t(label), Action::NextEvening);
+}
+
+fn first_morning_notes(report: &NightReport, stock: &Stock, lang: &Lang) -> [String; 2] {
+    let sale = match report.receipts.first() {
+        Some(receipt) => lang.f(
+            "accounts.first_sale",
+            &[
+                ("item", &lang.product(&receipt.product)),
+                ("price", &receipt.price),
+                ("paid", &receipt.paid),
+                ("given", &receipt.given),
+            ],
+        ),
+        None => lang.t("accounts.no_first_sale"),
+    };
+    let kept: Vec<_> = stock
+        .units()
+        .iter()
+        .filter(|(_, ages)| !ages.is_empty())
+        .map(|(id, ages)| {
+            lang.f(
+                "count.entry",
+                &[("count", &ages.len()), ("item", &lang.product(id))],
+            )
+        })
+        .collect();
+    let stock_note = if kept.is_empty() {
+        lang.t("accounts.stock_empty")
+    } else {
+        lang.f("accounts.stock_kept", &[("items", &lang.join(&kept))])
+    };
+    [sale, stock_note]
+}
+
+/// Counts repeated ids without disturbing the order they appear in the ledger.
+fn counted_wares<'a>(ids: impl Iterator<Item = &'a str>) -> Vec<(&'a str, u32)> {
+    let mut counts = Vec::new();
+    for id in ids {
+        match counts.iter_mut().find(|(item, _)| *item == id) {
+            Some((_, count)) => *count += 1,
+            None => counts.push((id, 1)),
+        }
+    }
+    counts
 }
 
 fn money(n: i64) -> Color {
@@ -657,6 +712,49 @@ pub fn fading_next_dawn(stock: &Stock, data: &GameData, bonus: u32) -> Vec<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn first_morning_reports_the_first_receipt_and_the_wares_that_survived_dawn() {
+        let data = GameData::load();
+        let lang = Lang::load("en");
+        let mut report = NightReport::default();
+        // The first customer received less change than was due.
+        report.record_sale("music_box", 17, 25, 6);
+        report.record_sale("rain_jar", 5, 5, 0);
+        let last_night = data.product("lavender").unwrap().fade_after - 1;
+        let mut stock = Stock::from_units(BTreeMap::from([
+            ("lavender".into(), vec![last_night]),
+            ("rain_jar".into(), vec![0, 0]),
+        ]));
+        report.faded = stock.age_and_fade(&data, 0);
+        let [receipt, kept] = first_morning_notes(&report, &stock, &lang);
+        assert!(receipt.contains(&lang.product("music_box")));
+        for amount in ["17", "25", "6"] {
+            assert!(receipt.contains(amount));
+        }
+        assert!(!receipt.contains(&lang.product("rain_jar")));
+        assert!(kept.contains(&lang.f(
+            "count.entry",
+            &[("count", &2), ("item", &lang.product("rain_jar"))],
+        )));
+        assert!(!kept.contains(&lang.product("lavender")));
+        assert_eq!(report.faded, [("lavender".to_owned(), 1)]);
+        assert_eq!((report.sales, report.revenue), (2, 22));
+    }
+
+    #[test]
+    fn first_morning_handles_no_sales_and_empty_stock() {
+        let lang = Lang::load("en");
+        let stock = Stock::from_units(BTreeMap::from([("lavender".into(), vec![])]));
+        assert_eq!(
+            first_morning_notes(&NightReport::default(), &stock, &lang),
+            [
+                lang.t("accounts.no_first_sale"),
+                lang.t("accounts.stock_empty")
+            ]
+        );
+    }
 
     #[test]
     fn an_empty_opening_drawer_still_opens_the_books_only_once() {
@@ -693,8 +791,6 @@ mod tests {
         assert_eq!(accounts.profit(), -(p.crate_cost as i64));
         assert_eq!(accounts.result_with_wares(), 0);
     }
-    use std::collections::BTreeMap;
-
     #[test]
     fn the_books_balance() {
         // 100 in the morning, 6 for a rug, 2 in change fees, 20 to the

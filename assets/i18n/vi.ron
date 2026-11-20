@@ -245,6 +245,13 @@
     "night.put_back": "Cất lại hết",
     "register.no_change": "Không có tiền thối vừa",
     "register.no_change_hint": "Ngăn kéo không thể thối lại đúng {due}. Hãy nhờ hồn ma trả bằng tiền lẻ hơn.",
+    "register.ask_smaller": "Nhờ khách trả bằng tiền lẻ hơn",
+    "register.change_tray": "Khay tiền thối của bạn · {total}",
+    "register.return_one": "{coin} ×{count} · cất lại một đồng",
+    "register.undo_hint": "Nhấp chuột phải vào một loại tiền để trả lại một đồng vào ngăn kéo.",
+    "register.change_short": "Tiền thối còn thiếu. Thêm một đồng rồi thử lại.",
+    "register.change_over": "Tiền thối nhiều quá. Cất lại một đồng rồi thử lại.",
+    "register.give_anyway": "Vẫn đưa khách số tiền này",
     "night.give_fare": "Đưa ông ấy một đồng xu trong ngăn kéo ({coin})",
     "night.fare_empty": "Ngăn kéo trống trơn – không còn đồng xu nào để đưa.",
     "night.hand_over": "Đưa khách",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Số đêm trước khi món cũ nhất phai mờ: {nights}",
-    "shelf.tip_evening": "Nhấp: lấy xuống khỏi kệ",
+    "shelf.tip_evening": "Nhấp chuột phải để lấy món hàng này xuống khỏi kệ. Món hàng vẫn còn trong kho.",
     "shelf.tip_night": "Nhấp: đưa cho hồn ma ở quầy",
     "shelf.tip_no_ghost": "Không có hồn ma nào đang đợi ở quầy.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Ra chợ",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} đã bán với giá {price}. Khách trả {paid} và nhận lại {given} tiền thối. Mọi số tiền đều tính bằng cúc áo.",
+    "accounts.no_first_sale": "Đêm qua chưa bán được món nào.",
+    "accounts.stock_kept": "Hàng còn lại cho buổi tối kế tiếp: {items}.",
+    "accounts.stock_empty": "Không còn hàng cho buổi tối kế tiếp.",
+    "accounts.first_market": "Ghé chợ làng rồi quay về tiệm chuẩn bị cho buổi tối kế tiếp. Bạn có thể đi chợ mà không mua gì.",
+
     "accounts.title": "Rạng sáng – Sổ sách đêm {night}",
     "accounts.cash": "Ngăn kéo thu ngân",
     "accounts.opening": "Trong ngăn kéo lúc đầu ngày",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Thần Chết nói giúp bạn một lời. Từ nay người lái đò mang thêm hai thùng mỗi tối.",
     "upgrade.apprentice.name": "Người học việc",
     "upgrade.apprentice.text": "Một hồn ma phụ việc nhỏ sau quầy. Vào những đêm đông khách, nó phục vụ tối đa ba vị khách đang xếp hàng đã cầm sẵn món hàng từ kệ, và nhận đúng số tiền bằng giá nên không phải thối lại.",
+
+    "guide_title": "Lần bán hàng đầu tiên của Hedda",
+    "guide_buy": "Ra bến thuyền và mua một thùng hàng trên thuyền của người lái đò. Chọn món nào bạn thích.",
+    "guide_shelf": "Về tiệm, chọn một món trong mục “Bày hàng lên kệ”, rồi nhấp vào kệ mà bạn muốn bày món đó.",
+    "guide_open": "Kệ hàng đã sẵn sàng. Hãy mở cửa tiệm khi bạn muốn đón vị khách đầu tiên.",
+    "guide_wish": "Vị khách đầu tiên sẽ đợi bạn. Đọc điều ước ở quầy rồi chọn món phù hợp trên kệ hoặc trong danh sách.",
+    "guide_change": "So số tiền khách trả với giá bán. Đếm tiền thối rồi đưa khách. Bạn có thể cất tiền lại và đếm lại.",
+    "guide_skip": "Bỏ qua hướng dẫn",
+    "guide_resume": "Tiếp tục hướng dẫn",
+    "guide_retry": "Khách vẫn đang đợi. Hãy đọc lại điều ước rồi thử một món khác.",
 
     // Tips during the first night.
     "tip.order": "Mỗi tối, người lái đò mang đến tối đa {count} thùng hàng. Đi ra cửa xuống bến và nhấp vào một thùng trên thuyền của ông để mua – tiền lấy từ ngăn kéo thu ngân.",

@@ -245,6 +245,13 @@
     "night.put_back": "Odłóż wszystko",
     "register.no_change": "Brak drobnych",
     "register.no_change_hint": "Z kasy nie da się wydać dokładnej reszty ({due}). Poproś ducha o drobniejsze monety.",
+    "register.ask_smaller": "Poproś o drobniejsze monety",
+    "register.change_tray": "Tacka na resztę · {total}",
+    "register.return_one": "{coin} ×{count} · odłóż jedną monetę",
+    "register.undo_hint": "Kliknij monetę prawym przyciskiem, aby odłożyć jedną do kasy.",
+    "register.change_short": "Za mało reszty. Dołóż monetę i spróbuj ponownie.",
+    "register.change_over": "Za dużo reszty. Odłóż monetę do kasy i spróbuj ponownie.",
+    "register.give_anyway": "Mimo to wydaj tę kwotę",
     "night.give_fare": "Daj mu monetę z kasy ({coin})",
     "night.fare_empty": "Kasa jest pusta – nie ma monety, którą można by dać.",
     "night.hand_over": "Wydaj",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Noce do wyblaknięcia najstarszego: {nights}",
-    "shelf.tip_evening": "Kliknięcie: zdejmij z półki",
+    "shelf.tip_evening": "Kliknij prawym przyciskiem, aby zdjąć ten towar z półki. Pozostanie w zapasach.",
     "shelf.tip_night": "Kliknięcie: podaj duchowi przy ladzie",
     "shelf.tip_no_ghost": "Przy ladzie nie czeka żaden duch.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Na targ",
 
     // Accounts at dawn
+    "accounts.first_sale": "Sprzedaż: {item} za {price}. Klient zapłacił {paid} i otrzymał {given} reszty. Wszystkie kwoty podano w guzikach.",
+    "accounts.no_first_sale": "Ostatniej nocy nie doszło do żadnej sprzedaży.",
+    "accounts.stock_kept": "W zapasie na następny wieczór: {items}.",
+    "accounts.stock_empty": "Na następny wieczór nie zostały żadne towary.",
+    "accounts.first_market": "Odwiedź wiejski targ, a na kolejny wieczór wróć do sklepu. Zakupy na targu są dobrowolne.",
+
     "accounts.title": "Świt – rozliczenie nocy {night}",
     "accounts.cash": "Kasa",
     "accounts.opening": "W kasie na początku dnia",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Kostucha wstawia się za tobą. Odtąd przewoźnik co wieczór przywozi o dwie skrzynie więcej.",
     "upgrade.apprentice.name": "Uczeń",
     "upgrade.apprentice.text": "Mały duch pomocnik za ladą. W ruchliwe noce obsługuje do trzech klientów z kolejki, którzy przynoszą towar z półek, i bierze dokładnie tyle, ile wynosi cena, więc nie trzeba wydawać reszty.",
+
+    "guide_title": "Pierwsza sprzedaż Heddy",
+    "guide_buy": "Idź do przystani i kup jedną skrzynię z promu. Wybierz dowolny towar.",
+    "guide_shelf": "Po powrocie do sklepu wybierz towar w sekcji „Rozłóż towary na półkach”, a potem kliknij półkę, na której chcesz go wystawić.",
+    "guide_open": "Półka jest gotowa. Otwórz sklep, kiedy zechcesz powitać pierwszego klienta.",
+    "guide_wish": "Pierwszy klient na ciebie zaczeka. Przeczytaj jego życzenie przy ladzie, a potem wybierz pasujący towar z półki lub z listy.",
+    "guide_change": "Porównaj wpłatę z ceną. Odlicz resztę i wydaj ją klientowi. Możesz odłożyć monety do kasy i spróbować ponownie.",
+    "guide_skip": "Pomiń samouczek",
+    "guide_resume": "Wznów samouczek",
+    "guide_retry": "Klient nadal czeka. Przeczytaj jego życzenie i spróbuj z innym towarem.",
 
     // Tips during the first night.
     "tip.order": "Co wieczór przewoźnik przywozi do {count} skrzyń. Wyjdź przez drzwi do przystani i kliknij skrzynię na jego łodzi, aby ją kupić – płacisz z kasy.",

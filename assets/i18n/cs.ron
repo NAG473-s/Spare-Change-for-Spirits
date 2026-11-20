@@ -245,6 +245,13 @@
     "night.put_back": "Vrátit vše",
     "register.no_change": "Chybí drobné",
     "register.no_change_hint": "Pokladna nedokáže vrátit přesnou částku ({due}). Požádej ducha o menší mince.",
+    "register.ask_smaller": "Požádej o menší mince",
+    "register.change_tray": "Miska na drobné k vrácení · {total}",
+    "register.return_one": "{coin} ×{count} · vrať jednu minci do pokladny",
+    "register.undo_hint": "Kliknutím pravým tlačítkem na minci vrátíš jeden kus do pokladny.",
+    "register.change_short": "Vracíš příliš málo. Přidej další minci a zkus to znovu.",
+    "register.change_over": "Vracíš příliš mnoho. Vrať jednu minci do pokladny a zkus to znovu.",
+    "register.give_anyway": "Přesto vydej tuto částku",
     "night.give_fare": "Dej mu minci z pokladny ({coin})",
     "night.fare_empty": "Tvoje pokladna je prázdná – není tu žádná mince, kterou by šlo dát.",
     "night.hand_over": "Předat",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nocí do vyblednutí nejstaršího kusu: {nights}",
-    "shelf.tip_evening": "Kliknutí: sundat z police",
+    "shelf.tip_evening": "Kliknutím pravým tlačítkem sundáš toto zboží z police. Zůstane ve skladu.",
     "shelf.tip_night": "Kliknutí: podat duchovi u pultu",
     "shelf.tip_no_ghost": "U pultu nečeká žádný duch.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Na trh",
 
     // Accounts at dawn
+    "accounts.first_sale": "Prodej: {item} za {price}. Zákazník zaplatil {paid} a dostal zpět {given}. Všechny částky jsou v knoflících.",
+    "accounts.no_first_sale": "Minulou noc se žádný prodej nedokončil.",
+    "accounts.stock_kept": "Na příští večer zůstává skladem: {items}.",
+    "accounts.stock_empty": "Na příští večer nezůstalo skladem žádné zboží.",
+    "accounts.first_market": "Navštiv vesnický trh a pak se na příští večer vrať do obchodu. Na trhu můžeš nakoupit, ale nemusíš.",
+
     "accounts.title": "Úsvit – účty za noc {night}",
     "accounts.cash": "Pokladna",
     "accounts.opening": "V pokladně na začátku dne",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Smrtka se za tebe přimluví. Od teď ti převozník každý večer přiveze o dvě bedny víc.",
     "upgrade.apprentice.name": "Učeň",
     "upgrade.apprentice.text": "Malý pomocný duch za pultem. V rušných nocích obslouží až tři zákazníky z fronty, kteří přinesou zboží z polic, a vezme si přesně danou cenu, takže se nic nevrací.",
+
+    "guide_title": "Heddin první prodej",
+    "guide_buy": "Zajdi do přístavu a kup si z přívozu jednu bednu. Zboží si vyber podle sebe.",
+    "guide_shelf": "Až se vrátíš do obchodu, vyber zboží v části „Rozlož zboží na police“ a klikni na polici, kde ho chceš vystavit.",
+    "guide_open": "Police je připravená. Až budeš chtít přivítat prvního zákazníka, otevři obchod.",
+    "guide_wish": "První zákazník na tebe počká. U pultu si přečti jeho přání a vyber odpovídající zboží z police nebo ze seznamu.",
+    "guide_change": "Porovnej zaplacenou částku s cenou. Odpočítej drobné a vrať je zákazníkovi. Mince můžeš vrátit do pokladny a zkusit to znovu.",
+    "guide_skip": "Přeskočit průvodce",
+    "guide_resume": "Pokračovat v průvodci",
+    "guide_retry": "Zákazník stále čeká. Přečti si jeho přání a zkus jiné zboží.",
 
     // Tips during the first night.
     "tip.order": "Každý večer ti převozník přiveze až {count} beden. Vyjdi dveřmi ven do přístavu a kliknutím na bednu v jeho loďce ji koupíš – platíš z pokladny.",

@@ -245,6 +245,13 @@
     "night.put_back": "Devolver todo",
     "register.no_change": "No hay cambio exacto",
     "register.no_change_hint": "El cajón no puede devolver exactamente {due}. Pide al fantasma monedas más pequeñas.",
+    "register.ask_smaller": "Pedir monedas más pequeñas",
+    "register.change_tray": "Bandeja del cambio · {total}",
+    "register.return_one": "{coin} ×{count} · devolver una",
+    "register.undo_hint": "Haz clic derecho en una moneda para devolver una al cajón.",
+    "register.change_short": "Falta cambio. Añade otra moneda e inténtalo de nuevo.",
+    "register.change_over": "Sobra cambio. Devuelve una moneda al cajón e inténtalo de nuevo.",
+    "register.give_anyway": "Entregar esta cantidad de todos modos",
     "night.give_fare": "Darle una moneda del cajón ({coin})",
     "night.fare_empty": "Tu cajón está vacío – no hay ninguna moneda que dar.",
     "night.hand_over": "Entregar",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Noches hasta que se desvanezca el más antiguo: {nights}",
-    "shelf.tip_evening": "Clic: quitar de la estantería",
+    "shelf.tip_evening": "Haz clic derecho para retirar este producto de la estantería. Sigue en el almacén.",
     "shelf.tip_night": "Clic: entregárselo al fantasma del mostrador",
     "shelf.tip_no_ghost": "No hay ningún fantasma esperando en el mostrador.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Al mercado",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item}: precio de venta, {price}. El cliente pagó {paid} y recibió {given} de cambio. Todas las cantidades están en botones.",
+    "accounts.no_first_sale": "Anoche no se completó ninguna venta.",
+    "accounts.stock_kept": "Queda en el almacén para la próxima noche: {items}.",
+    "accounts.stock_empty": "No queda mercancía para la próxima noche.",
+    "accounts.first_market": "Visita el mercado del pueblo y vuelve a la tienda para la próxima noche. Puedes ir al mercado solo a mirar.",
+
     "accounts.title": "Amanecer – Cuentas de la noche {night}",
     "accounts.cash": "Cajón",
     "accounts.opening": "En el cajón al comenzar el día",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "La Parca intercede por ti. A partir de ahora, el barquero trae dos cajas más cada atardecer.",
     "upgrade.apprentice.name": "Un aprendiz",
     "upgrade.apprentice.text": "Un pequeño fantasma ayudante tras el mostrador. En las noches de mucho trajín atiende hasta a tres clientes de la cola que traen un producto de las estanterías, y cobra el precio exacto, así que no hay que dar cambio.",
+
+    "guide_title": "La primera venta con Hedda",
+    "guide_buy": "Ve al puerto y compra una caja en la barca del barquero. Elige la mercancía que más te guste.",
+    "guide_shelf": "De vuelta en la tienda, elige un producto en «Colocar en estanterías» y haz clic en una estantería para exponerlo.",
+    "guide_open": "La estantería está lista. Abre la tienda cuando quieras recibir a tu primer cliente.",
+    "guide_wish": "Tu primer cliente te esperará. Lee su deseo en el mostrador y elige el producto adecuado en la estantería o en la lista.",
+    "guide_change": "Compara lo que ha pagado con el precio. Cuenta el cambio y entrégalo. Puedes devolver las monedas al cajón y volver a empezar.",
+    "guide_skip": "Saltar la guía",
+    "guide_resume": "Continuar con la guía",
+    "guide_retry": "El cliente sigue esperando. Lee su deseo y prueba con otro producto.",
 
     // Tips during the first night.
     "tip.order": "Cada atardecer el barquero trae hasta {count} cajas. Sal por la puerta al puerto y haz clic en una caja de su barca para comprarla – se paga con el dinero del cajón.",

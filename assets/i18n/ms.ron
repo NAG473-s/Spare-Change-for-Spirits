@@ -245,6 +245,13 @@
     "night.put_back": "Letak semula semua",
     "register.no_change": "Tiada baki yang sesuai",
     "register.no_change_hint": "Laci tidak dapat memulangkan baki tepat {due}. Minta hantu membayar dengan duit yang lebih kecil.",
+    "register.ask_smaller": "Minta syiling yang lebih kecil nilainya",
+    "register.change_tray": "Dulang baki anda · {total}",
+    "register.return_one": "{coin} ×{count} · letak semula satu",
+    "register.undo_hint": "Klik kanan pada syiling untuk mengembalikan sekeping ke dalam laci.",
+    "register.change_short": "Baki belum cukup. Tambah satu syiling lagi dan cuba semula.",
+    "register.change_over": "Baki terlalu banyak. Letak semula satu syiling dan cuba lagi.",
+    "register.give_anyway": "Tetap serahkan jumlah ini",
     "night.give_fare": "Beri dia sekeping syiling dari laci ({coin})",
     "night.fare_empty": "Laci anda kosong – tiada syiling untuk diberikan.",
     "night.hand_over": "Serahkan",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Malam sehingga yang tertua pudar: {nights}",
-    "shelf.tip_evening": "Klik: turunkan dari rak",
+    "shelf.tip_evening": "Klik kanan untuk mengeluarkan barang ini dari rak. Barang masih ada dalam stok.",
     "shelf.tip_night": "Klik: serahkan kepada hantu di kaunter",
     "shelf.tip_no_ghost": "Tiada hantu yang menunggu di kaunter.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Ke pasar",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} dijual pada harga {price}. Pelanggan membayar {paid} dan menerima baki {given}. Semua jumlah dikira dalam butang.",
+    "accounts.no_first_sale": "Tiada jualan yang selesai malam tadi.",
+    "accounts.stock_kept": "Stok yang tinggal untuk senja berikutnya: {items}.",
+    "accounts.stock_empty": "Tiada stok yang tinggal untuk senja berikutnya.",
+    "accounts.first_market": "Singgah di pasar kampung, kemudian kembali ke kedai untuk bersedia menyambut senja berikutnya. Anda boleh pulang tanpa membeli apa-apa.",
+
     "accounts.title": "Fajar – Akaun malam {night}",
     "accounts.cash": "Laci wang",
     "accounts.opening": "Dalam laci pada awal hari",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Sang Maut menyampaikan kata-kata yang baik. Mulai sekarang, penambang membawa dua peti lagi setiap petang.",
     "upgrade.apprentice.name": "Seorang perantis",
     "upgrade.apprentice.text": "Hantu pembantu kecil di belakang kaunter. Pada malam yang sibuk, ia melayan sehingga tiga pelanggan yang beratur sambil membawa barang dari rak, dan mengambil harga yang tepat, jadi tiada baki perlu diberi.",
+
+    "guide_title": "Jualan pertama Hedda",
+    "guide_buy": "Pergi ke jeti dan beli satu peti dari perahu penambang. Pilih barangan yang anda suka.",
+    "guide_shelf": "Apabila kembali ke kedai, pilih barangan di bawah “Susun barangan di rak”, kemudian klik rak untuk mempamerkannya.",
+    "guide_open": "Rak anda sudah sedia. Buka kedai apabila anda bersedia menyambut pelanggan pertama.",
+    "guide_wish": "Pelanggan pertama akan menunggu anda. Baca hajatnya di kaunter, kemudian pilih barangan yang sepadan dari rak atau senarai.",
+    "guide_change": "Bandingkan bayaran dengan harga barangan. Kira baki, kemudian serahkannya. Anda boleh meletakkan semula syiling dan mengira sekali lagi.",
+    "guide_skip": "Langkau panduan",
+    "guide_resume": "Sambung panduan",
+    "guide_retry": "Pelanggan masih menunggu. Baca semula hajatnya dan cuba barangan lain.",
 
     // Tips during the first night.
     "tip.order": "Setiap senja, penambang membawa sehingga {count} peti. Keluar melalui pintu ke jeti dan klik sebuah peti di perahunya untuk membelinya – anda membayar dari laci wang.",

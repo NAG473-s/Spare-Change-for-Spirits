@@ -245,6 +245,13 @@
     "night.put_back": "Legg alt tilbake",
     "register.no_change": "Ingen passende vekslepenger",
     "register.no_change_hint": "Skuffen kan ikke gi tilbake nøyaktig {due}. Be spøkelset om mindre mynter.",
+    "register.ask_smaller": "Be om mindre mynter",
+    "register.change_tray": "Skål for vekslepenger · {total}",
+    "register.return_one": "{coin} ×{count} · legg én tilbake",
+    "register.undo_hint": "Høyreklikk på en mynt for å legge én tilbake.",
+    "register.change_short": "For lite veksel. Legg til en mynt og prøv igjen.",
+    "register.change_over": "For mye veksel. Legg en mynt tilbake og prøv igjen.",
+    "register.give_anyway": "Gi dette beløpet likevel",
     "night.give_fare": "Gi ham en mynt fra pengeskuffen ({coin})",
     "night.fare_empty": "Pengeskuffen din er tom – det finnes ingen mynt å gi.",
     "night.hand_over": "Overrekk",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Netter til den eldste falmer: {nights}",
-    "shelf.tip_evening": "Klikk: ta den ned fra hylla",
+    "shelf.tip_evening": "Høyreklikk for å ta varen ned fra hylla. Den blir på lageret.",
     "shelf.tip_night": "Klikk: gi den til spøkelset ved disken",
     "shelf.tip_no_ghost": "Ingen spøkelser venter ved disken.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Til markedet",
 
     // Accounts at dawn
+    "accounts.first_sale": "Salg: {item} for {price}. Kunden betalte {paid} og fikk {given} tilbake. Alle beløp er i knapper.",
+    "accounts.no_first_sale": "Ingen salg ble fullført i natt.",
+    "accounts.stock_kept": "Igjen på lager til neste kveld: {items}.",
+    "accounts.stock_empty": "Det er ingen varer igjen på lager til neste kveld.",
+    "accounts.first_market": "Besøk landsbymarkedet og dra tilbake til butikken til neste kveld. Du velger selv om du vil kjøpe noe på markedet.",
+
     "accounts.title": "Daggry – regnskap for natt {night}",
     "accounts.cash": "Pengeskuff",
     "accounts.opening": "I pengeskuffen ved dagens start",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Mannen med ljåen legger inn et godt ord for deg. Fra nå av kommer fergemannen med to kasser til hver kveld.",
     "upgrade.apprentice.name": "En lærling",
     "upgrade.apprentice.text": "Et lite hjelpespøkelse bak disken. På travle netter betjener det opptil tre kunder i køen som kommer med en vare fra hyllene, og tar nøyaktig prisen, så det trengs ingen vekslepenger.",
+
+    "guide_title": "Heddas første salg",
+    "guide_buy": "Gå til havna og kjøp en kasse fra ferga. Velg den varen du har lyst på.",
+    "guide_shelf": "Tilbake i butikken velger du en vare under «Sett varer på hyllene». Klikk så på hylla der du vil sette den.",
+    "guide_open": "Hylla er klar. Åpne butikken når du er klar til å ta imot din første kunde.",
+    "guide_wish": "Din første kunde venter på deg. Les ønsket ved disken, og velg varen som passer fra hylla eller lista.",
+    "guide_change": "Sammenlign beløpet kunden betalte med prisen. Tell opp vekslepengene og gi dem til kunden. Du kan legge myntene tilbake og prøve igjen.",
+    "guide_skip": "Hopp over veiledningen",
+    "guide_resume": "Fortsett veiledningen",
+    "guide_retry": "Kunden venter fortsatt. Les ønsket og prøv en annen vare.",
 
     // Tips during the first night.
     "tip.order": "Hver kveld kommer fergemannen med opptil {count} kasser. Gå ut gjennom døra til havna og klikk på en kasse i båten hans for å kjøpe den – du betaler fra pengeskuffen.",

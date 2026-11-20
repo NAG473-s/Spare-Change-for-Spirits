@@ -3,9 +3,9 @@
 //! There are [`PROFILES`] profiles, each a game of its own. A profile has an
 //! autosave, written at the start of every evening and night and at dawn,
 //! and [`MANUAL_SLOTS`] slots the player saves to from the pause menu at any
-//! time; autosaves never overwrite them. A save continues at the market or
-//! at an evening: one made during a night continues at the start of that
-//! night. Settings live in a separate file so they survive a new game.
+//! time. A night restarts at its evening, except for the first guided night:
+//! its customer and counted change resume at the counter. The settled sale
+//! becomes the restart point for the rest of that night. Settings live separately.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -26,7 +26,7 @@ use crate::shop::{CellContent, ShopLayout, Storeroom};
 use crate::upgrades::Upgrades;
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 4;
+pub const SAVE_VERSION: u32 = 5;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -41,7 +41,15 @@ impl Plugin for SavePlugin {
             .add_systems(OnEnter(Phase::Evening), autosave_evening.after(lend))
             .add_systems(
                 OnEnter(Phase::Night),
-                autosave_night.after(crate::day_cycle::deliver_parcels),
+                autosave_night
+                    .after(crate::day_cycle::deliver_parcels)
+                    .after(crate::accounts::open_register),
+            )
+            .add_systems(
+                Update,
+                save_completed_first_sale
+                    .after(crate::register::make_change)
+                    .run_if(in_state(Phase::Night)),
             )
             // Keeping the shop open after the season: continue at that market.
             .add_systems(OnExit(Phase::DemoEnd), autosave_next_season)
@@ -312,7 +320,11 @@ fn slot_path(dir: &Path, profile: u8, slot: Slot) -> PathBuf {
 fn read_save_at(path: &Path) -> Option<SaveGame> {
     let text = std::fs::read_to_string(path).ok()?;
     match ron::from_str::<SaveGame>(&text) {
-        Ok(save) if save.version == SAVE_VERSION => Some(save),
+        Ok(mut save) if save.version == SAVE_VERSION || save.version == 4 => {
+            // Version 5 adds only optional journal data for the first sale.
+            save.version = SAVE_VERSION;
+            Some(save)
+        }
         Ok(save) => {
             warn!(
                 "ignoring save of version {} at {}",
@@ -531,6 +543,9 @@ impl SaveGame {
         if self.finished && !finished_demo {
             return Some((Phase::DemoEnd, self.night.saturating_sub(1)));
         }
+        if self.night == 1 && self.journal.first_sale_checkpoint.is_some() {
+            return Some((Phase::Night, self.night));
+        }
         let phase = if self.market_open {
             Phase::Day
         } else {
@@ -540,8 +555,7 @@ impl SaveGame {
     }
 }
 
-/// The state at the start of the current night: what a save made during
-/// the night stores (the night itself continues from its start).
+/// Resources from the restart point for this night, including the first settled sale if guided.
 #[derive(Resource, Default)]
 pub struct NightStart(pub Option<SaveGame>);
 
@@ -555,8 +569,39 @@ fn autosave_evening(state: GameState, profile: Res<ActiveProfile>) {
 }
 
 /// The start of the night: continue at its evening.
-fn autosave_night(state: GameState, profile: Res<ActiveProfile>, mut start: ResMut<NightStart>) {
+fn autosave_night(
+    mut state: GameState,
+    profile: Res<ActiveProfile>,
+    mut start: ResMut<NightStart>,
+) {
     let save = state.snapshot(state.progress.night, false, false);
+    write_slot(profile.0, Slot::Auto, &save);
+    start.0 = Some(save);
+    if state.progress.journal.first_sale == crate::guide::FirstSale::Complete {
+        state.progress.journal.first_sale_checkpoint = None;
+    }
+}
+
+/// The guided sale is the first night's new restart point. Subsequent customers replay normally.
+fn save_completed_first_sale(
+    state: GameState,
+    report: Res<crate::day_cycle::NightReport>,
+    profile: Res<ActiveProfile>,
+    mut start: ResMut<NightStart>,
+) {
+    use crate::guide::{FirstSale, FirstSaleCheckpoint};
+    if state.progress.night != 1
+        || state.progress.journal.first_sale != FirstSale::Complete
+        || !start
+            .0
+            .as_ref()
+            .is_some_and(|s| s.journal.first_sale == FirstSale::Following)
+    {
+        return;
+    }
+    let mut save = state.snapshot(1, false, false);
+    save.journal.first_sale_checkpoint =
+        Some(FirstSaleCheckpoint::AfterSale(Box::new(report.clone())));
     write_slot(profile.0, Slot::Auto, &save);
     start.0 = Some(save);
 }
@@ -592,14 +637,50 @@ pub fn save_now(
     state: &GameState,
     data: &GameData,
     night_start: &NightStart,
+    register: &crate::register::Register,
 ) -> Option<SaveGame> {
     match phase {
         Phase::Day => Some(state.snapshot(state.progress.night, false, true)),
         Phase::Evening => Some(state.snapshot(state.progress.night, false, false)),
-        Phase::Night => night_start.0.clone(),
+        Phase::Night => night_start
+            .0
+            .as_ref()
+            .map(|start| night_snapshot(start, &state.progress, register)),
         Phase::Morning => Some(dawn_snapshot(state, data)),
         Phase::Menu | Phase::DemoEnd => None,
     }
+}
+
+fn night_snapshot(
+    start: &SaveGame,
+    progress: &Progress,
+    register: &crate::register::Register,
+) -> SaveGame {
+    use crate::guide::FirstSaleCheckpoint;
+    let mut save = start.clone();
+    save.journal.first_sale = progress.journal.first_sale;
+    save.journal.first_sale_checkpoint = if progress.guiding_first_sale() {
+        Some(if let Some(sale) = &register.sale {
+            FirstSaleCheckpoint::Change {
+                coins: sale.coins.clone(),
+                given: sale.given,
+                recount: sale.recount,
+            }
+        } else {
+            progress
+                .journal
+                .first_sale_checkpoint
+                .clone()
+                .unwrap_or(FirstSaleCheckpoint::Wish)
+        })
+    } else {
+        start
+            .journal
+            .first_sale_checkpoint
+            .clone()
+            .filter(|c| c.settled_report().is_some())
+    };
+    save
 }
 
 #[cfg(test)]
@@ -766,6 +847,58 @@ mod tests {
         std::fs::write(old.join("logs/session-42.txt"), "").unwrap();
         assert!(!claim_first_launch_in(&old).unwrap());
         std::fs::remove_dir_all(old).unwrap();
+    }
+
+    #[test]
+    fn version_four_profiles_load_without_starting_the_guide() {
+        let mut original = sample(1);
+        original.version = 4;
+        original.stock.insert("marbles".into(), vec![0, 0]);
+        let old_text = ron::to_string(&original)
+            .unwrap()
+            .replace("first_sale:Skipped,", "")
+            .replace("first_sale_checkpoint:None,", "");
+        let dir = temp_dir("old-guide");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("save.ron");
+        std::fs::write(&path, old_text).unwrap();
+        let loaded = read_save_at(&path).unwrap();
+        assert_eq!(loaded.version, SAVE_VERSION);
+        assert_eq!(loaded.journal.first_sale, crate::guide::FirstSale::Skipped);
+        assert_eq!(loaded.resume_at(5), Some((Phase::Evening, 1)));
+        assert_eq!(loaded.stock, original.stock);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn the_first_night_restarts_at_the_wish_the_skipped_evening_or_the_settled_sale() {
+        use crate::guide::{FirstSale, FirstSaleCheckpoint};
+        let mut start = sample(1);
+        let mut progress = Progress::new(0);
+        let register = crate::register::Register::default();
+        progress.journal.first_sale = FirstSale::Following;
+        let wish = night_snapshot(&start, &progress, &register);
+        assert_eq!(wish.resume_at(5), Some((Phase::Night, 1)));
+        assert_eq!(
+            wish.journal.first_sale_checkpoint,
+            Some(FirstSaleCheckpoint::Wish)
+        );
+
+        progress.journal.first_sale = FirstSale::Skipped;
+        let skipped = night_snapshot(&wish, &progress, &register);
+        assert!(skipped.journal.first_sale_checkpoint.is_none());
+        assert_eq!(skipped.resume_at(5), Some((Phase::Evening, 1)));
+
+        let mut report = crate::day_cycle::NightReport::default();
+        report.record_sale("marbles", 3, 4, 1);
+        progress.journal.first_sale = FirstSale::Complete;
+        start.journal.first_sale = FirstSale::Complete;
+        start.journal.first_sale_checkpoint =
+            Some(FirstSaleCheckpoint::AfterSale(Box::new(report)));
+        let settled = night_snapshot(&start, &progress, &register);
+        let restored: SaveGame = ron::from_str(&ron::to_string(&settled).unwrap()).unwrap();
+        assert_eq!(restored.resume_at(5), Some((Phase::Night, 1)));
+        assert_eq!(restored, start);
     }
 
     #[test]

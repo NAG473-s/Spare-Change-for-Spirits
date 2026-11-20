@@ -22,6 +22,7 @@ mod ferry;
 mod fx;
 mod gamepad;
 mod ghosts;
+mod guide;
 mod harbor;
 mod i18n;
 mod incidents;
@@ -41,6 +42,7 @@ mod shop;
 mod showcase;
 mod sign;
 mod sim;
+mod story_film;
 mod title;
 mod tooltip;
 mod trailer;
@@ -125,6 +127,7 @@ fn main() {
             showcase::ShowcasePlugin,
             apprentice::ApprenticePlugin,
             gamepad::GamepadPlugin,
+            story_film::StoryFilmPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

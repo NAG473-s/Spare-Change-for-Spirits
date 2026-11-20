@@ -245,6 +245,13 @@
     "night.put_back": "Tout remettre",
     "register.no_change": "Pas de monnaie adaptée",
     "register.no_change_hint": "Le tiroir ne peut pas rendre exactement {due}. Demande au fantôme des pièces plus petites.",
+    "register.ask_smaller": "Demander de plus petites pièces",
+    "register.change_tray": "Sur le plateau de monnaie · {total}",
+    "register.return_one": "{coin} ×{count} · en remettre une",
+    "register.undo_hint": "Fais un clic droit sur une pièce pour en remettre une dans le tiroir.",
+    "register.change_short": "Il manque de la monnaie. Ajoute une pièce et réessaie.",
+    "register.change_over": "Il y a trop de monnaie. Remets une pièce dans le tiroir et réessaie.",
+    "register.give_anyway": "Donner quand même cette somme",
     "night.give_fare": "Lui donner une pièce du tiroir-caisse ({coin})",
     "night.fare_empty": "Ton tiroir-caisse est vide – tu n'as aucune pièce à donner.",
     "night.hand_over": "Donner",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nuits avant que le plus ancien ne fane : {nights}",
-    "shelf.tip_evening": "Clic : retirer de l'étagère",
+    "shelf.tip_evening": "Un clic droit retire cet article de l’étagère. Il reste en stock.",
     "shelf.tip_night": "Clic : le donner au fantôme au comptoir",
     "shelf.tip_no_ghost": "Aucun fantôme n'attend au comptoir.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Vers le marché",
 
     // Accounts at dawn
+    "accounts.first_sale": "Vente de {item} pour {price}. Le client a donné {paid} et reçu {given} de monnaie. Tous les montants sont en boutons.",
+    "accounts.no_first_sale": "Aucune vente cette nuit.",
+    "accounts.stock_kept": "Encore en stock pour demain soir : {items}.",
+    "accounts.stock_empty": "Il ne reste aucune marchandise pour demain soir.",
+    "accounts.first_market": "Passe au marché du village, puis rentre à la boutique pour la soirée suivante. Tu peux aussi repartir du marché les mains vides.",
+
     "accounts.title": "Aube – Comptes de la nuit {night}",
     "accounts.cash": "Tiroir-caisse",
     "accounts.opening": "Dans le tiroir au début de la journée",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "La Faucheuse glisse un mot en ta faveur. Désormais, le passeur apporte deux caisses de plus chaque soir.",
     "upgrade.apprentice.name": "Un apprenti",
     "upgrade.apprentice.text": "Un petit fantôme assistant derrière le comptoir. Les nuits d'affluence, il sert jusqu'à trois clients de la file qui apportent un produit des étagères, et encaisse le prix exact : pas de monnaie à rendre.",
+
+    "guide_title": "La première vente avec Hedda",
+    "guide_buy": "Va au port et achète une caisse sur le bateau du passeur. Choisis la marchandise qui te plaît.",
+    "guide_shelf": "De retour à la boutique, choisis une marchandise sous « Garnir les étagères », puis clique sur une étagère pour l’y exposer.",
+    "guide_open": "Ton étagère est prête. Ouvre la boutique quand tu voudras accueillir ton premier client.",
+    "guide_wish": "Ton premier client a tout son temps. Lis son souhait au comptoir, puis choisis la marchandise correspondante sur l’étagère ou dans la liste.",
+    "guide_change": "Compare la somme payée au prix. Compte la monnaie à rendre, puis donne-la. Tu peux remettre les pièces dans le tiroir et recommencer.",
+    "guide_skip": "Passer le guide",
+    "guide_resume": "Reprendre le guide",
+    "guide_retry": "Le client attend toujours. Relis son souhait et essaie une autre marchandise.",
 
     // Tips during the first night.
     "tip.order": "Chaque soir, le passeur apporte jusqu'à {count} caisses. Sors par la porte jusqu'au port et clique sur une caisse dans sa barque pour l'acheter – tu paies avec le tiroir-caisse.",

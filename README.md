@@ -65,7 +65,7 @@ Saves: three profiles, each a game of its own with an autosave (start of every e
 and dawn) and three manual slots (pause menu → *Save game*, at any time; autosaves never overwrite
 them). *Continue* loads the newest playable save across all profiles. *Load game* lists all slots,
 and *New game* asks for the profile. A save continues at the market, in the evening, or at the
-completed season’s epilogue. Saving during a night returns to its opening preparations.
+completed season’s epilogue. During the guided first sale, a save resumes at the customer or the change tray, including coins already counted. Once that sale is complete, the first night can restart from its receipt. Other nights restart at their opening preparations.
 Market offers, the hourglass, returnable crates and the day’s accounts carry over.
 Profile files are stored in `profile<N>/auto.ron` and `profile<N>/slot<M>.ron`
 (an old `save.ron` is moved to `profile1/auto.ron`). Saves and settings live in
@@ -77,9 +77,11 @@ folder, e.g. for test runs:
 SCFS_SAVE_DIR=/tmp/scfs-test cargo run
 ```
 
-During the first night a tips box explains each step (texts `tip.*` in the language catalogs).
+With tips enabled, a new profile starts with Hedda’s optional first-sale guide. Buy any crate from the ferry, put a ware on a shelf and open the shop. The first customer asks for that ware and waits while the night clock stands still. The ghost book keeps the guide for later. At the register, a right-click on a coin puts one of that denomination back. At the ferry it returns a crate, and in the shop it takes a ware off display during preparation. The first morning’s ledger shows an actual transaction and the wares still in stock.
 The coin bar at the top right shows the cash drawer in every phase; the clock on the shop wall
 shows the time of night.
+
+Each of the six ghost stories ends with a short, narrated film. The three painted scenes play when the last chapter is settled, including Kasimir’s fare. Speech and captions follow the game language. A click, tap or controller button skips the film and returns to the same night.
 
 ## Desktop icons
 

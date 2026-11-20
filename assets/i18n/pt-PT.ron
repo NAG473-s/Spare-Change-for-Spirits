@@ -245,6 +245,13 @@
     "night.put_back": "Devolver tudo",
     "register.no_change": "Sem troco certo",
     "register.no_change_hint": "A gaveta não consegue devolver exatamente {due}. Pede moedas mais pequenas ao fantasma.",
+    "register.ask_smaller": "Pedir moedas de menor valor",
+    "register.change_tray": "No tabuleiro do troco · {total}",
+    "register.return_one": "{coin} ×{count} · repor uma moeda",
+    "register.undo_hint": "Clica com o botão direito numa moeda para repor uma na gaveta.",
+    "register.change_short": "Falta troco. Junta mais uma moeda e tenta de novo.",
+    "register.change_over": "Há troco a mais. Volta a pôr uma moeda na gaveta e tenta de novo.",
+    "register.give_anyway": "Entregar este valor na mesma",
     "night.give_fare": "Dar-lhe uma moeda da gaveta ({coin})",
     "night.fare_empty": "A tua gaveta está vazia – não há nenhuma moeda para dar.",
     "night.hand_over": "Entregar",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Noites até o mais antigo se desvanecer: {nights}",
-    "shelf.tip_evening": "Clique: tirar da prateleira",
+    "shelf.tip_evening": "Clica com o botão direito para tirar este artigo da prateleira. Continua em armazém.",
     "shelf.tip_night": "Clique: entregar ao fantasma no balcão",
     "shelf.tip_no_ghost": "Não há nenhum fantasma à espera no balcão.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Para o mercado",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item}: preço de venda de {price}. O cliente pagou {paid} e recebeu {given} de troco. Todos os valores estão em botões.",
+    "accounts.no_first_sale": "Não houve vendas na noite passada.",
+    "accounts.stock_kept": "Em armazém para o próximo serão: {items}.",
+    "accounts.stock_empty": "Não restam artigos para o próximo serão.",
+    "accounts.first_market": "Visita o mercado da aldeia e regressa à loja para o próximo serão. Também podes ir ao mercado só para ver as bancas.",
+
     "accounts.title": "Amanhecer – Contas da noite {night}",
     "accounts.cash": "Gaveta",
     "accounts.opening": "Na gaveta no início do dia",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "O Ceifador fala bem de ti. A partir de agora, o barqueiro traz mais dois caixotes todas as noites.",
     "upgrade.apprentice.name": "Um aprendiz",
     "upgrade.apprentice.text": "Um pequeno fantasma ajudante atrás do balcão. Nas noites de maior movimento, atende até três clientes da fila que trazem um artigo das prateleiras e cobra o preço exato, por isso não há troco a dar.",
+
+    "guide_title": "A primeira venda com Hedda",
+    "guide_buy": "Vai ao porto e compra um caixote no barco do barqueiro. Escolhe um artigo de que gostes.",
+    "guide_shelf": "De volta à loja, escolhe um artigo em “Pôr produtos nas prateleiras” e clica numa prateleira para o expor.",
+    "guide_open": "A prateleira está pronta. Abre a loja quando quiseres receber o teu primeiro cliente.",
+    "guide_wish": "O teu primeiro cliente espera por ti. Lê o desejo dele ao balcão e escolhe o artigo certo na prateleira ou na lista.",
+    "guide_change": "Compara o valor pago com o preço. Conta o troco e entrega-o. Podes voltar a pôr as moedas na gaveta e tentar de novo.",
+    "guide_skip": "Saltar o guia",
+    "guide_resume": "Retomar o guia",
+    "guide_retry": "O cliente continua à espera. Lê o desejo dele e experimenta outro artigo.",
 
     // Tips during the first night.
     "tip.order": "Ao anoitecer, o barqueiro traz até {count} caixotes. Sai pela porta até ao porto e clica num caixote no barco dele para o comprar – pagas com o dinheiro da gaveta.",

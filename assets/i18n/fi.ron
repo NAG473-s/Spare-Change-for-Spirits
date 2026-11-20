@@ -245,6 +245,13 @@
     "night.put_back": "Palauta kaikki",
     "register.no_change": "Ei sopivaa vaihtorahaa",
     "register.no_change_hint": "Kassasta ei saa annettua tasan oikeaa vaihtorahaa ({due}). Pyydä haamulta pienempiä kolikoita.",
+    "register.ask_smaller": "Pyydä pienempiä kolikoita",
+    "register.change_tray": "Vaihtoraha-alusta · {total}",
+    "register.return_one": "{coin} ×{count} · palauta yksi kassaan",
+    "register.undo_hint": "Palauta yksi kolikko napsauttamalla kolikkoa hiiren oikealla painikkeella.",
+    "register.change_short": "Vaihtorahaa on liian vähän. Lisää kolikko ja yritä uudelleen.",
+    "register.change_over": "Vaihtorahaa on liikaa. Palauta kolikko kassaan ja yritä uudelleen.",
+    "register.give_anyway": "Anna tämä summa silti",
     "night.give_fare": "Anna hänelle kolikko kassasta ({coin})",
     "night.fare_empty": "Kassasi on tyhjä – annettavaa kolikkoa ei ole.",
     "night.hand_over": "Ojenna",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Öitä vanhimman haalistumiseen: {nights}",
-    "shelf.tip_evening": "Klikkaus: ota pois hyllystä",
+    "shelf.tip_evening": "Poista tavara hyllyltä napsauttamalla sitä hiiren oikealla painikkeella. Se pysyy varastossa.",
     "shelf.tip_night": "Klikkaus: ojenna tiskillä odottavalle haamulle",
     "shelf.tip_no_ghost": "Tiskillä ei odota yhtään haamua.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Markkinoille",
 
     // Accounts at dawn
+    "accounts.first_sale": "Myynti: {item}, hinta {price}. Asiakas maksoi {paid} ja sai takaisin {given}. Kaikki summat on ilmoitettu nappeina.",
+    "accounts.no_first_sale": "Viime yönä yhtään kauppaa ei saatu päätökseen.",
+    "accounts.stock_kept": "Varastossa ensi iltaa varten: {items}.",
+    "accounts.stock_empty": "Varastoon ei jäänyt tuotteita ensi illaksi.",
+    "accounts.first_market": "Käy kylän markkinoilla ja palaa sitten puotiin seuraavaksi illaksi. Markkinoilta ei tarvitse ostaa mitään.",
+
     "accounts.title": "Aamunkoitto – yön {night} tilit",
     "accounts.cash": "Kassa",
     "accounts.opening": "Kassassa päivän alussa",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Viikatemies puhuu puolestasi. Tästä lähtien lautturi tuo joka ilta kaksi laatikkoa enemmän.",
     "upgrade.apprentice.name": "Oppipoika",
     "upgrade.apprentice.text": "Pieni apuhaamu tiskin takana. Kiireisinä öinä se palvelee jonosta enintään kolme asiakasta, jotka tuovat tuotteen hyllyltä, ja ottaa tasan hinnan verran, joten vaihtorahaa ei tarvita.",
+
+    "guide_title": "Heddan ensimmäinen kauppa",
+    "guide_buy": "Mene satamaan ja osta lautalta yksi laatikko. Valitse haluamasi tuote.",
+    "guide_shelf": "Kun palaat puotiin, valitse tuote kohdasta ”Laita tuotteet hyllyille” ja napsauta hyllyä, johon haluat panna sen esille.",
+    "guide_open": "Hylly on valmis. Avaa puoti, kun olet valmis ottamaan ensimmäisen asiakkaan vastaan.",
+    "guide_wish": "Ensimmäinen asiakkaasi odottaa kyllä. Lue hänen toiveensa tiskillä ja valitse sopiva tuote hyllystä tai luettelosta.",
+    "guide_change": "Vertaa maksua hintaan. Laske vaihtorahat ja anna ne asiakkaalle. Voit palauttaa kolikot kassaan ja yrittää uudelleen.",
+    "guide_skip": "Ohita opastus",
+    "guide_resume": "Jatka opastusta",
+    "guide_retry": "Asiakas odottaa yhä. Lue hänen toiveensa ja kokeile toista tuotetta.",
 
     // Tips during the first night.
     "tip.order": "Joka ilta lautturi tuo enintään {count} laatikkoa. Mene ovesta ulos satamaan ja osta laatikko klikkaamalla sitä hänen veneessään – maksat kassasta.",

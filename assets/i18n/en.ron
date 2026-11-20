@@ -245,6 +245,13 @@
     "night.put_back": "Put all back",
     "register.no_change": "No fitting change",
     "register.no_change_hint": "The drawer cannot give back exactly {due}. Ask the ghost for smaller coins.",
+    "register.ask_smaller": "Ask for smaller coins",
+    "register.change_tray": "Your change tray · {total}",
+    "register.return_one": "{coin} ×{count} · put one back",
+    "register.undo_hint": "Right-click a coin to put one back.",
+    "register.change_short": "Too little change. Add another coin and try again.",
+    "register.change_over": "Too much change. Put a coin back and try again.",
+    "register.give_anyway": "Hand over this amount anyway",
     "night.give_fare": "Give him a coin from the drawer ({coin})",
     "night.fare_empty": "Your drawer is empty – there is no coin to give.",
     "night.hand_over": "Hand over",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nights until the oldest fades: {nights}",
-    "shelf.tip_evening": "Click: take it off the shelf",
+    "shelf.tip_evening": "Right-click to take this ware off the shelf. It stays in stock.",
     "shelf.tip_night": "Click: hand it to the ghost at the counter",
     "shelf.tip_no_ghost": "No ghost is waiting at the counter.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "To the market",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} sold for {price}. The customer paid {paid} and took {given} in change. All amounts are in buttons.",
+    "accounts.no_first_sale": "No sale was completed last night.",
+    "accounts.stock_kept": "Still in stock for the next evening: {items}.",
+    "accounts.stock_empty": "No wares remain in stock for the next evening.",
+    "accounts.first_market": "Visit the village market, then return to the shop for the next evening. Buying at the market is optional.",
+
     "accounts.title": "Dawn – Accounts of night {night}",
     "accounts.cash": "Cash drawer",
     "accounts.opening": "In the drawer at the start of the day",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "The Reaper puts in a good word. From now on the ferryman brings two more crates every evening.",
     "upgrade.apprentice.name": "An apprentice",
     "upgrade.apprentice.text": "A small helper ghost behind the counter. On busy nights it serves up to three customers waiting in line who bring a ware from the shelves, and takes exactly the price, so no change is due.",
+
+    "guide_title": "Hedda’s first sale",
+    "guide_buy": "Go to the harbour and buy one crate from the ferry. Choose any ware you like.",
+    "guide_shelf": "Back in the shop, choose a ware under “Put products on shelves”, then click a shelf to display it.",
+    "guide_open": "Your shelf is ready. Open the shop when you’re ready to meet your first customer.",
+    "guide_wish": "Your first customer will wait. Read the wish at the counter, then choose the matching ware from the shelf or the list.",
+    "guide_change": "Compare the payment with the price. Count the change, then hand it over. You can put the coins back and try again.",
+    "guide_skip": "Skip the guide",
+    "guide_resume": "Resume the guide",
+    "guide_retry": "The customer is still waiting. Read the wish and try another ware.",
 
     // Tips during the first night.
     "tip.order": "Every evening the ferryman brings up to {count} crates. Go out through the door to the harbour and click a crate on his boat to buy it – you pay from the cash drawer.",

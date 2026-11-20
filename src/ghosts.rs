@@ -62,7 +62,6 @@ impl Plugin for GhostPlugin {
                 (
                     spawn_ghosts,
                     spawn_story_ghost,
-                    come_home,
                     say_farewell,
                     spawn_thief,
                     spawn_ordering,
@@ -80,7 +79,17 @@ impl Plugin for GhostPlugin {
                     play_sheets,
                 )
                     .chain()
-                    .run_if(in_state(Phase::Night)),
+                    .run_if(in_state(Phase::Night))
+                    .run_if(crate::story_film::outside_film),
+            )
+            // Deliver the finale guest in its chapter's frame, before any
+            // film pause. The guest then holds its place until playback ends.
+            .add_systems(
+                Update,
+                come_home
+                    .after(crate::register::make_change)
+                    .run_if(in_state(Phase::Night))
+                    .run_if(crate::story_film::outside_film),
             );
     }
 }
@@ -101,6 +110,8 @@ pub enum GhostState {
 
 #[derive(Component)]
 pub struct Ghost {
+    /// The customer introduced by the first-sale guide.
+    pub first_customer: bool,
     /// Index in `GameData::ghosts`.
     pub def: usize,
     pub wish: String,
@@ -192,9 +203,14 @@ fn spawn_ghosts(
     ghosts: Query<(), With<Ghost>>,
     (upgrades, stock): (Res<Upgrades>, Res<crate::inventory::Stock>),
 ) {
+    if progress.guiding_first_sale() && !ghosts.is_empty() {
+        return;
+    }
     timer.0 -= time.delta_secs();
     // Nobody new arrives in the last 20 seconds.
-    if timer.0 > 0.0 || clock.elapsed > clock.length - 20.0 {
+    let resuming =
+        progress.guiding_first_sale() && progress.journal.first_sale_checkpoint.is_some();
+    if (timer.0 > 0.0 && !resuming) || clock.elapsed > clock.length - 20.0 {
         return;
     }
     // Good reputation = more customers.
@@ -209,19 +225,51 @@ fn spawn_ghosts(
     }
 
     let atmosphere = layout.atmosphere(&data, night);
-    // Complete furniture sets and the shop window draw certain ghosts.
-    let weights = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
-    let Some(def_idx) = rng.weighted(&weights) else {
-        return;
+    let guided_ware = if progress.guiding_first_sale() {
+        let ware = crate::guide::displayed_ware(&layout, &stock);
+        if ware.is_none() {
+            // A shelf may have been emptied while the opening sign was turning.
+            progress.journal.first_sale = crate::guide::FirstSale::Skipped;
+        }
+        ware
+    } else {
+        None
+    };
+    let (def_idx, mut wish) = if let Some(ware) = guided_ware {
+        // A familiar kind that likes this ware, or a first-night visitor curious about it.
+        let Some((idx, _)) = data
+            .ghosts
+            .iter()
+            .enumerate()
+            .filter(|(_, def)| def.spawn_weight > 0.0 && def.unlock_night <= night)
+            .min_by_key(|(_, def)| {
+                (
+                    !def.wishes.iter().any(|w| w == ware),
+                    def.unmet_need(&atmosphere).is_some(),
+                )
+            })
+        else {
+            return;
+        };
+        (idx, ware.to_owned())
+    } else {
+        let weights = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
+        let Some(idx) = rng.weighted(&weights) else {
+            return;
+        };
+        let wishes = data.wishes_tonight(&data.ghosts[idx], night);
+        (idx, wishes[rng.index(wishes.len())].to_string())
     };
     let def = &data.ghosts[def_idx];
-
-    let wishes = data.wishes_tonight(def, night);
-    let mut wish = wishes[rng.index(wishes.len())].to_string();
-    // Now and then it is a regular, by name, often after its favourite.
-    let regular = crate::regulars::returning(&data, &mut progress, &def.id, &mut rng);
+    let first_customer = guided_ware.is_some();
+    let regular = if first_customer {
+        None
+    } else {
+        crate::regulars::returning(&data, &mut progress, &def.id, &mut rng)
+    };
     let regular = regular.map(|i| {
         let r = &progress.journal.regulars[i];
+        let wishes = data.wishes_tonight(def, night);
         wish = crate::regulars::wish(&data, r, &wishes, wish.clone(), &mut rng);
         let name = r.name(&lang);
         log.push(lang.f(
@@ -232,9 +280,18 @@ fn spawn_ghosts(
     });
     progress.journal.met(&def.id, &wish);
     let hints = lang.count(&format!("product.{wish}.hint."));
-    let hint = format!("product.{wish}.hint.{}", rng.index(hints) + 1);
+    let hint_number = if first_customer {
+        1
+    } else {
+        rng.index(hints) + 1
+    };
+    let hint = format!("product.{wish}.hint.{hint_number}");
 
-    let unmet = def.unmet_need(&atmosphere);
+    let unmet = if first_customer {
+        None
+    } else {
+        def.unmet_need(&atmosphere)
+    };
     if let Some(need) = unmet {
         log.push(lang.f(
             "log.hesitates",
@@ -246,11 +303,12 @@ fn spawn_ghosts(
         report.fled += 1;
     }
     let visit = Visit {
+        first_customer,
         def_idx,
         wish,
         hint,
         chapter: None,
-        plain: false,
+        plain: first_customer,
         ordered: false,
         flees: unmet.is_some(),
         patience_factor: upgrades.patience_factor(&data),
@@ -478,6 +536,7 @@ struct GhostArt<'w> {
 
 /// What a newly arriving ghost comes for.
 struct Visit {
+    first_customer: bool,
     def_idx: usize,
     wish: String,
     hint: String,
@@ -541,6 +600,7 @@ fn spawn_ghost(
     let ghost = commands
         .spawn((
             Ghost {
+                first_customer: visit.first_customer,
                 def: visit.def_idx,
                 wish: visit.wish,
                 hint: visit.hint,
@@ -737,6 +797,7 @@ fn spawn_ordering(
         return;
     };
     let visit = Visit {
+        first_customer: false,
         def_idx,
         wish: order.product.clone(),
         hint: "order.whisper".into(),
@@ -823,6 +884,7 @@ fn spawn_thief(
         return;
     }
     let visit = Visit {
+        first_customer: false,
         def_idx,
         wish: wares[rng.index(wares.len())].clone(),
         hint: "ghost_tip.thief".into(),
@@ -910,6 +972,7 @@ fn come_home(
         ));
         report.story_lines.push((guest.clone(), farewell.clone()));
         let visit = Visit {
+            first_customer: false,
             def_idx,
             wish: def.wishes[0].clone(),
             hint: farewell,
@@ -980,6 +1043,7 @@ fn spawn_story_ghost(
         progress.journal.met(&story.ghost, &c.wish);
         log.push(lang.t(&format!("story.{}.arrives", story.ghost)));
         let visit = Visit {
+            first_customer: false,
             def_idx,
             wish: c.wish.clone(),
             hint: format!("story.{}.{}.intro", story.ghost, chapter + 1),
@@ -1024,6 +1088,15 @@ fn ghost_ai(
 ) {
     let dt = time.delta_secs();
     for (entity, mut g) in &mut ghosts {
+        if g.first_customer
+            && g.state == GhostState::Entering
+            && progress.journal.first_sale_checkpoint.is_some()
+        {
+            g.state = GhostState::Waiting;
+            g.pos = layout.queue_pos(0, 1);
+            g.target = g.pos;
+            queue.0.push(entity);
+        }
         match g.state {
             GhostState::Entering if g.arrived() => {
                 g.state = GhostState::Browsing;
@@ -1032,7 +1105,8 @@ fn ghost_ai(
                 let calm = quirks
                     .calm_with
                     .is_some_and(|n| n.is_met(&layout.atmosphere(&data, progress.calendar(&data))));
-                if !calm
+                if !g.first_customer
+                    && !calm
                     && rng.chance(quirks.knock_chance)
                     && let Some(product) = g.browse_cell.and_then(|c| {
                         let on_shelf = &layout.cells[c].products;
@@ -1060,7 +1134,11 @@ fn ghost_ai(
                     let on_shelf = g
                         .browse_cell
                         .is_some_and(|c| layout.cells[c].products.contains(&g.wish));
-                    if on_shelf && stock.count(&g.wish) > 0 && g.chapter.is_none() {
+                    if on_shelf
+                        && stock.count(&g.wish) > 0
+                        && g.chapter.is_none()
+                        && !(g.first_customer && progress.guiding_first_sale())
+                    {
                         g.carrying = Some(g.wish.clone());
                         log.push(lang.f(
                             "log.takes_from_shelf",
@@ -1086,7 +1164,8 @@ fn ghost_ai(
             }
             GhostState::Waiting => {
                 // Assist setting: patient ghosts never give up.
-                if !settings.patient_ghosts {
+                if !settings.patient_ghosts && !(g.first_customer && progress.guiding_first_sale())
+                {
                     g.patience -= dt;
                 }
                 if g.patience <= 0.0 {
@@ -1408,6 +1487,123 @@ mod tests {
     }
 
     #[test]
+    fn the_guided_customer_waits_for_real_stock_and_resumes_counted_change_once() {
+        use crate::economy::{Coin, Drawer};
+        use crate::guide::{FirstSale, FirstSaleCheckpoint};
+        use crate::register::{Register, RegisterPlugin};
+        use crate::shop::Storeroom;
+        use crate::ui::Action;
+
+        let ware = "powder_compact";
+        let open = |checkpoint| {
+            let data = GameData::load();
+            let mut layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+            let shelf = layout.shelf_cells(&data)[0];
+            layout.cells[shelf].products.push(ware.into());
+            let mut stock = Stock::default();
+            stock.add(ware, 2);
+            stock.add("rain_jar", 1);
+            let mut progress = Progress::new(0);
+            progress.journal.first_sale = FirstSale::Following;
+            progress.journal.first_sale_checkpoint = Some(checkpoint);
+            let mut app = App::new();
+            app.add_plugins((MinimalPlugins, AssetPlugin::default(), RegisterPlugin))
+                .init_asset::<Image>()
+                .init_asset::<Font>()
+                .init_resource::<Assets<Mesh>>()
+                .init_resource::<Assets<StandardMaterial>>()
+                .insert_resource(Lang::load("en"))
+                .init_resource::<UiFont>()
+                .init_resource::<Upgrades>()
+                .init_resource::<Storeroom>()
+                .init_resource::<Drawer>()
+                .init_resource::<GameLog>()
+                .init_resource::<NightReport>()
+                .init_resource::<Queue>()
+                .init_resource::<Settings>()
+                .insert_resource(State::new(Phase::Night))
+                .insert_resource(SpawnTimer(0.0))
+                .insert_resource(NightClock {
+                    elapsed: 0.,
+                    length: 100.,
+                })
+                .insert_resource(data)
+                .insert_resource(layout)
+                .insert_resource(stock)
+                .insert_resource(progress)
+                .insert_resource(Rng::new(9))
+                .add_message::<Action>()
+                .add_message::<Cue>()
+                .add_message::<Finale>()
+                .add_message::<crate::story_film::PlayStoryFilm>()
+                .add_systems(Update, (spawn_ghosts, ghost_ai).chain());
+            for _ in 0..3 {
+                app.update();
+            }
+            app
+        };
+
+        let mut app = open(FirstSaleCheckpoint::Wish);
+        let customer = app.world().resource::<Queue>().front().unwrap();
+        let g = app.world().get::<Ghost>(customer).unwrap();
+        assert!(g.first_customer && g.plain && g.carrying.is_none());
+        assert_eq!(g.state, GhostState::Waiting);
+        assert_eq!(g.wish, ware);
+        assert_eq!(g.patience, g.max_patience);
+
+        app.world_mut()
+            .write_message(Action::Offer("rain_jar".into()));
+        app.world_mut().write_message(Action::Decline);
+        app.update();
+        assert_eq!(app.world().resource::<Queue>().front(), Some(customer));
+        assert_eq!(app.world().resource::<Stock>().count("rain_jar"), 1);
+        assert_eq!(app.world().resource::<Progress>().reputation, 0);
+        app.world_mut().write_message(Action::Offer(ware.into()));
+        app.update();
+        app.world_mut().write_message(Action::CheckCoin(0));
+        app.world_mut()
+            .write_message(Action::AddChange(Coin::Button));
+        app.world_mut()
+            .write_message(Action::AddChange(Coin::Button));
+        app.world_mut().write_message(Action::GiveChange);
+        app.update();
+        let sale = app.world().resource::<Register>().sale.as_ref().unwrap();
+        assert!(sale.recount);
+        let checkpoint = FirstSaleCheckpoint::Change {
+            coins: sale.coins.clone(),
+            given: sale.given,
+            recount: sale.recount,
+        };
+        let drawer = app.world().resource::<Drawer>().0;
+        let price = sale.price;
+        let mut resumed = open(ron::from_str(&ron::to_string(&checkpoint).unwrap()).unwrap());
+        let world = resumed.world_mut();
+        let sale = world.resource::<Register>().sale.as_ref().unwrap();
+        assert_eq!(sale.given.buttons, 2);
+        assert!(sale.recount);
+        assert!(sale.coins[0].checked);
+        assert_eq!(world.resource::<Stock>().count(ware), 1);
+        assert_eq!(world.resource::<Drawer>().0, drawer);
+        assert_eq!(world.resource::<Progress>().reputation, -1);
+        world.write_message(Action::GiveChangeAnyway);
+        resumed.update();
+        assert!(resumed.world().resource::<Register>().is_busy());
+        let world = resumed.world_mut();
+        world.write_message(Action::ResetChange);
+        world.write_message(Action::AddChange(Coin::Button));
+        world.write_message(Action::GiveChange);
+        resumed.update();
+        let world = resumed.world();
+        assert_eq!(world.resource::<NightReport>().sales, 1);
+        assert_eq!(world.resource::<Stock>().count(ware), 1);
+        assert_eq!(world.resource::<Drawer>().total(), price);
+        assert_eq!(
+            world.resource::<Progress>().journal.first_sale,
+            FirstSale::Complete
+        );
+    }
+
+    #[test]
     fn reads_png_size() {
         let mut header = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
         header.extend_from_slice(&704u32.to_be_bytes());
@@ -1416,29 +1612,39 @@ mod tests {
         assert_eq!(png_size(b"not a png at all, sorry"), None);
     }
 
-    #[test]
-    fn accepting_the_last_ware_reserves_it_until_change_is_given() {
-        use crate::economy::Drawer;
+    fn lavender_sale() -> (App, Entity) {
+        let (mut app, ghost) = customer_at_counter();
+        app.update();
+        (app, ghost)
+    }
+
+    fn customer_at_counter() -> (App, Entity) {
+        use crate::economy::{Coin, Drawer, Purse};
         use crate::inventory::Stock;
-        use crate::register::{Register, RegisterPlugin};
+        use crate::register::RegisterPlugin;
         use crate::shop::Storeroom;
         use crate::ui::Action;
 
-        let data = GameData::load();
+        let mut data = GameData::load();
         let shy = data.ghost_index("shy").unwrap();
+        data.ghosts[shy].pays_with = vec![Coin::Candle];
         let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
         let mut app = App::new();
         app.add_plugins(RegisterPlugin)
             .add_message::<Action>()
             .add_message::<Cue>()
             .add_message::<Finale>()
+            .add_message::<crate::story_film::PlayStoryFilm>()
             .insert_resource(State::new(Phase::Night))
             .insert_resource(Progress::new(0))
             .insert_resource(layout)
             .insert_resource(data)
             .insert_resource(Lang::load("en"))
             .insert_resource(Rng::new(1))
-            .init_resource::<Drawer>()
+            .insert_resource(Drawer(Purse {
+                buttons: 4,
+                ..default()
+            }))
             .init_resource::<Stock>()
             .init_resource::<Storeroom>()
             .init_resource::<GameLog>()
@@ -1448,6 +1654,7 @@ mod tests {
         world.resource_mut::<Stock>().add(ware, 1);
         let ghost = world
             .spawn(Ghost {
+                first_customer: false,
                 def: shy,
                 wish: ware.into(),
                 hint: String::new(),
@@ -1471,15 +1678,178 @@ mod tests {
             })
             .id();
         world.insert_resource(Queue(vec![ghost]));
+        (app, ghost)
+    }
+
+    #[test]
+    fn each_story_plays_one_film_after_its_final_sale_parcel_or_fare() {
+        use crate::economy::Coin;
+        use crate::story_film::PlayStoryFilm;
+        use crate::ui::Action;
+
+        let (mut app, customer) = customer_at_counter();
+        let stories = app.world().resource::<GameData>().stories.clone();
+        for (i, story) in stories.iter().enumerate() {
+            let def = app
+                .world()
+                .resource::<GameData>()
+                .ghost_index(&story.ghost)
+                .unwrap();
+            app.world_mut().resource_mut::<GameData>().ghosts[def].pays_with = vec![Coin::Button];
+            let last = story.chapters.len() - 1;
+            // Re-deliver the last chapter to the already completed progress.
+            for (visit, chapter) in (0..=last).chain([last]).enumerate() {
+                let world = app.world_mut();
+                let wish = &story.chapters[chapter].wish;
+                {
+                    let mut ghost = world.get_mut::<Ghost>(customer).unwrap();
+                    ghost.def = def;
+                    ghost.wish.clone_from(wish);
+                    ghost.carrying = None;
+                    ghost.state = GhostState::Waiting;
+                    ghost.chapter = Some((i, chapter));
+                }
+                world.insert_resource(Queue(vec![customer]));
+                if story.chapters[chapter].fare {
+                    world.write_message(Action::GiveFare);
+                    world.write_message(Action::GiveFare);
+                } else {
+                    if (i + chapter) % 2 == 0 {
+                        world.resource_mut::<Stock>().add(wish, 1);
+                        world.write_message(Action::Offer(wish.clone()));
+                    } else {
+                        world.resource_mut::<Progress>().parcels.push(i);
+                        world.write_message(Action::HandParcel);
+                    }
+                    world.write_message(Action::GiveChange);
+                    world.write_message(Action::GiveChange);
+                }
+                app.update();
+                let films: Vec<_> = app
+                    .world_mut()
+                    .resource_mut::<Messages<PlayStoryFilm>>()
+                    .drain()
+                    .map(|film| film.0)
+                    .collect();
+                if visit == last {
+                    assert_eq!(films.as_slice(), std::slice::from_ref(&story.ghost));
+                } else {
+                    assert!(films.is_empty(), "{} on visit {visit}", story.ghost);
+                }
+                assert_eq!(
+                    app.world().resource::<Progress>().chapter(i),
+                    (visit + 1).min(last + 1)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn accepting_the_last_ware_reserves_it_until_change_is_given() {
+        use crate::economy::{Coin, Drawer};
+        use crate::inventory::Stock;
+        use crate::register::Register;
+        use crate::ui::Action;
+
+        let (mut app, ghost) = lavender_sale();
+        let world = app.world_mut();
+        let ware = "lavender";
+        assert!(world.resource::<Register>().is_busy_with(ghost));
+        assert!(!world.resource_mut::<Stock>().take_one(ware));
+        let received = world.resource::<Drawer>().0;
+        let reputation = world.resource::<Progress>().reputation;
+        world.resource_mut::<Stock>().add(ware, 1);
+        // The customer paid five for a four-button ware. Neither mistake
+        // commits the sale, moves the money or penalises the shopkeeper.
+        world.write_message(Action::GiveChange);
+        app.update();
+        let world = app.world_mut();
+        assert!(world.resource::<Register>().sale.as_ref().unwrap().recount);
+        assert_eq!(world.resource::<Queue>().front(), Some(ghost));
+        world.write_message(Action::AddChange(Coin::Button));
+        world.write_message(Action::AddChange(Coin::Button));
+        world.write_message(Action::GiveChange);
+        app.update();
+        let world = app.world_mut();
+        let sale = world.resource::<Register>().sale.as_ref().unwrap();
+        assert_eq!(sale.given.buttons, 2);
+        assert!(sale.recount);
+        assert_eq!(world.resource::<NightReport>().sales, 0);
+        assert_eq!(world.resource::<NightReport>().change_wrong, 0);
+        assert_eq!(world.resource::<Drawer>().0, received);
+        assert_eq!(world.resource::<Progress>().reputation, reputation);
+        assert_eq!(
+            world.get::<Ghost>(ghost).unwrap().state,
+            GhostState::AtRegister
+        );
+        world.write_message(Action::RemoveChange(Coin::Button));
+        // A stale confirmation cannot submit the corrected tray.
+        world.write_message(Action::GiveChangeAnyway);
+        app.update();
+        let world = app.world_mut();
+        let sale = world.resource::<Register>().sale.as_ref().unwrap();
+        assert_eq!(sale.given.buttons, 1);
+        assert!(!sale.recount);
+        let amounts = (sale.price, sale.paid().total(), sale.given.total());
+        assert!(world.resource::<NightReport>().receipts.is_empty());
+        world.write_message(Action::GiveChange);
+        world.write_message(Action::GiveChange);
+        app.update();
+        let report = app.world().resource::<NightReport>();
+        assert_eq!(report.sales, 1);
+        assert_eq!(report.change_correct, 1);
+        let receipt = &report.receipts[0];
+        assert_eq!(receipt.product, ware);
+        assert_eq!((receipt.price, receipt.paid, receipt.given), amounts);
+        assert_eq!(app.world().resource::<Stock>().count(ware), 1);
+    }
+
+    #[test]
+    fn an_ordinary_customer_can_be_given_wrong_change_after_confirmation() {
+        use crate::register::Register;
+        use crate::ui::Action;
+
+        let (mut app, ghost) = lavender_sale();
+        app.world_mut().write_message(Action::GiveChangeAnyway);
+        app.update();
+        assert!(app.world().resource::<Register>().is_busy_with(ghost));
+        app.world_mut().write_message(Action::GiveChange);
+        app.update();
+        app.world_mut().write_message(Action::GiveChangeAnyway);
+        app.update();
+        let report = app.world().resource::<NightReport>();
+        assert_eq!(
+            (report.sales, report.change_wrong, report.change_kept),
+            (1, 1, 1)
+        );
+        assert!(!app.world().resource::<Register>().is_busy());
+    }
+
+    #[test]
+    fn the_guided_customer_waits_for_the_corrected_amount() {
+        use crate::economy::Coin;
+        use crate::guide::FirstSale;
+        use crate::register::Register;
+        use crate::ui::Action;
+
+        let (mut app, ghost) = lavender_sale();
+        let world = app.world_mut();
+        world.get_mut::<Ghost>(ghost).unwrap().first_customer = true;
+        world.resource_mut::<Progress>().journal.first_sale = FirstSale::Following;
+        world.write_message(Action::GiveChange);
+        world.write_message(Action::GiveChangeAnyway);
         app.update();
         let world = app.world_mut();
         assert!(world.resource::<Register>().is_busy_with(ghost));
-        assert!(!world.resource_mut::<Stock>().take_one(ware));
-        // A new unit is still there after the first customer's change.
-        world.resource_mut::<Stock>().add(ware, 1);
+        assert!(world.resource::<Progress>().guiding_first_sale());
+        assert_eq!(world.resource::<NightReport>().sales, 0);
+        world.write_message(Action::AddChange(Coin::Button));
         world.write_message(Action::GiveChange);
         app.update();
-        assert_eq!(app.world().resource::<NightReport>().sales, 1);
-        assert_eq!(app.world().resource::<Stock>().count(ware), 1);
+        assert_eq!(
+            app.world().resource::<Progress>().journal.first_sale,
+            FirstSale::Complete
+        );
+        assert_eq!(app.world().resource::<NightReport>().change_correct, 1);
     }
 }

@@ -1,7 +1,7 @@
 //! Counter and register: guess the wish, take payment, inspect coins,
 //! hand out change – and decide what to do when a ghost pays twice.
 
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemParam, prelude::*};
 
 use crate::data::GameData;
 use crate::day_cycle::{NightReport, Order, Phase, Progress};
@@ -13,6 +13,7 @@ use crate::inventory::Stock;
 use crate::rng::Rng;
 use crate::shop::ShopLayout;
 use crate::shop::Storeroom;
+use crate::story_film::PlayStoryFilm;
 use crate::ui::{Action, GameLog};
 
 pub struct RegisterPlugin;
@@ -32,13 +33,14 @@ impl Plugin for RegisterPlugin {
                     answer_double_pay,
                 )
                     .chain()
-                    .run_if(in_state(Phase::Night)),
+                    .run_if(in_state(Phase::Night))
+                    .run_if(crate::story_film::outside_film),
             );
     }
 }
 
 /// One coin the ghost put on the counter.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PaidCoin {
     pub coin: Coin,
     /// Catalog key of how the coin looks or feels – counterfeits give
@@ -59,6 +61,8 @@ pub struct Sale {
     pub coins: Vec<PaidCoin>,
     /// What the player has counted out as change so far.
     pub given: Purse,
+    /// The last handover was rejected; changing the tray clears the warning.
+    pub recount: bool,
     /// (story, chapter) this sale completes, if it is a story ghost.
     pub chapter: Option<(usize, usize)>,
     /// Fetched from the storeroom, not found on the shelves: correct change
@@ -135,6 +139,7 @@ pub fn paid_coins(purse: &Purse, counterfeit: bool, lang: &Lang, rng: &mut Rng) 
 fn bring_carried_ware(
     register: Res<Register>,
     queue: Res<Queue>,
+    progress: Res<Progress>,
     stock: Res<Stock>,
     mut ghosts: Query<&mut Ghost>,
     mut actions: MessageWriter<Action>,
@@ -148,6 +153,15 @@ fn bring_carried_ware(
     if ghost.state != GhostState::Waiting {
         return;
     }
+    if ghost.first_customer
+        && matches!(
+            progress.journal.first_sale_checkpoint,
+            Some(crate::guide::FirstSaleCheckpoint::Change { .. })
+        )
+    {
+        actions.write(Action::Offer(ghost.wish.clone()));
+        return;
+    }
     if let Some(ware) = ghost.carrying.clone() {
         if stock.count(&ware) > 0 {
             actions.write(Action::Offer(ware));
@@ -155,6 +169,12 @@ fn bring_carried_ware(
             ghost.carrying = None;
         }
     }
+}
+
+#[derive(SystemParam)]
+pub(crate) struct StoryEndings<'w> {
+    guest: MessageWriter<'w, crate::ghosts::Finale>,
+    film: MessageWriter<'w, PlayStoryFilm>,
 }
 
 /// A story ghost got what it came for: its thanks, its keepsake, and the
@@ -171,9 +191,13 @@ fn complete_chapter(
     report: &mut NightReport,
     log: &mut GameLog,
     cues: &mut MessageWriter<Cue>,
-    finale: &mut MessageWriter<crate::ghosts::Finale>,
+    endings: &mut StoryEndings,
 ) {
     let story = &data.stories[i];
+    if progress.chapter(i) != chapter || chapter >= story.chapters.len() {
+        ghost.state = GhostState::Leaving;
+        return;
+    }
     let c = &story.chapters[chapter];
     let thanks = format!("story.{}.{}.thanks", story.ghost, chapter + 1);
     log.push(lang.f(
@@ -190,14 +214,15 @@ fn complete_chapter(
         report.keepsakes.push(k.clone());
     }
     progress.finish_chapter(i);
-    if progress.chapter(i) >= story.chapters.len() {
+    if progress.chapter(i) == story.chapters.len() {
+        endings.film.write(PlayStoryFilm(story.ghost.clone()));
         log.push(lang.t(&format!("story.{}.ending", story.ghost)));
         report.redeemed.push(story.ghost.clone());
         cues.write(Cue::Ascend(ghost.pos));
         ghost.state = GhostState::Ascending;
         ghost.timer = 0.0;
         if let Some(guest) = &story.finale_guest {
-            finale.write(crate::ghosts::Finale(guest.clone()));
+            endings.guest.write(crate::ghosts::Finale(guest.clone()));
         }
     } else {
         ghost.state = GhostState::Leaving;
@@ -238,7 +263,7 @@ fn serve_front_ghost(
     lang: Res<Lang>,
     layout: Res<ShopLayout>,
     mut storeroom: ResMut<Storeroom>,
-    mut finale: MessageWriter<crate::ghosts::Finale>,
+    mut endings: StoryEndings,
 ) {
     for action in actions.read() {
         if register.is_busy() {
@@ -271,6 +296,10 @@ fn serve_front_ghost(
                     if stock.count(product) == 0 {
                         continue;
                     }
+                    if ghost.first_customer && progress.guiding_first_sale() {
+                        log.push(lang.t("guide_retry"));
+                        continue;
+                    }
                     log.push(lang.f("log.wrong_item", &[("who", &lang.ghost_the(&def.id))]));
                     report.wrong_item += 1;
                     ghost.state = GhostState::Leaving;
@@ -291,9 +320,30 @@ fn serve_front_ghost(
                     factor *= 1.0 + data.config.orders.price_bonus;
                 }
                 let price = ((base as f32 * factor).round() as u32).max(1);
-                let purse = ghost_payment(price, &def.pays_with, &mut rng);
-                let counterfeit = rng.chance(def.quirks.counterfeit_chance);
-                let coins = paid_coins(&purse, counterfeit, &lang, &mut rng);
+                let guided = ghost.first_customer && progress.guiding_first_sale();
+                let purse = if guided {
+                    crate::guide::payment(price, &def.pays_with)
+                } else {
+                    ghost_payment(price, &def.pays_with, &mut rng)
+                };
+                let counterfeit = !guided && rng.chance(def.quirks.counterfeit_chance);
+                let (coins, given, recount) = if guided
+                    && let Some(crate::guide::FirstSaleCheckpoint::Change {
+                        coins,
+                        given,
+                        recount,
+                    }) = progress.journal.first_sale_checkpoint.take()
+                {
+                    // Loaded from the night-start drawer: replay any doubts about genuine coins once.
+                    progress.reputation -= coins.iter().filter(|c| c.checked).count() as i32;
+                    (coins, given, recount)
+                } else {
+                    (
+                        paid_coins(&purse, counterfeit, &lang, &mut rng),
+                        Purse::default(),
+                        false,
+                    )
+                };
                 // Payment goes straight into the drawer – change is taken from there too.
                 drawer.merge(&purse);
                 cues.write(Cue::Paid);
@@ -310,13 +360,14 @@ fn serve_front_ghost(
                     product: product.clone(),
                     price,
                     coins,
-                    given: Purse::default(),
+                    given,
+                    recount,
                     chapter: ghost.chapter,
                     from_storeroom: ghost.carrying.is_none()
                         && !layout.displayed_products().contains(product),
                 });
             }
-            (Action::Decline, _) => {
+            (Action::Decline, _) if !(ghost.first_customer && progress.guiding_first_sale()) => {
                 report.declined += 1;
                 if ghost.ordered {
                     // It came back for its order, and it is still missing.
@@ -364,7 +415,7 @@ fn serve_front_ghost(
                     &mut report,
                     &mut log,
                     &mut cues,
-                    &mut finale,
+                    &mut endings,
                 );
                 queue.remove(front);
             }
@@ -394,7 +445,7 @@ fn serve_front_ghost(
 }
 
 /// Inspect coins, count out change and hand it over.
-fn make_change(
+pub(crate) fn make_change(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
     mut register: ResMut<Register>,
@@ -407,7 +458,7 @@ fn make_change(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut ghosts: Query<&mut Ghost>,
-    mut finale: MessageWriter<crate::ghosts::Finale>,
+    mut endings: StoryEndings,
     lang: Res<Lang>,
 ) {
     for action in actions.read() {
@@ -423,6 +474,7 @@ fn make_change(
                     continue;
                 }
                 paid.checked = true;
+                cues.write(Cue::CoinHandled(paid.coin));
                 let name = ghosts
                     .get(sale.ghost)
                     .map(|g| lang.ghost_the(&data.ghosts[g.def].id))
@@ -448,9 +500,22 @@ fn make_change(
             Action::AddChange(coin) => {
                 if sale.given.get(*coin) < drawer.get(*coin) {
                     sale.given.add(*coin, 1);
+                    sale.recount = false;
+                    cues.write(Cue::CoinHandled(*coin));
                 }
             }
-            Action::ResetChange => sale.given = Purse::default(),
+            Action::RemoveChange(coin) => {
+                let mut one = Purse::default();
+                one.add(*coin, 1);
+                if sale.given.remove(&one) {
+                    sale.recount = false;
+                    cues.write(Cue::CoinHandled(*coin));
+                }
+            }
+            Action::ResetChange => {
+                sale.given = Purse::default();
+                sale.recount = false;
+            }
             // The drawer cannot give back the change exactly: the ghost takes
             // its coins back and pays with smaller ones.
             Action::NoChange if !drawer.can_give(sale.change_due()) => {
@@ -463,6 +528,7 @@ fn make_change(
                 drawer.merge(&purse);
                 sale.coins = paid_coins(&purse, false, &lang, &mut rng);
                 sale.given = Purse::default();
+                sale.recount = false;
                 cues.write(Cue::Paid);
                 log.push(lang.f(
                     "log.smaller_coins",
@@ -472,21 +538,30 @@ fn make_change(
                     ],
                 ));
             }
-            Action::GiveChange => {
+            Action::GiveChange | Action::GiveChangeAnyway => {
+                let guided = ghosts
+                    .get(sale.ghost)
+                    .is_ok_and(|g| g.first_customer && progress.guiding_first_sale());
+                if matches!(action, Action::GiveChangeAnyway) {
+                    if guided || !sale.recount {
+                        continue;
+                    }
+                } else if sale.given.total() != sale.change_due() {
+                    sale.recount = true;
+                    continue;
+                }
                 let sale = register.sale.take().expect("checked above");
                 drawer.remove(&sale.given);
-                report.sales += 1;
-                report.revenue += sale.price;
+                let given = sale.given.total();
+                report.record_sale(&sale.product, sale.price, sale.paid().total(), given);
                 if ghosts.get(sale.ghost).is_ok_and(|g| g.ordered) {
                     report.orders_fulfilled += 1;
                 }
-                report.sold.push(sale.product.clone());
                 report
                     .counterfeits_taken
                     .extend(sale.coins.iter().filter(|c| c.fake).map(|c| c.coin));
 
                 let due = sale.change_due();
-                let given = sale.given.total();
                 report.change_kept += due as i64 - given as i64;
                 let Ok(mut ghost) = ghosts.get_mut(sale.ghost) else {
                     queue.remove(sale.ghost);
@@ -495,6 +570,10 @@ fn make_change(
                 let def = &data.ghosts[ghost.def];
                 let name = lang.ghost_the(&def.id);
                 let correct = given == due;
+                let guided = ghost.first_customer && progress.guiding_first_sale();
+                if guided {
+                    progress.journal.first_sale = crate::guide::FirstSale::Complete;
+                }
                 progress.journal.served(&def.id);
                 if given > 0 {
                     cues.write(Cue::ChangeGiven);
@@ -553,11 +632,11 @@ fn make_change(
                         &mut report,
                         &mut log,
                         &mut cues,
-                        &mut finale,
+                        &mut endings,
                     );
                 } else if !correct {
                     ghost.state = GhostState::Leaving;
-                } else if rng.chance(def.quirks.double_pay_chance) {
+                } else if !guided && rng.chance(def.quirks.double_pay_chance) {
                     log.push(lang.f("log.double_pay", &[("who", &name), ("amount", &sale.price)]));
                     register.question = Some(DoublePay {
                         ghost: sale.ghost,
@@ -692,6 +771,7 @@ mod tests {
             price: 7,
             coins: paid_coins(&spoon, true, &lang(), &mut Rng::new(1)),
             given: Purse::default(),
+            recount: false,
             chapter: None,
             from_storeroom: false,
         };

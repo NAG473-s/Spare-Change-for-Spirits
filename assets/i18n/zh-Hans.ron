@@ -245,6 +245,13 @@
     "night.put_back": "全部放回",
     "register.no_change": "没有合适的零钱",
     "register.no_change_hint": "钱箱里凑不出正好{due}的找零。请幽灵用小面额的钱付款吧。",
+    "register.ask_smaller": "请顾客换用小面额的钱",
+    "register.change_tray": "你的找零盘 · {total}",
+    "register.return_one": "{coin} ×{count} · 放回一枚",
+    "register.undo_hint": "右键点击一种钱币，放回一枚。",
+    "register.change_short": "找零少了。再加一枚钱币试试。",
+    "register.change_over": "找零多了。放回一枚钱币再试试。",
+    "register.give_anyway": "仍按这个数额找零",
     "night.give_fare": "从钱箱里拿一枚钱币给他（{coin}）",
     "night.fare_empty": "钱箱空空如也 – 没有钱币可以给他。",
     "night.hand_over": "交给顾客",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "距最旧商品褪色（夜）：{nights}",
-    "shelf.tip_evening": "点击：从货架上取下",
+    "shelf.tip_evening": "右键点击可将这件货物撤下货架。它仍留在库存中。",
     "shelf.tip_night": "点击：交给柜台前的幽灵",
     "shelf.tip_no_ghost": "柜台前没有等候的幽灵。",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "通往集市",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item}卖了{price}。顾客付了{paid}，拿回了{given}的找零。金额均以纽扣计。",
+    "accounts.no_first_sale": "昨晚没有完成交易。",
+    "accounts.stock_kept": "为下个傍晚留下的库存：{items}。",
+    "accounts.stock_empty": "没有剩余的商品可留到下个傍晚。",
+    "accounts.first_market": "去村中集市逛逛，再回到店里准备下个傍晚。不买东西也可以。",
+
     "accounts.title": "黎明 – 第{night}夜账目",
     "accounts.cash": "钱箱",
     "accounts.opening": "一天开始时的钱箱",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "死神替你美言了几句。从今以后，摆渡人每天傍晚会多送来两个货箱。",
     "upgrade.apprentice.name": "小学徒",
     "upgrade.apprentice.text": "柜台后的一个小帮手幽灵。忙碌的夜里，它会接待排队等候、已从货架上拿好商品的客人，最多三位，而且只收刚好的价钱，不用找零。",
+
+    "guide_title": "赫达的第一笔生意",
+    "guide_buy": "去码头，从摆渡人的船上买一箱货。挑你喜欢的商品就好。",
+    "guide_shelf": "回到店里，在“商品上架”下选一件商品，再点击一个货架，把商品摆上去。",
+    "guide_open": "货架已经备好。准备好迎接第一位顾客时，就开门营业吧。",
+    "guide_wish": "第一位顾客会等你。在柜台读一读它的心愿，再从货架或列表里选出对应的商品。",
+    "guide_change": "对照价格看看顾客付了多少。数好找零，再交给顾客。你可以把钱币放回去重新数。",
+    "guide_skip": "跳过指引",
+    "guide_resume": "继续指引",
+    "guide_retry": "顾客还在等你。再读一读它的心愿，试试另一件商品。",
 
     // Tips during the first night.
     "tip.order": "每天傍晚，摆渡人最多会送来{count}箱货。从门出去到码头，点击他船上的货箱即可购买 – 货款从钱箱里支付。",

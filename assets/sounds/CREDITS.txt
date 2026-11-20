@@ -1,12 +1,14 @@
 Spare Change for Spirits
-Opening music and narration
+Opening music, seasonal audio and story narration
 
 The story is written for this game. Its translations are in assets/i18n.
 The four-bar score is composed and synthesised in tools/make_sounds.py.
 The evening tunes and night ambiences of every season are composed and
 synthesised in the same script.
-The distributed voice files are finished readings of the three lines.
-Synthesis took place during production. The game plays local Ogg audio.
+The opening narration reads the three lines of the introduction. Each of
+the six story endings has its own reading of the corresponding translated
+catalog text. Voices were synthesised during production and the game
+plays the rendered Ogg audio locally.
 
 Speech sources
 
@@ -47,5 +49,11 @@ the Apache License 2.0.
 https://huggingface.co/pythainlp/MakHamTTS
 https://github.com/PyThaiNLP/PyThaiTTS
 
-The speech rendering tool sherpa-onnx is licensed under Apache 2.0.
+The opening speech rendering tool sherpa-onnx is licensed under Apache 2.0.
 https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE
+
+Production of the story endings also used Piper, licensed under GPL 3.0,
+and ONNX Runtime, licensed under MIT. Only the finished recordings ship
+with the game.
+https://github.com/OHF-Voice/piper1-gpl/blob/main/COPYING
+https://onnxruntime.ai/

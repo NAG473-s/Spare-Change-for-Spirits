@@ -22,6 +22,8 @@ use crate::upgrades::Upgrades;
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Journal {
+    pub first_sale: crate::guide::FirstSale,
+    pub first_sale_checkpoint: Option<crate::guide::FirstSaleCheckpoint>,
     /// One entry per kind of ghost met (ghost id).
     pub book: BTreeMap<String, BookEntry>,
     /// Ghosts that come back by name.
@@ -125,6 +127,7 @@ pub fn book_page(
     ));
     let root = ui.root();
     ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
+    ui.menu_option(root, &lang.t("guide_title"), Action::OpenGuide, false);
     if met.is_empty() {
         ui.dim(&lang.t("book.empty"));
     }

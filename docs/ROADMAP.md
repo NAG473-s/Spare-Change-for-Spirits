@@ -4,13 +4,13 @@ The full game ends when Kasimir pays his own fare and the shopkeeper sees what h
 
 ## Starting point · 20 November 2026
 
-The market, ferry, shelves, register and morning accounts already form a playable day. The six stories are in the game: Edwin and Ida, Lotte and Anselm, Mira and Kasimir. Their chapters already change the village. The ghost book records encounters and keepsakes, regulars revisit, the apprentice serves customers, and the workbench repairs wares. The plan builds on those systems and their existing art and music.
+The market, ferry, shelves, register and morning accounts already form a playable day. The six stories are in the game: Edwin and Ida, Lotte and Anselm, Mira and Kasimir. Their chapters already change the village. The ghost book records encounters and keepsakes, regulars revisit, the apprentice serves customers, and the workbench repairs wares. Completing each story now plays its own narrated, painted film with localized captions. The plan builds on those systems and their existing art and music.
 
 ## November 20–29 · The first sale
 
-- [ ] Guide one real purchase from the ferry to the shelf. Let the first customer wait while the player studies the wish, chooses a ware and gives change. Completing a step independently advances the guide. It can be skipped, resumed after loading or revisited from the book.
-- [ ] Show which coins the customer offered, what change is due with the assist enabled, and which coins the player has returned. Give buttons, candle stubs and spoons distinct sounds and visible silhouettes. Correcting a mistake keeps the transaction open.
-- [ ] End the first morning with a ledger that explains one actual sale and what became of the unsold stock. A fresh profile can reach the next evening using only cues inside the game.
+- [x] Guide one real purchase from the ferry to the shelf. Let the first customer wait while the player studies the wish, chooses a ware and gives change. Completing a step independently advances the guide. It can be skipped, resumed after loading or revisited from the book.
+- [x] Show which coins the customer offered, what change is due with the assist enabled, and which coins the player has returned. Give buttons, candle stubs and spoons distinct sounds and visible silhouettes. Correcting a mistake keeps the transaction open.
+- [x] End the first morning with a ledger that explains one actual sale and what became of the unsold stock. A fresh profile can reach the next evening using only cues inside the game.
 
 ## November 30–December 6 · A reason to plan tomorrow
 

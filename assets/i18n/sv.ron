@@ -245,6 +245,13 @@
     "night.put_back": "Lägg tillbaka allt",
     "register.no_change": "Ingen passande växel",
     "register.no_change_hint": "Kassan kan inte ge tillbaka exakt {due}. Be spöket om mindre mynt.",
+    "register.ask_smaller": "Be om mindre mynt",
+    "register.change_tray": "På växelbrickan · {total}",
+    "register.return_one": "{coin} ×{count} · lägg tillbaka ett mynt",
+    "register.undo_hint": "Högerklicka på ett mynt för att lägga tillbaka ett.",
+    "register.change_short": "För lite växel. Lägg till ett mynt och försök igen.",
+    "register.change_over": "För mycket växel. Lägg tillbaka ett mynt och försök igen.",
+    "register.give_anyway": "Lämna över beloppet ändå",
     "night.give_fare": "Ge honom ett mynt ur kassan ({coin})",
     "night.fare_empty": "Din kassa är tom – det finns inget mynt att ge.",
     "night.hand_over": "Lämna över",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nätter tills den äldsta bleknar: {nights}",
-    "shelf.tip_evening": "Klick: ta ner den från hyllan",
+    "shelf.tip_evening": "Högerklicka för att ta ner varan från hyllan. Den finns kvar i lagret.",
     "shelf.tip_night": "Klick: ge den till spöket vid disken",
     "shelf.tip_no_ghost": "Inget spöke väntar vid disken.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Till marknaden",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} såldes för {price}. Kunden betalade {paid} och fick {given} i växel. Alla belopp anges i knappar.",
+    "accounts.no_first_sale": "Inget såldes i natt.",
+    "accounts.stock_kept": "Kvar i lager till nästa kväll: {items}.",
+    "accounts.stock_empty": "Inga varor finns kvar till nästa kväll.",
+    "accounts.first_market": "Besök bymarknaden och gå sedan tillbaka till butiken inför nästa kväll. Du kan också bara se dig omkring på marknaden.",
+
     "accounts.title": "Gryning – Räkenskaper för natt {night}",
     "accounts.cash": "Kassa",
     "accounts.opening": "I kassan vid dagens början",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Liemannen lägger ett gott ord för dig. Från och med nu kommer färjkarlen med två lådor till varje kväll.",
     "upgrade.apprentice.name": "En lärling",
     "upgrade.apprentice.text": "Ett litet hjälpspöke bakom disken. Under livliga nätter tar det emot upp till tre kunder i kön som kommer med en vara från hyllorna, och tar exakt priset, så ingen växel behövs.",
+
+    "guide_title": "Första försäljningen med Hedda",
+    "guide_buy": "Gå till hamnen och köp en låda från färjkarlens båt. Välj en vara du tycker om.",
+    "guide_shelf": "Tillbaka i butiken väljer du en vara under ”Ställ varor på hyllorna”. Klicka sedan på en hylla för att ställa ut den.",
+    "guide_open": "Din hylla är klar. Öppna butiken när du vill ta emot din första kund.",
+    "guide_wish": "Din första kund väntar gärna. Läs önskemålet vid disken och välj rätt vara på hyllan eller i listan.",
+    "guide_change": "Jämför betalningen med priset. Räkna upp växeln och lämna över den. Du kan lägga tillbaka mynt och försöka igen.",
+    "guide_skip": "Hoppa över guiden",
+    "guide_resume": "Fortsätt guiden",
+    "guide_retry": "Kunden väntar fortfarande. Läs önskemålet och försök med en annan vara.",
 
     // Tips during the first night.
     "tip.order": "Varje kväll kommer färjkarlen med upp till {count} lådor. Gå ut genom dörren till hamnen och klicka på en låda i hans båt för att köpa den – du betalar ur kassan.",

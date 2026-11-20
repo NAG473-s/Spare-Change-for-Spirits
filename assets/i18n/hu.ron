@@ -245,6 +245,13 @@
     "night.put_back": "Mindet vissza",
     "register.no_change": "Nincs megfelelő apró",
     "register.no_change_hint": "A kasszából nem lehet pontosan visszaadni: {due}. Kérj a szellemtől kisebb érméket.",
+    "register.ask_smaller": "Kérj kisebb érméket",
+    "register.change_tray": "Visszajáró a tálcán · {total}",
+    "register.return_one": "{coin} ×{count} · tegyél vissza egyet",
+    "register.undo_hint": "Kattints jobb gombbal egy érmére, hogy egyet visszategyél a kasszába.",
+    "register.change_short": "Kevés a visszajáró. Tegyél még egy érmét a tálcára, és próbáld újra.",
+    "register.change_over": "Sok a visszajáró. Tegyél vissza egy érmét a kasszába, és próbáld újra.",
+    "register.give_anyway": "Mégis ezt az összeget add át",
     "night.give_fare": "Adj neki egy érmét a kasszából ({coin})",
     "night.fare_empty": "Üres a kasszád – nincs érme, amit odaadhatnál.",
     "night.hand_over": "Átadás",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Éjszakák a legrégebbi megfakulásáig: {nights}",
-    "shelf.tip_evening": "Kattintás: levétel a polcról",
+    "shelf.tip_evening": "Jobb kattintással leveheted az árut a polcról. A készletben marad.",
     "shelf.tip_night": "Kattintás: odaadás a pultnál álló szellemnek",
     "shelf.tip_no_ghost": "Egy szellem sem vár a pultnál.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "A piacra",
 
     // Accounts at dawn
+    "accounts.first_sale": "Eladott áru: {item}. Ár: {price}. A vevő ennyit fizetett: {paid}. A visszajáró {given} volt. Minden összeg gombban értendő.",
+    "accounts.no_first_sale": "Az elmúlt éjjel egyetlen eladás sem zárult le.",
+    "accounts.stock_kept": "Készleten maradt a következő estére: {items}.",
+    "accounts.stock_empty": "Nem maradt áru a következő estére.",
+    "accounts.first_market": "Látogass el a falusi piacra, majd estére térj vissza a boltba. A piacon csak akkor vásárolj, ha szeretnél.",
+
     "accounts.title": "Hajnal – elszámolás, {night}. éjszaka",
     "accounts.cash": "Kassza",
     "accounts.opening": "A kasszában a nap elején",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Kaszás úr jó szót szól az érdekedben. Mostantól a révész minden este két ládával többet hoz.",
     "upgrade.apprentice.name": "Egy inas",
     "upgrade.apprentice.text": "Egy kis segítő szellem a pult mögött. Forgalmas éjszakákon a sorban álló vendégek közül legfeljebb hármat kiszolgál, akik egy terméket hoznak a polcokról, és pontosan az árat veszi el, így nem kell visszajáró.",
+
+    "guide_title": "Hedda első eladása",
+    "guide_buy": "Menj a kikötőbe, és vegyél egy láda árut a kompról. Olyat válassz, amilyet szeretnél.",
+    "guide_shelf": "A boltba visszatérve válassz árut a „Pakold polcra a termékeket” résznél, majd kattints a polcra, ahová ki szeretnéd tenni.",
+    "guide_open": "A polcod készen áll. Ha szeretnéd fogadni az első vevődet, nyisd ki a boltot.",
+    "guide_wish": "Az első vevőd megvár. Olvasd el a kívánságát a pultnál, majd válaszd ki a megfelelő árut a polcról vagy a listából.",
+    "guide_change": "Hasonlítsd össze a kapott összeget az árral. Számold ki a visszajárót, majd add át. Az érméket visszateheted a kasszába, és újrapróbálhatod.",
+    "guide_skip": "Útmutató kihagyása",
+    "guide_resume": "Útmutató folytatása",
+    "guide_retry": "A vevő még vár. Olvasd el a kívánságát, és próbálkozz másik áruval.",
 
     // Tips during the first night.
     "tip.order": "A révész minden este legfeljebb {count} ládát hoz. Menj ki az ajtón a kikötőbe, és kattints egy ládára a csónakjában, hogy megvedd – a kasszából fizetsz.",

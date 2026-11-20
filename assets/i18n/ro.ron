@@ -245,6 +245,13 @@
     "night.put_back": "Pune totul înapoi",
     "register.no_change": "Nu am rest potrivit",
     "register.no_change_hint": "Din sertar nu poți da înapoi exact {due}. Cere-i fantomei monede mai mici.",
+    "register.ask_smaller": "Cere monede mai mici",
+    "register.change_tray": "Tăvița pentru rest · {total}",
+    "register.return_one": "{coin} ×{count} · pune o monedă înapoi",
+    "register.undo_hint": "Dă clic dreapta pe o monedă pentru a pune una înapoi în sertar.",
+    "register.change_short": "Restul e prea mic. Mai adaugă o monedă și încearcă din nou.",
+    "register.change_over": "Restul e prea mare. Pune o monedă înapoi și încearcă din nou.",
+    "register.give_anyway": "Dă totuși această sumă",
     "night.give_fare": "Dă-i o monedă din sertar ({coin})",
     "night.fare_empty": "Sertarul tău e gol – nu ai nicio monedă de dat.",
     "night.hand_over": "Înmânează",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nopți până se decolorează cel mai vechi: {nights}",
-    "shelf.tip_evening": "Clic: ia-l de pe raft",
+    "shelf.tip_evening": "Dă clic dreapta pentru a lua marfa de pe raft. Rămâne în stoc.",
     "shelf.tip_night": "Clic: dă-l fantomei de la tejghea",
     "shelf.tip_no_ghost": "Nicio fantomă nu așteaptă la tejghea.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Spre târg",
 
     // Accounts at dawn
+    "accounts.first_sale": "Vânzare: {item} la prețul de {price}. Clientul a plătit {paid} și a primit {given} rest. Toate sumele sunt în nasturi.",
+    "accounts.no_first_sale": "Azi-noapte nu s-a încheiat nicio vânzare.",
+    "accounts.stock_kept": "În stoc pentru seara următoare: {items}.",
+    "accounts.stock_empty": "Nu a rămas nicio marfă în stoc pentru seara următoare.",
+    "accounts.first_market": "Vizitează târgul din sat, apoi întoarce-te la prăvălie pentru seara următoare. Cumpără ceva la târg doar dacă vrei.",
+
     "accounts.title": "Zori – socotelile nopții {night}",
     "accounts.cash": "Sertarul casei",
     "accounts.opening": "În sertar la începutul zilei",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Cel cu Coasa pune o vorbă bună pentru tine. De acum, luntrașul aduce în fiecare seară încă două lăzi.",
     "upgrade.apprentice.name": "Un ucenic",
     "upgrade.apprentice.text": "O mică fantomă ajutătoare în spatele tejghelei. În nopțile aglomerate servește până la trei clienți de la coadă care aduc un produs de pe rafturi și ia exact prețul, așa că nu e nevoie de rest.",
+
+    "guide_title": "Prima vânzare a Heddei",
+    "guide_buy": "Mergi în port și cumpără o ladă de pe feribot. Alege ce marfă îți place.",
+    "guide_shelf": "Înapoi în prăvălie, alege un produs din secțiunea „Pune produsele pe rafturi”, apoi apasă pe raftul pe care vrei să-l expui.",
+    "guide_open": "Raftul e pregătit. Deschide prăvălia când vrei să-ți întâmpini primul client.",
+    "guide_wish": "Primul client te va aștepta. Citește-i dorința la tejghea, apoi alege produsul potrivit de pe raft sau din listă.",
+    "guide_change": "Compară suma plătită cu prețul. Numără restul, apoi dă-l clientului. Poți să pui monedele înapoi și să încerci din nou.",
+    "guide_skip": "Sari peste ghid",
+    "guide_resume": "Reia ghidul",
+    "guide_retry": "Clientul încă așteaptă. Citește-i dorința și încearcă alt produs.",
 
     // Tips during the first night.
     "tip.order": "În fiecare seară, luntrașul aduce până la {count} lăzi. Ieși pe ușă în port și apasă pe o ladă din barca lui ca s-o cumperi – plătești din sertarul casei.",

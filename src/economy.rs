@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::i18n::Lang;
 use crate::rng::Rng;
 
-#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Coin {
     Button,
     Candle,

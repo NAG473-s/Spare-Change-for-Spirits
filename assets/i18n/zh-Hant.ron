@@ -245,6 +245,13 @@
     "night.put_back": "全部放回",
     "register.no_change": "沒有合適的零錢",
     "register.no_change_hint": "錢箱湊不出剛好{due}的找錢。請幽靈改用小面額的錢付款吧。",
+    "register.ask_smaller": "請客人改用小面額的錢",
+    "register.change_tray": "你的找零盤 · {total}",
+    "register.return_one": "{coin} ×{count} · 放回一枚",
+    "register.undo_hint": "右鍵點選一種錢幣，放回一枚。",
+    "register.change_short": "找的錢少了。再加一枚錢幣試試。",
+    "register.change_over": "找的錢多了。放回一枚錢幣再試試。",
+    "register.give_anyway": "仍照這個金額找錢",
     "night.give_fare": "從錢箱裡拿一枚錢幣給他（{coin}）",
     "night.fare_empty": "錢箱空空如也 – 沒有錢幣可以給他。",
     "night.hand_over": "交給客人",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "距最舊商品褪色（夜）：{nights}",
-    "shelf.tip_evening": "點選：從貨架上取下",
+    "shelf.tip_evening": "按右鍵可將這件貨物從貨架取下。它仍會留在庫存中。",
     "shelf.tip_night": "點選：交給櫃檯前的幽靈",
     "shelf.tip_no_ghost": "櫃檯前沒有等候的幽靈。",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "通往市集",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item}賣了{price}。客人付了{paid}，拿回了{given}的找零。金額都以鈕扣計算。",
+    "accounts.no_first_sale": "昨晚沒有完成交易。",
+    "accounts.stock_kept": "留到下個傍晚的庫存：{items}。",
+    "accounts.stock_empty": "沒有剩下的商品能留到下個傍晚。",
+    "accounts.first_market": "先去村裡的市集逛逛，再回店裡準備迎接下一個傍晚。不買東西也可以。",
+
     "accounts.title": "破曉 – 第{night}夜帳目",
     "accounts.cash": "錢箱",
     "accounts.opening": "一天開始時的錢箱",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "死神替你美言了幾句。從今以後，擺渡人每天傍晚會多送來兩個貨箱。",
     "upgrade.apprentice.name": "小學徒",
     "upgrade.apprentice.text": "櫃檯後的一個小幫手幽靈。忙碌的夜裡，它會接待排隊等候、已從貨架上拿好商品的客人，最多三位，而且只收剛好的價錢，不用找零。",
+
+    "guide_title": "赫達的第一筆生意",
+    "guide_buy": "去碼頭，從擺渡人的船上買一箱貨。挑你喜歡的商品就好。",
+    "guide_shelf": "回到店裡，在「將商品上架」下選一件商品，再點一下貨架把它擺上去。",
+    "guide_open": "貨架準備好了。準備好迎接第一位客人時，就開門營業吧。",
+    "guide_wish": "第一位客人會等你。在櫃檯讀一讀它的心願，再從貨架或清單裡挑出對應的商品。",
+    "guide_change": "對照價格看看客人付了多少。數好要找的錢，再交給客人。你可以把錢幣放回去重新數。",
+    "guide_skip": "略過教學",
+    "guide_resume": "繼續教學",
+    "guide_retry": "客人還在等你。再讀一讀它的心願，試試另一件商品。",
 
     // Tips during the first night.
     "tip.order": "每天傍晚，擺渡人最多會送來{count}箱貨。從門出去到碼頭，點選他船上的貨箱就能買下 – 貨款從錢箱裡付。",

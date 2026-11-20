@@ -245,6 +245,13 @@
     "night.put_back": "Alles terugleggen",
     "register.no_change": "Geen passend wisselgeld",
     "register.no_change_hint": "De kassa kan niet precies {due} teruggeven. Vraag de geest om kleinere munten.",
+    "register.ask_smaller": "Om kleinere munten vragen",
+    "register.change_tray": "Op het wisselgeldschaaltje · {total}",
+    "register.return_one": "{coin} ×{count} · leg er één terug",
+    "register.undo_hint": "Klik met rechts op een munt om er één terug te leggen.",
+    "register.change_short": "Te weinig wisselgeld. Leg er nog een munt bij en probeer het opnieuw.",
+    "register.change_over": "Te veel wisselgeld. Leg een munt terug en probeer het opnieuw.",
+    "register.give_anyway": "Dit bedrag toch geven",
     "night.give_fare": "Geef hem een munt uit de kassa ({coin})",
     "night.fare_empty": "Je kassa is leeg – er is geen munt om te geven.",
     "night.hand_over": "Overhandigen",
@@ -355,7 +362,7 @@
 
     // Products on the shelves (hover one)
     "shelf.tip_fades": "Nachten tot het oudste vervaagt: {nights}",
-    "shelf.tip_evening": "Klik: van de plank halen",
+    "shelf.tip_evening": "Klik met rechts om dit artikel van de plank te halen. Het blijft op voorraad.",
     "shelf.tip_night": "Klik: aan de geest bij de toonbank geven",
     "shelf.tip_no_ghost": "Er wacht geen geest bij de toonbank.",
 
@@ -368,6 +375,12 @@
     "shop.to_market": "Naar de markt",
 
     // Accounts at dawn
+    "accounts.first_sale": "{item} ging voor {price} over de toonbank. De klant betaalde {paid} en kreeg {given} terug. Alle bedragen zijn in knopen.",
+    "accounts.no_first_sale": "Vannacht is er niets verkocht.",
+    "accounts.stock_kept": "Nog op voorraad voor de volgende avond: {items}.",
+    "accounts.stock_empty": "Er zijn geen waren meer voor de volgende avond.",
+    "accounts.first_market": "Ga naar de dorpsmarkt en keer voor de volgende avond terug naar de winkel. Je kunt ook gewoon rondkijken op de markt.",
+
     "accounts.title": "Dageraad – Kasboek van nacht {night}",
     "accounts.cash": "Kassa",
     "accounts.opening": "In de kassa aan het begin van de dag",
@@ -774,6 +787,16 @@
     "upgrade.ferry_contract.text": "Magere Hein legt een goed woordje voor je in. Voortaan brengt de veerman elke avond twee kratten extra.",
     "upgrade.apprentice.name": "Een leerling",
     "upgrade.apprentice.text": "Een klein hulpgeestje achter de toonbank. Op drukke nachten helpt het tot drie klanten in de rij die een waar van de planken brengen, en rekent het precies de prijs af, dus er hoeft geen wisselgeld terug.",
+
+    "guide_title": "De eerste verkoop met Hedda",
+    "guide_buy": "Ga naar de haven en koop een kist van de veerman. Kies iets wat je graag wilt verkopen.",
+    "guide_shelf": "Kies in de winkel een artikel onder ‘Producten op planken zetten’ en klik op een plank om het uit te stallen.",
+    "guide_open": "Je plank is klaar. Open de winkel als je je eerste klant wilt ontvangen.",
+    "guide_wish": "Je eerste klant wacht rustig. Lees de wens bij de toonbank en kies het juiste artikel op de plank of in de lijst.",
+    "guide_change": "Vergelijk het betaalde bedrag met de prijs. Tel het wisselgeld uit en geef het aan de klant. Je kunt munten terugleggen en het opnieuw proberen.",
+    "guide_skip": "Uitleg overslaan",
+    "guide_resume": "Uitleg hervatten",
+    "guide_retry": "De klant wacht nog. Lees de wens en probeer een ander artikel.",
 
     // Tips during the first night.
     "tip.order": "Elke avond brengt de veerman maximaal {count} kratten. Ga door de deur naar buiten, naar de haven, en klik op een krat in zijn boot om hem te kopen – je betaalt uit de kassa.",

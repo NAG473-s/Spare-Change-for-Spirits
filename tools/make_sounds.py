@@ -104,6 +104,31 @@ def coins():
     return normalise(reverb(out, 0.15), 0.45)
 
 
+def coin_button():
+    """A small brass button bounces twice on the wooden counter."""
+    out = np.zeros(int(0.15 * SR))
+    partials = [(1.0, 1.0, 0.012), (2.6, 0.44, 0.009), (4.1, 0.22, 0.005)]
+    place(out, tone(1040, 0.09, partials, attack=0.0008), 0)
+    place(out, 0.45 * tone(1230, 0.08, partials, attack=0.001), 0.052)
+    return normalise(out, 0.45)
+
+
+def coin_candle():
+    """A wax stub lands with a soft thud and slides a little."""
+    t = t_axis(0.19)
+    out = tone(190, 0.19, [(1.0, 1.0, 0.028), (2.4, 0.32, 0.012)], attack=0.003)
+    grain = np.random.default_rng(43).standard_normal(len(t))
+    slide = normalise(bandpass_fft(grain, 280, 1150), 1.0)
+    out += 0.27 * slide * np.sin(np.pi * t / 0.19) ** 2
+    return normalise(out, 0.44)
+
+
+def coin_spoon():
+    """Silver rings after its bowl strikes the edge of the tray."""
+    partials = [(1.0, 1.0, 0.13), (2.37, 0.40, 0.067), (3.84, 0.19, 0.031)]
+    return normalise(tone(1810, 0.55, partials, attack=0.001), 0.33)
+
+
 def chime():
     out = np.zeros(int(3.0 * SR))
     for i, note in enumerate((76, 80, 83, 88)):  # E major arpeggio
@@ -411,6 +436,9 @@ def night_ambience_spring():
 SOUNDS = {
     "bell": bell,
     "coins": coins,
+    "coin_button": coin_button,
+    "coin_candle": coin_candle,
+    "coin_spoon": coin_spoon,
     "chime": chime,
     "midnight": midnight,
     "crash": crash,

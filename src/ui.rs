@@ -115,6 +115,7 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<Drawer>)
                                 .or_else(resource_changed::<UiFont>)
                                 .or_else(resource_changed::<crate::save::Settings>)
+                                .or_else(resource_changed::<Progress>)
                                 .or_else(ghost_state_changed),
                         ),
                     ),
@@ -143,6 +144,9 @@ pub enum Action {
     OpenAchievements,
     /// The ghost book (pauses the game).
     OpenBook,
+    OpenGuide,
+    SkipGuide,
+    ResumeGuide,
     /// Put a ware in the shop window, or empty it.
     Showcase(Option<String>),
     /// List a trader's wares in the side panel (`None`: all traders).
@@ -159,8 +163,10 @@ pub enum Action {
     /// Inspect (and reject, if fake) the paid coin with this index.
     CheckCoin(usize),
     AddChange(Coin),
+    RemoveChange(Coin),
     ResetChange,
     GiveChange,
+    GiveChangeAnyway,
     KeepSecondPayment,
     RefuseSecondPayment,
     NextEvening,
@@ -311,8 +317,8 @@ impl ButtonTone {
 pub struct Icons {
     products: HashMap<String, Handle<Image>>,
     decor: HashMap<String, Handle<Image>>,
-    /// `sprites/coins/<coin>.png`, in the order of `Coin::ASCENDING`.
-    coins: Vec<Option<Handle<Image>>>,
+    /// Painted currency if installed, otherwise a recognisable silhouette.
+    coins: HashMap<Coin, Handle<Image>>,
 }
 
 impl Icons {
@@ -325,8 +331,7 @@ impl Icons {
     }
 
     pub fn coin(&self, coin: Coin) -> Option<Handle<Image>> {
-        let i = Coin::ASCENDING.iter().position(|c| *c == coin)?;
-        self.coins.get(i).cloned().flatten()
+        self.coins.get(&coin).cloned()
     }
 }
 
@@ -335,7 +340,7 @@ impl FromWorld for Icons {
         let data = world.resource::<GameData>();
         let product_ids: Vec<String> = data.products.iter().map(|p| p.id.clone()).collect();
         let decor_ids: Vec<String> = data.decor.iter().map(|d| d.id.clone()).collect();
-        let assets = world.resource::<AssetServer>();
+        let assets = world.resource::<AssetServer>().clone();
         let load = |folder: &str, ids: Vec<String>| {
             ids.into_iter()
                 .filter_map(|id| {
@@ -345,10 +350,17 @@ impl FromWorld for Icons {
                 .collect()
         };
         let coins = Coin::ASCENDING
-            .iter()
+            .into_iter()
             .map(|c| {
                 let path = format!("sprites/coins/{}.png", c.id());
-                asset_exists(&path).then(|| assets.load(path))
+                let image = if asset_exists(&path) {
+                    assets.load(path)
+                } else {
+                    world
+                        .resource_mut::<Assets<Image>>()
+                        .add(coin_silhouette(c))
+                };
+                (c, image)
             })
             .collect();
         Self {
@@ -357,6 +369,49 @@ impl FromWorld for Icons {
             coins,
         }
     }
+}
+
+/// A four-hole button, a squat candle with a wick, and a spoon with a long handle.
+fn coin_silhouette(coin: Coin) -> Image {
+    use bevy::asset::RenderAssetUsages;
+    use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
+
+    const SIDE: u32 = 32;
+    let mut pixels = Vec::with_capacity((SIDE * SIDE * 4) as usize);
+    for y in 0..SIDE {
+        for x in 0..SIDE {
+            let p = Vec2::new(x as f32 + 0.5, y as f32 + 0.5) - Vec2::splat(SIDE as f32 / 2.);
+            let filled = match coin {
+                Coin::Button => {
+                    p.length_squared() <= 13.0_f32.powi(2)
+                        && (p.abs() - Vec2::splat(4.)).length_squared() > 2.5_f32.powi(2)
+                }
+                Coin::Candle => {
+                    (p.x.abs() <= 8. && (-5. ..=12.).contains(&p.y))
+                        || (p.x.abs() <= 1.5 && (-12. ..-5.).contains(&p.y))
+                }
+                Coin::Spoon => {
+                    // Bowl and handle share a diagonal centre line.
+                    let along = (p.x + p.y) * std::f32::consts::FRAC_1_SQRT_2;
+                    let across = (p.x - p.y) * std::f32::consts::FRAC_1_SQRT_2;
+                    ((along + 8.) / 7.).powi(2) + (across / 4.5).powi(2) <= 1.
+                        || ((-3. ..=15.).contains(&along) && across.abs() <= 1.7)
+                }
+            };
+            pixels.extend_from_slice(&[244, 221, 179, if filled { 255 } else { 0 }]);
+        }
+    }
+    Image::new(
+        Extent3d {
+            width: SIDE,
+            height: SIDE,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        pixels,
+        TextureFormat::Rgba8UnormSrgb,
+        RenderAssetUsages::RENDER_WORLD,
+    )
 }
 
 /// Fonts for the current language: Inter first, then the language's own
@@ -752,7 +807,12 @@ fn on_activate(
 ) {
     if let Ok(button) = buttons.get(activate.entity) {
         writer.write(button.0.clone());
-        cues.write(Cue::Click);
+        if !matches!(
+            button.0,
+            Action::CheckCoin(_) | Action::AddChange(_) | Action::RemoveChange(_)
+        ) {
+            cues.write(Cue::Click);
+        }
     }
 }
 
@@ -1135,6 +1195,18 @@ fn build_evening_panel(
 
     if *location == Location::Harbor {
         ui.heading(&lang.t("harbor.title"));
+        if progress.guiding_first_sale() {
+            crate::guide::prompt(&mut ui, &lang, crate::guide::evening_step(&layout, &stock));
+            if crate::guide::evening_step(&layout, &stock) != "guide_buy" {
+                ui.button_in(
+                    ui.root(),
+                    &lang.t("harbor.back"),
+                    Action::BackToShop,
+                    false,
+                    true,
+                );
+            }
+        }
         ui.dim(&lang.t("harbor.intro"));
         ui.section(&lang.f(
             "evening.ferryman",
@@ -1169,6 +1241,47 @@ fn build_evening_panel(
     }
 
     ui.heading(&lang.t("evening.title"));
+    if progress.guiding_first_sale() {
+        let step = crate::guide::evening_step(&layout, &stock);
+        crate::guide::prompt(&mut ui, &lang, step);
+        match step {
+            "guide_buy" => {
+                ui.button_in(
+                    ui.root(),
+                    &lang.t("harbor.go"),
+                    Action::GoToHarbor,
+                    false,
+                    true,
+                );
+            }
+            "guide_shelf" => {
+                let row = ui.row();
+                for (ware, units) in stock.units().iter().filter(|(_, units)| !units.is_empty()) {
+                    let label = lang.f(
+                        "evening.stock_button",
+                        &[("item", &lang.product(ware)), ("count", &units.len())],
+                    );
+                    ui.icon_button_in(
+                        row,
+                        icons.product(ware),
+                        &label,
+                        Action::ToolStock(ware.clone()),
+                        *tool == Tool::Stock(ware.clone()),
+                        true,
+                    );
+                }
+            }
+            _ => {
+                ui.button_in(
+                    ui.root(),
+                    &lang.t("evening.open"),
+                    Action::StartNight,
+                    false,
+                    true,
+                );
+            }
+        }
+    }
 
     // Hedda's letters: the first waits on the first evening, the others
     // turn up behind the junk her improvements clear.
@@ -1572,12 +1685,14 @@ fn workbench_section(
 /// front and its state, and the length of the line while nobody waits.
 #[derive(PartialEq)]
 struct NightPanelShows {
+    guiding: bool,
     front: Option<(Entity, GhostState)>,
     line: usize,
     /// Keep the actual coins and whether the drawer can make change: a
     /// replacement payment can have the same number of coins as the first.
     /// Counting change alone leaves these controls in place.
     sale: Option<(Entity, Vec<crate::register::PaidCoin>, bool)>,
+    recount: bool,
     question: bool,
 }
 
@@ -1585,18 +1700,70 @@ struct NightPanelShows {
 #[derive(Component)]
 struct CountedLine;
 
-/// A button that adds one coin of this kind to the change.
+/// Drawer buttons add a coin. A stack in the change tray puts one back.
+#[derive(Component, Clone, Copy)]
+enum ChangeCoin {
+    Drawer(Coin),
+    Tray(Coin),
+}
+
 #[derive(Component)]
-struct ChangeCoin(Coin);
+struct CoinPointerTarget(Coin);
+
+fn on_change_coin_click(
+    mut click: On<PointerClick>,
+    targets: Query<(&ChildOf, &CoinPointerTarget)>,
+    controls: Query<Has<InteractionDisabled>, With<ActionButton>>,
+    mut actions: MessageWriter<Action>,
+    mut commands: Commands,
+) {
+    click.propagate(false);
+    let Ok((parent, CoinPointerTarget(coin))) = targets.get(click.entity) else {
+        return;
+    };
+    let button = parent.parent();
+    let Ok(disabled) = controls.get(button) else {
+        return;
+    };
+    match click.button {
+        PointerButton::Primary if !disabled => commands.trigger(Activate { entity: button }),
+        PointerButton::Secondary => {
+            // Even an empty drawer slot can take back a coin already on the tray.
+            actions.write(Action::RemoveChange(*coin));
+        }
+        _ => {}
+    }
+}
+
+impl ChangeCoin {
+    fn label(self, lang: &Lang, drawer: &Drawer, sale: &crate::register::Sale) -> (String, bool) {
+        match self {
+            Self::Drawer(coin) => {
+                let left = drawer.get(coin).saturating_sub(sale.given.get(coin));
+                let label = lang.f(
+                    "night.add_coin",
+                    &[
+                        ("coin", &coin.name(lang)),
+                        ("value", &coin.value()),
+                        ("left", &left),
+                    ],
+                );
+                (label, left > 0)
+            }
+            Self::Tray(coin) => {
+                let count = sale.given.get(coin);
+                let label = lang.f(
+                    "register.return_one",
+                    &[("coin", &coin.name(lang)), ("count", &count)],
+                );
+                (label, count > 0)
+            }
+        }
+    }
+}
 
 fn counted_line(lang: &Lang, sale: &crate::register::Sale) -> String {
-    lang.f(
-        "night.counted",
-        &[
-            ("coins", &sale.given.describe(lang)),
-            ("total", &sale.given.total()),
-        ],
-    )
+    lang.f("register.change_tray", &[("total", &sale.given.total())])
 }
 
 /// While change is counted: the counted line and what is left of each coin.
@@ -1606,7 +1773,7 @@ fn refresh_change(
     lang: Res<Lang>,
     mut commands: Commands,
     mut lines: Query<&mut Text, With<CountedLine>>,
-    buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered)>,
+    mut buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered, &mut Node)>,
     mut texts: Query<&mut Text, Without<CountedLine>>,
     mut colors: Query<&mut TextColor>,
     mut images: Query<&mut ImageNode>,
@@ -1620,17 +1787,15 @@ fn refresh_change(
             line.0 = want;
         }
     }
-    for (entity, ChangeCoin(coin), children, hovered) in &buttons {
-        let left = drawer.get(*coin) - sale.given.get(*coin);
-        let label = lang.f(
-            "night.add_coin",
-            &[
-                ("coin", &coin.name(&lang)),
-                ("value", &coin.value()),
-                ("left", &left),
-            ],
-        );
-        let enabled = left > 0;
+    for (entity, coin, children, hovered, mut node) in &mut buttons {
+        let (label, enabled) = coin.label(&lang, &drawer, sale);
+        if matches!(coin, ChangeCoin::Tray(_)) {
+            node.display = if enabled {
+                Display::Flex
+            } else {
+                Display::None
+            };
+        }
         let tone = ButtonTone::option(enabled, false);
         let (surface, trim) = tone.paint(hovered.get() && enabled);
         let mut button = commands.entity(entity);
@@ -1684,6 +1849,7 @@ fn build_night_panel(
         .and_then(|e| ghosts.get(e).ok().map(|g| (e, g.state)));
     let waiting = front.is_some_and(|(_, state)| state == GhostState::Waiting);
     let shows = NightPanelShows {
+        guiding: progress.guiding_first_sale(),
         front,
         line: if waiting { 0 } else { queue.0.len() },
         sale: register.sale.as_ref().map(|sale| {
@@ -1693,9 +1859,13 @@ fn build_night_panel(
                 drawer.can_give(sale.change_due()),
             )
         }),
+        recount: register.sale.as_ref().is_some_and(|s| s.recount),
         question: register.question.is_some(),
     };
-    let forced = (waiting && (stock.is_changed() || drawer.is_changed()))
+    let forced = (shown
+        .as_ref()
+        .is_some_and(|old| old.guiding != shows.guiding))
+        || (waiting && (stock.is_changed() || drawer.is_changed()))
         || font.is_changed()
         || settings.is_changed()
         || phase.is_changed();
@@ -1705,10 +1875,18 @@ fn build_night_panel(
     *shown = Some(shows);
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
     ui.heading(&lang.t("night.title"));
+    if progress.guiding_first_sale() {
+        crate::guide::prompt(
+            &mut ui,
+            &lang,
+            if register.sale.is_some() {
+                "guide_change"
+            } else {
+                "guide_wish"
+            },
+        );
+    }
 
-    // Marked after building: the counted line and the change buttons are
-    // updated in place while change is counted (`refresh_change`).
-    let mut commands_later: Vec<(Entity, Option<Coin>)> = Vec::new();
     if let Some(sale) = &register.sale {
         ui.section(&lang.t("night.register"));
         ui.text(&lang.f("night.item", &[("item", &lang.product(&sale.product))]));
@@ -1725,7 +1903,7 @@ fn build_night_panel(
                 "night.coin_chip",
                 &[("coin", &c.coin.name(&lang)), ("tell", &lang.t(&c.tell))],
             );
-            ui.icon_button_in(
+            let button = ui.icon_button_in(
                 row,
                 icons.coin(c.coin),
                 &label,
@@ -1733,32 +1911,34 @@ fn build_night_panel(
                 false,
                 !c.checked,
             );
+            ui.coin_pointer_target(button, c.coin);
         }
         if settings.change_hint {
             ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
         }
         let counted = ui.text(&counted_line(&lang, sale));
-        commands_later.push((counted, None));
-        let row = ui.row();
-        for coin in Coin::ASCENDING {
-            let left = drawer.get(coin) - sale.given.get(coin);
-            let label = lang.f(
-                "night.add_coin",
-                &[
-                    ("coin", &coin.name(&lang)),
-                    ("value", &coin.value()),
-                    ("left", &left),
-                ],
-            );
-            let button = ui.icon_button_in(
-                row,
-                icons.coin(coin),
-                &label,
-                Action::AddChange(coin),
-                false,
-                left > 0,
-            );
-            commands_later.push((button, Some(coin)));
+        ui.commands.entity(counted).insert(CountedLine);
+        ui.dim(&lang.t("register.undo_hint"));
+        for tray in [true, false] {
+            let row = ui.row();
+            for coin in Coin::ASCENDING {
+                let (control, action) = if tray {
+                    (ChangeCoin::Tray(coin), Action::RemoveChange(coin))
+                } else {
+                    (ChangeCoin::Drawer(coin), Action::AddChange(coin))
+                };
+                let (label, enabled) = control.label(&lang, &drawer, sale);
+                let button =
+                    ui.icon_button_in(row, icons.coin(coin), &label, action, false, enabled);
+                let mut entity = ui.commands.entity(button);
+                entity.insert(control);
+                if tray && !enabled {
+                    entity
+                        .entry::<Node>()
+                        .and_modify(|mut node| node.display = Display::None);
+                }
+                ui.coin_pointer_target(button, coin);
+            }
         }
         let row = ui.row();
         ui.button_in(
@@ -1773,21 +1953,37 @@ fn build_night_panel(
         if !drawer.can_give(due) {
             ui.button_in(
                 row,
-                &lang.t("register.no_change"),
+                &lang.t("register.ask_smaller"),
                 Action::NoChange,
                 false,
                 true,
             );
-            ui.dim(&lang.f("register.no_change_hint", &[("due", &due)]));
+            if settings.change_hint {
+                ui.dim(&lang.f("register.no_change_hint", &[("due", &due)]));
+            }
         }
         ui.spacer();
-        ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
-        for (entity, coin) in commands_later {
-            match coin {
-                Some(coin) => commands.entity(entity).insert(ChangeCoin(coin)),
-                None => commands.entity(entity).insert(CountedLine),
+        if sale.recount {
+            // Keep the correction beside Hand over, even in a scrolled panel.
+            let key = if sale.given.total() < due {
+                "register.change_short"
+            } else {
+                "register.change_over"
             };
+            ui.add_text(ui.footer, &lang.t(key), true, 14.0, TEXT);
+            let guided_sale = ghosts.get(sale.ghost).is_ok_and(|g| g.first_customer)
+                && progress.guiding_first_sale();
+            if !guided_sale {
+                ui.button_in(
+                    ui.footer,
+                    &lang.t("register.give_anyway"),
+                    Action::GiveChangeAnyway,
+                    false,
+                    true,
+                );
+            }
         }
+        ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
         return;
     }
 
@@ -1908,7 +2104,9 @@ fn build_night_panel(
                     )],
                 ));
             }
-            ui.button_in(root, &lang.t("night.decline"), Action::Decline, false, true);
+            if !(ghost.first_customer && progress.guiding_first_sale()) {
+                ui.button_in(root, &lang.t("night.decline"), Action::Decline, false, true);
+            }
         }
         _ => {
             ui.dim(&lang.t("night.quiet"));
@@ -2304,6 +2502,25 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
         self.icon_button_in(parent, None, label, action, selected, enabled);
     }
 
+    // The standard widget turns any pointer button into Activate. Intercept
+    // clicks on its full surface (including the one-pixel border) first.
+    fn coin_pointer_target(&mut self, button: Entity, coin: Coin) {
+        self.commands
+            .spawn((
+                CoinPointerTarget(coin),
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: px(-1),
+                    right: px(-1),
+                    top: px(-1),
+                    bottom: px(-1),
+                    ..default()
+                },
+                ChildOf(button),
+            ))
+            .observe(on_change_coin_click);
+    }
+
     /// Like `button_in`, with a small picture in front of the label.
     pub(crate) fn icon_button_in(
         &mut self,
@@ -2441,5 +2658,208 @@ mod tests {
         let ids: Vec<String> = ["a", "b", "a", "a"].iter().map(|s| s.to_string()).collect();
         let lang = Lang::load("en");
         assert_eq!(count_list(&lang, &ids, |s| s.to_string()), "3× a, 1× b");
+    }
+
+    fn register_panel() -> App {
+        use crate::economy::Purse;
+        use crate::register::{PaidCoin, Sale};
+        use crate::save::Settings;
+
+        let mut app = App::new();
+        let body = app.world_mut().spawn_empty().id();
+        let footer = app.world_mut().spawn_empty().id();
+        let data = GameData::load();
+        app.add_plugins((
+            MinimalPlugins,
+            AssetPlugin::default(),
+            bevy::ui_widgets::ButtonPlugin,
+        ))
+        .add_message::<Action>()
+        .add_message::<Cue>()
+        .add_observer(on_activate)
+        .init_asset::<Font>()
+        .init_asset::<Image>()
+        .insert_resource(SidePanelParts { body, footer })
+        .insert_resource(State::new(Phase::Night))
+        .insert_resource(Progress::new(0))
+        .insert_resource(ShopLayout::new(
+            data.config.grid_cols,
+            data.config.grid_rows,
+        ))
+        .insert_resource(data)
+        .insert_resource(Lang::load("en"))
+        .init_resource::<UiFont>()
+        .init_resource::<Icons>()
+        .init_resource::<Stock>()
+        .init_resource::<Queue>()
+        .insert_resource(Drawer(Purse {
+            candles: 1,
+            ..default()
+        }))
+        .insert_resource(Settings {
+            change_hint: false,
+            ..default()
+        })
+        .insert_resource(Register {
+            sale: Some(Sale {
+                ghost: Entity::PLACEHOLDER,
+                product: "lavender".into(),
+                price: 4,
+                coins: vec![PaidCoin {
+                    coin: Coin::Candle,
+                    tell: "tell.genuine.1".into(),
+                    fake: false,
+                    checked: false,
+                }],
+                given: Purse::default(),
+                recount: false,
+                chapter: None,
+                from_storeroom: false,
+            }),
+            question: None,
+        })
+        .add_systems(Update, (build_night_panel, refresh_change).chain());
+        app.update();
+        app
+    }
+
+    #[test]
+    fn the_register_hides_the_due_amount_without_the_assist_and_updates_the_tray_in_place() {
+        use crate::save::Settings;
+        let mut app = register_panel();
+        let has_text = |world: &mut World, prefix: &str| {
+            world
+                .query::<&Text>()
+                .iter(world)
+                .any(|t| t.0.starts_with(prefix))
+        };
+        let world = app.world_mut();
+        assert!(has_text(world, "Ask for smaller coins"));
+        assert!(!has_text(world, "Change due"));
+        assert!(!has_text(world, "The drawer cannot give back exactly"));
+        world.resource_mut::<Settings>().change_hint = true;
+        app.update();
+        let world = app.world_mut();
+        assert!(has_text(world, "Change due: 1"));
+        assert!(has_text(world, "The drawer cannot give back exactly 1"));
+        let tray = world
+            .query::<(Entity, &ActionButton)>()
+            .iter(world)
+            .find(|(_, action)| action.0 == Action::RemoveChange(Coin::Candle))
+            .unwrap()
+            .0;
+        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::None);
+        world
+            .resource_mut::<Register>()
+            .sale
+            .as_mut()
+            .unwrap()
+            .given
+            .candles = 1;
+        app.update();
+        let world = app.world_mut();
+        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::Flex);
+        assert!(world.get::<InteractionDisabled>(tray).is_none());
+        assert!(has_text(world, "Your change tray · 5"));
+        assert!(
+            world
+                .get::<Children>(tray)
+                .unwrap()
+                .iter()
+                .any(|e| world.get::<ImageNode>(e).is_some())
+        );
+    }
+
+    #[test]
+    fn a_secondary_pointer_click_undoes_one_coin_without_activating_add() {
+        use bevy::camera::NormalizedRenderTarget;
+        use bevy::picking::{
+            backend::HitData,
+            events::Pointer,
+            pointer::{Location, PointerId},
+        };
+        use bevy::window::WindowRef;
+
+        let mut app = register_panel();
+        let world = app.world_mut();
+        let control = |world: &mut World, action: Action| {
+            let button = world
+                .query::<(Entity, &ActionButton)>()
+                .iter(world)
+                .find(|(_, a)| a.0 == action)
+                .unwrap()
+                .0;
+            let target = world
+                .get::<Children>(button)
+                .unwrap()
+                .iter()
+                .find(|e| world.get::<CoinPointerTarget>(*e).is_some())
+                .unwrap();
+            (button, target)
+        };
+        let (slot, drawer_target) = control(world, Action::AddChange(Coin::Candle));
+        let (_, offered_target) = control(world, Action::CheckCoin(0));
+        let window = world.spawn(Window::default()).id();
+        let click = |world: &mut World, target, button| {
+            let location = Location {
+                target: NormalizedRenderTarget::Window(
+                    WindowRef::Entity(window).normalize(Some(window)).unwrap(),
+                ),
+                position: Vec2::ZERO,
+            };
+            let pointer = Pointer::new(PointerId::Mouse, location);
+            let hit = HitData::new(window, 0., None, None);
+            world.trigger(PointerPress {
+                entity: target,
+                pointer: pointer.clone(),
+                button,
+                hit: hit.clone(),
+                count: 1,
+            });
+            world.flush();
+            world.trigger(PointerClick {
+                entity: target,
+                pointer: pointer.clone(),
+                button,
+                hit: hit.clone(),
+                duration: default(),
+                count: 1,
+            });
+            world.trigger(PointerRelease {
+                entity: target,
+                pointer,
+                button,
+                hit,
+            });
+            world.flush();
+            world
+                .resource_mut::<Messages<Action>>()
+                .drain()
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            click(world, drawer_target, PointerButton::Primary),
+            [Action::AddChange(Coin::Candle)]
+        );
+        assert_eq!(
+            click(world, drawer_target, PointerButton::Secondary),
+            [Action::RemoveChange(Coin::Candle)]
+        );
+        world.entity_mut(slot).insert(InteractionDisabled);
+        assert!(click(world, drawer_target, PointerButton::Primary).is_empty());
+        assert_eq!(
+            click(world, drawer_target, PointerButton::Secondary),
+            [Action::RemoveChange(Coin::Candle)]
+        );
+        assert!(click(world, drawer_target, PointerButton::Middle).is_empty());
+        // Right-clicking the customer's tender must not accuse it of paying with a fake.
+        assert_eq!(
+            click(world, offered_target, PointerButton::Secondary),
+            [Action::RemoveChange(Coin::Candle)]
+        );
+        assert_eq!(
+            click(world, offered_target, PointerButton::Primary),
+            [Action::CheckCoin(0)]
+        );
     }
 }

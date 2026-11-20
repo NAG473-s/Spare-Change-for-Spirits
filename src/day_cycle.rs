@@ -55,7 +55,8 @@ impl Plugin for DayCyclePlugin {
                 (
                     (tick_clock, close_at_dawn)
                         .chain()
-                        .run_if(in_state(Phase::Night)),
+                        .run_if(in_state(Phase::Night))
+                        .run_if(crate::story_film::outside_film),
                     next_evening.run_if(in_state(Phase::Morning)),
                     end_day.run_if(in_state(Phase::Day)),
                     keep_playing.run_if(in_state(Phase::DemoEnd)),
@@ -252,8 +253,19 @@ impl NightClock {
     }
 }
 
+/// A settled sale. Amounts are in buttons, using the final payment after
+/// any swap for smaller coins and the change actually handed over.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SaleReceipt {
+    pub product: String,
+    pub price: u32,
+    pub paid: u32,
+    pub given: u32,
+}
+
 /// Statistics of one night, shown in the morning.
-#[derive(Resource, Default)]
+#[derive(Resource, Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct NightReport {
     pub sales: u32,
     pub revenue: u32,
@@ -286,8 +298,7 @@ pub struct NightReport {
     pub keepsakes: Vec<String>,
     /// Ghosts that came in (or tried to) tonight.
     pub visitors: u32,
-    /// Product id of every unit sold tonight.
-    pub sold: Vec<String>,
+    pub receipts: Vec<SaleReceipt>,
     /// Change due minus change given, summed over all sales: positive when
     /// too little change was handed out (the drawer keeps it).
     pub change_kept: i64,
@@ -311,6 +322,19 @@ pub struct NightReport {
     pub wrong_item: u32,
 }
 
+impl NightReport {
+    pub fn record_sale(&mut self, product: &str, price: u32, paid: u32, given: u32) {
+        self.sales += 1;
+        self.revenue += price;
+        self.receipts.push(SaleReceipt {
+            product: product.to_owned(),
+            price,
+            paid,
+            given,
+        });
+    }
+}
+
 fn start_night(
     data: Res<GameData>,
     progress: Res<Progress>,
@@ -325,6 +349,15 @@ fn start_night(
         length: data.night_length(progress.calendar(&data))
             * market.night_length_factor(progress.night),
     };
+    if let Some(settled) = progress
+        .journal
+        .first_sale_checkpoint
+        .as_ref()
+        .and_then(|c| c.settled_report())
+    {
+        *report = settled.clone();
+        return;
+    }
     *report = NightReport {
         reputation_start: progress.reputation,
         ..default()
@@ -332,8 +365,10 @@ fn start_night(
     log.push(lang.t("log.midnight"));
 }
 
-fn tick_clock(time: Res<Time>, mut clock: ResMut<NightClock>) {
-    clock.elapsed += time.delta_secs();
+fn tick_clock(time: Res<Time>, progress: Res<Progress>, mut clock: ResMut<NightClock>) {
+    if !progress.guiding_first_sale() {
+        clock.elapsed += time.delta_secs();
+    }
 }
 
 /// At dawn all ghosts leave. Once the shop is empty, morning begins.
@@ -377,6 +412,14 @@ pub fn deliver_parcels(
     mut log: ResMut<GameLog>,
     lang: Res<Lang>,
 ) {
+    if progress
+        .journal
+        .first_sale_checkpoint
+        .as_ref()
+        .is_some_and(|c| c.settled_report().is_some())
+    {
+        return;
+    }
     for (i, story) in data.stories.iter().enumerate() {
         if !progress.story_due(&data, i) || progress.parcels.contains(&i) {
             continue;
@@ -471,6 +514,34 @@ fn end_day(mut actions: MessageReader<Action>, mut next: ResMut<NextState<Phase>
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_first_ledger_and_market_buttons_reach_the_second_evening() {
+        let mut app = App::new();
+        app.add_plugins(bevy::state::app::StatesPlugin)
+            .insert_state(Phase::Morning)
+            .add_message::<Action>()
+            .insert_resource(GameData::load())
+            .insert_resource(Progress::new(0))
+            .add_systems(
+                Update,
+                (
+                    next_evening.run_if(in_state(Phase::Morning)),
+                    end_day.run_if(in_state(Phase::Day)),
+                ),
+            );
+        app.update();
+        for (button, destination) in [
+            (Action::NextEvening, Phase::Day),
+            (Action::EndDay, Phase::Evening),
+        ] {
+            app.world_mut().write_message(button);
+            app.update();
+            app.update();
+            assert_eq!(*app.world().resource::<State<Phase>>().get(), destination);
+            assert_eq!(app.world().resource::<Progress>().night, 2);
+        }
+    }
 
     #[test]
     fn counterfeits_are_removed_only_if_still_in_drawer() {

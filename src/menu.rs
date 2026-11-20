@@ -45,9 +45,11 @@ impl Plugin for MenuPlugin {
                         ),
                     ),
                     main_menu_actions.run_if(in_state(Phase::Menu)),
-                    (toggle_pause, pause_actions).run_if(not(in_state(Phase::Menu))),
+                    (toggle_pause, pause_actions)
+                        .run_if(not(in_state(Phase::Menu)))
+                        .run_if(crate::story_film::outside_film),
                     toggle_tips,
-                    sync_pause.run_if(
+                    sync_pause.run_if(crate::story_film::outside_film).run_if(
                         resource_changed::<Paused>
                             .or_else(resource_changed::<SettingsMenu>)
                             .or_else(resource_changed::<SaveMenu>)
@@ -83,6 +85,7 @@ pub enum SaveMenu {
     Achievements,
     /// The ghost book (pause menu).
     Book,
+    FirstSale,
 }
 
 /// The game is paused and the pause menu is open.
@@ -273,7 +276,7 @@ fn build_main_menu(
             let all = crate::achievements::across_profiles();
             return crate::achievements::achievements_page(&mut ui, &lang, &data, &all);
         }
-        SaveMenu::Closed | SaveMenu::Save | SaveMenu::Book => {}
+        SaveMenu::Closed | SaveMenu::Save | SaveMenu::Book | SaveMenu::FirstSale => {}
     }
     ui.text(&lang.t("menu.tagline"));
     ui.rule();
@@ -355,6 +358,9 @@ fn main_menu_actions(
             Action::NewGameIn(p) | Action::ConfirmNewGame(p) => {
                 clear_profile(*p);
                 state.reset(&data);
+                if settings.tips {
+                    state.progress.journal.first_sale = crate::guide::FirstSale::Following;
+                }
                 profile.0 = *p;
                 log.clear();
                 *save_menu = SaveMenu::Closed;
@@ -406,6 +412,7 @@ fn describe_save(save: &SaveGame, lang: &Lang, demo_nights: u32) -> String {
     let state = match save.resume_at(demo_nights) {
         None => lang.t("save.state_finished"),
         Some((Phase::DemoEnd, _)) => lang.t("end.title_full"),
+        Some((Phase::Night, _)) => lang.t("guide_title"),
         Some((Phase::Day, night)) => lang.f("save.state_market", &[("night", &night)]),
         Some((_, night)) => lang.f("save.state_evening", &[("night", &night)]),
     };
@@ -472,7 +479,13 @@ fn new_game_page(ui: &mut PanelBuilder, lang: &Lang, demo_nights: u32) {
 }
 
 /// Pause menu: the manual slots of the running profile; a click saves.
-fn save_page(ui: &mut PanelBuilder, lang: &Lang, profile: u8, phase: Phase, demo_nights: u32) {
+fn save_page(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    profile: u8,
+    restarts_at_evening: bool,
+    demo_nights: u32,
+) {
     ui.heading(&lang.f("pause.save_title", &[("profile", &profile)]));
     let root = ui.root();
     for n in 1..=MANUAL_SLOTS {
@@ -489,7 +502,7 @@ fn save_page(ui: &mut PanelBuilder, lang: &Lang, profile: u8, phase: Phase, demo
         };
         ui.menu_option(root, &label, Action::SaveToSlot(n), false);
     }
-    if phase == Phase::Night {
+    if restarts_at_evening {
         ui.dim(&lang.t("pause.save_hint_night"));
     }
     ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
@@ -649,11 +662,11 @@ fn toggle_pause(
 fn pause_actions(
     mut actions: MessageReader<Action>,
     phase: Res<State<Phase>>,
-    state: GameState,
+    mut state: GameState,
     data: Res<GameData>,
     lang: Res<Lang>,
     profile: Res<ActiveProfile>,
-    night_start: Res<NightStart>,
+    (night_start, register): (Res<NightStart>, Res<Register>),
     mut save_menu: ResMut<SaveMenu>,
     mut log: ResMut<GameLog>,
     mut paused: ResMut<Paused>,
@@ -669,6 +682,25 @@ fn pause_actions(
             }
             Action::Pause => {
                 paused.0 = true;
+                *save_menu = SaveMenu::Closed;
+                continue;
+            }
+            Action::OpenGuide => {
+                paused.0 = true;
+                *save_menu = SaveMenu::FirstSale;
+                continue;
+            }
+            Action::SkipGuide if state.progress.guiding_first_sale() => {
+                state.progress.journal.first_sale = crate::guide::FirstSale::Skipped;
+                state.progress.journal.first_sale_checkpoint = None;
+                if let Some(save) = save_now(*phase.get(), &state, &data, &night_start, &register) {
+                    write_slot(profile.0, Slot::Auto, &save);
+                }
+                continue;
+            }
+            Action::ResumeGuide if *phase.get() == Phase::Evening && state.progress.night == 1 => {
+                state.progress.journal.first_sale = crate::guide::FirstSale::Following;
+                paused.0 = false;
                 *save_menu = SaveMenu::Closed;
                 continue;
             }
@@ -691,7 +723,7 @@ fn pause_actions(
                 continue;
             }
             Action::SaveToSlot(n) => {
-                if let Some(save) = save_now(*phase.get(), &state, &data, &night_start) {
+                if let Some(save) = save_now(*phase.get(), &state, &data, &night_start, &register) {
                     let slot = Slot::Manual(*n);
                     write_slot(profile.0, slot, &save);
                     log.push(lang.f("log.saved", &[("slot", &slot_name(slot, &lang))]));
@@ -704,10 +736,9 @@ fn pause_actions(
             Action::QuitGame => false,
             _ => continue,
         };
-        // The evening's purchases and furnishing are kept. A night in
-        // progress is not: the game continues at its evening.
-        if matches!(phase.get(), Phase::Evening | Phase::Day)
-            && let Some(save) = save_now(*phase.get(), &state, &data, &night_start)
+        // Store the current preparation or the restart point for this night.
+        if matches!(phase.get(), Phase::Evening | Phase::Day | Phase::Night)
+            && let Some(save) = save_now(*phase.get(), &state, &data, &night_start, &register)
         {
             write_slot(profile.0, Slot::Auto, &save);
         }
@@ -751,7 +782,7 @@ fn sync_pause(
         return;
     }
     time.pause();
-    let width = if *save_menu == SaveMenu::Book {
+    let width = if matches!(*save_menu, SaveMenu::Book | SaveMenu::FirstSale) {
         520.0
     } else {
         420.0
@@ -765,6 +796,10 @@ fn sync_pause(
     }
     if *save_menu == SaveMenu::Achievements {
         crate::achievements::achievements_page(&mut ui, &lang, &data, &progress);
+        return;
+    }
+    if *save_menu == SaveMenu::FirstSale {
+        crate::guide::book_page(&mut ui, &lang, &progress, *phase.get());
         return;
     }
     if *save_menu == SaveMenu::Book {
@@ -784,7 +819,9 @@ fn sync_pause(
             &mut ui,
             &lang,
             profile.0,
-            *phase.get(),
+            *phase.get() == Phase::Night
+                && !(progress.night == 1
+                    && progress.journal.first_sale != crate::guide::FirstSale::Skipped),
             data.config.demo_nights,
         );
         return;
@@ -796,7 +833,7 @@ fn sync_pause(
         ui.menu_option(root, &lang.t("pause.save"), Action::OpenSave, false);
     }
     let quit_label = match phase.get() {
-        Phase::Night => "pause.quit_night",
+        Phase::Night if !progress.guiding_first_sale() => "pause.quit_night",
         _ => "pause.save_quit",
     };
     ui.menu_option(root, &lang.t(quit_label), Action::QuitToMenu, false);
@@ -886,7 +923,7 @@ fn update_tips(
         .front()
         .and_then(|e| ghosts.get(e).ok())
         .is_some_and(|g| g.state == GhostState::Waiting);
-    let tip = (settings.tips && progress.night == 1)
+    let tip = (settings.tips && progress.night == 1 && !progress.guiding_first_sale())
         .then(|| {
             current_tip(
                 *phase.get(),
