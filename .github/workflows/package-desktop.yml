@@ -65,6 +65,9 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Test edition asset selection
+        run: python tools/test_package_assets.py
+
       - name: Restore build cache
         id: cache
         uses: actions/cache/restore@v6
@@ -101,6 +104,10 @@ jobs:
               cargo test --release --locked "${features[@]}"
             fi
           done
+
+      - name: Strip Windows release copies
+        if: steps.cross.outcome == 'success'
+        run: x86_64-w64-mingw32-strip --strip-unneeded editions/{full,demo}/spare_change_for_spirits.exe
 
       - name: Save build cache
         if: >-
