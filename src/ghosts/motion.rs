@@ -42,7 +42,7 @@ fn point(uv: Vec2) -> [f32; 3] {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Act {
+pub(super) enum Act {
     Arrive,
     Browse,
     Approach,
@@ -55,6 +55,34 @@ enum Act {
 }
 
 impl Act {
+    /// The activities that can have their own drawn sheet; the idle loop is
+    /// `<id>_sheet.png`.
+    pub(super) const DRAWN: [Act; 8] = [
+        Act::Arrive,
+        Act::Browse,
+        Act::Approach,
+        Act::Impatient,
+        Act::Pay,
+        Act::Goodbye,
+        Act::Flee,
+        Act::Ascend,
+    ];
+
+    /// File name part of the drawn sheet: `<id>_<file>.png`.
+    pub(super) fn file(self) -> &'static str {
+        match self {
+            Act::Arrive => "arrive",
+            Act::Browse => "browse",
+            Act::Approach => "approach",
+            Act::Idle => "sheet",
+            Act::Impatient => "impatient",
+            Act::Pay => "pay",
+            Act::Goodbye => "goodbye",
+            Act::Flee => "flee",
+            Act::Ascend => "ascend",
+        }
+    }
+
     fn for_state(state: GhostState, patience: f32, patient: bool) -> Self {
         match state {
             GhostState::Entering => Self::Arrive,
@@ -206,6 +234,14 @@ pub(super) struct Rig {
     next_frame: f32,
     previous: Pose,
     current: Pose,
+    /// Activities with a drawn sheet of their own: the drawing carries the
+    /// movement, so the mesh stays still for them.
+    drawn: Vec<Act>,
+}
+
+/// Where the drawn sheet of a ghost's activity lives.
+pub(super) fn gesture_path(id: &str, act: Act) -> String {
+    format!("sprites/ghosts/{id}_{}.png", act.file())
 }
 
 impl Rig {
@@ -235,7 +271,16 @@ impl Rig {
             next_frame: 0.0,
             previous: default(),
             current: default(),
+            drawn: Act::DRAWN
+                .into_iter()
+                .filter(|a| crate::data::asset_exists(&gesture_path(id, *a)))
+                .collect(),
         }
+    }
+
+    /// The current activity, if it has a drawn sheet.
+    pub(super) fn drawn_act(&self) -> Option<Act> {
+        self.drawn.contains(&self.act).then_some(self.act)
     }
 
     fn deform(&self, p: Vec2) -> Vec2 {
@@ -288,10 +333,12 @@ pub(super) fn animate(
         }
         rig.next_frame = rig.elapsed + FRAME;
         let k = (rig.elapsed / BLEND).clamp(0.0, 1.0);
-        rig.current = rig.previous.blend(
-            act.pose(rig.elapsed * rig.tempo, ghost.bob_offset),
-            k * k * (3.0 - 2.0 * k),
-        );
+        let pose = if rig.drawn.contains(&act) {
+            Pose::default()
+        } else {
+            act.pose(rig.elapsed * rig.tempo, ghost.bob_offset)
+        };
+        rig.current = rig.previous.blend(pose, k * k * (3.0 - 2.0 * k));
         let Some(mut surface) = meshes.get_mut(mesh) else {
             continue;
         };
@@ -313,6 +360,22 @@ pub(super) fn animate(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_tools_know_every_drawn_gesture() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        for tool in ["tools/prepare_sprite.py", "tools/check_models.py"] {
+            let text = std::fs::read_to_string(root.join(tool)).unwrap();
+            let line = text.lines().find(|l| l.starts_with("GESTURES = ")).unwrap();
+            for act in Act::DRAWN {
+                assert!(
+                    line.contains(&format!("\"{}\"", act.file())),
+                    "{tool}: {act:?}"
+                );
+            }
+            assert_eq!(line.matches('"').count(), Act::DRAWN.len() * 2, "{tool}");
+        }
+    }
     #[test]
     fn each_activity_moves_the_painted_mesh_differently() {
         let actions = [

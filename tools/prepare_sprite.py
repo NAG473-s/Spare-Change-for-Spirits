@@ -14,10 +14,14 @@ ghost_sheet, decor, product).
 ghost_sheet turns an animation drawn as a grid (default 2×2 on a 1024 × 1536
 canvas, frames read row by row) into assets/sprites/ghosts/<id>_sheet.png:
 all frames are trimmed with the same box, so the ghost does not jitter, and
-placed side by side.
+placed side by side. With --gesture NAME it writes the drawn sheet of one
+activity instead, assets/sprites/ghosts/<id>_<NAME>.png (see GESTURES).
 """
 
 import argparse
+
+# Activities a ghost can have a drawn sheet for (src/ghosts/motion.rs, Act::file).
+GESTURES = ("arrive", "browse", "approach", "impatient", "pay", "goodbye", "flee", "ascend")
 import sys
 from pathlib import Path
 
@@ -116,6 +120,7 @@ def main() -> int:
     parser.add_argument("--colors", type=int, help="reduce to this many colours")
     parser.add_argument("--out", type=Path, help="write here instead of assets/sprites/...")
     parser.add_argument("--grid", default="2x2", help="ghost_sheet: COLSxROWS of the frame grid (default 2x2)")
+    parser.add_argument("--gesture", choices=GESTURES, help="ghost_sheet: the activity this sheet shows")
     args = parser.parse_args()
 
     width, height, folder, is_cover = KINDS[args.kind]
@@ -140,7 +145,9 @@ def main() -> int:
     if args.colors:
         img = reduce_colors(img, args.colors)
 
-    suffix = "_sheet" if args.kind == "ghost_sheet" else ""
+    if args.gesture and args.kind != "ghost_sheet":
+        parser.error("--gesture only works with ghost_sheet")
+    suffix = f"_{args.gesture or 'sheet'}" if args.kind == "ghost_sheet" else ""
     out = args.out or ROOT / "assets" / "sprites" / folder / f"{name}{suffix}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     img.save(out, optimize=True)

@@ -26,6 +26,8 @@ python3 tools/check_models.py
 
 - Sprite and idle sheet for the `shade`, the thief that visits shops with a bad reputation,
   see *Ghosts introduced in later nights* below.
+- Optional gesture sheets for every ghost (pay, ascend, impatient, goodbye first), see
+  *Ghost gesture sheets* below.
 
 Everything else is delivered. Ida and Hedda have portraits and four-frame idle sheets
 in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
@@ -151,6 +153,50 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
+
+## Ghost gesture sheets – canvas 1024 × 1536 (optional, open)
+
+Each ghost can get a drawn four-frame sheet for each of its eight activities. While a ghost does
+something it has a sheet for, the game plays that sheet (8 frames per second, looping) instead
+of bending the portrait; without one it keeps bending the portrait as now. So sheets can arrive
+one at a time, in any order. Worth ordering first, because they are seen most: **pay**, **ascend**,
+**impatient**, **goodbye** – then browse, arrive, approach, flee. `python3 tools/check_models.py`
+lists every sheet with `ok` or `no sheet`.
+
+Order them like the idle sheets: one ChatGPT conversation per ghost, its portrait (and idle
+sheet) attached as reference, one gesture per image as a **2 × 2 grid** on one 1024 × 1536
+canvas. Start each prompt with:
+
+```
+Four frames of a looping animation of this ghost, arranged as a 2 x 2 grid on
+one 1024 x 1536 canvas, frames read left to right, top to bottom. The ghost
+keeps exactly the same size, colours, outfit and position in every frame and
+looks exactly like the reference; only the pose changes. Same style as the
+reference, no grid lines, no text, transparent background, PNG.
+```
+
+and add the gesture:
+
+| Gesture (file `<id>_<gesture>.png`) | Add to the prompt |
+|---|---|
+| `pay` | It holds out one hand with a small coin, offers it forward, nods, and draws the hand back. |
+| `ascend` | It looks up with a happy, peaceful smile, arms slightly open; its tail grows fainter and soft light motes rise around it from frame to frame. |
+| `impatient` | It taps the air with one hand, frowns a little, glances to the side and sighs; the tail flicks. |
+| `goodbye` | It turns slightly towards the viewer and waves goodbye with one hand, smiling. |
+| `browse` | It leans forward and peers at something at hand height, reaching out with one hand as if to pick it up. |
+| `arrive` | It peeks shyly around an invisible corner, then floats upright and tucks one hand against its chest. |
+| `approach` | It floats forward with a long, streaming tail and gently swinging arms, as if gliding. |
+| `flee` | It startles, leans away with wide eyes, raises both hands and its tail whips to the side. |
+
+Keep what the ghost carries in its portrait (the knight's helmet, the poltergeist's teacup, the
+child's pinwheel, Ida's lantern) in every frame. Prepare a download with `--gesture`:
+
+```bash
+python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --gesture pay --colors 48
+```
+
+It writes `assets/sprites/ghosts/<id>_<gesture>.png`. Delivery: one commit per sheet,
+`Add <id> <gesture> sheet [skip ci]`.
 
 ## First launch at the harbour (done)
 

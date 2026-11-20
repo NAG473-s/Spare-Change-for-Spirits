@@ -75,6 +75,7 @@ impl Plugin for GhostPlugin {
                     fade_ghosts,
                     animate_ghosts,
                     motion::animate,
+                    show_gestures,
                     play_sheets,
                 )
                     .chain()
@@ -534,6 +535,12 @@ fn spawn_ghost(
             shown: u32::MAX,
         });
     }
+    commands.entity(body).insert(Look {
+        ghost: def.id.clone(),
+        base: (asset_exists(&image)).then(|| asset_server.load(image.clone())),
+        base_frames: sheet,
+        shown: None,
+    });
     commands.entity(ghost).add_child(body);
     // An invisible box over the body for the tooltip. It does not block the
     // pointer, so the shelf items behind a ghost stay clickable.
@@ -1108,6 +1115,66 @@ fn animate_ghosts(
 }
 
 /// Steps through the frames of animated sprite sheets.
+/// What a ghost's body shows: its portrait or idle sheet, or the drawn
+/// sheet of what it is doing right now.
+#[derive(Component)]
+struct Look {
+    ghost: String,
+    base: Option<Handle<Image>>,
+    base_frames: Option<u32>,
+    /// The drawn activity on display; `None` for the portrait or idle sheet.
+    shown: Option<motion::Act>,
+}
+
+/// A ghost doing something it has a drawn sheet for shows that sheet; the
+/// rest of the time its portrait (or idle loop) moves by itself.
+fn show_gestures(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut bodies: Query<(
+        Entity,
+        &motion::Rig,
+        &mut Look,
+        &MeshMaterial3d<StandardMaterial>,
+    )>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (entity, rig, mut look, handle) in &mut bodies {
+        let want = rig.drawn_act();
+        if want == look.shown {
+            continue;
+        }
+        look.shown = want;
+        let (image, frames) = match want {
+            Some(act) => {
+                let path = motion::gesture_path(&look.ghost, act);
+                let frames = sheet_frames(&path);
+                (Some(asset_server.load(path)), frames)
+            }
+            None => (look.base.clone(), look.base_frames),
+        };
+        let Some(mut material) = materials.get_mut(&handle.0) else {
+            continue;
+        };
+        if image.is_some() {
+            material.base_color_texture = image;
+        }
+        match frames {
+            Some(frames) => {
+                commands.entity(entity).insert(SheetAnim {
+                    frames,
+                    fps: SHEET_FPS,
+                    shown: u32::MAX,
+                });
+            }
+            None => {
+                commands.entity(entity).remove::<SheetAnim>();
+                material.uv_transform = bevy::math::Affine2::IDENTITY;
+            }
+        }
+    }
+}
+
 fn play_sheets(
     time: Res<Time>,
     mut sheets: Query<(&mut SheetAnim, &MeshMaterial3d<StandardMaterial>, &ChildOf)>,

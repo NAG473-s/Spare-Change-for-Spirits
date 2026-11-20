@@ -18,6 +18,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__import__('os').environ.get('SCFS_ROOT', Path(__file__).resolve().parent.parent))
+# Activities a ghost can have a drawn sheet for (src/ghosts/motion.rs, Act::file), in the order
+# they are worth ordering: the ones seen most often first.
+GESTURES = ("pay", "ascend", "impatient", "goodbye", "browse", "arrive", "approach", "flee")
 MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
@@ -295,6 +298,12 @@ def main():
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
+    # Drawn gesture sheets are optional: without one the portrait performs the gesture.
+    print()
+    for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
+        for gesture in GESTURES:
+            sheet = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}_{gesture}.png"
+            print(("  ok       " if sheet.is_file() else "  no sheet ") + f"sprites/ghosts/{ghost}_{gesture}.png")
     for name in (
         "shop/floor.png", "market/square.png", "harbor/quay_stone.png",
         "title/intro_harbor.png", "title/intro_ferry.png", "title/intro_crew.png", "title/logo.png",
