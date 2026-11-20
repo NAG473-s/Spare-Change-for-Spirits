@@ -24,9 +24,11 @@ python3 tools/check_models.py
 
 ## To do
 
-- Icons (kind `decor`) for the seasonal furniture `fairy_lights`, `fur_rug`, `flower_pot` and
-  `birdhouse` (prompts as for their models in [MODEL_PROMPTS.md](MODEL_PROMPTS.md)).
 None. All currently ordered images are delivered.
+
+The seasonal furniture icons `fairy_lights`, `fur_rug`, `flower_pot` and `birdhouse` are in
+`assets/sprites/decor/` (96 × 96, transparent PNG). Their replacement prompts are listed
+under *Icons* below.
 
 All 18 Steam achievement icons and their greyed locked versions are in
 `art/steam/achievements/` (256 × 256 PNG, full game only). The motifs and replacement
@@ -310,6 +312,10 @@ just shows its text. Delivery as for sprites, e.g. `Add <id> icon [skip ci]`.
 | `tall_bookcase` | A tall, narrow dark wooden bookcase with a carved crown and three boards. |
 | `glass_cabinet` | An elegant glass display cabinet with a brass frame and glass doors. |
 | `folding_screen` | A three-panel folding screen with dusty-rose silk panels painted with moths and moons. |
+| `fairy_lights` | A small freestanding walnut frame with two drooping loops of warm amber glass bulbs, on short wooden feet. |
+| `fur_rug` | A soft round cream-and-grey fur rug with a slightly shaggy edge, seen from slightly above. |
+| `flower_pot` | A glazed terracotta pot with a teal band and a bushy plant with sage-green leaves and pink and ivory blossoms. |
+| `birdhouse` | A weathered teal wooden birdhouse with an indigo roof, a round entrance, a tiny perch and a painted white daisy, on a slim post with a square foot. |
 
 **Done:** every product and the other furniture have icons; the furniture and keepsake icons
 `shelf`, `candle`, `mirror`, `incense`, `rug`, `grandfather_clock`, `umbrella`, `teacup`,

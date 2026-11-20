@@ -9,11 +9,12 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- The market's seasonal traders and daily specials: `stall_frost`, `vendor_frost`,
-  `stall_florist`, `vendor_florist` and `special_tag` (*The village market*); the furniture they
-  sell, `fairy_lights`, `fur_rug`, `flower_pot` and `birdhouse` (*Furniture*).
 None. All currently ordered models are delivered, including:
 
+- The seasonal market stalls and traders `stall_frost`, `vendor_frost`, `stall_florist`
+  and `vendor_florist`, plus the daily offer's `special_tag`, in `assets/models/market/`.
+  Their furniture `fairy_lights`, `fur_rug`, `flower_pot` and `birdhouse` is in
+  `assets/models/decor/`.
 - Season 3, "The Thaw": the products `seed_packet`, `watering_can` and `storm_lantern`
   in `assets/models/products/`; the keepsakes `seedling_pot`, `flower_box`, `nameplate`
   and `oar` in `assets/models/decor/`; the market's `window_flowers` in `assets/models/market/`.
@@ -154,11 +155,6 @@ The clockmaker's story sets it going chapter by chapter; the game turns the hand
 | `clock_hand_hour` | 0.06 × 0.22 × 0.02 | The short, ornate black iron hour hand, pointing up along +Z (Blender), origin at its **pivot (bottom end)**. |
 | `clock_hand_minute` | 0.04 × 0.32 × 0.02 | The long, slim black iron minute hand, pointing up, origin at its **pivot (bottom end)**. |
 | `window_flowers` | 0.7 × 0.35 × 0.2 | A wooden window box full of spring flowers (pink, yellow, violet), hung under a house window; origin at the bottom centre, front −Y. Five of them appear on the houses as spring comes. |
-| `special_tag` | 0.14 × 0.1 × 0.02 | A little brass price tag on a loop of red string, a star stamped into it; marks a trader's special offer of the day. Origin at the bottom centre. |
-| `stall_frost` | 1.9 × 2.5 × 1.2 | Ilse Icicle's winter stall: like the other stalls (table top empty at 0.85 m), with a pale ice-blue awning, icicles hanging from its edge, a garland of fir and tiny lanterns, the emblem a snowflake. |
-| `vendor_frost` | 0.7 × 1.7 × 0.6 | Ilse Icicle, a tall, friendly frost spirit in a long white-blue coat with fur trim, frost on her eyebrows, rosy cheeks, holding a steaming cup. |
-| `stall_florist` | 1.9 × 2.5 × 1.2 | Bluma's spring stall: like the other stalls (table top empty at 0.85 m), with a pastel pink awning, flower garlands and ivy, buckets of tulips beside the table, the emblem a tulip. |
-| `vendor_florist` | 0.7 × 1.7 × 0.6 | Bluma the florist, a cheerful plump ghost lady with a flowery headscarf, a green apron, garden gloves and a watering can. |
 
 ## Products – `assets/models/products/<id>.glb`
 
@@ -382,7 +378,8 @@ Night colours, cute and simple, no rigs or animations.
 
 ## The village market – `assets/models/market/<id>.glb`
 
-By day the player visits a market of seven traders of the other side (`assets/data/market.ron`).
+By day the player visits a market of seven regular traders of the other side, joined by
+Ilse Icicle in winter and Bluma in spring (`assets/data/market.ron`).
 Each has a **stall** and the **trader** standing beside it (the game moves them: breathing, a
 nod after a sale, the wisp floating, the raven hopping). The game puts small samples of the wares
 on the stall's table, so the table top stays **empty** at **0.85 m** height. Stalls: origin at the
@@ -410,6 +407,11 @@ their origin and face −Y.
 | `vendor_reaper` | 0.7 × 1.7 × 0.6 | The Reaper, tall and polite, in a long black hooded robe, two pale glowing eyes (emissive) in the dark hood, holding his scythe upright. |
 | `hourglass` | 0.2 × 0.3 × 0.2 | A brass-framed hourglass with pale sand, standing upright. |
 | `plan` | 0.4 × 0.12 × 0.12 | A rolled-up building plan on yellowed paper, tied with a red ribbon, lying on its side (it stands for the carpenter's work on the shop). |
+| `special_tag` | 0.14 × 0.1 × 0.02 | A little brass price tag on a loop of red string, a star stamped into it; marks a trader's special offer of the day. Origin at the bottom centre. |
+| `stall_frost` | 1.9 × 2.5 × 1.2 | Ilse Icicle's winter stall: like the other stalls (table top empty at 0.85 m), with a pale ice-blue awning, icicles hanging from its edge, a garland of fir and tiny lanterns, the emblem a snowflake. |
+| `vendor_frost` | 0.7 × 1.7 × 0.6 | Ilse Icicle, a tall, friendly frost spirit in a long white-blue coat with fur trim, frost on her eyebrows, rosy cheeks, holding a steaming cup. |
+| `stall_florist` | 1.9 × 2.5 × 1.2 | Bluma's spring stall: like the other stalls (table top empty at 0.85 m), with a pastel pink awning, flower garlands and ivy, buckets of tulips beside the table, the emblem a tulip. |
+| `vendor_florist` | 0.7 × 1.7 × 0.6 | Bluma the florist, a cheerful plump ghost lady with a flowery headscarf, a green apron, garden gloves and a watering can. |
 
 ## Delivery
 
