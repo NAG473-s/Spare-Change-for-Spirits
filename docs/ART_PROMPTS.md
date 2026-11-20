@@ -25,14 +25,13 @@ python3 tools/check_models.py
 ## To do
 
 - Achievement icons for Steam (full game only), see *Achievement icons* below.
-- Season 3, "The Thaw": four idle sheets and 32 gesture sheets for `frog`, `butterfly`,
-  `mira` and `kasimir`. Their portraits are delivered; use them as the references for
-  *Ghost animation sheets* and *Ghost gesture sheets* below.
 
-Season 3 portraits and icons are delivered:
+Season 3 portraits, icons and animation sheets are delivered:
 
 - Portraits for `frog`, `butterfly`, `mira` and `kasimir` in `assets/sprites/ghosts/`
   (176 × 264, transparent PNG).
+- Four idle sheets and 32 gesture sheets for these ghosts in `assets/sprites/ghosts/`
+  (704 × 264, four frames per transparent PNG).
 - Product icons for `seed_packet`, `watering_can` and `storm_lantern` in
   `assets/sprites/products/` (96 × 96, transparent PNG).
 - Keepsake icons for `seedling_pot`, `flower_box`, `nameplate` and `oar` in
@@ -50,8 +49,7 @@ Season 2 portraits, icons and animation sheets are delivered:
   `workbench` icon, in `assets/sprites/decor/` (96 × 96, transparent PNG). Replacement
   prompts follow their models in [MODEL_PROMPTS.md](MODEL_PROMPTS.md).
 
-All eight activities under *Ghost gesture sheets* have been drawn for the seventeen ghosts
-from the first two seasons.
+All eight activities under *Ghost gesture sheets* have been drawn for all twenty-one ghosts.
 
 Ida, Hedda and the shade have portraits and four-frame idle sheets
 in `assets/sprites/ghosts/`. The icons for the logbook, ship’s bell, sea chart, lifebuoy and
@@ -61,7 +59,7 @@ The sign emblems and the shop door’s porthole light are included. The market n
 The desktop icon, furniture icons, market cobblestones and harbour lamp halo are included.
 The opening harbour, bare ferry hull and ferryman sheet are delivered, along with the oak shop
 floor, market street map and quay paving. The opening score and all 31 readings are in
-`assets/sounds/`. The seventeen ghosts from the first two seasons have drawn sheets for nine activities.
+`assets/sounds/`. All twenty-one ghosts have drawn sheets for nine activities.
 The game generates the water surface and its ripple normals at runtime.
 
 To check models, icons and gesture sheets on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
@@ -163,7 +161,7 @@ her hands over her apron, and the shade reaches out while clutching its patched 
 The four drawn frames in `<id>_sheet.png` add an idle loop at
 8 frames per second. A single `<id>.png` can perform all nine gestures on its own.
 
-The seventeen ghosts from the first two seasons have four-frame idle sheets.
+All twenty-one ghosts have four-frame idle sheets.
 To draw or redraw a sheet, ask for a **2 × 2 grid** on one
 1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
 attached as reference:
@@ -188,10 +186,10 @@ python3 tools/prepare_sprite.py ~/Downloads/image.png ghost_sheet shy --colors 4
 `--grid 4x1` reads a strip of four frames instead. Delivery as for sprites, one commit per sheet:
 `Add <id> sheet [skip ci]`.
 
-## Ghost gesture sheets – canvas 1024 × 1536 (first two seasons delivered)
+## Ghost gesture sheets – canvas 1024 × 1536 (all ghosts delivered)
 
-The seventeen ghosts from the first two seasons have a painted four-frame loop for each of the eight activities in the table.
-The 136 sheets live in `assets/sprites/ghosts/`. Each PNG is a 704 × 264 strip of four
+All twenty-one ghosts have a painted four-frame loop for each of the eight activities in the table.
+The 168 sheets live in `assets/sprites/ghosts/`. Each PNG is a 704 × 264 strip of four
 176 × 264 frames. The game switches sheets when the activity changes and plays eight frames
 per second. For a new ghost with a missing sheet, the animated portrait supplies the gesture.
 Run `python3 tools/check_models.py` to check each sheet for `ok` or `no sheet`.
