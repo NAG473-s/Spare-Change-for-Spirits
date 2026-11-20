@@ -20,6 +20,7 @@ mod fx;
 mod ghosts;
 mod harbor;
 mod i18n;
+mod incidents;
 mod inventory;
 mod loan;
 mod market;
@@ -37,6 +38,7 @@ mod title;
 mod tooltip;
 mod ui;
 mod upgrades;
+mod workbench;
 
 use bevy::prelude::*;
 
@@ -102,6 +104,8 @@ fn main() {
             loan::LoanPlugin,
             playtest::PlaytestPlugin,
             upgrades::UpgradesPlugin,
+            incidents::IncidentsPlugin,
+            workbench::WorkbenchPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

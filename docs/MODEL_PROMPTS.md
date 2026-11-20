@@ -9,7 +9,11 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-There are no open model orders. The models for Ida’s four keepsakes (logbook, ship’s bell,
+- The `workbench` (decor, see *Furniture* below, `assets/models/decor/workbench.glb`).
+- Three mishaps during the night: `draught`, `crow` and `leak` (see *Mishaps* below,
+  `assets/models/incidents/<id>.glb`).
+
+Everything else is delivered. The models for Ida’s four keepsakes (logbook, ship’s bell,
 sea chart and lifebuoy) and Hedda’s apron are in `assets/models/decor/`. Their dimensions
 and replacement prompts are listed under *Keepsakes*.
 
@@ -83,6 +87,7 @@ origin, front facing -Y, Z up, 1 unit = 1 metre.
 | `gramophone` | 0.6 × 1.1 × 0.6 | A small wooden cabinet with an old gramophone on top, big brass horn, a record on the turntable. |
 | `stove` | 0.7 × 1.1 × 0.6 | A little round cast-iron stove on four feet with a short chimney pipe; the small door glows warm orange (emissive) at about 0.5 m height. |
 | `vanity` | 0.9 × 1.5 × 0.5 | A vanity table with a large oval mirror, a small drawer, a perfume bottle and a hairbrush on top. |
+| `workbench` | 1.0 × 0.95 × 0.6 | A sturdy little wooden workbench with a vice on one end, a few tools (hammer, screwdriver, small pliers) and a tin of screws on top, a half-repaired music box waiting in the middle; a pegboard is not needed. |
 
 ## Keepsakes (gifts from the story ghosts) – `assets/models/decor/<id>.glb`
 
@@ -100,6 +105,18 @@ Placed like furniture on one floor cell; origin at the bottom centre, front towa
 | `sea_chart` | 0.7 × 1.2 × 0.3 | A wooden easel holding a framed, yellowed sea chart of a small harbour with a lighthouse; a tiny ghost doodle in one corner. |
 | `lifebuoy` | 0.6 × 1.1 × 0.3 | A red-and-white striped ring lifebuoy hanging on a weathered wooden post, a coil of rope looped over the top. |
 | `apron` | 0.5 × 1.6 × 0.5 | A slim wooden coat stand with a faded lavender shop apron hanging on it; the apron has a pocket with a small sprig of dried lavender peeking out. |
+
+## Mishaps – `assets/models/incidents/<id>.glb`
+
+Small things that go wrong during the night (`assets/data/incidents.ron`); the player clicks
+them to fix them. Origin at the bottom centre, front towards −Y. Static models – the game makes
+the crow hop, the leaves swirl and the puddle shimmer.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `draught` | 0.45 × 0.25 × 0.2 | Three dry autumn leaves (orange, brown, ochre) caught in a little swirl of wind, floating just above a window sill; no sill, only the leaves and a faint curl of pale wind ribbon. |
+| `crow` | 0.3 × 0.32 × 0.4 | A small, glossy black crow standing on two feet, beak half open as if cawing, head slightly cocked, wings folded; friendly, a little scruffy. |
+| `leak` | 0.6 × 0.04 × 0.6 | A flat, irregular puddle of water on the floor with two small ripple rings and a single drop splashing in the middle. |
 
 ## Products – `assets/models/products/<id>.glb`
 

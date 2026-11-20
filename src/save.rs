@@ -65,6 +65,16 @@ pub struct SaveGame {
     /// Stories whose ghost has a parcel from the ferryman waiting.
     #[serde(default)]
     pub parcels: Vec<usize>,
+    /// Wares ghosts ordered for a coming night.
+    #[serde(default)]
+    pub orders: Vec<crate::day_cycle::Order>,
+    /// Broken things waiting at the workbench, and when it was last used.
+    #[serde(default)]
+    pub broken: Vec<String>,
+    #[serde(default)]
+    pub rummaged_on: u32,
+    #[serde(default)]
+    pub repaired_on: u32,
     /// The season the shop is in, and the night it began (see `Progress`).
     #[serde(default = "first")]
     pub season: u32,
@@ -406,6 +416,10 @@ impl GameState<'_> {
             story: self.progress.story.clone(),
             story_tries: self.progress.story_tries.clone(),
             parcels: self.progress.parcels.clone(),
+            orders: self.progress.orders.clone(),
+            broken: self.progress.broken.clone(),
+            rummaged_on: self.progress.rummaged_on,
+            repaired_on: self.progress.repaired_on,
             season: self.progress.season,
             season_start: self.progress.season_start,
             drawer: self.drawer.0,
@@ -427,6 +441,10 @@ impl GameState<'_> {
             story: save.story.clone(),
             story_tries: save.story_tries.clone(),
             parcels: save.parcels.clone(),
+            orders: save.orders.clone(),
+            broken: save.broken.clone(),
+            rummaged_on: save.rummaged_on,
+            repaired_on: save.repaired_on,
             season: save.season,
             season_start: save.season_start,
         };
@@ -545,6 +563,10 @@ mod tests {
             story: vec![5],
             story_tries: Vec::new(),
             parcels: Vec::new(),
+            orders: Vec::new(),
+            broken: Vec::new(),
+            rummaged_on: 0,
+            repaired_on: 0,
             season: 1,
             season_start: 1,
             drawer: Purse::default(),
@@ -572,6 +594,10 @@ mod tests {
             story: vec![2],
             story_tries: Vec::new(),
             parcels: Vec::new(),
+            orders: Vec::new(),
+            broken: Vec::new(),
+            rummaged_on: 0,
+            repaired_on: 0,
             season: 1,
             season_start: 1,
             drawer: Purse {
@@ -607,6 +633,10 @@ mod tests {
             story: vec![0],
             story_tries: Vec::new(),
             parcels: Vec::new(),
+            orders: Vec::new(),
+            broken: Vec::new(),
+            rummaged_on: 0,
+            repaired_on: 0,
             season: 1,
             season_start: 1,
             drawer: Purse::default(),

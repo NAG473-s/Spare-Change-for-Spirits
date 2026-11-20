@@ -33,6 +33,7 @@ TRIANGLE_BUDGET = {
     "props": 3000,
     "critters": 2000,
     "market": 6000,
+    "incidents": 1500,
 }
 # The village market (src/market.rs): a stall and a trader for each vendor in
 # assets/data/market.ron, and the Reaper's hourglass.
@@ -138,6 +139,15 @@ def prop_sizes():
 
 def ids(path, pattern):
     return re.findall(pattern, (ROOT / path).read_text(encoding="utf-8"))
+
+
+def incident_sizes():
+    """Mishaps during the night (assets/data/incidents.ron) with their sizes."""
+    text = (ROOT / "assets/data/incidents.ron").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'id: "([^"]+)".*?size: \(([\d.]+), ([\d.]+), ([\d.]+)\)', text, re.S):
+        out[m.group(1)] = tuple(float(v) for v in m.group(2, 3, 4))
+    return out
 
 
 def decor_sizes():
@@ -277,6 +287,7 @@ def main():
         "props": prop_sizes(),
         "critters": CRITTER_SIZES,
         "market": MARKET_SIZES,
+        "incidents": incident_sizes(),
     }
     failures = 0
     for folder, targets in expected.items():

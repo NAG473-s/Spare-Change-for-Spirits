@@ -1,0 +1,21 @@
+// The workbench (decor "workbench", sold by the carpenter). Once an evening the player searches
+// Hedda's old junk and finds one broken thing; one broken thing an evening is repaired for
+// `cost` (button units) and becomes an ordinary ware in the storeroom.
+// junk: what can turn up (only products the ferryman already sells), `weight` = how often.
+// after_cleared_chance: once all junk is cleared, the chance an evening that the ferryman has
+//   left something broken by the door.
+// Texts: workbench.* and log.found_* in assets/i18n/<language>.ron.
+(
+    junk: [
+        (product: "tea_tin", cost: 2, weight: 3.0),
+        (product: "rusty_key", cost: 1, weight: 3.0),
+        (product: "letter_paper", cost: 1, weight: 2.0),
+        (product: "faceless_photo", cost: 2, weight: 2.0),
+        (product: "tin_soldier", cost: 3, weight: 2.0),
+        (product: "music_box", cost: 5, weight: 1.0),
+        (product: "pocket_watch", cost: 6, weight: 1.0),
+        (product: "brass_compass", cost: 6, weight: 1.0),
+        (product: "powder_compact", cost: 4, weight: 1.0),
+    ],
+    after_cleared_chance: 0.5,
+)

@@ -24,6 +24,9 @@ python3 tools/check_models.py
 
 ## To do
 
+- Icon for the `workbench` (kind `decor`): "A sturdy little wooden workbench with a vice, a
+  hammer and a half-repaired music box on top."
+
 All eight activities under *Ghost gesture sheets* have been drawn for all thirteen ghosts.
 
 Ida, Hedda and the shade have portraits and four-frame idle sheets

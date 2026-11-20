@@ -77,11 +77,26 @@ pub struct Progress {
     pub story_tries: Vec<u32>,
     /// Stories whose ghost has a parcel from the ferryman waiting.
     pub parcels: Vec<usize>,
+    /// Wares ghosts ordered for a coming night.
+    pub orders: Vec<Order>,
+    /// Broken things found in the junk, waiting at the workbench (product ids).
+    pub broken: Vec<String>,
+    /// The last night the junk was searched / something was repaired.
+    pub rummaged_on: u32,
+    pub repaired_on: u32,
     /// The season the shop is in (1, 2, …): each tells its own story over
     /// `season_length` nights and lasts until its finale is done.
     pub season: u32,
     /// The night the current season began.
     pub season_start: u32,
+}
+
+/// A ware a ghost ordered: it comes back for it on `night`.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct Order {
+    pub ghost: String,
+    pub product: String,
+    pub night: u32,
 }
 
 /// From this many failed nights on, a story ghost names the ware it needs.
@@ -95,6 +110,10 @@ impl Progress {
             story: Vec::new(),
             story_tries: Vec::new(),
             parcels: Vec::new(),
+            orders: Vec::new(),
+            broken: Vec::new(),
+            rummaged_on: 0,
+            repaired_on: 0,
             season: 1,
             season_start: 1,
         }
@@ -369,6 +388,9 @@ fn keep_playing(
 /// A story ghost that came tonight and did not get its wish tries again
 /// tomorrow – a little more plainly each time.
 pub fn count_story_tries(mut progress: ResMut<Progress>, report: Res<NightReport>) {
+    // Tonight's orders are settled, whatever happened.
+    let night = progress.night;
+    progress.orders.retain(|o| o.night > night);
     for &i in &report.story_arrived {
         if !report.story_done.contains(&i) {
             progress.fail_chapter(i);

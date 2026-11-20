@@ -1,0 +1,19 @@
+// Small mishaps during the night. Each worsens the atmosphere by `effect` until the player
+// clicks the spot where it shows. No time limit: the shop only feels worse until it is fixed.
+// How many per night: `incidents` in config.ron.
+// pos: where the spot is in the shop (x, y, z in metres; +x towards the counter, +z towards
+//   the camera), the origin of its model. size: placeholder box and the model's target size.
+// motion: Hop, Swirl or Drip – done in code, the models stay still.
+// Model (optional): assets/models/incidents/<id>.glb, see docs/MODEL_PROMPTS.md.
+// Texts: assets/i18n/<language>.ron (incident.<id>.name, incident.<id>.start, incident.<id>.fixed).
+[
+    // A draught through the window sill blows the candles out.
+    (id: "draught", effect: (light: -2), pos: (-3.2, 1.85, -2.75), size: (0.45, 0.25, 0.2),
+     color: (0.75, 0.5, 0.25), motion: Swirl),
+    // A crow flutters in and settles on the counter, cawing.
+    (id: "crow", effect: (silence: -2), pos: (6.3, 0.75, 1.8), size: (0.3, 0.32, 0.4),
+     color: (0.1, 0.1, 0.12), motion: Hop),
+    // The roof drips: a cold puddle on the floor.
+    (id: "leak", effect: (warmth: -1), pos: (-1.5, 0.01, 3.0), size: (0.6, 0.04, 0.6),
+     color: (0.35, 0.5, 0.7), motion: Drip),
+]

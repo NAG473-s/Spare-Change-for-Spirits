@@ -4,7 +4,7 @@
 use bevy::prelude::*;
 
 use crate::data::GameData;
-use crate::day_cycle::{NightReport, Phase, Progress};
+use crate::day_cycle::{NightReport, Order, Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse, ghost_payment, smaller_payment};
 use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
@@ -159,6 +159,17 @@ fn bring_carried_ware(
     }
 }
 
+/// Can the ghost at the counter order its wish for tomorrow? Only a plain
+/// customer whose wish is not in stock, while orders for tomorrow are left.
+pub fn can_order(ghost: &Ghost, stock: &Stock, progress: &Progress, max: usize) -> bool {
+    let tomorrow = progress
+        .orders
+        .iter()
+        .filter(|o| o.night == progress.night + 1)
+        .count();
+    ghost.chapter.is_none() && !ghost.ordered && stock.count(&ghost.wish) == 0 && tomorrow < max
+}
+
 fn serve_front_ghost(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
@@ -216,7 +227,10 @@ fn serve_front_ghost(
                     continue;
                 }
                 let base = data.product(product).map_or(1, |p| p.price);
-                let factor = def.pay_multiplier * data.price_factor(progress.calendar(&data));
+                let mut factor = def.pay_multiplier * data.price_factor(progress.calendar(&data));
+                if ghost.ordered {
+                    factor *= 1.0 + data.config.orders.price_bonus;
+                }
                 let price = ((base as f32 * factor).round() as u32).max(1);
                 let purse = ghost_payment(price, &def.pays_with, &mut rng);
                 let counterfeit = rng.chance(def.quirks.counterfeit_chance);
@@ -246,7 +260,41 @@ fn serve_front_ghost(
             }
             (Action::Decline, _) => {
                 report.declined += 1;
-                log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
+                if ghost.ordered {
+                    // It came back for its order, and it is still missing.
+                    progress.reputation -= data.config.orders.missed_penalty;
+                    report.unhappy += 1;
+                    cues.write(Cue::Disappointed);
+                    log.push(lang.f(
+                        "log.order_missed",
+                        &[
+                            ("who", &lang.ghost_the(&def.id)),
+                            ("item", &lang.product(&ghost.wish)),
+                        ],
+                    ));
+                } else {
+                    log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
+                }
+                ghost.state = GhostState::Leaving;
+                queue.remove(front);
+            }
+            // Not in stock: the ghost orders it and comes back tomorrow.
+            (Action::OrderForTomorrow, _)
+                if can_order(&ghost, &stock, &progress, data.config.orders.max_per_night) =>
+            {
+                let night = progress.night + 1;
+                progress.orders.push(Order {
+                    ghost: def.id.clone(),
+                    product: ghost.wish.clone(),
+                    night,
+                });
+                log.push(lang.f(
+                    "log.ordered",
+                    &[
+                        ("who", &lang.ghost_the(&def.id)),
+                        ("item", &lang.product(&ghost.wish)),
+                    ],
+                ));
                 ghost.state = GhostState::Leaving;
                 queue.remove(front);
             }

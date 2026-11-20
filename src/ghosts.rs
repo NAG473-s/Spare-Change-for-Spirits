@@ -65,6 +65,7 @@ impl Plugin for GhostPlugin {
                     come_home,
                     say_farewell,
                     spawn_thief,
+                    spawn_ordering,
                     ghost_ai,
                     ghost_murmurs,
                     ghost_tooltip,
@@ -123,6 +124,8 @@ pub struct Ghost {
     pub chapter: Option<(usize, usize)>,
     /// A story ghost that has waited for its wish long enough names it.
     pub plain: bool,
+    /// It comes back for a ware it ordered last night.
+    pub ordered: bool,
     /// Shelf cell the ghost browses, if any.
     browse_cell: Option<usize>,
     /// The ware it took from the shelf and brings to the counter (its wish
@@ -227,6 +230,7 @@ fn spawn_ghosts(
         hint,
         chapter: None,
         plain: false,
+        ordered: false,
         flees: unmet.is_some(),
         patience_factor: upgrades.patience_factor(&data),
     };
@@ -364,6 +368,11 @@ fn ghost_tooltip(
     let at_counter = matches!(g.state, GhostState::Waiting | GhostState::AtRegister);
     if def.id == THIEF_GHOST {
         t.line(TipKind::Bad, lang.t("ghost_tip.thief"));
+    } else if g.ordered && g.carrying.is_none() {
+        t.line(
+            TipKind::Good,
+            lang.f("ghost_tip.ordered", &[("item", &lang.product(&g.wish))]),
+        );
     } else if let Some(ware) = &g.carrying {
         t.line(
             TipKind::Good,
@@ -435,6 +444,7 @@ struct Visit {
     hint: String,
     chapter: Option<(usize, usize)>,
     plain: bool,
+    ordered: bool,
     flees: bool,
     /// The waiting bench: ghosts wait longer.
     patience_factor: f32,
@@ -505,6 +515,7 @@ fn spawn_ghost(
                 age: 0.0,
                 chapter: visit.chapter,
                 plain: visit.plain,
+                ordered: visit.ordered,
                 browse_cell,
                 carrying: None,
                 bob_offset: rng.range(0.0, std::f32::consts::TAU),
@@ -639,6 +650,67 @@ fn mute_browsing_names(
     }
 }
 
+/// Ghosts come back for the wares they ordered last night, early in the
+/// night and whatever the atmosphere.
+fn spawn_ordering(
+    mut commands: Commands,
+    data: Res<GameData>,
+    layout: Res<ShopLayout>,
+    clock: Res<NightClock>,
+    progress: Res<Progress>,
+    lang: Res<Lang>,
+    mut art: GhostArt,
+    mut rng: ResMut<Rng>,
+    mut cues: MessageWriter<Cue>,
+    mut came: Local<(u32, usize)>,
+    upgrades: Res<Upgrades>,
+) {
+    // `came`: (night, how many of tonight's orders have come so far).
+    if came.0 != progress.night {
+        *came = (progress.night, 0);
+    }
+    let due: Vec<_> = progress
+        .orders
+        .iter()
+        .filter(|o| o.night == progress.night)
+        .collect();
+    let Some(order) = due.get(came.1) else {
+        return;
+    };
+    let (from, to) = data.config.orders.arrive_at;
+    let at = from + (to - from) * came.1 as f32 / due.len().max(1) as f32;
+    if clock.elapsed < at * clock.length {
+        return;
+    }
+    came.1 += 1;
+    let Some(def_idx) = data.ghost_index(&order.ghost) else {
+        return;
+    };
+    let visit = Visit {
+        def_idx,
+        wish: order.product.clone(),
+        hint: "order.whisper".into(),
+        chapter: None,
+        plain: true,
+        ordered: true,
+        flees: false,
+        patience_factor: upgrades.patience_factor(&data),
+    };
+    spawn_ghost(
+        &mut commands,
+        &data,
+        &layout,
+        &art.font,
+        &lang,
+        &art.asset_server,
+        &mut art.meshes,
+        &mut art.materials,
+        &mut rng,
+        visit,
+    );
+    cues.write(Cue::GhostEnters);
+}
+
 /// The ghost id of the shade that steals from shops with a bad reputation.
 pub const THIEF_GHOST: &str = "shade";
 
@@ -704,6 +776,7 @@ fn spawn_thief(
         hint: "ghost_tip.thief".into(),
         chapter: None,
         plain: false,
+        ordered: false,
         flees: false,
         patience_factor: 1.0,
     };
@@ -797,6 +870,7 @@ fn come_home(
         hint: "finale.farewell".into(),
         chapter: None,
         plain: false,
+        ordered: false,
         flees: false,
         patience_factor: 1.0,
     };
@@ -863,6 +937,7 @@ fn spawn_story_ghost(
             hint: format!("story.{}.{}.intro", story.ghost, chapter + 1),
             chapter: Some((i, chapter)),
             plain: progress.asks_plainly(i),
+            ordered: false,
             flees: false,
             patience_factor: upgrades.patience_factor(&data),
         };

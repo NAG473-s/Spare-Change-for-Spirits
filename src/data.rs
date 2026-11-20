@@ -134,6 +134,36 @@ impl Atmosphere {
         }
     }
 
+    /// Only what changes, with signs: "light −2 · silence +1".
+    pub fn changes(&self, lang: &Lang) -> String {
+        let parts: Vec<String> = [
+            (Stat::Light, self.light),
+            (Stat::Warmth, self.warmth),
+            (Stat::Silence, self.silence),
+            (Stat::Reflection, self.reflection),
+        ]
+        .into_iter()
+        .filter(|(_, v)| *v != 0)
+        .map(|(s, v)| {
+            format!(
+                "{} {}{}",
+                lang.t(s.key()),
+                if v > 0 { "+" } else { "−" },
+                v.abs()
+            )
+        })
+        .collect();
+        parts.join(" · ")
+    }
+
+    /// Every value times `k` (−1 undoes an effect).
+    pub fn scale(&mut self, k: i32) {
+        self.light *= k;
+        self.warmth *= k;
+        self.silence *= k;
+        self.reflection *= k;
+    }
+
     pub fn add(&mut self, other: &Atmosphere) {
         self.light += other.light;
         self.warmth += other.warmth;
@@ -369,6 +399,10 @@ pub struct Config {
     pub reputation_perks: ReputationPerks,
     /// The shade that steals from shops with a bad reputation.
     pub thief: ThiefConfig,
+    /// Wares a ghost orders for the next night.
+    pub orders: OrdersConfig,
+    /// Mishaps during the night (`incidents.ron`).
+    pub incidents: IncidentsConfig,
     /// The part of the floor free of old junk at the start; the rest is
     /// cleared by improvements (`upgrades.ron`).
     pub start_area: StartArea,
@@ -381,6 +415,30 @@ pub struct ReputationSpawn {
     pub per_point: f32,
     pub fastest: f32,
     pub slowest: f32,
+}
+
+/// How many mishaps a night brings (config.ron).
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct IncidentsConfig {
+    /// From this calendar night on.
+    pub from_night: u32,
+    /// How many per night (at least, at most).
+    pub per_night: (u32, u32),
+    /// When they happen, as a fraction of the night (from, to).
+    pub arrive_at: (f32, f32),
+}
+
+/// Orders for the next night (config.ron).
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct OrdersConfig {
+    /// How many orders can wait for one night.
+    pub max_per_night: usize,
+    /// What a ghost pays on top for an ordered ware (0.5 = 50 % more).
+    pub price_bonus: f32,
+    /// Reputation lost when an ordered ware is still missing.
+    pub missed_penalty: i32,
+    /// When the ordering ghosts come back, as a fraction of the night (from, to).
+    pub arrive_at: (f32, f32),
 }
 
 /// When the shade comes to steal (config.ron).
@@ -444,6 +502,10 @@ pub struct GameData {
     pub ghosts: Vec<GhostDef>,
     pub decor: Vec<DecorDef>,
     pub stories: Vec<StoryDef>,
+    /// Mishaps during the night (`incidents.ron`).
+    pub incidents: Vec<crate::incidents::IncidentDef>,
+    /// Broken things in the junk and their repair (`workbench.ron`).
+    pub workbench: crate::workbench::WorkbenchDef,
     pub events: Vec<NightEvent>,
     pub props: Vec<PropDef>,
     pub vendors: Vec<VendorDef>,
@@ -564,6 +626,8 @@ impl GameData {
             ghosts: load_ron("data/ghosts.ron"),
             decor: load_ron("data/decor.ron"),
             stories: load_ron("data/story.ron"),
+            incidents: load_ron("data/incidents.ron"),
+            workbench: load_ron("data/workbench.ron"),
             events: load_ron("data/events.ron"),
             props: load_ron("data/props.ron"),
             vendors: load_ron("data/market.ron"),
@@ -699,6 +763,17 @@ impl GameData {
                 }
             }
         }
+        for j in &self.workbench.junk {
+            assert!(
+                self.product(&j.product).is_some(),
+                "workbench: unknown product '{}'",
+                j.product
+            );
+        }
+        assert!(
+            self.decor(crate::workbench::WORKBENCH).is_some(),
+            "decor.ron has no workbench"
+        );
         for u in &self.upgrades {
             if let Some(n) = u.letter {
                 assert!(

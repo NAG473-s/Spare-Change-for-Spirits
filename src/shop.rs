@@ -88,6 +88,8 @@ pub struct ShopLayout {
     pub cols: usize,
     pub rows: usize,
     pub cells: Vec<CellContent>,
+    /// Tonight's mishaps that are not fixed yet (`incidents.rs`).
+    pub mishaps: Atmosphere,
 }
 
 impl ShopLayout {
@@ -96,6 +98,7 @@ impl ShopLayout {
             cols,
             rows,
             cells: vec![CellContent::default(); cols * rows],
+            mishaps: Atmosphere::default(),
         };
         // Starting furniture: two shelves and a candle.
         layout.cells[cols + 2].decor = Some("shelf".into());
@@ -174,6 +177,7 @@ impl ShopLayout {
         if let Some(e) = data.event(night) {
             a.add(&e.atmosphere);
         }
+        a.add(&self.mishaps);
         for c in &self.cells {
             if let Some(d) = c.decor.as_deref().and_then(|d| data.decor(d)) {
                 a.add(&d.effect);

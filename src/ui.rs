@@ -119,6 +119,12 @@ pub enum Action {
     HandParcel,
     /// The drawer cannot give the change: ask the ghost for smaller coins.
     NoChange,
+    /// The wish is not in stock: the ghost orders it for tomorrow.
+    OrderForTomorrow,
+    /// Search the old junk for something broken (once an evening).
+    Rummage,
+    /// Repair a broken thing at the workbench.
+    Repair(String),
     /// The season is over: keep the shop open anyway.
     KeepPlaying,
     Decline,
@@ -1063,7 +1069,7 @@ fn build_evening_panel(
     bought: Res<BoughtTonight>,
     location: Res<Location>,
     upgrades: Res<Upgrades>,
-    letter: Res<crate::market::FoundLetter>,
+    (letter, drawer): (Res<crate::market::FoundLetter>, Res<Drawer>),
 ) {
     let night = progress.calendar(&data);
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
@@ -1224,6 +1230,10 @@ fn build_evening_panel(
         ui.dim(&lang.t("evening.storeroom_empty"));
     }
 
+    workbench_section(
+        &mut ui, &lang, &data, &layout, &progress, &drawer, &upgrades,
+    );
+
     ui.section(&lang.t("evening.atmosphere"));
     ui.text(&layout.atmosphere(&data, night).describe(&lang));
     ui.dim(&lang.f(
@@ -1259,6 +1269,20 @@ fn expected_guests(
     let mut likely: Vec<usize> = (0..odds.len()).filter(|&i| odds[i] > 0.0).collect();
     likely.sort_by(|&a, &b| odds[b].total_cmp(&odds[a]));
     ui.section(&lang.t("evening.expected"));
+    // Orders for tonight: these ghosts come for sure.
+    for o in progress.orders.iter().filter(|o| o.night == progress.night) {
+        let item = match stock.count(&o.product) {
+            0 => lang.product(&o.product),
+            n => lang.f(
+                "evening.stock_button",
+                &[("item", &lang.product(&o.product)), ("count", &n)],
+            ),
+        };
+        ui.text(&lang.f(
+            "evening.order",
+            &[("who", &lang.ghost(&o.ghost)), ("item", &item)],
+        ));
+    }
     // Story ghosts come every night until they have what they need: their
     // wish is announced, and the ferryman's parcel is mentioned.
     for (i, story) in data.stories.iter().enumerate() {
@@ -1307,6 +1331,56 @@ fn expected_guests(
         ));
     }
     ui.dim(&lang.t("evening.expected_hint"));
+}
+
+/// The workbench: search the junk, repair one broken thing an evening.
+fn workbench_section(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    layout: &ShopLayout,
+    progress: &Progress,
+    drawer: &Drawer,
+    upgrades: &Upgrades,
+) {
+    use crate::workbench::has_workbench;
+    let junk_left = upgrades.area(data) != (data.config.grid_cols, data.config.grid_rows);
+    if !has_workbench(layout) {
+        if junk_left {
+            ui.dim(&lang.t("workbench.buy_hint"));
+        }
+        return;
+    }
+    ui.section(&lang.t("workbench.title"));
+    let row = ui.row();
+    let rummaged = progress.rummaged_on == progress.night;
+    ui.button_in(
+        row,
+        &lang.t("workbench.rummage"),
+        Action::Rummage,
+        false,
+        !rummaged,
+    );
+    let repaired = progress.repaired_on == progress.night;
+    for b in &progress.broken {
+        let cost = data.workbench.cost(b).unwrap_or(0);
+        let label = lang.f(
+            "workbench.repair",
+            &[("item", &lang.product(b)), ("cost", &cost)],
+        );
+        ui.button_in(
+            row,
+            &label,
+            Action::Repair(b.clone()),
+            false,
+            !repaired && drawer.total() >= cost,
+        );
+    }
+    if rummaged && repaired {
+        ui.dim(&lang.t("workbench.done"));
+    } else {
+        ui.dim(&lang.t("workbench.hint"));
+    }
 }
 
 /// What the night panel shows besides the register: the ghost at the
@@ -1521,6 +1595,27 @@ fn build_night_panel(
             }
             ui.spacer();
             let root = ui.root();
+            if crate::register::can_order(
+                ghost,
+                &stock,
+                &progress,
+                data.config.orders.max_per_night,
+            ) {
+                ui.button_in(
+                    root,
+                    &lang.t("night.order"),
+                    Action::OrderForTomorrow,
+                    false,
+                    true,
+                );
+                ui.dim(&lang.f(
+                    "night.order_hint",
+                    &[(
+                        "percent",
+                        &((data.config.orders.price_bonus * 100.0).round() as u32),
+                    )],
+                ));
+            }
             ui.button_in(root, &lang.t("night.decline"), Action::Decline, false, true);
         }
         _ => {

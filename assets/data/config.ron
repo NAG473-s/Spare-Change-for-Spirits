@@ -24,6 +24,13 @@
     // Below `below` reputation a shade may come (chance per night, from night `from_night`):
     // it snatches one ware from the shelves and leaves. A shop with light `scared_by_light`
     // or more drives it away.
+    // Mishaps during the night (incidents.ron): `per_night` (at least, at most) from calendar
+    // night `from_night` on, at a random time between `arrive_at`.
+    incidents: (from_night: 2, per_night: (0, 2), arrive_at: (0.15, 0.8)),
+    // A ghost whose wish is not in stock can order it for the next night (at most `max_per_night`
+    // orders): it comes back early and pays `price_bonus` more; still missing costs
+    // `missed_penalty` reputation.
+    orders: (max_per_night: 3, price_bonus: 0.5, missed_penalty: 2, arrive_at: (0.08, 0.4)),
     thief: (from_night: 2, below: 0, chance: 0.6, arrive_at: (0.25, 0.7), scared_by_light: 5),
 
     grid_cols: 10,
