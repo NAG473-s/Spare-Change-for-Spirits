@@ -80,7 +80,10 @@ impl Upgrades {
 /// May the apprentice serve this ghost? It brings a ware from the shelves
 /// and wants nothing else.
 fn simple_customer(g: &Ghost) -> bool {
-    g.state == GhostState::Waiting && g.carrying.is_some() && g.chapter.is_none() && !g.ordered
+    g.state == GhostState::Waiting
+        && g.carrying.is_some()
+        && g.chapter.is_none()
+        && g.order.is_none()
 }
 
 fn serve(
@@ -131,7 +134,7 @@ fn serve(
         report.record_sale(&ware, price, price, 0);
         report.redeemed.push(def.id.clone());
         report.apprentice_served += 1;
-        progress.journal.served(&def.id);
+        progress.journal.served(&def.id, &ware, g.regular);
         cues.write(Cue::Paid);
         cues.write(Cue::Ascend(g.pos));
         g.state = GhostState::Ascending;

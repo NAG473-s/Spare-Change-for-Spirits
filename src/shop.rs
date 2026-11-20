@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use bevy::light::NotShadowCaster;
 
+use bevy::picking::hover::Hovered;
 use bevy::picking::pointer::PointerButton;
 
 use crate::data::{Atmosphere, DecorDef, GameData, asset_exists, rgb};
@@ -59,7 +60,7 @@ impl Plugin for ShopPlugin {
                             .or_else(resource_changed::<UiFont>),
                     ),
                     translate_counter.run_if(resource_changed::<UiFont>),
-                    shelf_tooltip,
+                    (shelf_tooltip, furnishing_tooltip).chain(),
                 ),
             )
             // A rebuilt shelf loses its hovered item.
@@ -83,7 +84,7 @@ pub struct CellContent {
     pub products: Vec<String>,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct ShopLayout {
     pub cols: usize,
     pub rows: usize,
@@ -190,7 +191,7 @@ impl ShopLayout {
 
 /// Furniture the player owns but has not placed: bought at the market or
 /// left by Edwin as a keepsake (decor id → count).
-#[derive(Resource, Default)]
+#[derive(Resource, Clone, Default)]
 pub struct Storeroom(pub BTreeMap<String, u32>);
 
 impl Storeroom {
@@ -221,6 +222,31 @@ fn clear_cell(layout: &mut ShopLayout, idx: usize, storeroom: &mut Storeroom) {
         storeroom.give(d);
     }
     layout.cells[idx] = CellContent::default();
+}
+
+/// Both the pointer preview and the actual click make the same replacement.
+fn furnish_cell(
+    layout: &mut ShopLayout,
+    room: &mut Storeroom,
+    data: &GameData,
+    upgrades: &Upgrades,
+    idx: usize,
+    piece: Option<&str>,
+) -> Result<(), &'static str> {
+    if let Some(id) = piece {
+        if !upgrades.usable(data, layout, idx) {
+            return Err("log.cell_blocked");
+        }
+        if layout.cells[idx].decor.as_deref() == Some(id) {
+            return Ok(());
+        }
+        if !room.take(id) {
+            return Err("log.none_in_storeroom");
+        }
+    }
+    clear_cell(layout, idx, room);
+    layout.cells[idx].decor = piece.map(str::to_owned);
+    Ok(())
 }
 
 /// Current tool in the evening.
@@ -465,6 +491,7 @@ fn spawn_shop(
         commands
             .spawn((
                 GridCell(idx),
+                Hovered::default(),
                 Mesh3d(tile_mesh.clone()),
                 MeshMaterial3d(if even {
                     light_tile.clone()
@@ -584,28 +611,15 @@ fn on_cell_click(
         return;
     };
     let idx = *idx;
-    if matches!(*tool, Tool::Place(_)) && !upgrades.usable(&data, &layout, idx) {
-        log.push(lang.t("log.cell_blocked"));
-        return;
-    }
     match &*tool {
         Tool::None => {}
-        Tool::Remove => {
-            clear_cell(&mut layout, idx, &mut storeroom);
-        }
+        Tool::Remove => clear_cell(&mut layout, idx, &mut storeroom),
         Tool::Place(id) => {
-            if layout.cells[idx].decor.as_deref() == Some(id.as_str()) {
-                return;
+            if let Err(key) =
+                furnish_cell(&mut layout, &mut storeroom, &data, &upgrades, idx, Some(id))
+            {
+                log.push(lang.f(key, &[("item", &lang.decor(id))]));
             }
-            if !storeroom.take(id) {
-                log.push(lang.f("log.none_in_storeroom", &[("item", &lang.decor(id))]));
-                return;
-            }
-            clear_cell(&mut layout, idx, &mut storeroom);
-            layout.cells[idx] = CellContent {
-                decor: Some(id.clone()),
-                products: Vec::new(),
-            };
         }
         Tool::Stock(product) => {
             let Some(def) = layout.cells[idx]
@@ -704,10 +718,17 @@ fn shelf_tooltip(
     ghosts: Query<&Ghost>,
     queue: Res<Queue>,
     upgrades: Res<Upgrades>,
+    tool: Res<Tool>,
     mut tip: ResMut<HoverTip>,
     mut shown: Local<bool>,
 ) {
-    let Some(item) = hovered.0.and_then(|e| items.get(e).ok()) else {
+    let furnishing =
+        *phase.get() == Phase::Evening && matches!(*tool, Tool::Place(_) | Tool::Remove);
+    let Some(item) = hovered
+        .0
+        .filter(|_| !furnishing)
+        .and_then(|e| items.get(e).ok())
+    else {
         if *shown {
             HoverTip::hide(&mut tip);
             *shown = false;
@@ -777,6 +798,138 @@ fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
         // Clicking the same tool again puts it away.
         *tool = if *tool == new { Tool::None } else { new };
     }
+}
+
+/// Apply the selected tool to a copy so events, complete sets and replaced
+/// furniture contribute exactly as they do after a real click.
+fn furnishing_preview(
+    data: &GameData,
+    layout: &ShopLayout,
+    room: &Storeroom,
+    upgrades: &Upgrades,
+    progress: &Progress,
+    lang: &Lang,
+    idx: usize,
+    piece: Option<&str>,
+) -> HoverTip {
+    let mut projected = layout.clone();
+    let mut tip = HoverTip::default();
+    let id = piece
+        .or(layout.cells[idx].decor.as_deref())
+        .unwrap_or_default();
+    tip.title = if piece.is_some() {
+        lang.decor(id)
+    } else {
+        format!("{} · {}", lang.t("evening.remove"), lang.decor(id))
+    };
+    if let Err(key) = furnish_cell(
+        &mut projected,
+        &mut room.clone(),
+        data,
+        upgrades,
+        idx,
+        piece,
+    ) {
+        tip.line(TipKind::Bad, lang.f(key, &[("item", &lang.decor(id))]));
+        return tip;
+    }
+    let night = progress.calendar(data);
+    let before = layout.atmosphere(data, night);
+    let after = projected.atmosphere(data, night);
+    let mut delta = before;
+    delta.scale(-1);
+    delta.add(&after);
+    let change = delta.changes(lang);
+    if !change.is_empty() {
+        tip.line(TipKind::Text, change);
+    }
+    let odds = data.ghost_odds(night, &before, progress.reputation);
+    let mut groups: BTreeMap<(bool, String), Vec<String>> = BTreeMap::new();
+    for (ghost, _) in data
+        .ghosts
+        .iter()
+        .zip(odds)
+        .filter(|(_, chance)| *chance > 0.)
+    {
+        for need in &ghost.needs {
+            let met = need.is_met(&after);
+            if met != need.is_met(&before) {
+                groups
+                    .entry((!met, need.describe(lang)))
+                    .or_default()
+                    .push(lang.ghost(&ghost.id));
+            }
+        }
+    }
+    if groups.is_empty() {
+        tip.line(TipKind::Hint, lang.t("preview.needs_same"));
+    }
+    for ((lost, need), ghosts) in groups {
+        let (key, kind) = if lost {
+            ("preview.need_lost", TipKind::Bad)
+        } else {
+            ("preview.need_met", TipKind::Good)
+        };
+        tip.line(
+            kind,
+            lang.f(key, &[("ghosts", &lang.join(&ghosts)), ("need", &need)]),
+        );
+    }
+    tip
+}
+
+fn furnishing_tooltip(
+    phase: Res<State<Phase>>,
+    tool: Res<Tool>,
+    cells: Query<(&GridCell, &Hovered)>,
+    data: Res<GameData>,
+    layout: Res<ShopLayout>,
+    room: Res<Storeroom>,
+    upgrades: Res<Upgrades>,
+    progress: Res<Progress>,
+    lang: Res<Lang>,
+    mut tip: ResMut<HoverTip>,
+    mut shown: Local<Option<(usize, HoverTip)>>,
+) {
+    let target = (*phase.get() == Phase::Evening)
+        .then(|| {
+            let (GridCell(idx), _) = cells.iter().find(|(_, hover)| hover.get())?;
+            match &*tool {
+                Tool::Place(id) => Some((*idx, Some(id.as_str()))),
+                Tool::Remove if layout.cells[*idx].decor.is_some() => Some((*idx, None)),
+                _ => None,
+            }
+        })
+        .flatten();
+    let Some((idx, piece)) = target else {
+        if let Some((_, old_tip)) = shown.take()
+            && *tip == old_tip
+        {
+            HoverTip::hide(&mut tip);
+        }
+        return;
+    };
+    if let Some((old_idx, preview)) = shown.as_ref()
+        && *old_idx == idx
+        && !(tool.is_changed()
+            || data.is_changed()
+            || layout.is_changed()
+            || room.is_changed()
+            || upgrades.is_changed()
+            || progress.is_changed()
+            || lang.is_changed())
+    {
+        // A previous hover target can clear the shared tooltip as the pointer leaves it.
+        if tip.is_empty() {
+            HoverTip::show(&mut tip, preview.clone());
+        }
+        return;
+    }
+    let preview = furnishing_preview(
+        &data, &layout, &room, &upgrades, &progress, &lang, idx, piece,
+    );
+    *shown = Some((idx, preview.clone()));
+    HoverTip::show(&mut tip, preview);
 }
 
 /// A label that belongs to a grid cell (rebuilt with the cell).
@@ -1038,6 +1191,69 @@ pub(crate) fn product_model(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_hovered_replacement_previews_unlocks_set_bonuses_and_lost_needs_without_placing() {
+        use crate::data::{Need, Stat};
+
+        let mut data = GameData::load();
+        let vain = data.ghost_index("vain").unwrap();
+        let child = data.ghost_index("child").unwrap();
+        // A mirror and vanity give five reflection; the completed set gives six.
+        data.ghosts[vain].needs = vec![Need::AtLeast(Stat::Reflection, 6)];
+        data.ghosts[child].needs = vec![Need::AtLeast(Stat::Warmth, 4)];
+        let mut layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        layout.cells.fill(CellContent::default());
+        let idx = data.config.start_area.cols;
+        layout.cells[idx].decor = Some("rug".into());
+        layout.cells[0].decor = Some("vanity".into());
+        layout.cells[1].decor = Some("folding_screen".into());
+        let mut room = Storeroom::default();
+        room.give("mirror");
+        let lang = Lang::load("en");
+        let vain = lang.ghost("vain");
+        let child = lang.ghost("child");
+        let blocked = lang.t("log.cell_blocked");
+        let mut app = App::new();
+        app.insert_resource(State::new(Phase::Evening))
+            .insert_resource(Tool::Place("mirror".into()))
+            .insert_resource(Progress::new(0))
+            .insert_resource(data)
+            .insert_resource(layout)
+            .insert_resource(room)
+            .insert_resource(lang)
+            .init_resource::<Upgrades>()
+            .init_resource::<HoverTip>()
+            .add_systems(Update, furnishing_tooltip);
+        app.world_mut().spawn((GridCell(idx), Hovered(true)));
+        app.update();
+        assert_eq!(app.world().resource::<HoverTip>().lines[0].text, blocked);
+        app.world_mut()
+            .resource_mut::<Upgrades>()
+            .0
+            .insert("clear_corner".into());
+        app.update();
+        let world = app.world();
+        let tip = world.resource::<HoverTip>();
+        assert!(
+            tip.lines
+                .iter()
+                .any(|l| l.kind == TipKind::Good && l.text.contains(&vain) && l.text.contains('6'))
+        );
+        assert!(
+            tip.lines
+                .iter()
+                .any(|l| l.kind == TipKind::Bad && l.text.contains(&child) && l.text.contains('4'))
+        );
+        assert_eq!(
+            world.resource::<ShopLayout>().cells[idx].decor.as_deref(),
+            Some("rug")
+        );
+        assert_eq!(world.resource::<Storeroom>().count("mirror"), 1);
+        app.world_mut().insert_resource(Tool::None);
+        app.update();
+        assert!(app.world().resource::<HoverTip>().is_empty());
+    }
 
     #[test]
     fn secondary_click_removes_only_the_targeted_ware_in_the_evening() {

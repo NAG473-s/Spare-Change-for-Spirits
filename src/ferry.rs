@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::accounts::Accounts;
-use crate::data::{GameData, asset_exists};
+use crate::data::{GameData, ProductDef, asset_exists};
 use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Drawer, Purse};
 use crate::fx::Cue;
@@ -249,6 +249,24 @@ fn blocked(
         Some("ferry.tip_poor")
     } else {
         None
+    }
+}
+
+struct CratePreview {
+    stock_after: u32,
+    money_after: i64,
+    fade_after_night: u32,
+}
+
+impl CratePreview {
+    fn new(product: &ProductDef, count: u32, money: u32, night: u32, fade_bonus: u32) -> Self {
+        // A new unit starts at age zero and first ages at the end of this night.
+        let shelf_life = product.fade_after.saturating_add(fade_bonus);
+        Self {
+            stock_after: count.saturating_add(product.crate_size),
+            money_after: i64::from(money) - i64::from(product.crate_cost),
+            fade_after_night: night.saturating_add(shelf_life.saturating_sub(1)),
+        }
     }
 }
 
@@ -1055,12 +1073,13 @@ fn update_crate_labels(
     data: Res<GameData>,
     progress: Res<Progress>,
     crates: Query<&Crate>,
-    mut labels: Query<(&CrateLabel, &mut Text)>,
+    mut labels: Query<(Ref<CrateLabel>, &mut Text)>,
 ) {
-    if !bought.is_changed() && !lang.is_changed() {
-        return;
-    }
+    let refresh = bought.is_changed() || lang.is_changed() || progress.is_changed();
     for (label, mut text) in &mut labels {
+        if !refresh && !label.is_added() {
+            continue;
+        }
         let Ok(item) = crates.get(label.0) else {
             continue;
         };
@@ -1068,12 +1087,19 @@ fn update_crate_labels(
         let new = data
             .product(&item.id)
             .is_some_and(|p| p.unlock_night == progress.calendar(&data) && p.unlock_night > 1);
-        text.0 = if n > 0 {
+        let label = if n > 0 {
             format!("×{n}")
         } else if new {
             lang.t("ferry.new")
         } else {
             String::new()
+        };
+        text.0 = if progress.pinned_for(&item.id) {
+            format!("{} {label}", crate::orders::PIN_MARK)
+                .trim_end()
+                .to_owned()
+        } else {
+            label
         };
     }
 }
@@ -1122,8 +1148,10 @@ fn update_tooltip(
     node.left = px(x);
     node.top = px(y);
 
-    let changed = stock.is_changed()
+    let changed = progress.is_changed()
+        || stock.is_changed()
         || drawer.is_changed()
+        || upgrades.is_changed()
         || crates.is_changed()
         || bought.is_changed()
         || lang.is_changed();
@@ -1155,6 +1183,9 @@ fn update_tooltip(
         17.0,
         Color::srgb_u8(249, 200, 132),
     );
+    if progress.pinned_for(&id) {
+        ui.text(&lang.t("order_slips.pinned"));
+    }
     ui.rule();
     ui.text(&lang.f(
         "ferry.tip_crate",
@@ -1172,11 +1203,34 @@ fn update_tooltip(
         14.0,
         if profit >= 0 { GREEN } else { RED },
     );
+    let count = stock.count(&id);
+    let preview = CratePreview::new(
+        p,
+        count,
+        drawer.total(),
+        progress.night,
+        upgrades.fade_bonus(&data),
+    );
     ui.text(&lang.f(
-        "ferry.tip_lasts",
-        &[("nights", &(p.fade_after + upgrades.fade_bonus(&data)))],
+        "preview.crate_stock",
+        &[("before", &count), ("after", &preview.stock_after)],
     ));
-    ui.text(&lang.f("ferry.tip_stock", &[("count", &stock.count(&id))]));
+    let (key, color) = if preview.money_after < 0 {
+        ("preview.crate_short", RED)
+    } else {
+        ("preview.crate_money", crate::ui::TEXT)
+    };
+    ui.add_text(
+        body,
+        &lang.f(key, &[("amount", &preview.money_after.abs())]),
+        false,
+        14.,
+        color,
+    );
+    ui.text(&lang.f(
+        "preview.crate_fades",
+        &[("night", &preview.fade_after_night)],
+    ));
     if let Some(n) = bought.0.get(&id) {
         ui.text(&lang.f("ferry.tip_bought", &[("count", n)]));
     }
@@ -1187,14 +1241,57 @@ fn update_tooltip(
         upgrades.crates_tonight(&data, night),
         &id,
     ) {
-        Some(key) => ui.add_text(body, &lang.t(key), false, 13.0, RED),
-        None => ui.add_text(body, &lang.t("ferry.tip_controls"), false, 12.0, TEXT_DIM),
-    };
+        Some("ferry.tip_poor") => {}
+        Some(key) => {
+            ui.add_text(body, &lang.t(key), false, 13.0, RED);
+        }
+        None => {
+            ui.add_text(body, &lang.t("ferry.tip_controls"), false, 12.0, TEXT_DIM);
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn one_crate_forecasts_the_actual_balance_stock_and_last_night() {
+        let data = GameData::load();
+        let product = data.product("lavender").unwrap();
+        let mut upgrades = Upgrades::default();
+        upgrades.0.insert("herb_sachets".into());
+        let bonus = upgrades.fade_bonus(&data);
+        let night = 13;
+        let mut stock = Stock::default();
+        stock.add(&product.id, 2);
+        let mut drawer = Drawer(Purse {
+            spoons: 1,
+            ..default()
+        });
+        let preview = CratePreview::new(
+            product,
+            stock.count(&product.id),
+            drawer.total(),
+            night,
+            bonus,
+        );
+        assert!(drawer.pay(product.crate_cost));
+        stock.add(&product.id, product.crate_size);
+        assert_eq!(preview.money_after, i64::from(drawer.total()));
+        assert_eq!(preview.stock_after, stock.count(&product.id));
+        for _ in night..preview.fade_after_night {
+            assert!(stock.age_and_fade(&data, bonus).is_empty());
+        }
+        assert_eq!(
+            stock.age_and_fade(&data, bonus),
+            [(product.id.clone(), preview.stock_after)]
+        );
+        assert_eq!(
+            CratePreview::new(product, 0, product.crate_cost - 1, night, 0).money_after,
+            -1
+        );
+    }
 
     #[test]
     fn loaded_cart_and_refunds_match_the_purchased_products() {

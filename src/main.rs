@@ -30,6 +30,7 @@ mod inventory;
 mod loan;
 mod market;
 mod menu;
+mod orders;
 mod playtest;
 mod props;
 mod register;

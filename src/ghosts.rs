@@ -136,7 +136,7 @@ pub struct Ghost {
     /// A story ghost that has waited for its wish long enough names it.
     pub plain: bool,
     /// It comes back for a ware it ordered last night.
-    pub ordered: bool,
+    pub order: Option<usize>,
     /// Shelf cell the ghost browses, if any.
     browse_cell: Option<usize>,
     /// The ware it took from the shelf and brings to the counter (its wish
@@ -144,13 +144,18 @@ pub struct Ghost {
     pub carrying: Option<String>,
     /// A regular customer: its index in `Progress::journal.regulars`.
     pub regular: Option<usize>,
+    /// What this particular visitor recalled, even if another arrives later.
+    pub memory: Option<crate::regulars::Memory>,
     bob_offset: f32,
 }
 
 impl Ghost {
     /// What the ghost whispers, in the current language.
     pub fn whisper(&self, lang: &Lang) -> String {
-        let text = lang.t(&self.hint);
+        let text = match &self.memory {
+            Some(memory) => format!("{} {}", memory.words(lang), lang.t(&self.hint)),
+            None => lang.t(&self.hint),
+        };
         if self.plain {
             // A fare chapter asks for a coin, not a ware.
             let plainly = if self.wish.is_empty() {
@@ -200,7 +205,7 @@ fn spawn_ghosts(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut report: ResMut<NightReport>,
-    ghosts: Query<(), With<Ghost>>,
+    ghosts: Query<&Ghost>,
     (upgrades, stock): (Res<Upgrades>, Res<crate::inventory::Stock>),
 ) {
     if progress.guiding_first_sale() && !ghosts.is_empty() {
@@ -262,23 +267,32 @@ fn spawn_ghosts(
     };
     let def = &data.ghosts[def_idx];
     let first_customer = guided_ware.is_some();
-    let regular = if first_customer {
+    let unmet = if first_customer {
         None
     } else {
-        crate::regulars::returning(&data, &mut progress, &def.id, &mut rng)
+        def.unmet_need(&atmosphere)
+    };
+    let regular = if first_customer || unmet.is_some() {
+        None
+    } else {
+        crate::regulars::returning(
+            &data,
+            &mut progress,
+            &def.id,
+            ghosts.iter().filter_map(|g| g.regular),
+            &mut rng,
+        )
     };
     let regular = regular.map(|i| {
         let r = &progress.journal.regulars[i];
         let wishes = data.wishes_tonight(def, night);
         wish = crate::regulars::wish(&data, r, &wishes, wish.clone(), &mut rng);
-        let name = r.name(&lang);
-        log.push(lang.f(
-            "log.regular_back",
-            &[("name", &name), ("visits", &r.visits)],
-        ));
-        (i, name)
+        crate::regulars::greet(i, &mut progress, &wish, &data, &layout, &lang, &mut log)
     });
-    progress.journal.met(&def.id, &wish);
+    let unfamiliar = !progress.journal.book.contains_key(&def.id);
+    if unmet.is_none() {
+        progress.journal.met(&def.id, &wish);
+    }
     let hints = lang.count(&format!("product.{wish}.hint."));
     let hint_number = if first_customer {
         1
@@ -287,11 +301,6 @@ fn spawn_ghosts(
     };
     let hint = format!("product.{wish}.hint.{hint_number}");
 
-    let unmet = if first_customer {
-        None
-    } else {
-        def.unmet_need(&atmosphere)
-    };
     if let Some(need) = unmet {
         log.push(lang.f(
             "log.hesitates",
@@ -308,8 +317,8 @@ fn spawn_ghosts(
         wish,
         hint,
         chapter: None,
-        plain: first_customer,
-        ordered: false,
+        plain: first_customer || unfamiliar || regular.is_some(),
+        order: None,
         flees: unmet.is_some(),
         patience_factor: upgrades.patience_factor(&data),
         regular,
@@ -465,7 +474,7 @@ fn ghost_tooltip(
     let at_counter = matches!(g.state, GhostState::Waiting | GhostState::AtRegister);
     if def.id == THIEF_GHOST {
         t.line(TipKind::Bad, lang.t("ghost_tip.thief"));
-    } else if g.ordered && g.carrying.is_none() {
+    } else if g.order.is_some() && g.carrying.is_none() {
         t.line(
             TipKind::Good,
             lang.f("ghost_tip.ordered", &[("item", &lang.product(&g.wish))]),
@@ -542,12 +551,11 @@ struct Visit {
     hint: String,
     chapter: Option<(usize, usize)>,
     plain: bool,
-    ordered: bool,
+    order: Option<usize>,
     flees: bool,
     /// The waiting bench: ghosts wait longer.
     patience_factor: f32,
-    /// A regular: its index and its name.
-    regular: Option<(usize, String)>,
+    regular: Option<crate::regulars::RegularVisit>,
 }
 
 fn spawn_ghost(
@@ -616,10 +624,11 @@ fn spawn_ghost(
                 age: 0.0,
                 chapter: visit.chapter,
                 plain: visit.plain,
-                ordered: visit.ordered,
+                order: visit.order,
                 browse_cell,
                 carrying: None,
-                regular: visit.regular.as_ref().map(|(i, _)| *i),
+                regular: visit.regular.as_ref().map(|r| r.index),
+                memory: visit.regular.as_ref().map(|r| r.memory.clone()),
                 bob_offset: rng.range(0.0, std::f32::consts::TAU),
             },
             Billboard,
@@ -678,7 +687,7 @@ fn spawn_ghost(
         .observe(on_ghost_over)
         .observe(on_ghost_out);
     let name = match &visit.regular {
-        Some((_, name)) => name.clone(),
+        Some(r) => r.name.clone(),
         None => lang.ghost(&def.id),
     };
     let label = commands
@@ -780,22 +789,62 @@ fn spawn_ordering(
     mut cues: MessageWriter<Cue>,
     mut report: ResMut<NightReport>,
     upgrades: Res<Upgrades>,
+    mut log: ResMut<GameLog>,
+    ghosts: Query<&Ghost>,
 ) {
-    let mut due = progress.orders.iter().filter(|o| o.night == progress.night);
-    let arrived = report.orders_arrived;
-    let total = due.clone().count();
-    let Some(order) = due.nth(arrived) else {
+    if clock.is_over() {
         return;
-    };
+    }
+    let mut due = progress
+        .orders
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.night == progress.night);
+    let total = due.clone().count();
+    let arrived = report.dispatched_orders.len();
+    if arrived >= total {
+        return;
+    }
     let (from, to) = data.config.orders.arrive_at;
     let at = from + (to - from) * arrived as f32 / total as f32;
     if clock.elapsed < at * clock.length {
         return;
     }
-    report.orders_arrived += 1;
+    let Some((index, order)) = due.find(|(idx, order)| {
+        !report.dispatched_orders.contains(idx)
+            && order.state == crate::orders::OrderState::Open
+            && !order.regular_name.is_some_and(|name| {
+                ghosts
+                    .iter()
+                    .filter_map(|g| g.regular)
+                    .filter_map(|i| progress.journal.regulars.get(i))
+                    .any(|r| r.name == name && r.ghost == order.ghost)
+            })
+    }) else {
+        return;
+    };
+    report.dispatched_orders.push(index);
     let Some(def_idx) = data.ghost_index(&order.ghost) else {
         return;
     };
+    let order = order.clone();
+    let regular = order.regular_name.and_then(|name| {
+        let index = progress
+            .journal
+            .regulars
+            .iter()
+            .position(|r| r.name == name && r.ghost == order.ghost)?;
+        progress.journal.regulars[index].visits += 1;
+        Some(crate::regulars::greet(
+            index,
+            &mut progress,
+            &order.product,
+            &data,
+            &layout,
+            &lang,
+            &mut log,
+        ))
+    });
     let visit = Visit {
         first_customer: false,
         def_idx,
@@ -803,10 +852,10 @@ fn spawn_ordering(
         hint: "order.whisper".into(),
         chapter: None,
         plain: true,
-        ordered: true,
+        order: Some(index),
         flees: false,
         patience_factor: upgrades.patience_factor(&data),
-        regular: None,
+        regular,
     };
     progress.journal.met(&data.ghosts[def_idx].id, &visit.wish);
     spawn_ghost(
@@ -890,7 +939,7 @@ fn spawn_thief(
         hint: "ghost_tip.thief".into(),
         chapter: None,
         plain: false,
-        ordered: false,
+        order: None,
         flees: false,
         patience_factor: 1.0,
         regular: None,
@@ -978,7 +1027,7 @@ fn come_home(
             hint: farewell,
             chapter: None,
             plain: false,
-            ordered: false,
+            order: None,
             flees: false,
             patience_factor: 1.0,
             regular: None,
@@ -1049,7 +1098,7 @@ fn spawn_story_ghost(
             hint: format!("story.{}.{}.intro", story.ghost, chapter + 1),
             chapter: Some((i, chapter)),
             plain: progress.asks_plainly(i),
-            ordered: false,
+            order: None,
             flees: false,
             patience_factor: upgrades.patience_factor(&data),
             regular: None,
@@ -1170,6 +1219,7 @@ fn ghost_ai(
                 }
                 if g.patience <= 0.0 {
                     let who = lang.ghost_the(&data.ghosts[g.def].id);
+                    progress.set_order_state(g.order, crate::orders::OrderState::Expired);
                     log.push(lang.f("log.waited_too_long", &[("who", &who)]));
                     g.state = GhostState::Leaving;
                     queue.remove(entity);
@@ -1444,15 +1494,19 @@ fn fade_ghosts(
 mod tests {
     use super::*;
 
-    #[test]
-    fn replaying_a_night_brings_back_its_ordered_customer() {
+    fn ordering_fixture() -> (App, Progress) {
         let data = GameData::load();
         let mut progress = Progress::new(0);
-        progress.orders.push(crate::day_cycle::Order {
-            night: progress.night,
-            ghost: "cat".into(),
-            product: "fish_bone".into(),
-        });
+        let first = crate::orders::Order::new("cat", "fish_bone", progress.night, Some(1));
+        progress.orders = vec![
+            first.clone(),
+            first,
+            crate::orders::Order::new("shy", "letter_paper", progress.night, None),
+        ];
+        progress
+            .journal
+            .regulars
+            .push(ron::from_str(r#"(ghost:"cat",name:1,visits:2,favourite:"fish_bone")"#).unwrap());
         let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, AssetPlugin::default()))
@@ -1471,8 +1525,14 @@ mod tests {
                 length: 100.,
             })
             .add_message::<Cue>()
+            .init_resource::<GameLog>()
             .add_systems(Update, spawn_ordering);
+        (app, progress)
+    }
 
+    #[test]
+    fn replaying_a_night_brings_back_its_ordered_customer() {
+        let (mut app, progress) = ordering_fixture();
         for _ in 0..2 {
             // Loading the evening snapshot starts a fresh report even for the same night.
             app.insert_resource(progress.clone())
@@ -1482,8 +1542,64 @@ mod tests {
             let played = app.world().resource::<Progress>();
             assert_eq!(played.journal.book["cat"].met, 1);
             assert_eq!(played.journal.book["cat"].wishes, ["fish_bone"]);
-            assert_eq!(app.world().resource::<NightReport>().orders_arrived, 1);
+            assert_eq!(played.journal.regulars[0].visits, 3);
+            assert_eq!(played.journal.regulars[0].encounters.len(), 1);
+            let world = app.world_mut();
+            assert_eq!(world.resource::<NightReport>().dispatched_orders, [0, 2]);
+            let first = world
+                .query::<(Entity, &Ghost)>()
+                .iter(world)
+                .find(|(_, g)| g.order == Some(0) && g.regular == Some(0))
+                .unwrap()
+                .0;
+            world.despawn(first);
+            app.update();
+            let world = app.world_mut();
+            assert_eq!(world.resource::<NightReport>().dispatched_orders, [0, 2, 1]);
+            assert_eq!(world.resource::<Progress>().journal.regulars[0].visits, 4);
+            let guests: Vec<_> = world
+                .query_filtered::<Entity, With<Ghost>>()
+                .iter(world)
+                .collect();
+            for guest in guests {
+                world.despawn(guest);
+            }
         }
+    }
+
+    #[test]
+    fn an_order_waiting_for_the_same_customer_expires_when_the_first_visit_ends_at_dawn() {
+        use crate::orders::OrderState;
+        let (mut app, progress) = ordering_fixture();
+        app.insert_resource(progress).init_resource::<NightReport>();
+        app.update();
+        app.update();
+        let world = app.world_mut();
+        assert_eq!(world.resource::<NightReport>().dispatched_orders, [0, 2]);
+        let first = world
+            .query::<(Entity, &Ghost)>()
+            .iter(world)
+            .find(|(_, ghost)| ghost.order == Some(0))
+            .unwrap()
+            .0;
+        world
+            .resource_mut::<Progress>()
+            .set_order_state(Some(0), OrderState::Collected);
+        world.despawn(first);
+        let mut clock = world.resource_mut::<NightClock>();
+        clock.elapsed = clock.length;
+        app.update();
+
+        let world = app.world_mut();
+        assert_eq!(world.resource::<NightReport>().dispatched_orders, [0, 2]);
+        let mut progress = world.resource_mut::<Progress>();
+        assert_eq!(progress.journal.regulars[0].encounters.len(), 1);
+        progress.archive_due_orders();
+        assert_eq!(
+            progress.journal.order_history[0].state,
+            OrderState::Collected
+        );
+        assert_eq!(progress.journal.order_history[1].state, OrderState::Expired);
     }
 
     #[test]
@@ -1670,10 +1786,11 @@ mod tests {
                 age: 0.0,
                 chapter: None,
                 plain: false,
-                ordered: false,
+                order: None,
                 browse_cell: None,
                 carrying: Some(ware.into()),
                 regular: None,
+                memory: None,
                 bob_offset: 0.0,
             })
             .id();
@@ -1742,6 +1859,52 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn settling_one_of_two_identical_orders_updates_only_that_customers_slip() {
+        use crate::economy::Coin;
+        use crate::orders::{Order, OrderState};
+        use crate::register::Register;
+        use crate::ui::Action;
+
+        let (mut app, ghost) = customer_at_counter();
+        let world = app.world_mut();
+        let first = Order::new("shy", "lavender", 1, None);
+        world.resource_mut::<Progress>().orders = vec![first.clone(), first];
+        world.get_mut::<Ghost>(ghost).unwrap().order = Some(1);
+        app.update();
+        let world = app.world_mut();
+        assert!(world.resource::<Register>().is_busy_with(ghost));
+        assert_eq!(
+            world.resource::<Progress>().orders[0].state,
+            OrderState::Open
+        );
+        assert_eq!(
+            world.resource::<Progress>().orders[1].state,
+            OrderState::AtRegister
+        );
+        let change = world
+            .resource::<Register>()
+            .sale
+            .as_ref()
+            .unwrap()
+            .change_due();
+        for _ in 0..change {
+            world.write_message(Action::AddChange(Coin::Button));
+        }
+        world.write_message(Action::GiveChange);
+        app.update();
+        let world = app.world_mut();
+        assert_eq!(world.resource::<NightReport>().orders_fulfilled, 1);
+        assert_eq!(
+            world.resource::<Progress>().orders[0].state,
+            OrderState::Open
+        );
+        assert_eq!(
+            world.resource::<Progress>().orders[1].state,
+            OrderState::Collected
+        );
     }
 
     #[test]

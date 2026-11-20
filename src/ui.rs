@@ -144,7 +144,10 @@ pub enum Action {
     OpenAchievements,
     /// The ghost book (pauses the game).
     OpenBook,
+    RegularHistory(u32, usize),
     OpenGuide,
+    OpenOrders(usize),
+    PinOrder(usize),
     SkipGuide,
     ResumeGuide,
     /// Put a ware in the shop window, or empty it.
@@ -1208,6 +1211,21 @@ fn build_evening_panel(
             }
         }
         ui.dim(&lang.t("harbor.intro"));
+        let mut pinned = progress
+            .orders
+            .iter()
+            .filter(|o| o.pinned && o.state == crate::orders::OrderState::Open)
+            .peekable();
+        if pinned.peek().is_some() {
+            ui.section(&format!(
+                "{} {}",
+                crate::orders::PIN_MARK,
+                lang.t("order_slips.pinned")
+            ));
+            for order in pinned {
+                ui.text(&order.label(&lang));
+            }
+        }
         ui.section(&lang.f(
             "evening.ferryman",
             &[("count", &crates.0), ("max", &max_crates)],
@@ -1443,24 +1461,19 @@ fn expected_guests(
 ) {
     let night = progress.calendar(data);
     let total: f32 = odds.iter().sum();
-    if total <= 0.0 {
-        return;
-    }
     let mut likely: Vec<usize> = (0..odds.len()).filter(|&i| odds[i] > 0.0).collect();
     likely.sort_by(|&a, &b| odds[b].total_cmp(&odds[a]));
     ui.section(&lang.t("evening.expected"));
     // Orders for tonight: these ghosts come for sure.
-    for o in progress.orders.iter().filter(|o| o.night == progress.night) {
-        let item = match stock.count(&o.product) {
-            0 => lang.product(&o.product),
-            n => lang.f(
-                "evening.stock_button",
-                &[("item", &lang.product(&o.product)), ("count", &n)],
-            ),
-        };
+    for order in progress.orders.iter().filter(|order| {
+        order.night == progress.night && order.state == crate::orders::OrderState::Open
+    }) {
         ui.text(&lang.f(
             "evening.order",
-            &[("who", &lang.ghost(&o.ghost)), ("item", &item)],
+            &[
+                ("who", &order.customer(lang)),
+                ("item", &order.ordered_ware(lang)),
+            ],
         ));
     }
     // Story ghosts come every night until they have what they need: their
@@ -1889,6 +1902,18 @@ fn build_night_panel(
 
     if let Some(sale) = &register.sale {
         ui.section(&lang.t("night.register"));
+        if let Ok(ghost) = ghosts.get(sale.ghost)
+            && let Some(memory) = &ghost.memory
+            && let Some(regular) = ghost.regular.and_then(|i| progress.journal.regulars.get(i))
+        {
+            ui.text(&lang.f(
+                "log.story_says",
+                &[
+                    ("name", &regular.name(&lang)),
+                    ("text", &memory.words(&lang)),
+                ],
+            ));
+        }
         ui.text(&lang.f("night.item", &[("item", &lang.product(&sale.product))]));
         ui.text(&lang.f("night.price", &[("price", &sale.price)]));
         let paid = sale.paid();
@@ -2011,7 +2036,9 @@ fn build_night_panel(
     match front {
         Some(ghost) if ghost.state == GhostState::Waiting => {
             let def = &data.ghosts[ghost.def];
-            if ghost.chapter.is_some() {
+            if let Some(regular) = ghost.regular.and_then(|i| progress.journal.regulars.get(i)) {
+                ui.section(&lang.f("night.story_says", &[("name", &regular.name(&lang))]));
+            } else if ghost.chapter.is_some() {
                 ui.section(&lang.f("night.story_says", &[("name", &lang.ghost(&def.id))]));
             } else {
                 ui.section(&lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))]));
@@ -2157,8 +2184,8 @@ fn build_morning_panel(
         ui.text(&lang.f(
             "morning.order",
             &[
-                ("who", &lang.ghost(&o.ghost)),
-                ("item", &lang.product(&o.product)),
+                ("who", &o.customer(&lang)),
+                ("item", &o.ordered_ware(&lang)),
             ],
         ));
     }

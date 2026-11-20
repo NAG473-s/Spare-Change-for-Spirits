@@ -26,7 +26,7 @@ use crate::shop::{CellContent, ShopLayout, Storeroom};
 use crate::upgrades::Upgrades;
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 5;
+pub const SAVE_VERSION: u32 = 6;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -79,7 +79,7 @@ pub struct SaveGame {
     pub parcels: Vec<usize>,
     /// Wares ghosts ordered for a coming night.
     #[serde(default)]
-    pub orders: Vec<crate::day_cycle::Order>,
+    pub orders: Vec<crate::orders::Order>,
     /// Broken things waiting at the workbench, and when it was last used.
     #[serde(default)]
     pub broken: Vec<String>,
@@ -320,8 +320,8 @@ fn slot_path(dir: &Path, profile: u8, slot: Slot) -> PathBuf {
 fn read_save_at(path: &Path) -> Option<SaveGame> {
     let text = std::fs::read_to_string(path).ok()?;
     match ron::from_str::<SaveGame>(&text) {
-        Ok(mut save) if save.version == SAVE_VERSION || save.version == 4 => {
-            // Version 5 adds only optional journal data for the first sale.
+        Ok(mut save) if (4..=SAVE_VERSION).contains(&save.version) => {
+            // The first-sale guide and the order book added only defaulted fields in versions 5 and 6.
             save.version = SAVE_VERSION;
             Some(save)
         }
@@ -658,6 +658,11 @@ fn night_snapshot(
 ) -> SaveGame {
     use crate::guide::FirstSaleCheckpoint;
     let mut save = start.clone();
+    // Night saves restore the opening stock and promises. Keep pin choices for slips
+    // that existed at that point, even if their guest has already collected the ware.
+    for (order, live) in save.orders.iter_mut().zip(&progress.orders) {
+        order.pinned = live.pinned;
+    }
     save.journal.first_sale = progress.journal.first_sale;
     save.journal.first_sale_checkpoint = if progress.guiding_first_sale() {
         Some(if let Some(sale) = &register.sale {
@@ -856,6 +861,7 @@ mod tests {
         original.stock.insert("marbles".into(), vec![0, 0]);
         let old_text = ron::to_string(&original)
             .unwrap()
+            .replace("order_history:[],", "")
             .replace("first_sale:Skipped,", "")
             .replace("first_sale_checkpoint:None,", "");
         let dir = temp_dir("old-guide");
@@ -867,6 +873,43 @@ mod tests {
         assert_eq!(loaded.journal.first_sale, crate::guide::FirstSale::Skipped);
         assert_eq!(loaded.resume_at(5), Some((Phase::Evening, 1)));
         assert_eq!(loaded.stock, original.stock);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn legacy_orders_survive_loading_and_a_restarted_night_keeps_the_pin_with_its_original_stock() {
+        use crate::orders::{Order, OrderState};
+
+        let mut old = sample(4);
+        old.version = 5;
+        old.orders.push(Order::new("shy", "lavender", 4, None));
+        old.stock.insert("lavender".into(), vec![0]);
+        let mut text = ron::to_string(&old).unwrap();
+        text = text
+            .replace("order_history:[],", "")
+            .replace(",regular_name:None,state:Open,pinned:false", "");
+        assert!(!text.contains("order_history:") && !text.contains("pinned:"));
+        let dir = temp_dir("order-slips");
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("save.ron");
+        std::fs::write(&file, text).unwrap();
+        let loaded = read_save_at(&file).unwrap();
+        assert_eq!(loaded.version, SAVE_VERSION);
+        assert_eq!(loaded.orders[0].state, OrderState::Open);
+        assert!(!loaded.orders[0].pinned);
+        let mut live = Progress::new(0);
+        live.night = 4;
+        live.orders = loaded.orders.clone();
+        live.orders[0].pinned = true;
+        live.orders[0].state = OrderState::Collected;
+        live.orders.push(Order::new("child", "marbles", 5, None));
+        let saved = night_snapshot(&loaded, &live, &crate::register::Register::default());
+        write_ron(&file, &saved);
+        let reloaded = read_save_at(&file).unwrap();
+        assert_eq!(reloaded.orders.len(), 1);
+        assert!(reloaded.orders[0].pinned);
+        assert_eq!(reloaded.orders[0].state, OrderState::Open);
+        assert_eq!(reloaded.stock, old.stock);
         std::fs::remove_dir_all(dir).unwrap();
     }
 

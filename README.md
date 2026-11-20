@@ -128,7 +128,7 @@ Runs for the same ref queue behind the current run.
 | Phase | What happens |
 |---|---|
 | **Market day** | From the second day on, the village market opens before the evening: seven traders sell furniture (shelves of every size, candles and lamps, plants and incense, mirrors, rugs and screens), the raven changes coins and the Reaper sells rare single pieces and an hourglass that makes the coming night longer. Bought furniture waits in the storeroom; it can be sold back the same day. |
-| **Evening** | Place furniture from the storeroom (removing it puts it back), step out through the shop door to the harbour, where the ferryman's boat waits: click a crate to buy it (max. 4 per evening), right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. Turn the sign in the window (or press the button) to open: the clock runs on to midnight and strikes. |
+| **Evening** | Place furniture from the storeroom (removing it puts it back), step out through the shop door to the harbour, where the ferryman's boat waits: hover over a crate to see the stock and cash after purchase and the dawn when the new wares would fade. Click to buy a crate, or right-click to give one back. Back in the shop, pick a tool and click cells: build shelves, candles, mirrors …, put products on shelves. Turn the sign in the window (or press the button) to open: the clock runs on to midnight and strikes. |
 | **Night** | Ghosts come in, browse and queue at the counter. The ghost at the front whispers a hint – you hand over a product from the shelves (click it on the shelf or in the panel; hovering a product on a shelf shows its price, stock and when it fades). Guess right → it pays and you count out the change. |
 | **Morning** | The accounts: a ledger of the cash drawer (dusk, ferryman, furniture, takings, counterfeits, profit or loss) and how the night went – visitors, sales, change, reputation, ghosts that passed into the light, faded items and what fades next. |
 
@@ -170,14 +170,14 @@ Special customers:
 - **Ghost book** – every kind of ghost the shop meets gets a page that fills in while playing:
   how often it came and was served, what it likes, how it pays and the wishes heard so far, with
   the regulars, Hedda's letters and the keepsakes (pause menu or the evening panel, `book.rs`).
+  Next-night orders have a slip showing the customer, ware, quantity and collection night. Pin a slip to mark its crate on the ferry. The book keeps the outcome when an order is collected or expires.
 - **Regulars** – a ghost served well may come back now and then by name (Mrs Wispel, Captain
-  Brine …), often for the ware it bought the first time, and tips more often the more it visits
-  (`regulars` in `config.ron`, `regulars.rs`).
+  Brine …), often for the ware it bought the first time, and tips more often as it returns. A regular can recall its last purchase or recognise a keepsake it has seen in the shop before. The ghost book records the remark and the wish from that visit (`regulars` in `config.ron`, `regulars.rs`).
 - **Shop window** – in the evening one ware from stock goes in the window; ghosts who wish for
   it come more often while one is left (`showcase_attract`, `showcase.rs`).
 - **Furniture sets** – three matching pieces in the shop draw certain ghosts and add to the
   atmosphere, e.g. the dressing room (mirror, vanity, folding screen) for vain ghosts and
-  brides, or Ida's keepsakes as the seafarer's corner (`sets.ron`, `sets.rs`).
+  brides, or Ida's keepsakes as the seafarer's corner (`sets.ron`, `sets.rs`). With a furnishing or removal tool selected, hover over a floor square to see which visiting ghosts would gain or lose a condition they need, including the effects of replacing a piece or completing a set.
 - **Apprentice** – an improvement from the Reaper: a helper ghost behind the counter serves up
   to three customers a night who wait in line with a ware from the shelves (`apprentice.rs`).
 

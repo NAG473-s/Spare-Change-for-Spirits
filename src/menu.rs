@@ -53,6 +53,7 @@ impl Plugin for MenuPlugin {
                         resource_changed::<Paused>
                             .or_else(resource_changed::<SettingsMenu>)
                             .or_else(resource_changed::<SaveMenu>)
+                            .or_else(order_page_changed)
                             .or_else(resource_changed::<Settings>)
                             .or_else(resource_changed::<UiFont>),
                     ),
@@ -85,7 +86,9 @@ pub enum SaveMenu {
     Achievements,
     /// The ghost book (pause menu).
     Book,
+    RegularHistory(u32, usize),
     FirstSale,
+    Orders(usize),
 }
 
 /// The game is paused and the pause menu is open.
@@ -276,7 +279,12 @@ fn build_main_menu(
             let all = crate::achievements::across_profiles();
             return crate::achievements::achievements_page(&mut ui, &lang, &data, &all);
         }
-        SaveMenu::Closed | SaveMenu::Save | SaveMenu::Book | SaveMenu::FirstSale => {}
+        SaveMenu::RegularHistory(_, _) => {}
+        SaveMenu::Closed
+        | SaveMenu::Save
+        | SaveMenu::Book
+        | SaveMenu::FirstSale
+        | SaveMenu::Orders(_) => {}
     }
     ui.text(&lang.t("menu.tagline"));
     ui.rule();
@@ -685,6 +693,25 @@ fn pause_actions(
                 *save_menu = SaveMenu::Closed;
                 continue;
             }
+            Action::OpenOrders(page) => {
+                paused.0 = true;
+                *save_menu = SaveMenu::Orders(*page);
+                continue;
+            }
+            Action::PinOrder(index) if matches!(*save_menu, SaveMenu::Orders(_)) => {
+                if let Some(order) = state.progress.orders.get_mut(*index)
+                    && order.state == crate::orders::OrderState::Open
+                {
+                    order.pinned = !order.pinned;
+                    save_menu.set_changed();
+                    if let Some(save) =
+                        save_now(*phase.get(), &state, &data, &night_start, &register)
+                    {
+                        write_slot(profile.0, Slot::Auto, &save);
+                    }
+                }
+                continue;
+            }
             Action::OpenGuide => {
                 paused.0 = true;
                 *save_menu = SaveMenu::FirstSale;
@@ -713,6 +740,10 @@ fn pause_actions(
                 continue;
             }
             // From the pause menu or straight from the evening panel.
+            Action::RegularHistory(name, page) => {
+                *save_menu = SaveMenu::RegularHistory(*name, *page);
+                continue;
+            }
             Action::OpenBook => {
                 paused.0 = true;
                 *save_menu = SaveMenu::Book;
@@ -751,6 +782,14 @@ fn pause_actions(
     }
 }
 
+fn order_page_changed(
+    menu: Res<SaveMenu>,
+    progress: Res<Progress>,
+    stock: Res<crate::inventory::Stock>,
+) -> bool {
+    matches!(*menu, SaveMenu::Orders(_)) && (progress.is_changed() || stock.is_changed())
+}
+
 fn sync_pause(
     mut commands: Commands,
     paused: Res<Paused>,
@@ -771,6 +810,7 @@ fn sync_pause(
         Res<crate::shop::Storeroom>,
         Res<crate::upgrades::Upgrades>,
         Res<AssetServer>,
+        Res<crate::inventory::Stock>,
     ),
     gamepads: Query<&Gamepad>,
 ) {
@@ -782,7 +822,10 @@ fn sync_pause(
         return;
     }
     time.pause();
-    let width = if matches!(*save_menu, SaveMenu::Book | SaveMenu::FirstSale) {
+    let width = if matches!(
+        *save_menu,
+        SaveMenu::Book | SaveMenu::FirstSale | SaveMenu::Orders(_) | SaveMenu::RegularHistory(_, _)
+    ) {
         520.0
     } else {
         420.0
@@ -798,12 +841,20 @@ fn sync_pause(
         crate::achievements::achievements_page(&mut ui, &lang, &data, &progress);
         return;
     }
+    if let SaveMenu::Orders(page) = *save_menu {
+        crate::orders::book_page(&mut ui, &lang, &progress, &shop.4, page);
+        return;
+    }
     if *save_menu == SaveMenu::FirstSale {
         crate::guide::book_page(&mut ui, &lang, &progress, *phase.get());
         return;
     }
+    if let SaveMenu::RegularHistory(name, page) = *save_menu {
+        crate::book::regular_history_page(&mut ui, &lang, &progress.journal, name, page);
+        return;
+    }
     if *save_menu == SaveMenu::Book {
-        let (layout, storeroom, upgrades, assets) = &shop;
+        let (layout, storeroom, upgrades, assets, _) = &shop;
         crate::book::book_page(
             &mut ui,
             &lang,

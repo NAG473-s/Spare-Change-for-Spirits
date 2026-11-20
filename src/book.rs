@@ -22,6 +22,7 @@ use crate::upgrades::Upgrades;
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Journal {
+    pub order_history: Vec<crate::orders::Order>,
     pub first_sale: crate::guide::FirstSale,
     pub first_sale_checkpoint: Option<crate::guide::FirstSaleCheckpoint>,
     /// One entry per kind of ghost met (ghost id).
@@ -52,6 +53,13 @@ pub struct Regular {
     pub visits: u32,
     /// The ware it bought the first time; it often asks for it again.
     pub favourite: String,
+    #[serde(default)]
+    pub last_purchase: Option<String>,
+    /// Only keepsakes this customer has actually seen on the shop floor.
+    #[serde(default)]
+    pub seen_keepsakes: Vec<String>,
+    #[serde(default)]
+    pub encounters: Vec<crate::regulars::Encounter>,
 }
 
 impl Regular {
@@ -71,8 +79,11 @@ impl Journal {
     }
 
     /// A ghost was sold something.
-    pub fn served(&mut self, ghost: &str) {
+    pub fn served(&mut self, ghost: &str, bought: &str, regular: Option<usize>) {
         self.book.entry(ghost.to_string()).or_default().served += 1;
+        if let Some(customer) = regular.and_then(|i| self.regulars.get_mut(i)) {
+            customer.last_purchase = Some(bought.to_owned());
+        }
     }
 
     pub fn regular(&self, ghost: &str) -> Option<&Regular> {
@@ -106,6 +117,42 @@ pub fn letters_found(data: &GameData, upgrades: &Upgrades) -> Vec<u32> {
     found
 }
 
+const RECENT_ENCOUNTERS: usize = 3;
+const HISTORY_PAGE_SIZE: usize = 8;
+
+pub fn regular_history_page(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    journal: &Journal,
+    name: u32,
+    page: usize,
+) {
+    let back = if page == 0 {
+        Action::OpenBook
+    } else {
+        Action::RegularHistory(name, page - 1)
+    };
+    let Some(regular) = journal.regulars.iter().find(|r| r.name == name) else {
+        ui.menu_option(ui.root(), &lang.t("menu.back"), Action::OpenBook, false);
+        return;
+    };
+    ui.heading(&regular.name(lang));
+    ui.menu_option(ui.root(), &lang.t("menu.back"), back, false);
+    let skip = RECENT_ENCOUNTERS + page * HISTORY_PAGE_SIZE;
+    let mut entries = regular.encounters.iter().rev().skip(skip);
+    for encounter in entries.by_ref().take(HISTORY_PAGE_SIZE) {
+        ui.text(&encounter.entry(lang));
+    }
+    if entries.next().is_some() {
+        ui.menu_option(
+            ui.root(),
+            &lang.t("regular.earlier_visits"),
+            Action::RegularHistory(name, page + 1),
+            false,
+        );
+    }
+}
+
 /// The book's page in the pause menu.
 pub fn book_page(
     ui: &mut PanelBuilder,
@@ -128,6 +175,12 @@ pub fn book_page(
     let root = ui.root();
     ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
     ui.menu_option(root, &lang.t("guide_title"), Action::OpenGuide, false);
+    ui.menu_option(
+        root,
+        &lang.t("order_slips.title"),
+        Action::OpenOrders(0),
+        false,
+    );
     if met.is_empty() {
         ui.dim(&lang.t("book.empty"));
     }
@@ -168,6 +221,17 @@ pub fn book_page(
                     ("item", &lang.product(&r.favourite)),
                 ],
             ));
+            for encounter in r.encounters.iter().rev().take(RECENT_ENCOUNTERS) {
+                ui.text(&encounter.entry(lang));
+            }
+            if r.encounters.len() > RECENT_ENCOUNTERS {
+                ui.menu_option(
+                    root,
+                    &lang.t("regular.earlier_visits"),
+                    Action::RegularHistory(r.name, 0),
+                    false,
+                );
+            }
         }
         let mut about: Vec<String> = g.needs.iter().map(|n| n.describe(lang)).collect();
         if !g.pays_with.is_empty() {
@@ -248,7 +312,7 @@ mod tests {
         j.met("shy", "lavender");
         j.met("shy", "lavender");
         j.met("shy", "tea_tin");
-        j.served("shy");
+        j.served("shy", "lavender", None);
         let e = &j.book["shy"];
         assert_eq!((e.met, e.served), (3, 1));
         assert_eq!(e.wishes, ["lavender", "tea_tin"]);

@@ -14,9 +14,9 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 
 ## November 30–December 6 · A reason to plan tomorrow
 
-- [ ] Give each next-night order a slip in the ghost book with the customer, ware, quantity and due night. Pinning it marks the matching crate at the ferry. Its status follows stock, sale, expiry and save/load.
-- [ ] Preview what one crate adds, how much money remains and when its contents will fade. On the shop floor, preview which ghost needs a furniture change would satisfy before placing it.
-- [ ] Make a regular's return feel familiar. A returning customer can recall a previous purchase or comment on a keepsake it recognises. The book records the encounter, and an unfamiliar face still gets a readable wish.
+- [x] Give each next-night order a slip in the ghost book with the customer, ware, quantity and due night. Pinning it marks the matching crate at the ferry. Its status follows stock, sale, expiry and save/load.
+- [x] Preview what one crate adds, how much money remains and when its contents will fade. On the shop floor, preview which ghost needs a furniture change would satisfy before placing it.
+- [x] Make a regular's return feel familiar. A returning customer can recall a previous purchase or comment on a keepsake it recognises. The book records the encounter, and an unfamiliar face still gets a readable wish.
 
 ## December 7–13 · Edwin, Ida and Hedda
 

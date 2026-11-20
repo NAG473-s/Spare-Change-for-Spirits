@@ -7,6 +7,7 @@ use crate::economy::{Coin, Drawer, Purse};
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
+use crate::orders::Order;
 use crate::register::Register;
 use crate::ui::{Action, GameLog};
 
@@ -95,14 +96,6 @@ pub struct Progress {
     pub season_start: u32,
     /// The ghost book, the regulars and the shop window (`book.rs`).
     pub journal: crate::book::Journal,
-}
-
-/// A ware a ghost ordered: it comes back for it on `night`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Order {
-    pub ghost: String,
-    pub product: String,
-    pub night: u32,
 }
 
 /// From this many failed nights on, a story ghost names the ware it needs.
@@ -311,8 +304,8 @@ pub struct NightReport {
     /// How many tips were left, orders fulfilled and mishaps fixed tonight.
     pub tips_given: u32,
     pub orders_fulfilled: u32,
-    /// Returning customers already dispatched for this playthrough of the night.
-    pub orders_arrived: usize,
+    /// Indices of order slips whose customers have arrived this night.
+    pub dispatched_orders: Vec<usize>,
     pub mishaps_fixed: u32,
     /// Customers the apprentice served (`apprentice.rs`).
     pub apprentice_served: u32,
@@ -374,6 +367,7 @@ fn tick_clock(time: Res<Time>, progress: Res<Progress>, mut clock: ResMut<NightC
 /// At dawn all ghosts leave. Once the shop is empty, morning begins.
 fn close_at_dawn(
     clock: Res<NightClock>,
+    mut progress: ResMut<Progress>,
     register: Res<Register>,
     mut queue: ResMut<Queue>,
     mut ghosts: Query<(Entity, &mut Ghost)>,
@@ -393,6 +387,7 @@ fn close_at_dawn(
                     | GhostState::Waiting
             )
         {
+            progress.set_order_state(ghost.order, crate::orders::OrderState::Expired);
             ghost.state = GhostState::Leaving;
             queue.remove(entity);
         }
@@ -453,8 +448,7 @@ fn keep_playing(
 /// tomorrow – a little more plainly each time.
 pub fn count_story_tries(mut progress: ResMut<Progress>, report: Res<NightReport>) {
     // Tonight's orders are settled, whatever happened.
-    let night = progress.night;
-    progress.orders.retain(|o| o.night > night);
+    progress.archive_due_orders();
     for &i in &report.story_arrived {
         if !report.story_done.contains(&i) {
             progress.fail_chapter(i);

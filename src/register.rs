@@ -4,12 +4,13 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 
 use crate::data::GameData;
-use crate::day_cycle::{NightReport, Order, Phase, Progress};
+use crate::day_cycle::{NightReport, Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse, ghost_payment, smaller_payment};
 use crate::fx::Cue;
 use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
+use crate::orders::{Order, OrderState};
 use crate::rng::Rng;
 use crate::shop::ShopLayout;
 use crate::shop::Storeroom;
@@ -244,7 +245,10 @@ pub fn can_order(ghost: &Ghost, stock: &Stock, progress: &Progress, max: usize) 
         .iter()
         .filter(|o| o.night == progress.night + 1)
         .count();
-    ghost.chapter.is_none() && !ghost.ordered && stock.count(&ghost.wish) == 0 && tomorrow < max
+    ghost.chapter.is_none()
+        && ghost.order.is_none()
+        && stock.count(&ghost.wish) == 0
+        && tomorrow < max
 }
 
 fn serve_front_ghost(
@@ -301,6 +305,7 @@ fn serve_front_ghost(
                         continue;
                     }
                     log.push(lang.f("log.wrong_item", &[("who", &lang.ghost_the(&def.id))]));
+                    progress.set_order_state(ghost.order, OrderState::Expired);
                     report.wrong_item += 1;
                     ghost.state = GhostState::Leaving;
                     queue.remove(front);
@@ -316,7 +321,7 @@ fn serve_front_ghost(
                 }
                 let base = data.product(product).map_or(1, |p| p.price);
                 let mut factor = def.pay_multiplier * data.price_factor(progress.calendar(&data));
-                if ghost.ordered {
+                if ghost.order.is_some() {
                     factor *= 1.0 + data.config.orders.price_bonus;
                 }
                 let price = ((base as f32 * factor).round() as u32).max(1);
@@ -355,6 +360,7 @@ fn serve_front_ghost(
                         ("coins", &purse.describe(&lang)),
                     ],
                 ));
+                progress.set_order_state(ghost.order, OrderState::AtRegister);
                 register.sale = Some(Sale {
                     ghost: front,
                     product: product.clone(),
@@ -369,7 +375,8 @@ fn serve_front_ghost(
             }
             (Action::Decline, _) if !(ghost.first_customer && progress.guiding_first_sale()) => {
                 report.declined += 1;
-                if ghost.ordered {
+                if ghost.order.is_some() {
+                    progress.set_order_state(ghost.order, OrderState::Expired);
                     // It came back for its order, and it is still missing.
                     progress.reputation -= data.config.orders.missed_penalty;
                     report.unhappy += 1;
@@ -424,18 +431,19 @@ fn serve_front_ghost(
                 if can_order(&ghost, &stock, &progress, data.config.orders.max_per_night) =>
             {
                 let night = progress.night + 1;
-                progress.orders.push(Order {
-                    ghost: def.id.clone(),
-                    product: ghost.wish.clone(),
-                    night,
-                });
+                let regular_name = ghost
+                    .regular
+                    .and_then(|i| progress.journal.regulars.get(i))
+                    .map(|r| r.name);
+                let order = Order::new(&def.id, &ghost.wish, night, regular_name);
                 log.push(lang.f(
                     "log.ordered",
                     &[
-                        ("who", &lang.ghost_the(&def.id)),
+                        ("who", &order.customer(&lang)),
                         ("item", &lang.product(&ghost.wish)),
                     ],
                 ));
+                progress.orders.push(order);
                 ghost.state = GhostState::Leaving;
                 queue.remove(front);
             }
@@ -554,7 +562,8 @@ pub(crate) fn make_change(
                 drawer.remove(&sale.given);
                 let given = sale.given.total();
                 report.record_sale(&sale.product, sale.price, sale.paid().total(), given);
-                if ghosts.get(sale.ghost).is_ok_and(|g| g.ordered) {
+                if let Some(index) = ghosts.get(sale.ghost).ok().and_then(|g| g.order) {
+                    progress.set_order_state(Some(index), OrderState::Collected);
                     report.orders_fulfilled += 1;
                 }
                 report
@@ -574,7 +583,9 @@ pub(crate) fn make_change(
                 if guided {
                     progress.journal.first_sale = crate::guide::FirstSale::Complete;
                 }
-                progress.journal.served(&def.id);
+                progress
+                    .journal
+                    .served(&def.id, &sale.product, ghost.regular);
                 if given > 0 {
                     cues.write(Cue::ChangeGiven);
                 }
@@ -654,7 +665,12 @@ pub(crate) fn make_change(
                             &mut rng,
                         )
                     {
-                        log.push(lang.f("log.regular_new", &[("who", &name), ("name", &regular)]));
+                        ghost.regular = Some(regular);
+                        let regular_name = progress.journal.regulars[regular].name(&lang);
+                        log.push(lang.f(
+                            "log.regular_new",
+                            &[("who", &name), ("name", &regular_name)],
+                        ));
                     }
                     cues.write(Cue::Ascend(ghost.pos));
                     ghost.state = GhostState::Ascending;
