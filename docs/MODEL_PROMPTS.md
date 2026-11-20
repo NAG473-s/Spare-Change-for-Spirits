@@ -9,6 +9,10 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
+- Season 3, "The Thaw":
+  - the products `seed_packet`, `watering_can` and `storm_lantern` (*Products*);
+  - the keepsakes `seedling_pot`, `flower_box`, `nameplate` and `oar` (*Keepsakes*);
+  - the market's flower boxes `window_flowers` (*The village market*).
 None. All currently ordered models are delivered, including:
 
 - Season 2, "The Long Winter": the five products `gear`, `clock_key`, `little_bell`, `leash`
@@ -117,6 +121,10 @@ Placed like furniture on one floor cell; origin at the bottom centre, front towa
 | `dog_basket` | 0.7 × 0.35 × 0.5 | A round wicker dog basket with a soft knitted blanket inside and a little bell lying on the rim. |
 | `cog_wheel` | 0.6 × 0.8 × 0.3 | A large, old brass cog from a tower clock, leaning upright in a simple wooden stand; worn teeth, a bit of patina. |
 | `cuckoo_clock` | 0.45 × 1.6 × 0.3 | A carved wooden cuckoo clock hanging on a slim wooden post; small roof, pine cones on chains, the little door shut. Static – the game moves nothing on it. |
+| `seedling_pot` | 0.4 × 0.6 × 0.4 | A small clay pot on a little wooden stool with a fresh green seedling, two round leaves and a bud; a few crumbs of earth on the stool. |
+| `flower_box` | 0.8 × 0.5 × 0.3 | A painted wooden flower box on short legs, overflowing with pink, yellow and violet spring flowers and trailing ivy. |
+| `nameplate` | 0.6 × 0.9 × 0.2 | A weathered little wooden board on a post, painted by hand with a simple rowing boat and a lantern; no lettering. |
+| `oar` | 0.3 × 1.8 × 0.3 | The ferryman's old punting pole, dark and worn smooth, standing upright in a small iron stand with a rope wound round its top. |
 
 ## Mishaps – `assets/models/incidents/<id>.glb`
 
@@ -139,6 +147,7 @@ The clockmaker's story sets it going chapter by chapter; the game turns the hand
 | `clock_tower` | 1.2 × 4.2 × 1.2 | A slim old stone clock tower with a pointed slate roof, a round clock face **without hands** centred at **2.75 m** height on the front (−Y), Roman numerals, a little balcony rail below the face. Origin at the bottom centre. |
 | `clock_hand_hour` | 0.06 × 0.22 × 0.02 | The short, ornate black iron hour hand, pointing up along +Z (Blender), origin at its **pivot (bottom end)**. |
 | `clock_hand_minute` | 0.04 × 0.32 × 0.02 | The long, slim black iron minute hand, pointing up, origin at its **pivot (bottom end)**. |
+| `window_flowers` | 0.7 × 0.35 × 0.2 | A wooden window box full of spring flowers (pink, yellow, violet), hung under a house window; origin at the bottom centre, front −Y. Five of them appear on the houses as spring comes. |
 
 ## Products – `assets/models/products/<id>.glb`
 
@@ -177,6 +186,9 @@ Season 2 products:
 | `little_bell` | A small silver bell on a red ribbon tied in a bow. |
 | `leash` | A coiled red dog leash with a brass clip and a looped handle. |
 | `snow_globe` | A snow globe on a wooden base with a tiny house and a pine tree inside, a few white flakes floating. |
+| `seed_packet` | A small paper seed packet with a flower drawn on it, folded at the top, a few seeds spilled beside it. |
+| `watering_can` | A little green tin watering can with a long spout and a rose on the end. |
+| `storm_lantern` | A sturdy iron storm lantern with a glass chimney and a carrying handle; the flame glows warm (emissive). |
 
 ## Shop – `assets/models/shop/<id>.glb`
 

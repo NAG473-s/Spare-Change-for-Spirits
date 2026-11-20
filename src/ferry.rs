@@ -38,6 +38,7 @@ impl Plugin for FerryPlugin {
                 (
                     sail_boat,
                     animate_ferryman,
+                    name_ferryman,
                     make_wake,
                     fly_crates,
                     (animate_crates, update_crate_labels, update_tooltip)
@@ -559,6 +560,47 @@ fn spawn_boat(
     let body = theme.panel_body(&mut b.commands, frame, 0.23, 13.0, 4.0);
     b.commands.entity(body).insert(Pickable::IGNORE);
     b.commands.entity(frame).insert(Tooltip(body));
+}
+
+/// The ferryman already wears his name.
+#[derive(Component)]
+struct Named;
+
+/// Height of his name above his feet.
+const NAME_HEIGHT: f32 = 1.95;
+
+/// Once his own story is finished (`names_ferryman` in story.ron) the
+/// ferryman wears his name above his hood.
+fn name_ferryman(
+    mut commands: Commands,
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    lang: Res<Lang>,
+    font: Res<UiFont>,
+    men: Query<Entity, (With<Ferryman>, Without<Named>)>,
+) {
+    let Some(story) = data
+        .stories
+        .iter()
+        .enumerate()
+        .find(|(i, s)| s.names_ferryman && progress.chapter(*i) >= s.chapters.len())
+        .map(|(_, s)| s)
+    else {
+        return;
+    };
+    for man in &men {
+        commands.entity(man).insert(Named);
+        commands.spawn((
+            world_label(
+                &font,
+                lang.ghost(&story.ghost),
+                11.0,
+                man,
+                Vec3::Y * NAME_HEIGHT,
+            ),
+            DespawnOnExit(Phase::Evening),
+        ));
+    }
 }
 
 /// A tall hooded figure at the stern with a long pole: a model

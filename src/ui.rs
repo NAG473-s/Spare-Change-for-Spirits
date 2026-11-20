@@ -128,6 +128,8 @@ pub enum Action {
     NoChange,
     /// The wish is not in stock: the ghost orders it for tomorrow.
     OrderForTomorrow,
+    /// Give the ferryman his fare: one coin from the drawer.
+    GiveFare,
     /// Search the old junk for something broken (once an evening).
     Rummage,
     /// Repair a broken thing at the workbench.
@@ -1301,8 +1303,13 @@ fn expected_guests(
         let chapter = progress.chapter(i);
         let mut wish = lang.t(&format!("story.{}.{}.intro", story.ghost, chapter + 1));
         if progress.asks_plainly(i) {
-            let item = lang.product(&story.chapters[chapter].wish);
-            wish = format!("{wish} {}", lang.f("story.plainly", &[("item", &item)]));
+            let c = &story.chapters[chapter];
+            let plainly = if c.fare {
+                lang.t("story.fare_plainly")
+            } else {
+                lang.f("story.plainly", &[("item", &lang.product(&c.wish))])
+            };
+            wish = format!("{wish} {plainly}");
         }
         ui.text(&lang.f(
             "evening.story_comes",
@@ -1658,6 +1665,21 @@ fn build_night_panel(
             ui.section(&lang.t("night.what_hand_over"));
             let row = ui.row();
             let mut any = false;
+            // The ferryman's fare: a coin, not a ware.
+            if crate::register::asks_fare(ghost, &data) {
+                match Coin::DESCENDING.into_iter().find(|c| drawer.get(*c) > 0) {
+                    Some(coin) => {
+                        ui.button_in(
+                            row,
+                            &lang.f("night.give_fare", &[("coin", &coin.name(&lang))]),
+                            Action::GiveFare,
+                            false,
+                            true,
+                        );
+                    }
+                    None => ui.dim(&lang.t("night.fare_empty")),
+                }
+            }
             // The ferryman's parcel holds exactly what a story ghost needs.
             let parcel = ghost
                 .chapter
@@ -1701,7 +1723,7 @@ fn build_night_panel(
             }
             if any {
                 ui.dim(&lang.t("night.storeroom_hint"));
-            } else if !parcel {
+            } else if !parcel && !crate::register::asks_fare(ghost, &data) {
                 ui.dim(&lang.t("night.nothing_on_shelves"));
             }
             ui.spacer();

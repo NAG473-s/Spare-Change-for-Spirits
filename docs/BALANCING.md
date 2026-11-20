@@ -122,3 +122,9 @@ The simulation now plays all 20 nights. 100 runs: demand +1088, demand + furnitu
 demand + furniture + improvements +2581, cheapest crates −92 (loans in 38 % of the nights);
 39–42 % of the wishes fulfilled. Money grows about twice as much over twice the nights, so the
 winter neither breaks nor starves the shop. Not simulated yet: orders, mishaps, the workbench.
+
+## Season 3 (nights 21–30)
+
+100 runs over all 30 nights: demand +1685, demand + furniture +3737, demand + furniture +
+improvements +4151, eager +1676, cheapest crates −92 (loans in 42 % of the nights); 40–47 % of
+the wishes fulfilled. The money keeps growing at about the same pace per season.

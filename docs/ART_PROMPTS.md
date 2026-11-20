@@ -24,6 +24,11 @@ python3 tools/check_models.py
 
 ## To do
 
+- Season 3, "The Thaw": portraits (then idle and gesture sheets) for `frog`, `butterfly`,
+  `mira` and `kasimir` (*Ghosts introduced in later nights*); icons for the products
+  `seed_packet`, `watering_can`, `storm_lantern` and the keepsakes `seedling_pot`,
+  `flower_box`, `nameplate`, `oar` (prompts as for their models in
+  [MODEL_PROMPTS.md](MODEL_PROMPTS.md)).
 - **Approved for ordering (owner, 2026-11-20):** idle and gesture sheets for the four
   season 2 ghosts `snow`, `lantern_child`, `lotte` and `anselm` – four idle sheets
   (`<id>_sheet.png`, see *Ghost animation sheets*) and 32 gesture sheets (`<id>_<gesture>.png`,
@@ -127,6 +132,10 @@ All seventeen portraits are included in `assets/sprites/ghosts/`. The prompts be
 | `lantern_child` | A small ghost child with a warm golden glow carrying a paper lantern on a stick, wrapped in a woolly cap, big curious eyes. |
 | `lotte` | Lotte, a little ghost girl with a mint glow, plaits under a woolly hat with a bobble, mittens on a string, holding a small dog collar with a bell, hopeful worried eyes. |
 | `anselm` | Anselm, an old clockmaker ghost with a pale amber glow, a jeweller's magnifying glass pushed up on his forehead, a waistcoat with a watch chain, white sideburns, holding a tiny screwdriver, kind and precise. |
+| `frog` | A plump little frog ghost with a soft pond-green glow, big round eyes, a lily pad worn like a hat, a happy wide mouth, a few water drops around it. |
+| `butterfly` | A tiny butterfly soul: a small ghost with a warm pink glow and two large translucent butterfly wings with pastel patterns, delicate antennae, a dreamy smile. |
+| `mira` | Mira, a gardener ghost with a fresh spring-green glow, a straw hat with a flower, rolled-up sleeves, a muddy apron with seed packets in the pocket, a small trowel in her hand, cheerful. |
+| `kasimir` | Kasimir, the ferryman without his hood: an old, gaunt but kind ghost with a cool blue-grey glow, a long grey beard, a weathered dark cloak with the hood pushed back, holding a storm lantern, tired but gentle eyes. |
 
 **Original ghosts:**
 

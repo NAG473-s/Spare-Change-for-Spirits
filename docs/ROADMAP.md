@@ -13,7 +13,7 @@ publicly.
 |---|---|---|---|
 | Nights | 1–5, ends with "continue with night 6 in the full game" | 1–10 | 11–15, endless mode |
 | Ghosts | all 10 | + 4 new | more, seasonal ones |
-| Story | Hedda's first letter, Edwin, all 5 chapters | + Ida the lighthouse keeper (nights 6–10), Hedda's letters, finale; season 2 "The Long Winter" (nights 11–20: Lotte and her dog, Anselm and the tower clock) | a season 3 story every ten nights |
+| Story | Hedda's first letter, Edwin, all 5 chapters | + Ida the lighthouse keeper (nights 6–10), Hedda's letters, finale; season 2 "The Long Winter" (nights 11–20: Lotte and her dog, Anselm and the tower clock); season 3 "The Thaw" (nights 21–30: Mira the gardener, Kasimir the ferryman and his own fare) | a new story every ten nights |
 | Shop | furniture, harbour, ferryman | + shop upgrades (bigger shop, second counter) | decoration sets |
 | Polish | everything shown must look finished | all models in, no placeholders | |
 
@@ -99,8 +99,9 @@ Checkboxes are ticked in the commit that finishes them.
 ### Week 9 · Jan 26 – Jan 31: launch ready
 
 - [ ] Early Access build uploaded and approved, release button ready for right after the festival
-- [ ] Plan for the next updates (season 3: nights 21–30 with its own story). Season 2
-      (nights 11–20) is in: orders for the next night, mishaps during the night, the workbench.
+- [ ] Plan for the next updates (season 4: nights 31–40 with its own story). Seasons 2 and 3
+      (nights 11–30) are in, with orders for the next night, mishaps during the night and the
+      workbench.
 
 ## Steam rules to check in Steamworks
 

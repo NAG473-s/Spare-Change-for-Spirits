@@ -159,6 +159,60 @@ fn bring_carried_ware(
     }
 }
 
+/// A story ghost got what it came for: its thanks, its keepsake, and the
+/// next chapter – or, after the last one, its ending (and a finale guest).
+#[allow(clippy::too_many_arguments)]
+fn complete_chapter(
+    i: usize,
+    chapter: usize,
+    ghost: &mut Ghost,
+    data: &GameData,
+    lang: &Lang,
+    progress: &mut Progress,
+    storeroom: &mut Storeroom,
+    report: &mut NightReport,
+    log: &mut GameLog,
+    cues: &mut MessageWriter<Cue>,
+    finale: &mut MessageWriter<crate::ghosts::Finale>,
+) {
+    let story = &data.stories[i];
+    let c = &story.chapters[chapter];
+    let thanks = format!("story.{}.{}.thanks", story.ghost, chapter + 1);
+    log.push(lang.f(
+        "log.story_says",
+        &[
+            ("name", &lang.ghost(&story.ghost)),
+            ("text", &lang.t(&thanks)),
+        ],
+    ));
+    report.story_lines.push((story.ghost.clone(), thanks));
+    report.story_done.push(i);
+    if let Some(k) = &c.keepsake {
+        storeroom.give(k);
+        report.keepsakes.push(k.clone());
+    }
+    progress.finish_chapter(i);
+    if progress.chapter(i) >= story.chapters.len() {
+        log.push(lang.t(&format!("story.{}.ending", story.ghost)));
+        report.redeemed.push(story.ghost.clone());
+        cues.write(Cue::Ascend(ghost.pos));
+        ghost.state = GhostState::Ascending;
+        ghost.timer = 0.0;
+        if let Some(guest) = &story.finale_guest {
+            finale.write(crate::ghosts::Finale(guest.clone()));
+        }
+    } else {
+        ghost.state = GhostState::Leaving;
+    }
+}
+
+/// Is the story ghost at the counter asking for a coin (its fare)?
+pub fn asks_fare(ghost: &Ghost, data: &GameData) -> bool {
+    ghost
+        .chapter
+        .is_some_and(|(i, c)| data.stories[i].chapters[c].fare)
+}
+
 /// Can the ghost at the counter order its wish for tomorrow? Only a plain
 /// customer whose wish is not in stock, while orders for tomorrow are left.
 pub fn can_order(ghost: &Ghost, stock: &Stock, progress: &Progress, max: usize) -> bool {
@@ -185,6 +239,8 @@ fn serve_front_ghost(
     mut ghosts: Query<&mut Ghost>,
     lang: Res<Lang>,
     layout: Res<ShopLayout>,
+    mut storeroom: ResMut<Storeroom>,
+    mut finale: MessageWriter<crate::ghosts::Finale>,
 ) {
     for action in actions.read() {
         if register.is_busy() {
@@ -276,6 +332,38 @@ fn serve_front_ghost(
                     log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
                 }
                 ghost.state = GhostState::Leaving;
+                queue.remove(front);
+            }
+            // The ferryman's fare: the most precious coin in the drawer.
+            (Action::GiveFare, _) if asks_fare(&ghost, &data) => {
+                let Some(coin) = Coin::DESCENDING.into_iter().find(|c| drawer.get(*c) > 0) else {
+                    continue;
+                };
+                let mut one = Purse::default();
+                one.add(coin, 1);
+                drawer.remove(&one);
+                cues.write(Cue::ChangeGiven);
+                log.push(lang.f(
+                    "log.fare_given",
+                    &[
+                        ("who", &lang.ghost_the(&def.id)),
+                        ("coin", &coin.name(&lang)),
+                    ],
+                ));
+                let (i, chapter) = ghost.chapter.expect("checked by asks_fare");
+                complete_chapter(
+                    i,
+                    chapter,
+                    &mut ghost,
+                    &data,
+                    &lang,
+                    &mut progress,
+                    &mut storeroom,
+                    &mut report,
+                    &mut log,
+                    &mut cues,
+                    &mut finale,
+                );
                 queue.remove(front);
             }
             // Not in stock: the ghost orders it and comes back tomorrow.
@@ -448,35 +536,19 @@ fn make_change(
 
                 if let Some((i, chapter)) = sale.chapter {
                     // The story ghost got what it needed, whatever the change.
-                    let story = &data.stories[i];
-                    let c = &story.chapters[chapter];
-                    let thanks = format!("story.{}.{}.thanks", story.ghost, chapter + 1);
-                    log.push(lang.f(
-                        "log.story_says",
-                        &[
-                            ("name", &lang.ghost(&story.ghost)),
-                            ("text", &lang.t(&thanks)),
-                        ],
-                    ));
-                    report.story_lines.push((story.ghost.clone(), thanks));
-                    report.story_done.push(i);
-                    if let Some(k) = &c.keepsake {
-                        storeroom.give(k);
-                        report.keepsakes.push(k.clone());
-                    }
-                    progress.finish_chapter(i);
-                    if progress.chapter(i) >= story.chapters.len() {
-                        log.push(lang.t(&format!("story.{}.ending", story.ghost)));
-                        report.redeemed.push(story.ghost.clone());
-                        cues.write(Cue::Ascend(ghost.pos));
-                        ghost.state = GhostState::Ascending;
-                        ghost.timer = 0.0;
-                        if story.finale {
-                            finale.write(crate::ghosts::Finale);
-                        }
-                    } else {
-                        ghost.state = GhostState::Leaving;
-                    }
+                    complete_chapter(
+                        i,
+                        chapter,
+                        &mut ghost,
+                        &data,
+                        &lang,
+                        &mut progress,
+                        &mut storeroom,
+                        &mut report,
+                        &mut log,
+                        &mut cues,
+                        &mut finale,
+                    );
                 } else if !correct {
                     ghost.state = GhostState::Leaving;
                 } else if rng.chance(def.quirks.double_pay_chance) {

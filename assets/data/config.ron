@@ -45,7 +45,7 @@
     // (cargo build --features demo) stops after `demo_nights`; a finished demo save continues
     // in the full game.
     season_length: 10,
-    last_night: 20,
+    last_night: 30,
     demo_nights: 5,
 
     // Atmosphere of the empty shop. Decor is added on top.

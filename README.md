@@ -130,6 +130,10 @@ Special customers:
   ware, and whenever it is not in stock at opening time the ferryman brings a parcel with it, so
   no story can get stuck. Ida's chapters relight the harbour lighthouse; her last one is the
   finale, and the season lasts until it is done.
+- **Seasons** – the game is told in seasons of ten nights, each with its own story and
+  finale: Hedda's (1–10), "The Long Winter" with Lotte, her dog Pfote and Anselm the clockmaker
+  (11–20), and "The Thaw" with Mira the gardener and Kasimir the ferryman, whose last wish is
+  one coin for his own crossing (21–30). Later seasons keep the shop open without a story.
 - **Hedda's letters** – the player inherited the shop from great-aunt Hedda. Her first letter
   waits on the first evening, the others turn up when improvements clear her old junk
   (`letter` in `upgrades.ron`). At the finale she comes home through the shop door.

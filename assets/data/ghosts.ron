@@ -95,4 +95,24 @@
      spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 0.85,
      needs: [],
      wishes: ["gear", "clock_key", "polishing_cloth", "pocket_watch", "snow_globe"]),
+
+    // Season 3, "The Thaw".
+    (id: "frog", color: (0.55, 0.8, 0.55), unlock_night: 21,
+     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 24.0, voice: 0.95,
+     needs: [AtMost(Warmth, 3)],
+     wishes: ["rain_jar", "watering_can", "fish_bone"]),
+    (id: "butterfly", color: (0.95, 0.75, 0.95), unlock_night: 23,
+     spawn_weight: 1.5, pay_multiplier: 1.2, patience_secs: 16.0, voice: 1.5,
+     needs: [AtLeast(Light, 3)],
+     wishes: ["pressed_flower", "lavender", "seed_packet"],
+     pays_with: [Button, Candle]),
+    // Story ghosts of season 3 (story.ron).
+    (id: "mira", color: (0.7, 0.9, 0.6),
+     spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 1.1,
+     needs: [],
+     wishes: ["seed_packet", "watering_can", "lavender", "pressed_flower", "rain_jar"]),
+    (id: "kasimir", color: (0.6, 0.65, 0.8),
+     spawn_weight: 0.0, pay_multiplier: 1.0, patience_secs: 60.0, voice: 0.75,
+     needs: [],
+     wishes: ["brass_compass", "letter_paper", "storm_lantern", "pocket_watch"]),
 ]

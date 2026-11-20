@@ -23,8 +23,11 @@ pub struct WinterPlugin;
 
 impl Plugin for WinterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_clock_tower, spawn_snow))
-            .add_systems(Update, (turn_clock_hands, fall_snow));
+        app.add_systems(
+            Startup,
+            (spawn_clock_tower, spawn_snow, spawn_window_flowers),
+        )
+        .add_systems(Update, (turn_clock_hands, fall_snow, show_window_flowers));
     }
 }
 
@@ -69,12 +72,24 @@ pub fn clock_level(data: &GameData, progress: &Progress) -> f32 {
         })
 }
 
-/// Is it winter yet – the story that brings the snow finished?
+/// Is it winter – the story that brings the snow finished, and the thaw
+/// not begun?
 pub fn snowing(data: &GameData, progress: &Progress) -> bool {
+    let stories = || data.stories.iter().enumerate();
+    stories().any(|(i, s)| s.snow && progress.chapter(i) >= s.chapters.len())
+        && !stories().any(|(i, s)| s.thaw && progress.chapter(i) > 0)
+}
+
+/// How far spring has come to the market, from 0 to 1: the story marked
+/// `blossom` puts flowers on the windows chapter by chapter.
+pub fn blossom_level(data: &GameData, progress: &Progress) -> f32 {
     data.stories
         .iter()
         .enumerate()
-        .any(|(i, s)| s.snow && progress.chapter(i) >= s.chapters.len())
+        .find(|(_, s)| s.blossom)
+        .map_or(0.0, |(i, s)| {
+            progress.chapter(i).min(s.chapters.len()) as f32 / s.chapters.len() as f32
+        })
 }
 
 fn spawn_clock_tower(
@@ -263,6 +278,96 @@ fn fall_snow(
         p.x += 0.12 * (t * 0.8 + f.phase).sin() * dt;
         if p.y < f.centre.y - f.half.y {
             p.y += 2.0 * f.half.y;
+        }
+    }
+}
+
+/// Flower boxes under the windows of the market houses (market metres), in
+/// the order spring brings them. Model (optional):
+/// `assets/models/market/window_flowers.glb`, origin at the bottom centre.
+const WINDOW_FLOWERS: [Vec3; 5] = [
+    Vec3::new(0.6, 1.05, -5.25),
+    Vec3::new(-5.0, 1.05, -5.05),
+    Vec3::new(3.4, 1.05, -5.75),
+    Vec3::new(-2.2, 1.05, -5.65),
+    Vec3::new(6.0, 1.05, -5.15),
+];
+
+/// A flower box; it shows once spring has come far enough.
+#[derive(Component)]
+struct WindowFlowers(usize);
+
+fn spawn_window_flowers(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let model = "models/market/window_flowers.glb";
+    let wood = materials.add(StandardMaterial {
+        base_color: Color::srgb(0.45, 0.3, 0.18),
+        perceptual_roughness: 0.9,
+        ..default()
+    });
+    let colours = [
+        Color::srgb(0.95, 0.55, 0.65),
+        Color::srgb(0.98, 0.85, 0.35),
+        Color::srgb(0.7, 0.55, 0.95),
+    ];
+    for (n, at) in WINDOW_FLOWERS.into_iter().enumerate() {
+        let box_ = commands
+            .spawn((
+                WindowFlowers(n),
+                Transform::from_translation(MARKET + at),
+                Visibility::Hidden,
+                Pickable::IGNORE,
+            ))
+            .id();
+        if asset_exists(model) {
+            commands.spawn((
+                WorldAssetRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(model))),
+                Transform::default(),
+                ChildOf(box_),
+            ));
+            continue;
+        }
+        commands.spawn((
+            Mesh3d(meshes.add(Cuboid::new(0.7, 0.15, 0.18))),
+            MeshMaterial3d(wood.clone()),
+            Transform::from_xyz(0.0, 0.075, 0.0),
+            ChildOf(box_),
+        ));
+        for k in 0..5 {
+            let colour = colours[(n + k) % colours.len()];
+            commands.spawn((
+                Mesh3d(meshes.add(Sphere::new(0.06))),
+                MeshMaterial3d(materials.add(StandardMaterial {
+                    base_color: colour,
+                    perceptual_roughness: 0.8,
+                    ..default()
+                })),
+                Transform::from_xyz(-0.26 + 0.13 * k as f32, 0.2, 0.0),
+                NotShadowCaster,
+                ChildOf(box_),
+            ));
+        }
+    }
+}
+
+fn show_window_flowers(
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    mut boxes: Query<(&WindowFlowers, &mut Visibility)>,
+) {
+    let shown = (blossom_level(&data, &progress) * WINDOW_FLOWERS.len() as f32).round() as usize;
+    for (WindowFlowers(n), mut visibility) in &mut boxes {
+        let wanted = if *n < shown {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+        if *visibility != wanted {
+            *visibility = wanted;
         }
     }
 }

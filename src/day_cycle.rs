@@ -365,7 +365,12 @@ pub fn deliver_parcels(
         if !progress.story_due(&data, i) || progress.parcels.contains(&i) {
             continue;
         }
-        let wish = &story.chapters[progress.chapter(i)].wish;
+        let chapter = &story.chapters[progress.chapter(i)];
+        // A fare is paid from the drawer: no parcel for that.
+        if chapter.fare {
+            continue;
+        }
+        let wish = &chapter.wish;
         if stock.count(wish) == 0 || progress.tries(i) > 0 {
             progress.parcels.push(i);
             log.push(lang.f("log.parcel", &[("name", &lang.ghost(&story.ghost))]));
@@ -529,6 +534,13 @@ mod tests {
         assert_eq!((second.season, second.night), (2, 2 * len));
         assert!(crate::winter::snowing(&data, &second));
         assert_eq!(crate::winter::clock_level(&data, &second), 1.0);
+        // Season 3: the thaw ends the snow, and the ferryman's fare ends the season.
+        let mut third = second.clone();
+        third.next_season();
+        let third = play_from(third, &data, &[]);
+        assert_eq!((third.season, third.night), (3, 3 * len));
+        assert!(!crate::winter::snowing(&data, &third));
+        assert_eq!(crate::winter::blossom_level(&data, &third), 1.0);
     }
 
     #[test]

@@ -9,6 +9,11 @@
 // tower_clock: every chapter sets the market's tower clock going a little more.
 // snow: once this story is finished, snow falls over the village.
 // companion: a critter (critters.rs) that lives in the shop once this story is finished.
+// finale_guest: a ghost who comes to say goodbye when this story is finished
+//   (texts finale.<ghost>.arrives, finale.<ghost>.farewell).
+// thaw: the first chapter of this story ends the snow. blossom: each chapter puts flowers on
+//   the market's windows. names_ferryman: once finished, the ferryman wears his name.
+// fare: true in a chapter: instead of a ware the ghost asks for one coin from the drawer.
 // keepsake: decor (keepsake: true in decor.ron) left in your storeroom as thanks.
 // Texts: assets/i18n/<language>.ron (story.<ghost>.arrives, story.<ghost>.<n>.intro,
 // story.<ghost>.<n>.thanks, story.<ghost>.ending).
@@ -33,6 +38,7 @@
         start_night: 6,
         arrive_at: 0.4,
         finale: true,
+        finale_guest: Some("hedda"),
         lighthouse: true,
         chapters: [
             (wish: "polishing_cloth", keepsake: Some("logbook")),
@@ -73,6 +79,39 @@
             (wish: "polishing_cloth"),
             (wish: "pocket_watch"),
             (wish: "snow_globe", keepsake: Some("cuckoo_clock")),
+        ],
+    ),
+    // Season 3, "The Thaw". Mira the gardener brings spring back: her first chapter ends the
+    // snow (`thaw`), each chapter puts flowers on the market's windows (`blossom`).
+    (
+        ghost: "mira",
+        start_night: 21,
+        arrive_at: 0.3,
+        thaw: true,
+        blossom: true,
+        chapters: [
+            (wish: "seed_packet"),
+            (wish: "watering_can", keepsake: Some("seedling_pot")),
+            (wish: "lavender"),
+            (wish: "pressed_flower"),
+            (wish: "rain_jar", keepsake: Some("flower_box")),
+        ],
+    ),
+    // Kasimir, the ferryman, remembers his name and crosses over himself, once. His last
+    // chapter asks for his own fare: one coin from the drawer (`fare`). Afterwards he wears his
+    // name at the harbour (`names_ferryman`).
+    (
+        ghost: "kasimir",
+        start_night: 26,
+        arrive_at: 0.4,
+        finale: true,
+        names_ferryman: true,
+        chapters: [
+            (wish: "brass_compass"),
+            (wish: "letter_paper", keepsake: Some("nameplate")),
+            (wish: "storm_lantern"),
+            (wish: "pocket_watch"),
+            (fare: true, keepsake: Some("oar")),
         ],
     ),
 ]

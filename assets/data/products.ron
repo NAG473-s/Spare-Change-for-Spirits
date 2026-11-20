@@ -33,4 +33,9 @@
     (id: "little_bell", price: 5, crate_cost: 10, crate_size: 4, fade_after: 5, unlock_night: 11, container: "basket"),
     (id: "leash", price: 6, crate_cost: 12, crate_size: 3, fade_after: 5, unlock_night: 11, container: "basket"),
     (id: "snow_globe", price: 16, crate_cost: 24, crate_size: 2, fade_after: 5, unlock_night: 11, container: "crate"),
+
+    // Season 3, "The Thaw" (from calendar night 21).
+    (id: "seed_packet", price: 3, crate_cost: 7, crate_size: 6, fade_after: 4, unlock_night: 21, container: "basket"),
+    (id: "watering_can", price: 10, crate_cost: 18, crate_size: 3, fade_after: 6, unlock_night: 21, container: "crate"),
+    (id: "storm_lantern", price: 12, crate_cost: 20, crate_size: 2, fade_after: 6, unlock_night: 21, container: "chest"),
 ]

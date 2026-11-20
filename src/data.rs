@@ -370,12 +370,30 @@ pub struct StoryDef {
     /// A critter that lives in the shop once this story is finished.
     #[serde(default)]
     pub companion: Option<String>,
+    /// A ghost who comes through the door to say goodbye when this story is
+    /// finished (texts `finale.<ghost>.arrives`, `finale.<ghost>.farewell`).
+    #[serde(default)]
+    pub finale_guest: Option<String>,
+    /// The first chapter of this story ends the snow (the thaw).
+    #[serde(default)]
+    pub thaw: bool,
+    /// Each chapter puts flowers on the market's windows.
+    #[serde(default)]
+    pub blossom: bool,
+    /// Once this story is finished the ferryman wears his name.
+    #[serde(default)]
+    pub names_ferryman: bool,
 }
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct ChapterDef {
     /// Product the ghost needs in this chapter.
+    #[serde(default)]
     pub wish: String,
+    /// Instead of a ware the ghost asks for one coin from the drawer: the
+    /// ferryman's own fare.
+    #[serde(default)]
+    pub fare: bool,
     /// Decor id of the keepsake left behind.
     #[serde(default)]
     pub keepsake: Option<String>,
@@ -753,9 +771,15 @@ impl GameData {
             }
         }
         for story in &self.stories {
+            if let Some(g) = &story.finale_guest {
+                assert!(
+                    self.ghost_index(g).is_some(),
+                    "finale guest '{g}' is not in ghosts.ron"
+                );
+            }
             for (i, c) in story.chapters.iter().enumerate() {
                 assert!(
-                    self.product(&c.wish).is_some(),
+                    c.fare || self.product(&c.wish).is_some(),
                     "{} chapter {} wishes for unknown product '{}'",
                     story.ghost,
                     i + 1,
@@ -1036,6 +1060,12 @@ mod tests {
                     "story {g} {n}"
                 );
             }
+        }
+        for g in data.stories.iter().filter_map(|s| s.finale_guest.as_ref()) {
+            assert!(
+                has(format!("finale.{g}.arrives")) && has(format!("finale.{g}.farewell")),
+                "finale guest {g}"
+            );
         }
         // Every season that ends with a finale has an epilogue.
         for story in data.stories.iter().filter(|s| s.finale) {

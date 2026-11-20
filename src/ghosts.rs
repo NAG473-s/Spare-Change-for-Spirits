@@ -139,7 +139,12 @@ impl Ghost {
     pub fn whisper(&self, lang: &Lang) -> String {
         let text = lang.t(&self.hint);
         if self.plain {
-            let plainly = lang.f("story.plainly", &[("item", &lang.product(&self.wish))]);
+            // A fare chapter asks for a coin, not a ware.
+            let plainly = if self.wish.is_empty() {
+                lang.t("story.fare_plainly")
+            } else {
+                lang.f("story.plainly", &[("item", &lang.product(&self.wish))])
+            };
             format!("{text} {plainly}")
         } else {
             text
@@ -825,13 +830,10 @@ fn steal_from_shelf(
     }
 }
 
-/// The last chapter of the finale story is done: the ghost who brought the
-/// shopkeeper here comes home through the shop door.
-#[derive(Message, Clone, Copy)]
-pub struct Finale;
-
-/// The ghost id of the finale guest (ghosts.ron).
-pub const FINALE_GHOST: &str = "hedda";
+/// A story with a finale guest is finished: that ghost comes through the
+/// shop door to say goodbye (Hedda at the end of the first season).
+#[derive(Message, Clone)]
+pub struct Finale(pub String);
 
 /// The finale guest: she does not shop, she says goodbye.
 #[derive(Component)]
@@ -849,49 +851,45 @@ fn come_home(
     mut cues: MessageWriter<Cue>,
     mut report: ResMut<NightReport>,
 ) {
-    if finale.read().count() == 0 {
-        return;
+    let guests: Vec<String> = finale.read().map(|f| f.0.clone()).collect();
+    for guest in guests {
+        let Some(def_idx) = data.ghost_index(&guest) else {
+            continue;
+        };
+        let def = &data.ghosts[def_idx];
+        let farewell = format!("finale.{guest}.farewell");
+        // The goodbye is told at once: the finale can come just before dawn.
+        log.push(lang.t(&format!("finale.{guest}.arrives")));
+        log.push(lang.f(
+            "log.story_says",
+            &[("name", &lang.ghost(&guest)), ("text", &lang.t(&farewell))],
+        ));
+        report.story_lines.push((guest.clone(), farewell.clone()));
+        let visit = Visit {
+            def_idx,
+            wish: def.wishes[0].clone(),
+            hint: farewell,
+            chapter: None,
+            plain: false,
+            ordered: false,
+            flees: false,
+            patience_factor: 1.0,
+        };
+        let ghost = spawn_ghost(
+            &mut commands,
+            &data,
+            &layout,
+            &art.font,
+            &lang,
+            &art.asset_server,
+            &mut art.meshes,
+            &mut art.materials,
+            &mut rng,
+            visit,
+        );
+        commands.entity(ghost).insert(Farewell);
+        cues.write(Cue::GhostEnters);
     }
-    let Some(def_idx) = data.ghost_index(FINALE_GHOST) else {
-        return;
-    };
-    let def = &data.ghosts[def_idx];
-    // Her goodbye is told at once: the finale can come just before dawn.
-    log.push(lang.t("finale.arrives"));
-    log.push(lang.f(
-        "log.story_says",
-        &[
-            ("name", &lang.ghost(FINALE_GHOST)),
-            ("text", &lang.t("finale.farewell")),
-        ],
-    ));
-    report
-        .story_lines
-        .push((FINALE_GHOST.to_string(), "finale.farewell".to_string()));
-    let visit = Visit {
-        def_idx,
-        wish: def.wishes[0].clone(),
-        hint: "finale.farewell".into(),
-        chapter: None,
-        plain: false,
-        ordered: false,
-        flees: false,
-        patience_factor: 1.0,
-    };
-    let ghost = spawn_ghost(
-        &mut commands,
-        &data,
-        &layout,
-        &art.font,
-        &lang,
-        &art.asset_server,
-        &mut art.meshes,
-        &mut art.materials,
-        &mut rng,
-        visit,
-    );
-    commands.entity(ghost).insert(Farewell);
-    cues.write(Cue::GhostEnters);
 }
 
 /// Once inside, the finale guest passes into the light.
