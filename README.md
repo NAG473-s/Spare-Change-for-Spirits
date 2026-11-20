@@ -31,6 +31,14 @@ money, reputation, sales, missed wishes, fled and unhappy ghosts per night):
 BEVY_ASSET_ROOT=. cargo run --release -- --simulate 500
 ```
 
+Trailers and store screenshots: start with `--trailer` (players never see these keys). **F9**
+hides the whole interface, **F10** starts or stops a slow camera drive around the current view
+(the camera returns to its place), **F12** saves a screenshot to `screenshots/`:
+
+```bash
+cargo run --release -- --trailer
+```
+
 Goals, results and open points of the balancing passes: [`docs/BALANCING.md`](docs/BALANCING.md).
 
 Playtest logs: the game writes `logs/nights.csv` (one row per night with the simulation's figures,
@@ -176,6 +184,7 @@ src/
   i18n.rs        language catalogs, placeholders, language detection
   rng.rs         small random number generator
   sim.rs         balancing simulation (`--simulate`), plays every night without a window
+  trailer.rs     helpers for trailers and screenshots (`--trailer`)
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,

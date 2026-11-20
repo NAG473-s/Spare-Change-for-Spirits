@@ -37,6 +37,7 @@ mod sign;
 mod sim;
 mod title;
 mod tooltip;
+mod trailer;
 mod ui;
 mod upgrades;
 mod winter;
@@ -110,6 +111,7 @@ fn main() {
             workbench::WorkbenchPlugin,
             winter::WinterPlugin,
             achievements::AchievementsPlugin,
+            trailer::TrailerPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);
