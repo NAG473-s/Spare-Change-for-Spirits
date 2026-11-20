@@ -314,10 +314,10 @@ def main():
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
         sprite = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}.png"
         print(("  ok       " if sprite.is_file() else "  missing  ") + f"sprites/ghosts/{ghost}.png")
-    # Drawn gesture sheets are optional: without one the portrait performs the gesture.
+    # Drawn idle and gesture sheets are optional: without one the portrait performs it.
     print()
     for ghost in ids("assets/data/ghosts.ron", r'\(id: "([^"]+)"'):
-        for gesture in GESTURES:
+        for gesture in ("sheet", *GESTURES):
             sheet = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}_{gesture}.png"
             print(("  ok       " if sheet.is_file() else "  no sheet ") + f"sprites/ghosts/{ghost}_{gesture}.png")
     for name in (

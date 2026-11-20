@@ -24,9 +24,12 @@ python3 tools/check_models.py
 
 ## To do
 
-- Later: idle and gesture sheets for the four season 2 ghosts `snow`, `lantern_child`,
-  `lotte` and `anselm`. Their portraits already perform all nine activities using the
-  game's portrait animation. The four idle sheets and 32 gesture sheets remain open.
+- **Approved for ordering (owner, 2026-11-20):** idle and gesture sheets for the four
+  season 2 ghosts `snow`, `lantern_child`, `lotte` and `anselm` – four idle sheets
+  (`<id>_sheet.png`, see *Ghost animation sheets*) and 32 gesture sheets (`<id>_<gesture>.png`,
+  eight per ghost, see *Ghost gesture sheets*). Until they arrive the portraits perform all
+  nine activities with the game's portrait animation. `python3 tools/check_models.py` lists
+  each one as `ok` or `no sheet`.
 
 All currently ordered portraits and icons are delivered:
 
@@ -146,7 +149,8 @@ her hands over her apron, and the shade reaches out while clutching its patched 
 The four drawn frames in `<id>_sheet.png` add an idle loop at
 8 frames per second. A single `<id>.png` can perform all nine gestures on its own.
 
-The original thirteen ghosts have four-frame idle sheets; the four season 2 sheets are deferred.
+The original thirteen ghosts have four-frame idle sheets; the four season 2 sheets are approved
+and open (see *To do*).
 To draw or redraw a sheet, ask for a **2 × 2 grid** on one
 1024 × 1536 canvas – four frames, read left to right, top to bottom – with the existing sprite
 attached as reference:
