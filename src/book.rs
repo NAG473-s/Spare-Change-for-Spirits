@@ -52,6 +52,8 @@ pub struct Journal {
     pub campaign_complete: bool,
     /// The keepsake on the last page of Hedda's ledger (decor id).
     pub ledger_keepsake: Option<String>,
+    /// Quay lanterns restored after the campaign, in order (`lanterns.rs`).
+    pub lanterns: Vec<crate::lanterns::LanternRecord>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -621,6 +623,7 @@ pub fn letters_page(
         let root = ui.root();
         ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
     }
+    crate::lanterns::book_section(ui, lang, data, journal);
 }
 
 /// Where a keepsake came from: (story index, chapter number from 1).

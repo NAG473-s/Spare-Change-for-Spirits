@@ -1,0 +1,12 @@
+// The old quay lanterns, restored one a night with the shop's savings once the campaign is
+// complete (`src/lanterns.rs`). Optional: no ending needs them.
+// pos: (x, y, z) on the quay, relative to the harbour (the quay edge is at z = -0.7).
+// cost: button units. A prosperous shop can restore one a night; a quieter one saves up for a
+// few nights (the free-play test in sim.rs checks the whole row is within reach).
+[
+    (pos: (-3.3, 0.0, -0.95), cost: 120),
+    (pos: (-1.3, 0.0, -0.95), cost: 160),
+    (pos: (1.9, 0.0, -0.95), cost: 200),
+    (pos: (4.6, 0.0, -0.95), cost: 240),
+    (pos: (7.0, 0.0, -0.95), cost: 280),
+]

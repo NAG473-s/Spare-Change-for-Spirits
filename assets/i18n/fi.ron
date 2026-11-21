@@ -203,6 +203,8 @@
     "log.thief": "Varjo livahtaa sisään ja katoaa saman tien – mukanaan hyllystä: {item}!",
     "log.thief_scared": "Varjo kurkistaa ikkunasta, mutta kirkas valo ajaa sen pois.",
     "log.ordered": "{who} tilaa huomisyöksi: {item}.",
+    "log.lantern_restored": "Laiturin lyhty {n}/{total} on kunnostettu. Tänä yönä se loistaa sataman yllä.",
+    "log.regular_request": "Lappu henkilöltä {who}: pidä {item} tallessa minulle tätä yötä varten.",
     "log.order_missed": "{who} palasi hakemaan tilaustaan ({item}) ja lähtee tyhjin käsin – sana kiirii.",
     "log.fare_given": "{who} ottaa kolikon varovasti vastaan: {coin}.",
     "log.achievement": "Saavutus avattu: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Tiskillä ei odota yhtään haamua.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Laiturin lyhdyt ({lit}/{total} palaa)",
+    "harbor.lanterns_hint": "Vapaaehtoinen: laiturin vanhat lyhdyt ovat olleet pimeinä Heddan ajoista asti. Kunnosta niitä yksi kerrallaan, kun puodilla on siihen varaa.",
+    "harbor.lanterns_restore": "Kunnosta seuraava lyhty ({cost})",
+    "harbor.lanterns_tonight": "Uusi lyhty loistaa tänä yönä ensimmäistä kertaa. Seuraava saa odottaa huomiseen.",
+    "harbor.lanterns_done": "Jokainen laiturin lyhty loistaa taas.",
     "harbor.title": "Satama",
     "harbor.intro": "Usva ajelehtii mustan veden yllä. Lautturi odottaa veneensä luona, lyhty heiluen.",
     "harbor.go": "Ulos satamaan  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Heddan esiliina",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Tavallinen yö",
+    "event.week_quiet.text": "Tarinat on kerrottu, mutta ovi aukeaa yhä. Rauhallinen yö viikon aluksi, ja henkiä tulee vähän tavallista vähemmän.",
+    "event.week_rain.name": "Sadetta katoilla",
+    "event.week_rain.text": "Pehmeä sade rummuttaa ikkunaluukkuja. Puoti on vähän pimeämpi, ja sammakot tulevat kylään.",
+    "event.week_regulars.name": "Kanta-asiakkaiden ilta",
+    "event.week_regulars.text": "Markkinoilla odottaa lappuja kanta-asiakkailtasi: he toivovat, että pidät heidän suosikkinsa tallessa tätä yötä varten.",
+    "event.week_fog.name": "Satamasumu",
+    "event.week_fog.text": "Sumu vyöryy laiturilta. Ujot henget ja vanhat merimiehet löytävät tiensä valosi luo.",
+    "event.week_market.name": "Markkinapäivä",
+    "event.week_market.text": "Kauppiailla on tänään tavallista enemmän tarjouksia, ja henget ovat tänä yönä ostotuulella.",
+    "event.week_wind.name": "Kylmä tuuli",
+    "event.week_wind.text": "Pureva tuuli puhaltaa veden yli. Lautturi tuo yhden laatikon vähemmän, ja puodissa on kylmempää.",
+    "event.week_long_night.name": "Pitkä yö",
+    "event.week_long_night.text": "Viikon viimeinen yö kestää muita pidempään. Henget viipyilevät ja maksavat hyvin, ennen kuin viikko alkaa alusta.",
     "event.first_night.name": "Hiljainen alku",
     "event.first_night.text": "Tieto puodistasi on tuskin levinnyt. Vain harvat henget löytävät ovelle tänä yönä.",
     "event.fog.name": "Sumua joen yllä",
@@ -856,6 +877,9 @@
     "tell.fake.5": "kalahtaa kumeasti",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Laiturin lyhdyt ({lit}/{total})",
+    "book.lantern_entry": "Lyhty {n} · sytytetty ensi kerran yönä {night} · sinä yönä: {who}",
+    "book.lantern_nobody": "hiljainen yö, kukaan ei siirtynyt valoon",
     "book.open": "Haamukirja",
     "book.tab.ghosts": "Haamut",
     "book.tab.keepsakes": "Muistoesineet",

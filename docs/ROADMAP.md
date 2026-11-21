@@ -38,9 +38,9 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 
 ## December 28–January 3 · Life after the ending
 
-- [ ] Give free play a repeatable week of market specials, weather and small requests from regulars. Begin it on the night after the actual finale, including when the story ran late.
-- [ ] Add one optional use for a prosperous shop’s savings: restore a row of quay lanterns, one at a time. Show each light in the harbour and record who visited when the work was finished. Keep the next upgrade affordable without requiring it for an ending.
-- [ ] Keep orders, the apprentice, furniture sets, repairs and the collection book useful after the credits. Test a returning night-31 profile and several weeks of play for repeated farewells, expired orders and missing visitors.
+- [x] Give free play a repeatable week of market specials, weather and small requests from regulars. Begin it on the night after the actual finale, including when the story ran late.
+- [x] Add one optional use for a prosperous shop’s savings: restore a row of quay lanterns, one at a time. Show each light in the harbour and record who visited when the work was finished. Keep the next upgrade affordable without requiring it for an ending.
+- [x] Keep orders, the apprentice, furniture sets, repairs and the collection book useful after the credits. Test a returning night-31 profile and several weeks of play for repeated farewells, expired orders and missing visitors.
 
 ## January 4–10 · Balance, readability and controls
 

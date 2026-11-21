@@ -50,4 +50,18 @@
     (id: "still_water", night: 28, atmosphere: (silence: 1), length_factor: 1.1),
     (id: "equinox", night: 29, price_factor: 1.2),
     (id: "last_crossing", night: 30, spawn_factor: 0.65, price_factor: 1.5, length_factor: 1.3),
+    // Free play after the last season: a week that repeats from the night after the actual
+    // finale (week_day 1–7). market_specials: extra daily specials per trader that day;
+    // regular_requests: regulars who order their favourite ware for tonight.
+    (id: "week_quiet", night: 0, week_day: Some(1), spawn_factor: 1.1),
+    (id: "week_rain", night: 0, week_day: Some(2), weather: Some(Rain), atmosphere: (light: -1),
+     ghost_weights: [("frog", 1.5)]),
+    (id: "week_regulars", night: 0, week_day: Some(3), regular_requests: 2),
+    (id: "week_fog", night: 0, week_day: Some(4), weather: Some(Fog), atmosphere: (light: -1),
+     ghost_weights: [("shy", 1.5), ("sailor", 1.5)]),
+    (id: "week_market", night: 0, week_day: Some(5), market_specials: 1, price_factor: 1.1),
+    (id: "week_wind", night: 0, week_day: Some(6), weather: Some(Storm), crate_bonus: -1,
+     atmosphere: (warmth: -1)),
+    (id: "week_long_night", night: 0, week_day: Some(7), spawn_factor: 0.8, price_factor: 1.3,
+     length_factor: 1.2),
 ]

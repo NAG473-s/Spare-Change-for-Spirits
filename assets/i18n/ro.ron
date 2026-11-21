@@ -203,6 +203,8 @@
     "log.thief": "O umbră se strecoară înăuntru, înhață de pe raft și dispare: {item}!",
     "log.thief_scared": "O umbră se uită pe fereastră, dar lumina puternică o alungă.",
     "log.ordered": "{who} comandă pentru noaptea de mâine: {item}.",
+    "log.lantern_restored": "Felinarul {n} din {total} de pe chei a fost restaurat. În noaptea asta luminează deasupra portului.",
+    "log.regular_request": "Un bilet de la {who}: te rog, păstrează-mi {item} pentru noaptea asta.",
     "log.order_missed": "{who} a revenit după comandă ({item}) și pleacă cu mâna goală – vorba se duce.",
     "log.fare_given": "{who} ia moneda cu grijă: {coin}.",
     "log.achievement": "Realizare deblocată: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Nicio fantomă nu așteaptă la tejghea.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Felinarele de pe chei (aprinse: {lit} din {total})",
+    "harbor.lanterns_hint": "Opțional: felinarele vechi de pe chei stau stinse încă din vremea Heddei. Restaurează-le unul câte unul, când magazinul își permite.",
+    "harbor.lanterns_restore": "Restaurează următorul felinar ({cost})",
+    "harbor.lanterns_tonight": "Felinarul cel nou luminează în noaptea asta pentru prima dată. Următorul poate aștepta până mâine.",
+    "harbor.lanterns_done": "Toate felinarele de pe chei luminează din nou.",
     "harbor.title": "Portul",
     "harbor.intro": "Ceața plutește peste apa neagră. Luntrașul așteaptă lângă barca lui, cu felinarul legănându-se.",
     "harbor.go": "Ieși în port  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Șorțul Heddei",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "O noapte obișnuită",
+    "event.week_quiet.text": "Poveștile au fost spuse, dar ușa tot se deschide. O noapte liniștită la început de săptămână, cu ceva mai puține spirite decât de obicei.",
+    "event.week_rain.name": "Ploaie pe acoperișuri",
+    "event.week_rain.text": "O ploaie blândă bate în obloane. Magazinul e puțin mai întunecat, iar broaștele ies în vizită.",
+    "event.week_regulars.name": "Seara clienților fideli",
+    "event.week_regulars.text": "La târg te așteaptă bilete de la clienții tăi fideli: ar vrea să le păstrezi preferatele pentru noaptea asta.",
+    "event.week_fog.name": "Ceață în port",
+    "event.week_fog.text": "Ceața vine dinspre chei. Spiritele timide și bătrânii marinari își găsesc drumul spre lumina ta.",
+    "event.week_market.name": "Zi de târg",
+    "event.week_market.text": "Negustorii aduc azi oferte speciale în plus, iar spiritele din noaptea asta sunt puse pe cheltuială.",
+    "event.week_wind.name": "Un vânt rece",
+    "event.week_wind.text": "Un vânt tăios bate peste apă. Luntrașul aduce cu o ladă mai puțin, iar în magazin e mai frig.",
+    "event.week_long_night.name": "Noaptea cea lungă",
+    "event.week_long_night.text": "Ultima noapte a săptămânii durează mai mult decât celelalte. Spiritele zăbovesc și plătesc bine înainte ca săptămâna să înceapă din nou.",
     "event.first_night.name": "Un început liniștit",
     "event.first_night.text": "Vestea despre magazinul tău abia a început să se răspândească. În noaptea asta, doar câteva spirite vor găsi ușa.",
     "event.fog.name": "Ceață peste râu",
@@ -856,6 +877,9 @@
     "tell.fake.5": "sună înfundat",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Felinarele de pe chei ({lit} din {total})",
+    "book.lantern_entry": "Felinarul {n} · aprins prima dată în noaptea {night} · în noaptea aceea: {who}",
+    "book.lantern_nobody": "o noapte liniștită, nimeni n-a trecut în lumină",
     "book.open": "Cartea fantomelor",
     "book.tab.ghosts": "Fantome",
     "book.tab.keepsakes": "Amintiri",

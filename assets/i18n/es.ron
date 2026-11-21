@@ -203,6 +203,8 @@
     "log.thief": "¡Una sombra se cuela, coge algo de la estantería ({item}) y desaparece!",
     "log.thief_scared": "Una sombra se asoma por la ventana, pero la luz intensa la ahuyenta.",
     "log.ordered": "{who} encarga para mañana por la noche: {item}.",
+    "log.lantern_restored": "El farol {n} de {total} del muelle está restaurado. Esta noche brilla sobre el puerto.",
+    "log.regular_request": "Una nota de {who}: por favor, guárdame {item} para esta noche.",
     "log.order_missed": "{who} vuelve a por su pedido ({item}) y se va con las manos vacías – se correrá la voz.",
     "log.fare_given": "{who} toma la moneda con cuidado: {coin}.",
     "log.achievement": "Logro desbloqueado: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "No hay ningún fantasma esperando en el mostrador.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Los faroles del muelle ({lit} de {total} encendidos)",
+    "harbor.lanterns_hint": "Opcional: los viejos faroles del muelle llevan apagados desde los tiempos de Hedda. Restáuralos uno a uno cuando la tienda pueda permitírselo.",
+    "harbor.lanterns_restore": "Restaurar el siguiente farol ({cost})",
+    "harbor.lanterns_tonight": "El farol nuevo brilla esta noche por primera vez. El siguiente puede esperar hasta mañana.",
+    "harbor.lanterns_done": "Todos los faroles del muelle vuelven a brillar.",
     "harbor.title": "El puerto",
     "harbor.intro": "La niebla se desliza sobre el agua negra. El barquero espera junto a su barca, con el farol balanceándose.",
     "harbor.go": "Salir al puerto  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Delantal de Hedda",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Una noche corriente",
+    "event.week_quiet.text": "Las historias ya se han contado, pero la puerta sigue abriéndose. Una noche tranquila para empezar la semana, con algunos espíritus menos que de costumbre.",
+    "event.week_rain.name": "Lluvia en los tejados",
+    "event.week_rain.text": "Una lluvia suave tamborilea en los postigos. La tienda está un poco más oscura, y las ranas vienen de visita.",
+    "event.week_regulars.name": "Velada de los habituales",
+    "event.week_regulars.text": "En el mercado te esperan notas de tus clientes habituales: les gustaría que les guardaras sus favoritos para esta noche.",
+    "event.week_fog.name": "Niebla en el puerto",
+    "event.week_fog.text": "La niebla llega desde el muelle. Los espíritus tímidos y los viejos marineros encuentran el camino hasta tu luz.",
+    "event.week_market.name": "Día de mercado",
+    "event.week_market.text": "Hoy los comerciantes traen más ofertas especiales, y esta noche los espíritus tienen ganas de gastar.",
+    "event.week_wind.name": "Un viento frío",
+    "event.week_wind.text": "Un viento cortante sopla sobre el agua. El barquero trae una caja menos, y en la tienda hace más frío.",
+    "event.week_long_night.name": "La noche larga",
+    "event.week_long_night.text": "La última noche de la semana dura más que las demás. Los espíritus se quedan más rato y pagan bien antes de que la semana vuelva a empezar.",
     "event.first_night.name": "Un comienzo tranquilo",
     "event.first_night.text": "Apenas se ha corrido la voz sobre tu tienda. Esta noche solo unos pocos espíritus encontrarán la puerta.",
     "event.fog.name": "Niebla sobre el río",
@@ -856,6 +877,9 @@
     "tell.fake.5": "suena apagado",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Los faroles del muelle ({lit} de {total})",
+    "book.lantern_entry": "Farol {n} · encendido por primera vez la noche {night} · esa noche: {who}",
+    "book.lantern_nobody": "una noche tranquila, nadie pasó a la luz",
     "book.open": "Libro de fantasmas",
     "book.tab.ghosts": "Fantasmas",
     "book.tab.keepsakes": "Recuerdos",

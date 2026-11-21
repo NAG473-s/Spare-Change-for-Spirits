@@ -203,6 +203,8 @@
     "log.thief": "影子幽靈悄悄溜進來，從架上抓走{item}，一溜煙就不見了！",
     "log.thief_scared": "影子幽靈從窗外往裡窺看，卻被明亮的光趕跑了。",
     "log.ordered": "{who}預訂了明晚的貨：{item}。",
+    "log.lantern_restored": "碼頭第{n}盞提燈（共{total}盞）已修好。今晚它照亮了港灣。",
+    "log.regular_request": "{who}留了張字條：今晚請幫我留著{item}。",
     "log.order_missed": "{who}回來取預訂的{item}，卻只能空手而歸 – 消息很快就傳開了。",
     "log.fare_given": "{who}小心翼翼地接過錢幣：{coin}。",
     "log.achievement": "成就解鎖：{name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "櫃檯前沒有等候的幽靈。",
 
     // The harbour behind the shop
+    "harbor.lanterns": "碼頭提燈（已點亮{lit}/{total}）",
+    "harbor.lanterns_hint": "可選：碼頭沿岸的舊提燈從赫達那時起就一直熄著。等小店手頭寬裕時，再一盞一盞修好它們。",
+    "harbor.lanterns_restore": "修復下一盞提燈（{cost}）",
+    "harbor.lanterns_tonight": "新修好的提燈今晚第一次亮起。下一盞可以等到明天。",
+    "harbor.lanterns_done": "碼頭沿岸的每一盞提燈都重新亮起來了。",
     "harbor.title": "碼頭",
     "harbor.intro": "霧氣在漆黑的水面上飄蕩。擺渡人守在船邊，手中的提燈輕輕搖晃。",
     "harbor.go": "出門去碼頭  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "赫達的圍裙",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "尋常的一夜",
+    "event.week_quiet.text": "故事都已講完，但店門依舊會打開。這是一週開始時平靜的一夜，幽靈比平時少一些。",
+    "event.week_rain.name": "雨落屋頂",
+    "event.week_rain.text": "細雨輕敲著百葉窗。店裡稍暗了些，青蛙們出來串門子了。",
+    "event.week_regulars.name": "常客之夜",
+    "event.week_regulars.text": "常客們的字條在市集上等著你：他們希望你今晚替他們留著最愛的東西。",
+    "event.week_fog.name": "碼頭起霧",
+    "event.week_fog.text": "霧從碼頭漫了過來。害羞的幽靈和年老的水手循著你的燈光找到了路。",
+    "event.week_market.name": "市集日",
+    "event.week_market.text": "今天商販們帶來了更多特價商品，今晚的幽靈們也很捨得花錢。",
+    "event.week_wind.name": "冷風",
+    "event.week_wind.text": "刺骨的寒風掠過水面。擺渡人少送一箱貨，店裡也更冷了。",
+    "event.week_long_night.name": "長夜",
+    "event.week_long_night.text": "一週的最後一夜比其他夜晚都長。幽靈們流連不去，在新的一週開始前出手闊綽。",
     "event.first_night.name": "安靜的開始",
     "event.first_night.text": "你的小店才剛開始有人知道。今晚只有少數幾個幽靈會找到門口。",
     "event.fog.name": "河上起霧",
@@ -856,6 +877,9 @@
     "tell.fake.5": "聲音悶悶的",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "碼頭提燈（{lit}/{total}）",
+    "book.lantern_entry": "提燈{n} · 第{night}夜首次點亮 · 那一夜：{who}",
+    "book.lantern_nobody": "安靜的一夜，沒有誰走進光裡",
     "book.open": "幽靈圖鑑",
     "book.tab.ghosts": "幽靈",
     "book.tab.keepsakes": "紀念品",

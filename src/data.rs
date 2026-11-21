@@ -339,6 +339,16 @@ pub struct NightEvent {
     /// (`event.<id>.prepare`).
     #[serde(default)]
     pub prepare: bool,
+    /// Free play after the last written night: the day of the repeating week
+    /// (1–7) this event belongs to, instead of a `night`.
+    #[serde(default)]
+    pub week_day: Option<u32>,
+    /// Extra daily specials each trader offers at the market that day.
+    #[serde(default)]
+    pub market_specials: u32,
+    /// Regulars who order their favourite ware for tonight (`regulars.rs`).
+    #[serde(default)]
+    pub regular_requests: u32,
 }
 
 fn default_size() -> (f32, f32, f32) {
@@ -556,6 +566,9 @@ impl Config {
     }
 }
 
+/// Days of the repeating free-play week (`week_day` in events.ron).
+pub const WEEK_DAYS: u32 = 7;
+
 #[derive(Resource)]
 pub struct GameData {
     pub config: Config,
@@ -569,6 +582,8 @@ pub struct GameData {
     pub sets: Vec<crate::sets::SetDef>,
     /// Lost-and-found errands after a story (`errands.ron`).
     pub errands: Vec<crate::errands::ErrandDef>,
+    /// Quay lanterns restored after the campaign (`lanterns.ron`).
+    pub lanterns: Vec<crate::lanterns::LanternDef>,
     /// The credits at the end of the campaign (`credits.ron`).
     pub credits: Vec<crate::ending::CreditSection>,
     /// Achievements of the full game (`achievements.ron`).
@@ -607,9 +622,22 @@ pub struct VendorDef {
 }
 
 impl VendorDef {
-    /// Is this trader at the market on this calendar night?
-    pub fn in_season(&self, calendar: u32) -> bool {
-        calendar >= self.from_night && self.until_night.is_none_or(|u| calendar <= u)
+    /// Is this trader at the market on this calendar night? In free play
+    /// after the last written night the seasonal traders take turns, a week
+    /// each, so their furniture (and the sets it completes) stays in reach.
+    pub fn here(&self, data: &GameData, calendar: u32) -> bool {
+        let last = data.config.last_night;
+        if calendar <= last || self.until_night.is_none() {
+            return calendar >= self.from_night && self.until_night.is_none_or(|u| calendar <= u);
+        }
+        let seasonal: Vec<&str> = data
+            .vendors
+            .iter()
+            .filter(|v| v.until_night.is_some())
+            .map(|v| v.id.as_str())
+            .collect();
+        let week = ((calendar - last - 1) / WEEK_DAYS) as usize;
+        seasonal[week % seasonal.len()] == self.id
     }
 }
 
@@ -719,6 +747,7 @@ impl GameData {
             incidents: load_ron("data/incidents.ron"),
             sets: load_ron("data/sets.ron"),
             errands: load_ron("data/errands.ron"),
+            lanterns: load_ron("data/lanterns.ron"),
             credits: load_ron("data/credits.ron"),
             workbench: load_ron("data/workbench.ron"),
             achievements: if cfg!(feature = "demo") {
@@ -737,6 +766,12 @@ impl GameData {
 
     fn validate(&self) {
         let c = &self.config;
+        for day in 1..=WEEK_DAYS {
+            assert!(
+                self.events.iter().any(|e| e.week_day == Some(day)),
+                "the free-play week has no event for day {day}"
+            );
+        }
         for set in &self.sets {
             assert!(set.decor.len() >= 2, "set '{}' needs two pieces", set.id);
             for d in &set.decor {
@@ -948,8 +983,16 @@ impl GameData {
         (calendar.max(1) - 1) / self.config.season_length + 1
     }
 
+    /// Tonight's event. Past the last written night the free-play week
+    /// repeats: its first day is the first night after the last season.
     pub fn event(&self, night: u32) -> Option<&NightEvent> {
-        self.events.iter().find(|e| e.night == night)
+        if night > self.config.last_night {
+            let day = (night - self.config.last_night - 1) % WEEK_DAYS + 1;
+            return self.events.iter().find(|e| e.week_day == Some(day));
+        }
+        self.events
+            .iter()
+            .find(|e| e.night == night && e.week_day.is_none())
     }
 
     /// Crates the ferryman brings tonight (at least one).
@@ -1059,6 +1102,51 @@ mod tests {
     use super::*;
 
     #[test]
+    fn free_play_repeats_its_week_and_brings_back_the_seasonal_traders() {
+        let data = GameData::load();
+        let last = data.config.last_night;
+        for night in 1..=last {
+            assert!(data.event(night).is_none_or(|e| e.week_day.is_none()));
+        }
+        for week in 0..6 {
+            for day in 1..=WEEK_DAYS {
+                let night = last + week * WEEK_DAYS + day;
+                let e = data.event(night).expect("a free-play night has an event");
+                assert_eq!(e.week_day, Some(day), "night {night}");
+            }
+        }
+        assert!(data.events.iter().any(|e| e.market_specials > 0));
+        assert!(data.events.iter().any(|e| e.regular_requests > 0));
+        assert!(
+            data.events
+                .iter()
+                .any(|e| e.week_day.is_some() && e.weather.is_some())
+        );
+        // Each seasonal trader keeps its season, then comes back for a week
+        // in turn; exactly one of them stands at the shared stall.
+        let seasonal: Vec<&VendorDef> = data
+            .vendors
+            .iter()
+            .filter(|v| v.until_night.is_some())
+            .collect();
+        for v in &seasonal {
+            assert!(v.here(&data, v.from_night) && !v.here(&data, v.from_night - 1));
+        }
+        for week in 0..seasonal.len() as u32 * 2 {
+            let night = last + 1 + week * WEEK_DAYS;
+            let here: Vec<_> = seasonal.iter().filter(|v| v.here(&data, night)).collect();
+            assert_eq!(here.len(), 1, "week {week}");
+            assert!(
+                here[0].here(&data, night + WEEK_DAYS - 1),
+                "for the whole week"
+            );
+        }
+        for v in data.vendors.iter().filter(|v| v.until_night.is_none()) {
+            assert!(v.here(&data, last + 40));
+        }
+    }
+
+    #[test]
     fn the_five_night_catalog_keeps_the_unrepaired_harbor_and_edwins_full_story() {
         let mut data = GameData::load();
         let limit = data.config.demo_nights;
@@ -1127,7 +1215,7 @@ mod tests {
         assert!(data.crates_tonight(storm.night) < base);
         assert!(data.crates_tonight(storm.night) >= 1);
         // A night without an event changes nothing.
-        let quiet = 1000;
+        let quiet = 0;
         assert_eq!(data.crates_tonight(quiet), base);
         assert_eq!(data.price_factor(quiet), 1.0);
         assert_eq!(data.ghost_weight_factor(quiet, "shy"), 1.0);

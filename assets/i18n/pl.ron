@@ -203,6 +203,8 @@
     "log.thief": "Cień wślizguje się do środka, porywa z półki i znika: {item}!",
     "log.thief_scared": "Cień zagląda przez okno, ale jasne światło go odpędza.",
     "log.ordered": "{who} zamawia na jutrzejszą noc: {item}.",
+    "log.lantern_restored": "Latarnia na nabrzeżu ({n} z {total}) została odnowiona. Dziś w nocy świeci nad portem.",
+    "log.regular_request": "Liścik od {who}: proszę, zachowaj dla mnie {item} na dzisiejszą noc.",
     "log.order_missed": "{who} wraca po zamówienie ({item}) i odchodzi z pustymi rękami – wieść się rozchodzi.",
     "log.fare_given": "{who} ostrożnie bierze monetę: {coin}.",
     "log.achievement": "Odblokowano osiągnięcie: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Przy ladzie nie czeka żaden duch.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Latarnie na nabrzeżu (zapalone: {lit} z {total})",
+    "harbor.lanterns_hint": "Opcjonalnie: stare latarnie wzdłuż nabrzeża są ciemne od czasów Heddy. Odnawiaj je po kolei, kiedy sklep może sobie na to pozwolić.",
+    "harbor.lanterns_restore": "Odnów następną latarnię ({cost})",
+    "harbor.lanterns_tonight": "Nowa latarnia świeci dziś w nocy po raz pierwszy. Następna może poczekać do jutra.",
+    "harbor.lanterns_done": "Wszystkie latarnie wzdłuż nabrzeża znów świecą.",
     "harbor.title": "Przystań",
     "harbor.intro": "Nad czarną wodą snuje się mgła. Przewoźnik czeka przy swojej łodzi, a jego latarnia kołysze się na wietrze.",
     "harbor.go": "Do przystani  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Fartuch Heddy",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Zwyczajna noc",
+    "event.week_quiet.text": "Historie zostały opowiedziane, ale drzwi wciąż się otwierają. Spokojna noc na początek tygodnia, z kilkoma duchami mniej niż zwykle.",
+    "event.week_rain.name": "Deszcz na dachach",
+    "event.week_rain.text": "Łagodny deszcz bębni o okiennice. W sklepie jest trochę ciemniej, a żaby wpadają w odwiedziny.",
+    "event.week_regulars.name": "Wieczór stałych klientów",
+    "event.week_regulars.text": "Na targu czekają liściki od twoich stałych klientów: chcieliby, żebyś zachował dla nich ich ulubione towary na dzisiejszą noc.",
+    "event.week_fog.name": "Mgła nad portem",
+    "event.week_fog.text": "Od nabrzeża napływa mgła. Nieśmiałe duchy i starzy marynarze znajdują drogę do twojego światła.",
+    "event.week_market.name": "Dzień targowy",
+    "event.week_market.text": "Kupcy przywożą dziś dodatkowe oferty specjalne, a duchy mają tej nocy ochotę na zakupy.",
+    "event.week_wind.name": "Zimny wiatr",
+    "event.week_wind.text": "Nad wodą wieje przenikliwy wiatr. Przewoźnik przywozi o jedną skrzynię mniej, a w sklepie jest zimniej.",
+    "event.week_long_night.name": "Długa noc",
+    "event.week_long_night.text": "Ostatnia noc tygodnia trwa dłużej niż pozostałe. Duchy zostają dłużej i dobrze płacą, zanim tydzień zacznie się od nowa.",
     "event.first_night.name": "Spokojny początek",
     "event.first_night.text": "Wieść o twoim sklepie dopiero zaczyna się rozchodzić. Dziś w nocy drzwi znajdzie tylko kilka duchów.",
     "event.fog.name": "Mgła nad rzeką",
@@ -856,6 +877,9 @@
     "tell.fake.5": "brzmi głucho",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Latarnie na nabrzeżu ({lit} z {total})",
+    "book.lantern_entry": "Latarnia {n} · pierwszy raz zapalona w noc nr {night} · tej nocy: {who}",
+    "book.lantern_nobody": "spokojna noc, nikt nie odszedł w światło",
     "book.open": "Księga duchów",
     "book.tab.ghosts": "Duchy",
     "book.tab.keepsakes": "Pamiątki",

@@ -30,6 +30,7 @@ mod harbor;
 mod i18n;
 mod incidents;
 mod inventory;
+mod lanterns;
 mod loan;
 mod market;
 mod menu;
@@ -137,6 +138,8 @@ fn main() {
             tower_clock::TowerClockPlugin,
             ending::EndingPlugin,
             story_film::StoryFilmPlugin,
+            regulars::RegularsPlugin,
+            lanterns::LanternsPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

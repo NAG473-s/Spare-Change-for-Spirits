@@ -203,6 +203,8 @@
     "log.thief": "Ein Schattengeist huscht herein, schnappt sich etwas aus dem Regal ({item}) und ist verschwunden!",
     "log.thief_scared": "Ein Schattengeist späht durchs Fenster, doch das helle Licht vertreibt ihn.",
     "log.ordered": "{who} bestellt für morgen Nacht: {item}.",
+    "log.lantern_restored": "Kailaterne {n} von {total} ist wieder instand gesetzt. Heute Nacht leuchtet sie über dem Hafen.",
+    "log.regular_request": "Ein Zettel von {who}: Bitte leg {item} für heute Nacht zurück.",
     "log.order_missed": "{who} wollte die Bestellung abholen ({item}) und geht mit leeren Händen – das spricht sich herum.",
     "log.fare_given": "{who} nimmt die Münze behutsam entgegen: {coin}.",
     "log.achievement": "Errungenschaft freigeschaltet: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "An der Theke wartet kein Geist.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Die Laternen am Kai ({lit} von {total} leuchten)",
+    "harbor.lanterns_hint": "Optional: Die alten Laternen am Kai sind seit Heddas Zeit dunkel. Setze sie nach und nach instand, wenn der Laden es sich leisten kann.",
+    "harbor.lanterns_restore": "Nächste Laterne instand setzen ({cost})",
+    "harbor.lanterns_tonight": "Die neue Laterne leuchtet heute Nacht zum ersten Mal. Die nächste kann bis morgen warten.",
+    "harbor.lanterns_done": "Alle Laternen am Kai leuchten wieder.",
     "harbor.title": "Der Hafen",
     "harbor.intro": "Nebel treibt über das schwarze Wasser. Der Fährmann wartet an seinem Boot, seine Laterne schaukelt.",
     "harbor.go": "Hinaus zum Hafen  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Heddas Schürze",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Eine gewöhnliche Nacht",
+    "event.week_quiet.text": "Die Geschichten sind erzählt, aber die Tür geht noch immer auf. Eine ruhige Nacht zum Wochenbeginn, mit ein paar Geistern weniger als sonst.",
+    "event.week_rain.name": "Regen auf den Dächern",
+    "event.week_rain.text": "Sanfter Regen trommelt auf die Fensterläden. Im Laden ist es etwas dunkler, und die Frösche kommen zu Besuch.",
+    "event.week_regulars.name": "Abend der Stammgäste",
+    "event.week_regulars.text": "Auf dem Markt warten Zettel von deinen Stammgästen: Sie möchten, dass du ihnen heute Nacht ihr Liebstes zurücklegst.",
+    "event.week_fog.name": "Hafennebel",
+    "event.week_fog.text": "Nebel zieht vom Kai herein. Scheue Geister und alte Seeleute finden den Weg zu deinem Licht.",
+    "event.week_market.name": "Markttag",
+    "event.week_market.text": "Die Händler haben heute besondere Angebote dabei, und die Geister sind heute Nacht in Kauflaune.",
+    "event.week_wind.name": "Ein kalter Wind",
+    "event.week_wind.text": "Ein scharfer Wind fegt übers Wasser. Der Fährmann bringt eine Kiste weniger, und im Laden ist es kälter.",
+    "event.week_long_night.name": "Die lange Nacht",
+    "event.week_long_night.text": "Die letzte Nacht der Woche dauert länger als die anderen. Die Geister verweilen und zahlen gut, bevor die Woche von vorn beginnt.",
     "event.first_night.name": "Ein stiller Anfang",
     "event.first_night.text": "Von deinem Laden hat sich noch kaum etwas herumgesprochen. Heute Nacht finden nur wenige Geister die Tür.",
     "event.fog.name": "Nebel über dem Fluss",
@@ -856,6 +877,9 @@
     "tell.fake.5": "klingt dumpf",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Die Laternen am Kai ({lit} von {total})",
+    "book.lantern_entry": "Laterne {n} · zum ersten Mal entzündet in Nacht {night} · in jener Nacht: {who}",
+    "book.lantern_nobody": "eine stille Nacht, niemand ging ins Licht",
     "book.open": "Geisterbuch",
     "book.tab.ghosts": "Geister",
     "book.tab.keepsakes": "Andenken",

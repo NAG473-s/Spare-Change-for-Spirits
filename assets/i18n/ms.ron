@@ -203,6 +203,8 @@
     "log.thief": "Satu bayang menyelinap masuk, menyambar {item} dari rak, lalu lenyap!",
     "log.thief_scared": "Satu bayang mengintai dari tingkap, tetapi cahaya terang menghalaunya.",
     "log.ordered": "{who} memesan untuk malam esok: {item}.",
+    "log.lantern_restored": "Pelita jeti {n} daripada {total} telah dipulihkan. Ia bersinar di atas pelabuhan malam ini.",
+    "log.regular_request": "Nota daripada {who}: tolong simpankan {item} untuk malam ini.",
     "log.order_missed": "{who} kembali untuk pesanannya ({item}) dan pulang dengan tangan kosong – cerita itu tersebar.",
     "log.fare_given": "{who} menyambut syiling itu dengan cermat: {coin}.",
     "log.achievement": "Pencapaian dibuka: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Tiada hantu yang menunggu di kaunter.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Pelita jeti ({lit} daripada {total} menyala)",
+    "harbor.lanterns_hint": "Pilihan: pelita-pelita lama di sepanjang jeti telah padam sejak zaman Hedda. Pulihkannya satu demi satu apabila kedai mampu.",
+    "harbor.lanterns_restore": "Pulihkan pelita seterusnya ({cost})",
+    "harbor.lanterns_tonight": "Pelita baharu bersinar buat kali pertama malam ini. Yang seterusnya boleh tunggu sehingga esok.",
+    "harbor.lanterns_done": "Setiap pelita di sepanjang jeti bersinar semula.",
     "harbor.title": "Jeti",
     "harbor.intro": "Kabus berarak di atas air yang hitam. Penambang menunggu di sisi perahunya, pelitanya berayun.",
     "harbor.go": "Keluar ke jeti  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Apron Hedda",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Malam Biasa",
+    "event.week_quiet.text": "Semua kisah telah diceritakan, namun pintu masih terbuka. Malam yang tenang untuk memulakan minggu, dengan roh yang datang kurang sedikit daripada biasa.",
+    "event.week_rain.name": "Hujan di Atas Bumbung",
+    "event.week_rain.text": "Hujan lembut mengetuk daun tingkap. Kedai sedikit lebih gelap, dan katak-katak keluar berkunjung.",
+    "event.week_regulars.name": "Malam Pelanggan Tetap",
+    "event.week_regulars.text": "Nota daripada pelanggan tetap anda menanti di pasar: mereka mahu barang kegemaran mereka disimpan untuk malam ini.",
+    "event.week_fog.name": "Kabus Pelabuhan",
+    "event.week_fog.text": "Kabus bergulung masuk dari jeti. Roh-roh pemalu dan kelasi tua menemui jalan ke arah cahaya anda.",
+    "event.week_market.name": "Hari Pasar",
+    "event.week_market.text": "Para peniaga membawa tawaran istimewa tambahan hari ini, dan roh-roh malam ini sedang gemar berbelanja.",
+    "event.week_wind.name": "Angin Sejuk",
+    "event.week_wind.text": "Angin tajam bertiup di atas air. Penambang membawa satu peti kurang, dan kedai lebih sejuk.",
+    "event.week_long_night.name": "Malam Panjang",
+    "event.week_long_night.text": "Malam terakhir minggu ini berlangsung lebih lama daripada yang lain. Roh-roh berlama-lama dan membayar dengan baik sebelum minggu bermula semula.",
     "event.first_night.name": "Permulaan yang Tenang",
     "event.first_night.text": "Berita tentang kedai anda belum tersebar luas. Hanya beberapa roh akan menemui pintunya malam ini.",
     "event.fog.name": "Kabus di Atas Sungai",
@@ -856,6 +877,9 @@
     "tell.fake.5": "dentingnya hambar",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Pelita jeti ({lit} daripada {total})",
+    "book.lantern_entry": "Pelita {n} · pertama dinyalakan pada malam {night} · malam itu: {who}",
+    "book.lantern_nobody": "malam yang tenang, tiada siapa pergi ke dalam cahaya",
     "book.open": "Buku hantu",
     "book.tab.ghosts": "Hantu",
     "book.tab.keepsakes": "Kenangan",

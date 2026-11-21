@@ -203,6 +203,8 @@
     "log.thief": "En skygge smyger seg inn og er borte igjen – med noe fra hylla: {item}!",
     "log.thief_scared": "En skygge titter inn gjennom vinduet, men det sterke lyset driver den bort.",
     "log.ordered": "{who} bestiller til i morgen natt: {item}.",
+    "log.lantern_restored": "Kailykt {n} av {total} er satt i stand. I natt lyser den over havna.",
+    "log.regular_request": "En lapp fra {who}: vær så snill å holde av {item} til i natt.",
     "log.order_missed": "{who} kom tilbake for bestillingen sin ({item}) og går tomhendt – slikt sprer seg.",
     "log.fare_given": "{who} tar forsiktig imot mynten: {coin}.",
     "log.achievement": "Prestasjon låst opp: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Ingen spøkelser venter ved disken.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Lyktene på kaia ({lit} av {total} tent)",
+    "harbor.lanterns_hint": "Valgfritt: De gamle lyktene langs kaia har vært mørke siden Heddas tid. Sett dem i stand én etter én når butikken har råd.",
+    "harbor.lanterns_restore": "Sett neste lykt i stand ({cost})",
+    "harbor.lanterns_tonight": "Den nye lykta lyser for første gang i natt. Den neste kan vente til i morgen.",
+    "harbor.lanterns_done": "Alle lyktene langs kaia lyser igjen.",
     "harbor.title": "Havna",
     "harbor.intro": "Tåka driver over det svarte vannet. Fergemannen venter ved båten sin, og lykta hans svaier.",
     "harbor.go": "Ut til havna  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Heddas forkle",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "En vanlig natt",
+    "event.week_quiet.text": "Historiene er fortalt, men døra går fortsatt opp. En rolig natt å begynne uka med, med noen færre ånder enn vanlig.",
+    "event.week_rain.name": "Regn på takene",
+    "event.week_rain.text": "Mykt regn tromrer på skoddene. Butikken er litt mørkere, og froskene kommer på besøk.",
+    "event.week_regulars.name": "Stamkundenes kveld",
+    "event.week_regulars.text": "Lapper fra stamkundene dine venter på markedet: De vil gjerne at du holder av favorittene deres til i natt.",
+    "event.week_fog.name": "Havnetåke",
+    "event.week_fog.text": "Tåka ruller inn fra kaia. Sjenerte ånder og gamle sjøfolk finner veien til lyset ditt.",
+    "event.week_market.name": "Markedsdag",
+    "event.week_market.text": "Handelsfolkene har med seg ekstra tilbud i dag, og åndene er i kjøpehumør i natt.",
+    "event.week_wind.name": "En kald vind",
+    "event.week_wind.text": "En skarp vind blåser over vannet. Fergemannen tar med én kasse mindre, og det er kaldere i butikken.",
+    "event.week_long_night.name": "Den lange natten",
+    "event.week_long_night.text": "Ukas siste natt varer lenger enn de andre. Åndene blir værende og betaler godt før uka begynner på nytt.",
     "event.first_night.name": "En stille begynnelse",
     "event.first_night.text": "Ryktet om butikken din har så vidt begynt å spre seg. Bare noen få ånder finner døra i natt.",
     "event.fog.name": "Tåke over elva",
@@ -856,6 +877,9 @@
     "tell.fake.5": "har en matt klang",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Lyktene på kaia ({lit} av {total})",
+    "book.lantern_entry": "Lykt {n} · tent første gang natt {night} · den natten: {who}",
+    "book.lantern_nobody": "en stille natt, ingen gikk inn i lyset",
     "book.open": "Spøkelsesbok",
     "book.tab.ghosts": "Spøkelser",
     "book.tab.keepsakes": "Minneting",

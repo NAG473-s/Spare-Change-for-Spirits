@@ -203,6 +203,8 @@
     "log.thief": "En skugga smyger in och är borta igen – med något från hyllan: {item}!",
     "log.thief_scared": "En skugga kikar in genom fönstret, men det starka ljuset driver bort den.",
     "log.ordered": "{who} beställer till i morgon natt: {item}.",
+    "log.lantern_restored": "Kajlykta {n} av {total} är lagad. I natt lyser den över hamnen.",
+    "log.regular_request": "En lapp från {who}: snälla, spara {item} till i natt.",
     "log.order_missed": "{who} kom tillbaka för sin beställning ({item}) och går tomhänt – ryktet sprider sig.",
     "log.fare_given": "{who} tar varsamt emot myntet: {coin}.",
     "log.achievement": "Prestation upplåst: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Inget spöke väntar vid disken.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Lyktorna vid kajen ({lit} av {total} tända)",
+    "harbor.lanterns_hint": "Valfritt: de gamla lyktorna längs kajen har varit släckta sedan Heddas tid. Laga dem en i taget när butiken har råd.",
+    "harbor.lanterns_restore": "Laga nästa lykta ({cost})",
+    "harbor.lanterns_tonight": "Den nya lyktan lyser för första gången i natt. Nästa kan vänta till i morgon.",
+    "harbor.lanterns_done": "Alla lyktor längs kajen lyser igen.",
     "harbor.title": "Hamnen",
     "harbor.intro": "Dimman driver över det svarta vattnet. Färjkarlen väntar vid sin båt, och hans lykta gungar.",
     "harbor.go": "Ut till hamnen  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Heddas förkläde",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "En vanlig natt",
+    "event.week_quiet.text": "Berättelserna är berättade, men dörren öppnas fortfarande. En lugn natt i början av veckan, med några färre andar än vanligt.",
+    "event.week_rain.name": "Regn på taken",
+    "event.week_rain.text": "Mjukt regn trummar mot fönsterluckorna. Butiken är lite mörkare, och grodorna kommer på besök.",
+    "event.week_regulars.name": "Stamkundernas kväll",
+    "event.week_regulars.text": "Lappar från dina stamkunder väntar på marknaden: de vill att du sparar deras favoriter till i natt.",
+    "event.week_fog.name": "Hamndimma",
+    "event.week_fog.text": "Dimman väller in från kajen. Blyga andar och gamla sjömän hittar vägen till ditt ljus.",
+    "event.week_market.name": "Marknadsdag",
+    "event.week_market.text": "Handlarna har med sig extra erbjudanden i dag, och andarna är på köphumör i natt.",
+    "event.week_wind.name": "En kall vind",
+    "event.week_wind.text": "En bitande vind blåser över vattnet. Färjkarlen tar med en låda mindre, och det är kallare i butiken.",
+    "event.week_long_night.name": "Den långa natten",
+    "event.week_long_night.text": "Veckans sista natt varar längre än de andra. Andarna dröjer sig kvar och betalar bra innan veckan börjar om.",
     "event.first_night.name": "En stillsam början",
     "event.first_night.text": "Ryktet om din butik har knappt spridits. Bara några få andar hittar dörren i natt.",
     "event.fog.name": "Dimma över floden",
@@ -856,6 +877,9 @@
     "tell.fake.5": "klingar dovt",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Lyktorna vid kajen ({lit} av {total})",
+    "book.lantern_entry": "Lykta {n} · tändes första gången natt {night} · den natten: {who}",
+    "book.lantern_nobody": "en stilla natt, ingen gick in i ljuset",
     "book.open": "Spökbok",
     "book.tab.ghosts": "Spöken",
     "book.tab.keepsakes": "Minnessaker",

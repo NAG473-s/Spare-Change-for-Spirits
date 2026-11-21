@@ -158,6 +158,8 @@ pub enum Action {
     OpenLedgerChoice,
     ChooseLedgerKeepsake(usize),
     OpenCredits,
+    /// Restore the next quay lantern (`lanterns.rs`).
+    RestoreLantern,
     CloseCredits,
     /// Turn to a chapter of the book (its coloured tab).
     BookChapter(crate::book::Chapter),
@@ -1153,7 +1155,7 @@ fn build_market_panel(
     let calendar = progress.calendar(&data);
     let root = ui.root();
     for (i, v) in data.vendors.iter().enumerate() {
-        if !v.in_season(calendar) {
+        if !v.here(&data, calendar) {
             continue;
         }
         ui.menu_option(
@@ -1268,6 +1270,7 @@ fn build_evening_panel(
             ));
         }
         evening_visits(&mut ui, &lang, &data, &progress, &odds);
+        crate::lanterns::harbor_section(&mut ui, &lang, &data, &progress, &drawer);
         ui.spacer();
         ui.primary(&lang.t("harbor.back"), Action::BackToShop);
         return;

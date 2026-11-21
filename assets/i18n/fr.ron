@@ -203,6 +203,8 @@
     "log.thief": "Une ombre se faufile, chipe quelque chose sur l'étagère ({item}) et disparaît !",
     "log.thief_scared": "Une ombre jette un œil par la fenêtre, mais la lumière vive la fait fuir.",
     "log.ordered": "{who} passe commande pour la nuit prochaine : {item}.",
+    "log.lantern_restored": "La lanterne du quai {n} sur {total} est restaurée. Elle brille sur le port cette nuit.",
+    "log.regular_request": "Un mot de {who} : garde-moi {item} pour cette nuit, s'il te plaît.",
     "log.order_missed": "{who} revient chercher sa commande ({item}) et repart les mains vides – ça va se savoir.",
     "log.fare_given": "{who} prend la pièce avec précaution : {coin}.",
     "log.achievement": "Succès débloqué : {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Aucun fantôme n'attend au comptoir.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Les lanternes du quai ({lit} sur {total} allumées)",
+    "harbor.lanterns_hint": "Facultatif : les vieilles lanternes le long du quai sont éteintes depuis l'époque de Hedda. Restaure-les une à une quand la boutique peut se le permettre.",
+    "harbor.lanterns_restore": "Restaurer la lanterne suivante ({cost})",
+    "harbor.lanterns_tonight": "La nouvelle lanterne brille pour la première fois cette nuit. La suivante peut attendre demain.",
+    "harbor.lanterns_done": "Toutes les lanternes du quai brillent de nouveau.",
     "harbor.title": "Le port",
     "harbor.intro": "La brume glisse sur l'eau noire. Le passeur attend près de sa barque, sa lanterne se balançant doucement.",
     "harbor.go": "Sortir vers le port  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Tablier de Hedda",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Une nuit ordinaire",
+    "event.week_quiet.text": "Les histoires ont été racontées, mais la porte s'ouvre toujours. Une nuit calme pour commencer la semaine, avec quelques esprits de moins que d'habitude.",
+    "event.week_rain.name": "Pluie sur les toits",
+    "event.week_rain.text": "Une pluie douce tambourine sur les volets. La boutique est un peu plus sombre, et les grenouilles viennent en visite.",
+    "event.week_regulars.name": "Soirée des habitués",
+    "event.week_regulars.text": "Des mots de tes habitués t'attendent au marché : ils aimeraient que tu leur gardes leurs articles préférés pour cette nuit.",
+    "event.week_fog.name": "Brume sur le port",
+    "event.week_fog.text": "La brume monte du quai. Les esprits timides et les vieux marins trouvent le chemin de ta lumière.",
+    "event.week_market.name": "Jour de marché",
+    "event.week_market.text": "Les marchands apportent davantage d'offres spéciales aujourd'hui, et les esprits ont envie de dépenser cette nuit.",
+    "event.week_wind.name": "Un vent froid",
+    "event.week_wind.text": "Un vent mordant souffle sur l'eau. Le passeur apporte une caisse de moins, et il fait plus froid dans la boutique.",
+    "event.week_long_night.name": "La longue nuit",
+    "event.week_long_night.text": "La dernière nuit de la semaine dure plus longtemps que les autres. Les esprits s'attardent et paient bien avant que la semaine ne recommence.",
     "event.first_night.name": "Des débuts tranquilles",
     "event.first_night.text": "Ta boutique est encore peu connue. Seuls quelques esprits trouveront la porte cette nuit.",
     "event.fog.name": "Brume sur la rivière",
@@ -856,6 +877,9 @@
     "tell.fake.5": "sonne creux",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Les lanternes du quai ({lit} sur {total})",
+    "book.lantern_entry": "Lanterne {n} · allumée pour la première fois la nuit {night} · cette nuit-là : {who}",
+    "book.lantern_nobody": "une nuit tranquille, personne n'est parti vers la lumière",
     "book.open": "Livre des fantômes",
     "book.tab.ghosts": "Fantômes",
     "book.tab.keepsakes": "Souvenirs",

@@ -203,6 +203,8 @@
     "log.thief": "그림자 유령이 스르르 들어와 선반의 물건을 낚아채고 사라졌다: {item}!",
     "log.thief_scared": "그림자 유령이 창문으로 들여다보지만, 밝은 빛에 쫓겨 달아난다.",
     "log.ordered": "{who}, 내일 밤 몫으로 주문한다: {item}",
+    "log.lantern_restored": "부두 랜턴 {n}/{total}을 고쳤다. 오늘 밤 선착장 위를 밝힌다.",
+    "log.regular_request": "{who}의 쪽지: 오늘 밤을 위해 남겨 주세요 – {item}",
     "log.order_missed": "{who}, 주문한 물건({item})을 찾으러 왔다가 빈손으로 떠난다 – 소문이 퍼진다.",
     "log.fare_given": "{who}, 조심스럽게 동전을 받아 든다: {coin}",
     "log.achievement": "도전 과제 달성: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "카운터에서 기다리는 유령이 없어요.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "부두 랜턴 ({lit}/{total}개 켜짐)",
+    "harbor.lanterns_hint": "선택 사항: 부두를 따라 늘어선 낡은 랜턴은 헤다 시절부터 꺼져 있어요. 가게에 여유가 생길 때마다 하나씩 고쳐 보세요.",
+    "harbor.lanterns_restore": "다음 랜턴 고치기 ({cost})",
+    "harbor.lanterns_tonight": "새 랜턴이 오늘 밤 처음으로 빛나요. 다음 랜턴은 내일까지 기다려도 돼요.",
+    "harbor.lanterns_done": "부두를 따라 모든 랜턴이 다시 빛나요.",
     "harbor.title": "선착장",
     "harbor.intro": "검은 물 위로 안개가 흘러가요. 뱃사공이 배 옆에서 기다리고, 랜턴이 흔들려요.",
     "harbor.go": "선착장으로 나가기  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "헤다의 앞치마",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "평범한 밤",
+    "event.week_quiet.text": "이야기는 모두 끝났지만, 문은 여전히 열린다. 한 주를 여는 조용한 밤, 유령은 평소보다 조금 적다.",
+    "event.week_rain.name": "지붕 위의 비",
+    "event.week_rain.text": "보슬비가 덧문을 두드린다. 가게는 조금 더 어둡고, 개구리들이 놀러 나온다.",
+    "event.week_regulars.name": "단골들의 밤",
+    "event.week_regulars.text": "장터에 단골들의 쪽지가 기다리고 있다. 오늘 밤 좋아하는 물건을 남겨 두어 달라고 한다.",
+    "event.week_fog.name": "선착장의 안개",
+    "event.week_fog.text": "부두에서 안개가 밀려온다. 수줍은 유령들과 늙은 선원들이 당신의 불빛을 따라 찾아온다.",
+    "event.week_market.name": "장날",
+    "event.week_market.text": "오늘은 상인들이 특가품을 더 많이 가져왔고, 오늘 밤 유령들은 지갑을 활짝 연다.",
+    "event.week_wind.name": "차가운 바람",
+    "event.week_wind.text": "매서운 바람이 물 위로 분다. 뱃사공이 가져오는 상자가 하나 줄고, 가게는 더 춥다.",
+    "event.week_long_night.name": "긴 밤",
+    "event.week_long_night.text": "한 주의 마지막 밤은 다른 밤보다 길게 이어진다. 유령들은 오래 머물며, 새로운 한 주가 시작되기 전에 돈을 후하게 낸다.",
     "event.first_night.name": "조용한 시작",
     "event.first_night.text": "가게 소문이 아직 거의 퍼지지 않았다. 오늘 밤 문을 찾아오는 유령은 몇 안 된다.",
     "event.fog.name": "강 위의 안개",
@@ -856,6 +877,9 @@
     "tell.fake.5": "둔탁한 소리가 남",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "부두 랜턴 ({lit}/{total})",
+    "book.lantern_entry": "랜턴 {n} · {night}번째 밤에 처음 켜짐 · 그날 밤: {who}",
+    "book.lantern_nobody": "조용한 밤, 빛 속으로 떠난 유령은 없었다",
     "book.open": "유령 도감",
     "book.tab.ghosts": "유령",
     "book.tab.keepsakes": "기념품",

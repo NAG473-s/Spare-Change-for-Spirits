@@ -203,6 +203,8 @@
     "log.thief": "影法師がするりと忍び込み、棚の{item}をひったくって消えた！",
     "log.thief_scared": "影法師が窓からのぞき込んだが、明るい光に追い払われた。",
     "log.ordered": "{who}が明日の夜の分を注文した：{item}。",
+    "log.lantern_restored": "波止場のランタン{n}/{total}がよみがえった。今夜、船着き場を照らしている。",
+    "log.regular_request": "{who}からのメモ：今夜のために{item}を取っておいてね。",
     "log.order_missed": "{who}は注文の品（{item}）を受け取りに来たが、手ぶらで帰っていった – うわさはすぐに広まる。",
     "log.fare_given": "{who}は{coin}を大事そうに受け取った。",
     "log.achievement": "実績解除：{name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "カウンターで待っている幽霊はいない。",
 
     // The harbour behind the shop
+    "harbor.lanterns": "波止場のランタン（点灯 {lit}/{total}）",
+    "harbor.lanterns_hint": "任意：波止場沿いの古いランタンは、ヘッダの時代から消えたままだ。店に余裕ができたら、ひとつずつ修理しよう。",
+    "harbor.lanterns_restore": "次のランタンを修理する（{cost}）",
+    "harbor.lanterns_tonight": "新しいランタンが今夜はじめて灯った。次のランタンは明日まで待とう。",
+    "harbor.lanterns_done": "波止場沿いのランタンが、すべてふたたび灯った。",
     "harbor.title": "船着き場",
     "harbor.intro": "黒い水面に霧が漂う。渡し守は舟のそばで待ち、ランタンが揺れている。",
     "harbor.go": "船着き場へ出る  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "ヘッダのエプロン",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "いつもの夜",
+    "event.week_quiet.text": "物語はすべて語られたけれど、扉はまだ開く。週のはじまりの穏やかな夜で、幽霊はいつもより少しだけ少ない。",
+    "event.week_rain.name": "屋根に降る雨",
+    "event.week_rain.text": "やわらかな雨がよろい戸をたたく。店は少し暗く、カエルたちが遊びにやってくる。",
+    "event.week_regulars.name": "常連の夜",
+    "event.week_regulars.text": "市場で常連たちのメモが待っている。今夜のためにお気に入りの品を取っておいてほしいそうだ。",
+    "event.week_fog.name": "港の霧",
+    "event.week_fog.text": "波止場から霧が流れこんでくる。内気な幽霊や年老いた船乗りたちが、あなたの明かりをたよりにやってくる。",
+    "event.week_market.name": "市場の日",
+    "event.week_market.text": "今日は商人たちが特売品を多めに持ってきた。今夜の幽霊たちは財布のひもがゆるい。",
+    "event.week_wind.name": "冷たい風",
+    "event.week_wind.text": "水の上を鋭い風が吹きぬける。渡し守が運ぶ木箱は1つ少なく、店はいつもより寒い。",
+    "event.week_long_night.name": "長い夜",
+    "event.week_long_night.text": "週の最後の夜は、ほかの夜より長く続く。幽霊たちはゆっくり過ごし、新しい週が始まる前に気前よく払ってくれる。",
     "event.first_night.name": "静かな始まり",
     "event.first_night.text": "お店のうわさはまだほとんど広まっていない。今夜ドアを見つけるのは、ほんの数人の幽霊だけ。",
     "event.fog.name": "川霧",
@@ -856,6 +877,9 @@
     "tell.fake.5": "鈍い音がする",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "波止場のランタン（{lit}/{total}）",
+    "book.lantern_entry": "ランタン{n} · {night}日目の夜に初点灯 · その夜：{who}",
+    "book.lantern_nobody": "静かな夜、光の中へ旅立った幽霊はいなかった",
     "book.open": "幽霊帳",
     "book.tab.ghosts": "幽霊",
     "book.tab.keepsakes": "思い出",

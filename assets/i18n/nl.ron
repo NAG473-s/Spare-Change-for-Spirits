@@ -203,6 +203,8 @@
     "log.thief": "Een schim glipt naar binnen, grist iets van de plank ({item}) en is weg!",
     "log.thief_scared": "Een schim gluurt door het raam, maar het felle licht jaagt hem weg.",
     "log.ordered": "{who} bestelt voor morgennacht: {item}.",
+    "log.lantern_restored": "Kadelantaarn {n} van {total} is hersteld. Vannacht schijnt hij over de haven.",
+    "log.regular_request": "Een briefje van {who}: hou alsjeblieft {item} apart voor vannacht.",
     "log.order_missed": "{who} kwam de bestelling ophalen ({item}) en vertrekt met lege handen – dat gaat rond.",
     "log.fare_given": "{who} neemt de munt voorzichtig aan: {coin}.",
     "log.achievement": "Prestatie behaald: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Er wacht geen geest bij de toonbank.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "De lantaarns op de kade ({lit} van {total} aan)",
+    "harbor.lanterns_hint": "Optioneel: de oude lantaarns langs de kade zijn al donker sinds Hedda's tijd. Herstel ze een voor een wanneer de winkel het kan missen.",
+    "harbor.lanterns_restore": "Volgende lantaarn herstellen ({cost})",
+    "harbor.lanterns_tonight": "De nieuwe lantaarn schijnt vannacht voor het eerst. De volgende kan tot morgen wachten.",
+    "harbor.lanterns_done": "Alle lantaarns langs de kade schijnen weer.",
     "harbor.title": "De haven",
     "harbor.intro": "Mist drijft over het zwarte water. De veerman wacht bij zijn boot, zijn lantaarn zwaait heen en weer.",
     "harbor.go": "Naar buiten, naar de haven  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Hedda's schort",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Een gewone nacht",
+    "event.week_quiet.text": "De verhalen zijn verteld, maar de deur gaat nog steeds open. Een rustige nacht om de week te beginnen, met een paar geesten minder dan anders.",
+    "event.week_rain.name": "Regen op de daken",
+    "event.week_rain.text": "Zachte regen roffelt op de luiken. De winkel is een beetje donkerder, en de kikkers komen op bezoek.",
+    "event.week_regulars.name": "Avond van de vaste klanten",
+    "event.week_regulars.text": "Op de markt liggen briefjes van je vaste klanten klaar: ze willen graag dat je hun favorieten voor vannacht apart houdt.",
+    "event.week_fog.name": "Havenmist",
+    "event.week_fog.text": "Mist rolt binnen vanaf de kade. Verlegen geesten en oude zeelieden vinden de weg naar je licht.",
+    "event.week_market.name": "Marktdag",
+    "event.week_market.text": "De handelaars hebben vandaag extra aanbiedingen bij zich, en de geesten zijn vannacht in een koopgrage bui.",
+    "event.week_wind.name": "Een koude wind",
+    "event.week_wind.text": "Een snijdende wind waait over het water. De veerman brengt één krat minder, en het is kouder in de winkel.",
+    "event.week_long_night.name": "De lange nacht",
+    "event.week_long_night.text": "De laatste nacht van de week duurt langer dan de andere. Geesten blijven hangen en betalen goed voordat de week opnieuw begint.",
     "event.first_night.name": "Een rustig begin",
     "event.first_night.text": "Je winkel is nog nauwelijks bekend. Vannacht vinden maar een paar geesten de deur.",
     "event.fog.name": "Mist boven de rivier",
@@ -856,6 +877,9 @@
     "tell.fake.5": "klinkt dof",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "De lantaarns op de kade ({lit} van {total})",
+    "book.lantern_entry": "Lantaarn {n} · voor het eerst aangestoken in nacht {night} · die nacht: {who}",
+    "book.lantern_nobody": "een stille nacht, niemand ging naar het licht",
     "book.open": "Geestenboek",
     "book.tab.ghosts": "Geesten",
     "book.tab.keepsakes": "Aandenkens",

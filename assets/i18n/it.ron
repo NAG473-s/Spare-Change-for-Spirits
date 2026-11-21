@@ -203,6 +203,8 @@
     "log.thief": "Un'ombra scivola dentro, arraffa qualcosa dallo scaffale ({item}) e sparisce!",
     "log.thief_scared": "Un'ombra sbircia dalla finestra, ma la luce intensa la scaccia.",
     "log.ordered": "{who} ordina per domani notte: {item}.",
+    "log.lantern_restored": "La lanterna {n} di {total} del molo è restaurata. Stanotte brilla sul porto.",
+    "log.regular_request": "Un biglietto da {who}: per favore, tienimi da parte {item} per stanotte.",
     "log.order_missed": "{who} torna a ritirare il suo ordine ({item}) e se ne va a mani vuote – la voce si sparge.",
     "log.fare_given": "{who} prende la moneta con cura: {coin}.",
     "log.achievement": "Obiettivo sbloccato: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Nessun fantasma aspetta al bancone.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Le lanterne del molo ({lit} di {total} accese)",
+    "harbor.lanterns_hint": "Facoltativo: le vecchie lanterne lungo il molo sono spente dai tempi di Hedda. Restaurale una alla volta, quando la bottega se lo può permettere.",
+    "harbor.lanterns_restore": "Restaura la prossima lanterna ({cost})",
+    "harbor.lanterns_tonight": "La nuova lanterna brilla stanotte per la prima volta. La prossima può aspettare fino a domani.",
+    "harbor.lanterns_done": "Tutte le lanterne lungo il molo brillano di nuovo.",
     "harbor.title": "Il porto",
     "harbor.intro": "La nebbia scivola sull'acqua nera. Il traghettatore aspetta accanto alla sua barca, con la lanterna che oscilla.",
     "harbor.go": "Fuori, al porto  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Grembiule di Hedda",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Una notte qualunque",
+    "event.week_quiet.text": "Le storie sono state raccontate, ma la porta si apre ancora. Una notte tranquilla per iniziare la settimana, con qualche spirito in meno del solito.",
+    "event.week_rain.name": "Pioggia sui tetti",
+    "event.week_rain.text": "Una pioggia leggera tamburella sulle imposte. La bottega è un po' più buia, e le rane vengono a fare visita.",
+    "event.week_regulars.name": "Serata dei clienti abituali",
+    "event.week_regulars.text": "Al mercato ti aspettano i biglietti dei tuoi clienti abituali: vorrebbero che tenessi da parte i loro preferiti per stanotte.",
+    "event.week_fog.name": "Nebbia sul porto",
+    "event.week_fog.text": "La nebbia sale dal molo. Spiriti timidi e vecchi marinai trovano la strada verso la tua luce.",
+    "event.week_market.name": "Giorno di mercato",
+    "event.week_market.text": "Oggi i mercanti portano offerte speciali in più, e stanotte gli spiriti hanno voglia di spendere.",
+    "event.week_wind.name": "Un vento freddo",
+    "event.week_wind.text": "Un vento pungente soffia sull'acqua. Il traghettatore porta una cassa in meno, e in bottega fa più freddo.",
+    "event.week_long_night.name": "La lunga notte",
+    "event.week_long_night.text": "L'ultima notte della settimana dura più delle altre. Gli spiriti si trattengono e pagano bene prima che la settimana ricominci.",
     "event.first_night.name": "Un inizio tranquillo",
     "event.first_night.text": "Della tua bottega si sa ancora poco. Stanotte solo pochi spiriti troveranno la porta.",
     "event.fog.name": "Nebbia sul fiume",
@@ -856,6 +877,9 @@
     "tell.fake.5": "suona sordo",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Le lanterne del molo ({lit} di {total})",
+    "book.lantern_entry": "Lanterna {n} · accesa per la prima volta la notte {night} · quella notte: {who}",
+    "book.lantern_nobody": "una notte tranquilla, nessuno è passato nella luce",
     "book.open": "Libro dei fantasmi",
     "book.tab.ghosts": "Fantasmi",
     "book.tab.keepsakes": "Ricordi",

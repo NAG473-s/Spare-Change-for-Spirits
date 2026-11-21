@@ -14,6 +14,7 @@
 //   day (`special_discount` in config.ron cheaper; a new pick every day).
 // from_night / until_night (optional): a seasonal trader, at the market only between these
 //   calendar nights. Seasonal traders may share a place, as their seasons do not overlap.
+//   In free play after `last_night` (config.ron) they take turns, a week each, in this order.
 [
     // Three traders share the western cobbled bay. The cart lane passes east of the herbalist.
     (id: "carpenter", pos: (-5.65, -3.18), turn: 10.0, color: (0.6, 0.45, 0.28),

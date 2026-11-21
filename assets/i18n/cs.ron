@@ -203,6 +203,8 @@
     "log.thief": "Stín vklouzne dovnitř, popadne z police a zmizí: {item}!",
     "log.thief_scared": "Stín nahlédne oknem, ale jasné světlo ho zažene.",
     "log.ordered": "{who} objednává na zítřejší noc: {item}.",
+    "log.lantern_restored": "Lucerna na nábřeží ({n} z {total}) je opravená. Dnes v noci svítí nad přístavem.",
+    "log.regular_request": "Vzkaz od: {who}. Schovej mi prosím na dnešní noc {item}.",
     "log.order_missed": "{who} se vrací pro objednávku ({item}) a odchází s prázdnou – to se rozkřikne.",
     "log.fare_given": "{who} opatrně přijímá minci: {coin}.",
     "log.achievement": "Úspěch odemčen: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "U pultu nečeká žádný duch.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Lucerny na nábřeží (svítí {lit} z {total})",
+    "harbor.lanterns_hint": "Nepovinné: staré lucerny podél nábřeží jsou temné už od Heddiných časů. Opravuj je jednu po druhé, až si to obchod bude moct dovolit.",
+    "harbor.lanterns_restore": "Opravit další lucernu ({cost})",
+    "harbor.lanterns_tonight": "Nová lucerna dnes v noci svítí poprvé. Další může počkat do zítřka.",
+    "harbor.lanterns_done": "Všechny lucerny podél nábřeží zase svítí.",
     "harbor.title": "Přístav",
     "harbor.intro": "Nad černou vodou se valí mlha. Převozník čeká u své loďky a lucerna se mu pohupuje v ruce.",
     "harbor.go": "Ven do přístavu  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Heddina zástěra",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Obyčejná noc",
+    "event.week_quiet.text": "Příběhy jsou dovyprávěny, ale dveře se pořád otevírají. Klidná noc na začátek týdne, s pár duchy méně než obvykle.",
+    "event.week_rain.name": "Déšť na střechách",
+    "event.week_rain.text": "Jemný déšť bubnuje na okenice. V obchodě je o něco tmavěji a na návštěvu přicházejí žáby.",
+    "event.week_regulars.name": "Večer štamgastů",
+    "event.week_regulars.text": "Na trhu na tebe čekají vzkazy od tvých štamgastů: chtěli by, abys jim na dnešní noc schoval jejich oblíbené zboží.",
+    "event.week_fog.name": "Mlha nad přístavem",
+    "event.week_fog.text": "Od nábřeží se valí mlha. Plaší duchové a staří námořníci nacházejí cestu k tvému světlu.",
+    "event.week_market.name": "Trhový den",
+    "event.week_market.text": "Obchodníci dnes přivážejí víc zvláštních nabídek a duchové mají dnes v noci chuť utrácet.",
+    "event.week_wind.name": "Studený vítr",
+    "event.week_wind.text": "Nad vodou fouká ostrý vítr. Převozník přiveze o jednu bednu méně a v obchodě je chladněji.",
+    "event.week_long_night.name": "Dlouhá noc",
+    "event.week_long_night.text": "Poslední noc v týdnu trvá déle než ostatní. Duchové se zdrží a dobře platí, než týden začne znovu.",
     "event.first_night.name": "Tichý začátek",
     "event.first_night.text": "Zpráva o tvém obchodě se sotva začala šířit. Dnes v noci najde dveře jen pár duchů.",
     "event.fog.name": "Mlha nad řekou",
@@ -856,6 +877,9 @@
     "tell.fake.5": "zní dutě",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Lucerny na nábřeží ({lit} z {total})",
+    "book.lantern_entry": "Lucerna {n} · poprvé rozsvícena během {night}. noci · té noci: {who}",
+    "book.lantern_nobody": "klidná noc, nikdo neodešel do světla",
     "book.open": "Kniha duchů",
     "book.tab.ghosts": "Duchové",
     "book.tab.keepsakes": "Památky",

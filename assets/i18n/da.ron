@@ -203,6 +203,8 @@
     "log.thief": "En skygge smutter ind og er væk igen – med noget fra hylden: {item}!",
     "log.thief_scared": "En skygge kigger ind ad vinduet, men det stærke lys driver den væk.",
     "log.ordered": "{who} bestiller til i morgen nat: {item}.",
+    "log.lantern_restored": "Kajlygte {n} af {total} er sat i stand. I nat lyser den over havnen.",
+    "log.regular_request": "En seddel fra {who}: læg venligst {item} til side til i nat.",
     "log.order_missed": "{who} kom tilbage efter sin bestilling ({item}) og går tomhændet – det rygtes hurtigt.",
     "log.fare_given": "{who} tager forsigtigt imod mønten: {coin}.",
     "log.achievement": "Præstation låst op: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Intet spøgelse venter ved disken.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Lygterne på kajen ({lit} af {total} tændt)",
+    "harbor.lanterns_hint": "Valgfrit: De gamle lygter langs kajen har været slukket siden Heddas tid. Sæt dem i stand én ad gangen, når butikken har råd.",
+    "harbor.lanterns_restore": "Sæt den næste lygte i stand ({cost})",
+    "harbor.lanterns_tonight": "Den nye lygte lyser for første gang i nat. Den næste kan vente til i morgen.",
+    "harbor.lanterns_done": "Alle lygter langs kajen lyser igen.",
     "harbor.title": "Havnen",
     "harbor.intro": "Tågen driver hen over det sorte vand. Færgemanden venter ved sin båd, og hans lygte svajer.",
     "harbor.go": "Ud til havnen  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Heddas forklæde",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "En almindelig nat",
+    "event.week_quiet.text": "Historierne er fortalt, men døren går stadig op. En rolig nat til at begynde ugen med, med et par ånder færre end ellers.",
+    "event.week_rain.name": "Regn på tagene",
+    "event.week_rain.text": "Blød regn trommer på skodderne. Butikken er lidt mørkere, og frøerne kommer på besøg.",
+    "event.week_regulars.name": "Stamkundernes aften",
+    "event.week_regulars.text": "Sedler fra dine stamkunder venter på markedet: De vil gerne have, at du lægger deres yndlingsvarer til side til i nat.",
+    "event.week_fog.name": "Havnetåge",
+    "event.week_fog.text": "Tågen ruller ind fra kajen. Generte ånder og gamle sømænd finder vej til dit lys.",
+    "event.week_market.name": "Markedsdag",
+    "event.week_market.text": "Handelsfolkene har ekstra tilbud med i dag, og ånderne er i købehumør i nat.",
+    "event.week_wind.name": "En kold vind",
+    "event.week_wind.text": "En skarp vind blæser over vandet. Færgemanden kommer med én kasse mindre, og der er koldere i butikken.",
+    "event.week_long_night.name": "Den lange nat",
+    "event.week_long_night.text": "Ugens sidste nat varer længere end de andre. Ånderne bliver hængende og betaler godt, før ugen begynder forfra.",
     "event.first_night.name": "En stille begyndelse",
     "event.first_night.text": "Rygtet om din butik har knap nok spredt sig. Kun få ånder finder døren i nat.",
     "event.fog.name": "Tåge over floden",
@@ -856,6 +877,9 @@
     "tell.fake.5": "klinger dumpt",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Lygterne på kajen ({lit} af {total})",
+    "book.lantern_entry": "Lygte {n} · tændt første gang nat {night} · den nat: {who}",
+    "book.lantern_nobody": "en stille nat, ingen gik ind i lyset",
     "book.open": "Spøgelsesbog",
     "book.tab.ghosts": "Spøgelser",
     "book.tab.keepsakes": "Mindegenstande",

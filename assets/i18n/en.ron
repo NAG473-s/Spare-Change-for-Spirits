@@ -203,6 +203,8 @@
     "log.thief": "A shade slips in, snatches {item} from the shelf and is gone!",
     "log.thief_scared": "A shade peers through the window, but the bright light drives it away.",
     "log.ordered": "{who} orders for tomorrow night: {item}.",
+    "log.lantern_restored": "Quay lantern {n} of {total} is restored. It shines over the harbour tonight.",
+    "log.regular_request": "A note from {who}: please keep {item} for tonight.",
     "log.order_missed": "{who} came back for its order ({item}) and leaves empty-handed – word gets around.",
     "log.fare_given": "{who} takes the coin carefully: {coin}.",
     "log.achievement": "Achievement unlocked: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "No ghost is waiting at the counter.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "The quay lanterns ({lit} of {total} lit)",
+    "harbor.lanterns_hint": "Optional: the old lanterns along the quay have been dark since Hedda's time. Restore them one by one when the shop can spare it.",
+    "harbor.lanterns_restore": "Restore the next lantern ({cost})",
+    "harbor.lanterns_tonight": "The new lantern shines for the first time tonight. The next one can wait until tomorrow.",
+    "harbor.lanterns_done": "Every lantern along the quay shines again.",
     "harbor.title": "The Harbour",
     "harbor.intro": "Mist drifts over the black water. The ferryman waits by his boat, his lantern swinging.",
     "harbor.go": "Out to the harbour  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Hedda's Apron",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "An Ordinary Night",
+    "event.week_quiet.text": "The stories are told, but the door still opens. A calm night to start the week, with a few spirits less than usual.",
+    "event.week_rain.name": "Rain on the Roofs",
+    "event.week_rain.text": "Soft rain drums on the shutters. The shop is a little darker, and the frogs come out to visit.",
+    "event.week_regulars.name": "Regulars' Evening",
+    "event.week_regulars.text": "Notes from your regulars wait at the market: they would like their favourites kept for tonight.",
+    "event.week_fog.name": "Harbour Fog",
+    "event.week_fog.text": "Fog rolls in from the quay. Shy spirits and old sailors find their way to your light.",
+    "event.week_market.name": "Market Day",
+    "event.week_market.text": "The traders bring extra specials today, and the spirits tonight are in a spending mood.",
+    "event.week_wind.name": "A Cold Wind",
+    "event.week_wind.text": "A sharp wind blows over the water. The ferryman brings one crate less, and the shop is colder.",
+    "event.week_long_night.name": "The Long Night",
+    "event.week_long_night.text": "The last night of the week lasts longer than the others. Spirits linger and pay well before the week begins again.",
     "event.first_night.name": "A Quiet Beginning",
     "event.first_night.text": "Word of your shop has barely spread. Only a few spirits will find the door tonight.",
     "event.fog.name": "Fog over the River",
@@ -856,6 +877,9 @@
     "tell.fake.5": "rings dully",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "The quay lanterns ({lit} of {total})",
+    "book.lantern_entry": "Lantern {n} · first lit on night {night} · that night: {who}",
+    "book.lantern_nobody": "a quiet night, no one passed into the light",
     "book.open": "Ghost book",
     "book.tab.ghosts": "Ghosts",
     "book.tab.keepsakes": "Keepsakes",

@@ -203,6 +203,8 @@
     "log.thief": "Egy árny besurran, lekap valamit a polcról, és már el is tűnt: {item}!",
     "log.thief_scared": "Egy árny benéz az ablakon, de az erős fény elűzi.",
     "log.ordered": "{who} rendel holnap éjjelre: {item}.",
+    "log.lantern_restored": "Rakparti lámpás helyreállítva: {n}/{total}. Ma éjjel már a kikötő fölött világít.",
+    "log.regular_request": "Üzenet tőle: {who}. Kérlek, tedd félre nekem ma éjjelre: {item}.",
     "log.order_missed": "{who} visszajött a rendeléséért ({item}), és üres kézzel távozik – ennek híre megy.",
     "log.fare_given": "{who} óvatosan átveszi az érmét: {coin}.",
     "log.achievement": "Teljesítmény feloldva: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Egy szellem sem vár a pultnál.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "A rakparti lámpások ({lit}/{total} ég)",
+    "harbor.lanterns_hint": "Nem kötelező: a rakpart régi lámpásai Hedda ideje óta sötétek. Állítsd helyre őket egyenként, amikor a bolt megengedheti magának.",
+    "harbor.lanterns_restore": "A következő lámpás helyreállítása ({cost})",
+    "harbor.lanterns_tonight": "Az új lámpás ma éjjel világít először. A következő ráér holnapig.",
+    "harbor.lanterns_done": "A rakpart minden lámpása újra világít.",
     "harbor.title": "A kikötő",
     "harbor.intro": "Köd úszik a fekete víz fölött. A révész a csónakja mellett vár, lámpása lassan himbálózik.",
     "harbor.go": "Ki a kikötőbe  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Hedda köténye",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Egy átlagos éjszaka",
+    "event.week_quiet.text": "A történetek elmesélve, de az ajtó még mindig nyílik. Nyugodt éjszaka a hét elején, a szokásosnál néhány szellemmel kevesebb.",
+    "event.week_rain.name": "Eső a háztetőkön",
+    "event.week_rain.text": "Szelíd eső dobol a spalettákon. A bolt kicsit sötétebb, és a békák is beugranak látogatóba.",
+    "event.week_regulars.name": "A törzsvendégek estéje",
+    "event.week_regulars.text": "A piacon a törzsvendégeid üzenetei várnak: szeretnék, ha ma éjjelre félretennéd nekik a kedvencüket.",
+    "event.week_fog.name": "Kikötői köd",
+    "event.week_fog.text": "A rakpart felől köd gördül be. A félénk szellemek és az öreg matrózok rátalálnak a fényedre.",
+    "event.week_market.name": "Vásárnap",
+    "event.week_market.text": "A kereskedők ma több különleges ajánlatot hoznak, és a szellemek ma éjjel költekező kedvükben vannak.",
+    "event.week_wind.name": "Hideg szél",
+    "event.week_wind.text": "Metsző szél fúj a víz felett. A révész eggyel kevesebb ládát hoz, és hidegebb van a boltban.",
+    "event.week_long_night.name": "A hosszú éjszaka",
+    "event.week_long_night.text": "A hét utolsó éjszakája tovább tart a többinél. A szellemek elidőznek, és jól fizetnek, mielőtt újrakezdődik a hét.",
     "event.first_night.name": "Csendes kezdet",
     "event.first_night.text": "A boltod híre még alig terjedt el. Ma éjjel csak néhány szellem talál rá az ajtóra.",
     "event.fog.name": "Köd a folyó fölött",
@@ -856,6 +877,9 @@
     "tell.fake.5": "tompán cseng",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "A rakparti lámpások ({lit}/{total})",
+    "book.lantern_entry": "{n}. lámpás · először égett: {night}. éjszaka · azon az éjjelen: {who}",
+    "book.lantern_nobody": "csendes éjszaka, senki sem távozott a fénybe",
     "book.open": "Szellemkönyv",
     "book.tab.ghosts": "Szellemek",
     "book.tab.keepsakes": "Emléktárgyak",

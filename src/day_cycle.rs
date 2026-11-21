@@ -127,9 +127,14 @@ impl Progress {
     /// past its last night, its last calendar night repeats.
     pub fn calendar(&self, data: &GameData) -> u32 {
         let len = data.config.season_length;
-        let into = (self.night + 1)
-            .saturating_sub(self.season_start)
-            .clamp(1, len);
+        let into = (self.night + 1).saturating_sub(self.season_start).max(1);
+        // A season with a story waits for its finale on its last night; free
+        // play after the stories counts on, so the week keeps turning.
+        let into = if self.season_has_finale(data) {
+            into.min(len)
+        } else {
+            into
+        };
         (self.season - 1) * len + into
     }
 
@@ -654,6 +659,60 @@ mod tests {
         assert_eq!((third.season, third.night), (3, 3 * len));
         assert!(!crate::winter::snowing(&data, &third));
         assert_eq!(crate::winter::blossom_level(&data, &third), 1.0);
+    }
+
+    /// Life after the ending: a returning profile keeps playing for weeks.
+    #[cfg(not(feature = "demo"))]
+    #[test]
+    fn free_play_turns_a_week_from_the_night_after_the_actual_finale() {
+        let data = GameData::load();
+        let last = data.config.last_night;
+        let layout = crate::shop::ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        // On time, and with stories that ran late in two seasons.
+        for failures in [vec![], vec![7, 8, 25]] {
+            let mut p = play(&data, &failures);
+            loop {
+                p.next_season();
+                if !p.season_has_finale(&data) {
+                    break;
+                }
+                p = play_from(p, &data, &failures);
+            }
+            // The night after the actual finale, later when a story ran late.
+            assert_eq!(p.night > last + 1, !failures.is_empty(), "{}", p.night);
+            assert_eq!(p.calendar(&data), last + 1);
+            let mut ordered = Vec::new();
+            for n in 0..8 * crate::data::WEEK_DAYS {
+                let calendar = p.calendar(&data);
+                let event = data
+                    .event(calendar)
+                    .expect("every night of the week has one");
+                assert_eq!(event.week_day, Some(n % crate::data::WEEK_DAYS + 1));
+                assert!(
+                    (0..data.stories.len()).all(|i| !p.story_due(&data, i)),
+                    "no story comes back on night {}",
+                    p.night
+                );
+                assert!(!p.season_over(&data), "free play never ends by itself");
+                let odds =
+                    data.ghost_odds(calendar, &layout.atmosphere(&data, calendar), p.reputation);
+                assert!(odds.iter().sum::<f32>() > 0.0, "ghosts still come");
+                // An order for tonight that no one collects expires at dawn.
+                p.orders
+                    .push(crate::orders::Order::new("shy", "lavender", p.night, None));
+                ordered.push(p.night);
+                p.night += 1;
+                p.archive_due_orders();
+                assert!(p.orders.is_empty());
+            }
+            let history = &p.journal.order_history;
+            assert_eq!(history.len(), ordered.len());
+            assert!(
+                history
+                    .iter()
+                    .all(|o| o.state == crate::orders::OrderState::Expired)
+            );
+        }
     }
 
     #[test]

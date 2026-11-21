@@ -203,6 +203,8 @@
     "log.thief": "Uma sombra entra às escondidas, tira algo da prateleira ({item}) e desaparece!",
     "log.thief_scared": "Uma sombra espreita pela janela, mas a luz forte afugenta-a.",
     "log.ordered": "{who} encomenda para amanhã à noite: {item}.",
+    "log.lantern_restored": "A lanterna {n} de {total} do cais foi restaurada. Esta noite brilha sobre o porto.",
+    "log.regular_request": "Um bilhete de {who}: por favor, guarda-me {item} para esta noite.",
     "log.order_missed": "{who} voltou para levantar a encomenda ({item}) e vai-se embora de mãos vazias – a notícia espalha-se.",
     "log.fare_given": "{who} recebe a moeda com cuidado: {coin}.",
     "log.achievement": "Conquista desbloqueada: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Não há nenhum fantasma à espera no balcão.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "As lanternas do cais ({lit} de {total} acesas)",
+    "harbor.lanterns_hint": "Opcional: as velhas lanternas ao longo do cais estão apagadas desde o tempo da Hedda. Restaura-as uma a uma quando a loja o puder pagar.",
+    "harbor.lanterns_restore": "Restaurar a próxima lanterna ({cost})",
+    "harbor.lanterns_tonight": "A lanterna nova brilha pela primeira vez esta noite. A próxima pode esperar até amanhã.",
+    "harbor.lanterns_done": "Todas as lanternas ao longo do cais voltam a brilhar.",
     "harbor.title": "O porto",
     "harbor.intro": "O nevoeiro desliza sobre a água negra. O barqueiro espera junto ao barco, com a lanterna a balançar.",
     "harbor.go": "Sair para o porto  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Avental da Hedda",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Uma noite qualquer",
+    "event.week_quiet.text": "As histórias já foram contadas, mas a porta continua a abrir-se. Uma noite calma para começar a semana, com alguns espíritos a menos do que o costume.",
+    "event.week_rain.name": "Chuva nos telhados",
+    "event.week_rain.text": "Uma chuva miudinha tamborila nas portadas. A loja fica um pouco mais escura, e as rãs vêm fazer uma visita.",
+    "event.week_regulars.name": "Serão dos clientes habituais",
+    "event.week_regulars.text": "No mercado esperam-te bilhetes dos teus clientes habituais: gostavam que lhes guardasses os preferidos para esta noite.",
+    "event.week_fog.name": "Nevoeiro no porto",
+    "event.week_fog.text": "O nevoeiro entra a partir do cais. Espíritos tímidos e velhos marinheiros encontram o caminho até à tua luz.",
+    "event.week_market.name": "Dia de mercado",
+    "event.week_market.text": "Hoje os comerciantes trazem mais ofertas especiais, e esta noite os espíritos estão com vontade de gastar.",
+    "event.week_wind.name": "Um vento frio",
+    "event.week_wind.text": "Um vento cortante sopra sobre a água. O barqueiro traz menos um caixote, e a loja fica mais fria.",
+    "event.week_long_night.name": "A longa noite",
+    "event.week_long_night.text": "A última noite da semana dura mais do que as outras. Os espíritos demoram-se e pagam bem antes de a semana recomeçar.",
     "event.first_night.name": "Um início sossegado",
     "event.first_night.text": "A notícia da tua loja mal se espalhou. Só alguns espíritos vão encontrar a porta esta noite.",
     "event.fog.name": "Nevoeiro sobre o rio",
@@ -856,6 +877,9 @@
     "tell.fake.5": "som abafado",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "As lanternas do cais ({lit} de {total})",
+    "book.lantern_entry": "Lanterna {n} · acesa pela primeira vez na noite {night} · nessa noite: {who}",
+    "book.lantern_nobody": "uma noite sossegada, ninguém partiu rumo à luz",
     "book.open": "Livro dos fantasmas",
     "book.tab.ghosts": "Fantasmas",
     "book.tab.keepsakes": "Recordações",

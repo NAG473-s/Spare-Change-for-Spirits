@@ -204,6 +204,17 @@ Special customers:
   and the credits follow (`credits.ron`; skippable, and open again from the settings, the
   epilogue or the book). The accounts, the epilogue and free play continue in the same profile;
   closing the game at any point resumes at the epilogue with the ending kept.
+- **Life after the ending** – free play counts the calendar on from the night after the
+  actual finale (also when a story ran late) through a repeating week (`week_day` in
+  `events.ron`): a quiet night, rain, the regulars' evening (two regulars leave a note at the
+  market asking for their favourite tonight, collected like any order), harbour fog, a market
+  day with an extra special at every stall, a cold wind and a long night. The winter and spring
+  traders take turns at the market, a week each, so their furniture and sets stay in reach.
+- **Quay lanterns** (`lanterns.ron`, `lanterns.rs`) – once the campaign is complete, the
+  harbour panel offers to restore the old lanterns along the quay with the shop's savings, one a
+  night and never needed for anything else. Each restored lantern shines over the harbour from
+  that evening on, and the book's Letters chapter records the night it was first lit and who
+  passed into the light that night.
 - **Lost-and-found errands** (`errands.ron`, `errands.rs`) – after Lotte's story she has lost
   her little sledge in the snow. Tracks on the quay (evening) and behind the market stalls (by
   day) are clicked to follow them; the sledge, found with a cracked runner, is mended at the
@@ -276,7 +287,7 @@ src/
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
                  props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron, sets.ron,
-                 errands.ron, credits.ron,
+                 errands.ron, credits.ron, lanterns.ron,
                  achievements.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)

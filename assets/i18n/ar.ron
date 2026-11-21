@@ -203,6 +203,8 @@
     "log.thief": "يتسلّل ظلّ إلى الداخل، فيخطف {item} عن الرف ويختفي!",
     "log.thief_scared": "يختلس ظلّ النظر عبر النافذة، لكن الضوء الساطع يطرده.",
     "log.ordered": "يطلب {who} لليلة الغد: {item}.",
+    "log.lantern_restored": "رُمّم فانوس الرصيف {n} من {total}. إنه يضيء فوق المرسى الليلة.",
+    "log.regular_request": "رسالة من {who}: احتفظ لي من فضلك بـ{item} لهذه الليلة.",
     "log.order_missed": "عاد {who} لأخذ طلبه ({item}) ويغادر خالي الوفاض – والخبر ينتشر.",
     "log.fare_given": "يأخذ {who} العملة بحرص: {coin}.",
     "log.achievement": "تم فتح إنجاز: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "لا شبح ينتظر عند المنضدة.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "فوانيس الرصيف (المضاء {lit} من {total})",
+    "harbor.lanterns_hint": "اختياري: الفوانيس القديمة على طول الرصيف مطفأة منذ أيام هيدا. رمّمها واحدًا تلو الآخر حين يستطيع المتجر تحمّل ذلك.",
+    "harbor.lanterns_restore": "رمّم الفانوس التالي ({cost})",
+    "harbor.lanterns_tonight": "يضيء الفانوس الجديد الليلة لأول مرة. يمكن للفانوس التالي أن ينتظر حتى الغد.",
+    "harbor.lanterns_done": "كل الفوانيس على طول الرصيف تضيء من جديد.",
     "harbor.title": "المرسى",
     "harbor.intro": "ينساب الضباب فوق الماء الأسود. ينتظر الملّاح بجانب قاربه، وفانوسه يتأرجح.",
     "harbor.go": "اخرج إلى المرسى  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "مريلة هيدا",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "ليلة عادية",
+    "event.week_quiet.text": "رُويت الحكايات كلها، لكن الباب ما زال يُفتح. ليلة هادئة لبداية الأسبوع، والأرواح أقل قليلًا من المعتاد.",
+    "event.week_rain.name": "مطر على الأسطح",
+    "event.week_rain.text": "مطر ناعم يقرع المصاريع. المتجر أظلم قليلًا، والضفادع تخرج للزيارة.",
+    "event.week_regulars.name": "أمسية الزبائن الدائمين",
+    "event.week_regulars.text": "رسائل من زبائنك الدائمين تنتظرك في السوق: يريدون أن تحتفظ لهم بما يفضّلونه لهذه الليلة.",
+    "event.week_fog.name": "ضباب المرسى",
+    "event.week_fog.text": "يزحف الضباب من الرصيف. الأرواح الخجولة والبحّارة القدامى يهتدون إلى نورك.",
+    "event.week_market.name": "يوم السوق",
+    "event.week_market.text": "يُحضر التجّار اليوم عروضًا خاصة إضافية، والأرواح الليلة في مزاج للإنفاق.",
+    "event.week_wind.name": "ريح باردة",
+    "event.week_wind.text": "ريح حادّة تهبّ فوق الماء. يُحضر الملّاح صندوقًا أقل، والمتجر أبرد.",
+    "event.week_long_night.name": "الليلة الطويلة",
+    "event.week_long_night.text": "آخر ليلة في الأسبوع تدوم أطول من غيرها. تتمهّل الأرواح وتدفع جيدًا قبل أن يبدأ الأسبوع من جديد.",
     "event.first_night.name": "بداية هادئة",
     "event.first_night.text": "بالكاد انتشر خبر متجرك. لن يجد الباب الليلة سوى قليل من الأرواح.",
     "event.fog.name": "ضباب فوق النهر",
@@ -856,6 +877,9 @@
     "tell.fake.5": "رنين مكتوم",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "فوانيس الرصيف ({lit} من {total})",
+    "book.lantern_entry": "الفانوس {n} · أُضيء أول مرة في الليلة {night} · في تلك الليلة: {who}",
+    "book.lantern_nobody": "ليلة هادئة، لم يعبر أحد إلى النور",
     "book.open": "كتاب الأشباح",
     "book.tab.ghosts": "الأشباح",
     "book.tab.keepsakes": "التذكارات",

@@ -203,6 +203,8 @@
     "log.thief": "Bir gölge içeri süzülüp raftan bir ürün kapıyor ({item}) ve ortadan kayboluyor!",
     "log.thief_scared": "Bir gölge pencereden içeri bakıyor ama parlak ışık onu uzaklaştırıyor.",
     "log.ordered": "{who} yarın gece için sipariş veriyor: {item}.",
+    "log.lantern_restored": "Rıhtım feneri {n}/{total} onarıldı. Bu gece limanın üzerinde parlıyor.",
+    "log.regular_request": "{who} bir not bıraktı: bu gece için {item} ayırmanı rica ediyor.",
     "log.order_missed": "{who} siparişi ({item}) için geri geldi ve eli boş gidiyor – bu haber çabuk yayılıyor.",
     "log.fare_given": "{who} sikkeyi özenle alıyor: {coin}.",
     "log.achievement": "Başarım açıldı: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Tezgâhta bekleyen hayalet yok.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Rıhtım fenerleri ({lit}/{total} yanıyor)",
+    "harbor.lanterns_hint": "İsteğe bağlı: rıhtım boyunca uzanan eski fenerler Hedda'nın zamanından beri karanlık. Dükkân kaldırabildikçe onları tek tek onar.",
+    "harbor.lanterns_restore": "Sıradaki feneri onar ({cost})",
+    "harbor.lanterns_tonight": "Yeni fener bu gece ilk kez parlıyor. Sıradaki yarına kadar bekleyebilir.",
+    "harbor.lanterns_done": "Rıhtım boyunca bütün fenerler yeniden parlıyor.",
     "harbor.title": "İskele",
     "harbor.intro": "Kara suyun üzerinde sis süzülüyor. Kayıkçı, feneri sallanarak kayığının yanında bekliyor.",
     "harbor.go": "İskeleye çık  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Hedda'nın Önlüğü",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Sıradan Bir Gece",
+    "event.week_quiet.text": "Hikâyeler anlatıldı ama kapı hâlâ açılıyor. Haftaya sakin bir başlangıç; ruhlar her zamankinden biraz daha az.",
+    "event.week_rain.name": "Çatılarda Yağmur",
+    "event.week_rain.text": "Yumuşak bir yağmur kepenklere vuruyor. Dükkân biraz daha karanlık ve kurbağalar ziyarete çıkıyor.",
+    "event.week_regulars.name": "Müdavimler Akşamı",
+    "event.week_regulars.text": "Pazarda müdavimlerinden notlar seni bekliyor: bu gece için en sevdikleri şeylerin ayrılmasını istiyorlar.",
+    "event.week_fog.name": "Liman Sisi",
+    "event.week_fog.text": "Rıhtımdan sis çöküyor. Utangaç ruhlar ve yaşlı denizciler senin ışığına giden yolu buluyor.",
+    "event.week_market.name": "Pazar Vakti",
+    "event.week_market.text": "Satıcılar bugün ekstra fırsatlar getiriyor ve bu geceki ruhlar para harcamaya pek hevesli.",
+    "event.week_wind.name": "Soğuk Bir Rüzgâr",
+    "event.week_wind.text": "Suyun üzerinden keskin bir rüzgâr esiyor. Kayıkçı bir sandık eksik getiriyor ve dükkân daha soğuk.",
+    "event.week_long_night.name": "Uzun Gece",
+    "event.week_long_night.text": "Haftanın son gecesi diğerlerinden daha uzun sürüyor. Hafta yeniden başlamadan önce ruhlar oyalanıyor ve iyi ödüyor.",
     "event.first_night.name": "Sessiz Bir Başlangıç",
     "event.first_night.text": "Dükkânının adı henüz pek duyulmadı. Bu gece kapıyı yalnızca birkaç ruh bulacak.",
     "event.fog.name": "Nehrin Üstünde Sis",
@@ -856,6 +877,9 @@
     "tell.fake.5": "boğuk çınlıyor",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Rıhtım fenerleri ({lit}/{total})",
+    "book.lantern_entry": "Fener {n} · ilk kez {night}. gecede yandı · o gece: {who}",
+    "book.lantern_nobody": "sessiz bir gece, kimse ışığa kavuşmadı",
     "book.open": "Hayalet kitabı",
     "book.tab.ghosts": "Hayaletler",
     "book.tab.keepsakes": "Hatıralar",

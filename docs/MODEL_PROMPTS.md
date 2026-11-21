@@ -9,7 +9,9 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-All model orders are delivered.
+- The quay lanterns (life after the ending): `quay_lantern` in `assets/models/harbor/` (see
+  *The harbour*). The game stands five of them along the quay and lights each one the player
+  restores. Until it arrives each is a thin iron post with a dark glass box.
 
 ## Delivered models
 
@@ -288,6 +290,7 @@ glowing glass and windows are just emissive materials.
 | `harbour_hut` | 2.6 × 2.9 × 2.1 | The harbour master's plank hut with a shingled roof, left-hand door, amber window and a lantern 1.75 m up. Hang a ship's wheel over the entrance, mount a striped tide staff by the door, and set a flower box below the window. Keep the wall rope and lifebuoy. |
 | `lighthouse` | 1.2 × 4.3 × 1.2 | A small, stout lighthouse on a round stone base: tapering tower with white and dusty-red bands, a little iron gallery, a glass lamp room **centred at 3.6 m height** glowing pale gold (emissive), a dark conical roof. The game dims the emissive glass while the story keeps the lighthouse dark. |
 | `lamp_post` | 0.4 × 2.7 × 0.4 | An old cast-iron harbour lamp post with a square glass lantern on top, the glass **centred at 2.45 m** and glowing warm amber (emissive). |
+| `quay_lantern` | 0.3 × 2.2 × 0.3 | An old, slightly crooked cast-iron lantern post for the quay, origin at the **centre of its foot**, with a small square lantern housing whose glass is **centred at 1.95 m**. Leave the glass plain and **not emissive**, with a little soot and rust, because the game puts its own glow and light inside when the player restores the lantern. Add a ladder bar under the housing for the lamplighter. |
 | `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
 | `barrel` | 0.6 × 0.72 × 0.6 | An old wooden barrel with iron hoops. |
 | `mooring_post` | 0.3 × 0.6 × 0.3 | A short weathered wooden mooring post (bollard) with a coil of thick rope around it. |

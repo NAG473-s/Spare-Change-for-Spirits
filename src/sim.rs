@@ -472,8 +472,12 @@ impl<'a> Game<'a> {
                 | Strategy::Improvements
                 | Strategy::Eager => affordable
                     .map(|p| {
-                        // Demand until the ware fades or the game ends.
-                        let nights_left = data.config.final_night() + 1 - self.night;
+                        // Demand until the ware fades or the stories end
+                        // (free play goes on, so then until it fades).
+                        let nights_left = (data.config.final_night() + 1)
+                            .checked_sub(self.night)
+                            .filter(|n| *n > 0)
+                            .unwrap_or(u32::MAX);
                         let lasts = p.fade_after + self.upgrades.fade_bonus(data);
                         let horizon = lasts.min(nights_left) as f32;
                         let wanted = horizon
@@ -691,6 +695,49 @@ pub fn finale_nights(data: &GameData, strategy: Strategy, seed: u64) -> Vec<u32>
     game.finales
 }
 
+#[cfg(test)]
+/// Life after the ending: plays one game through every finale, then `nights`
+/// nights of free play (the calendar and its repeating week run on). Gives
+/// the stats of the free-play nights and the night free play began.
+pub fn free_play(
+    data: &GameData,
+    strategy: Strategy,
+    seed: u64,
+    nights: u32,
+) -> (Vec<NightStats>, u32) {
+    let mut game = Game::new(data, seed);
+    let seasons = finale_seasons(data);
+    let mut night = 0;
+    let mut stats = Vec::new();
+    let mut started = None;
+    while stats.len() < nights as usize {
+        night += 1;
+        assert!(
+            night < data.config.final_night() * 2 + nights,
+            "the stories never end"
+        );
+        if game.finales.len() >= seasons {
+            started.get_or_insert(night);
+        }
+        game.progress.night = night;
+        game.night = game.progress.calendar(data);
+        let mut tonight = NightStats {
+            furniture: game.market(strategy) as f64,
+            ..Default::default()
+        };
+        game.evening(strategy, &mut tonight);
+        game.prepare_stories(strategy);
+        game.night(&mut tonight);
+        game.story_visits(&mut tonight);
+        game.morning(&mut tonight);
+        game.end_of_season();
+        if started.is_some() {
+            stats.push(tonight);
+        }
+    }
+    (stats, started.unwrap_or(night))
+}
+
 /// Averages over many runs, per strategy and night.
 pub fn averages(data: &GameData, strategy: Strategy, runs: u32) -> Vec<NightStats> {
     let mut sum = vec![NightStats::default(); data.config.final_night() as usize];
@@ -838,6 +885,50 @@ mod tests {
                         "{strategy:?} seed {seed}: finale on night {night}, planned {planned_end}"
                     );
                     planned_end = planned_end.max(night);
+                }
+            }
+        }
+    }
+
+    /// Several weeks after the credits the shop still earns its keep, no
+    /// story returns, and the quay lanterns stay within reach of savings.
+    #[test]
+    #[cfg(not(feature = "demo"))]
+    fn the_shop_keeps_earning_for_weeks_of_free_play() {
+        let data = GameData::load();
+        let weeks = 4 * crate::data::WEEK_DAYS;
+        let lanterns: u32 = data.lanterns.iter().map(|l| l.cost).sum();
+        // The struggling `Cheapest` shop never saves; its weak nights are
+        // checked by the finale test above.
+        for strategy in [Strategy::Demand, Strategy::Eager] {
+            for seed in 1..=10 {
+                let (nights, start) = free_play(&data, strategy, seed, weeks);
+                assert!(
+                    start > data.config.last_night,
+                    "{strategy:?} {seed}: {start}"
+                );
+                assert!(nights.iter().all(|n| n.chapters == 0.0), "no more chapters");
+                let sales: f64 = nights.iter().map(|n| n.sales).sum::<f64>() / weeks as f64;
+                let spring = play(&data, strategy, seed);
+                let spring = spring[spring.len() - data.config.season_length as usize..]
+                    .iter()
+                    .map(|n| n.sales)
+                    .sum::<f64>()
+                    / data.config.season_length as f64;
+                assert!(
+                    sales >= spring * 0.7,
+                    "{strategy:?} {seed}: {sales:.1} sales a night, {spring:.1} in spring"
+                );
+                let last = nights.last().unwrap();
+                assert_eq!(last.owed, 0.0, "{strategy:?} {seed}: in debt after weeks");
+                if strategy == Strategy::Demand {
+                    // A careful shopkeeper could restore the whole row
+                    // within these weeks from what the shop gains.
+                    let gained = last.money - nights[0].money;
+                    assert!(
+                        gained + nights[0].money >= lanterns as f64,
+                        "{seed}: gains {gained} against {lanterns} for the lanterns"
+                    );
                 }
             }
         }

@@ -203,6 +203,8 @@
     "log.thief": "影子幽灵悄悄溜进来，从货架上抓走{item}，转眼就不见了！",
     "log.thief_scared": "影子幽灵从窗外往里窥探，却被明亮的光赶跑了。",
     "log.ordered": "{who}预订了明晚的货：{item}。",
+    "log.lantern_restored": "码头第{n}盏提灯（共{total}盏）已修好。今夜它照亮了港湾。",
+    "log.regular_request": "{who}留了张字条：今晚请帮我留着{item}。",
     "log.order_missed": "{who}回来取预订的{item}，却只能空手而归 – 消息很快传开了。",
     "log.fare_given": "{who}小心翼翼地接过钱币：{coin}。",
     "log.achievement": "成就解锁：{name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "柜台前没有等候的幽灵。",
 
     // The harbour behind the shop
+    "harbor.lanterns": "码头提灯（已点亮{lit}/{total}）",
+    "harbor.lanterns_hint": "可选：码头沿岸的旧提灯从赫达那时起就一直熄着。等小店手头宽裕时，再一盏一盏修好它们。",
+    "harbor.lanterns_restore": "修复下一盏提灯（{cost}）",
+    "harbor.lanterns_tonight": "新修好的提灯今夜第一次亮起。下一盏可以等到明天。",
+    "harbor.lanterns_done": "码头沿岸的每一盏提灯都重新亮起来了。",
     "harbor.title": "码头",
     "harbor.intro": "雾气在漆黑的水面上飘荡。摆渡人守在船边，手中的提灯轻轻摇晃。",
     "harbor.go": "出门去码头  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "赫达的围裙",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "寻常的一夜",
+    "event.week_quiet.text": "故事都已讲完，但店门依旧会打开。这是一周开始时平静的一夜，幽灵比平时少一些。",
+    "event.week_rain.name": "雨落屋顶",
+    "event.week_rain.text": "细雨轻敲着百叶窗。店里稍暗了些，青蛙们出来串门了。",
+    "event.week_regulars.name": "常客之夜",
+    "event.week_regulars.text": "常客们的字条在集市上等着你：他们希望你今晚为他们留着最爱的东西。",
+    "event.week_fog.name": "码头起雾",
+    "event.week_fog.text": "雾从码头漫了过来。害羞的幽灵和年老的水手循着你的灯光找到了路。",
+    "event.week_market.name": "集市日",
+    "event.week_market.text": "今天商贩们带来了更多特价商品，今晚的幽灵们也很舍得花钱。",
+    "event.week_wind.name": "冷风",
+    "event.week_wind.text": "刺骨的寒风掠过水面。摆渡人少送一箱货，店里也更冷了。",
+    "event.week_long_night.name": "长夜",
+    "event.week_long_night.text": "一周的最后一夜比其他夜晚都长。幽灵们流连不去，在新的一周开始前出手大方。",
     "event.first_night.name": "平静的开端",
     "event.first_night.text": "你的小店还没什么名气。今晚只有寥寥几个幽灵能找到门。",
     "event.fog.name": "河上起雾",
@@ -856,6 +877,9 @@
     "tell.fake.5": "声音发闷",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "码头提灯（{lit}/{total}）",
+    "book.lantern_entry": "提灯{n} · 第{night}夜首次点亮 · 那一夜：{who}",
+    "book.lantern_nobody": "安静的一夜，没有谁步入光中",
     "book.open": "幽灵图鉴",
     "book.tab.ghosts": "幽灵",
     "book.tab.keepsakes": "纪念品",

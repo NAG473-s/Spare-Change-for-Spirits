@@ -203,6 +203,8 @@
     "log.thief": "Một hồn ma bóng tối lẻn vào, chộp lấy {item} trên kệ rồi biến mất!",
     "log.thief_scared": "Một hồn ma bóng tối ghé nhìn qua cửa sổ, nhưng ánh sáng rực rỡ đã xua nó đi.",
     "log.ordered": "{who} đặt hàng cho đêm mai: {item}.",
+    "log.lantern_restored": "Ngọn đèn lồng thứ {n}/{total} trên bến đã được sửa lại. Đêm nay nó tỏa sáng trên bến thuyền.",
+    "log.regular_request": "Lời nhắn từ {who}: xin hãy giữ {item} cho đêm nay.",
     "log.order_missed": "{who} quay lại lấy món đã đặt ({item}) nhưng phải ra về tay trắng – tin đồn lan đi.",
     "log.fare_given": "{who} cẩn thận nhận lấy đồng xu: {coin}.",
     "log.achievement": "Đã mở khóa thành tựu: {name}",
@@ -374,6 +376,11 @@
     "shelf.tip_no_ghost": "Không có hồn ma nào đang đợi ở quầy.",
 
     // The harbour behind the shop
+    "harbor.lanterns": "Đèn lồng trên bến (đã thắp {lit}/{total} ngọn)",
+    "harbor.lanterns_hint": "Tùy chọn: những ngọn đèn lồng cũ dọc bến đã tắt từ thời Hedda. Hãy sửa lại từng ngọn một khi cửa tiệm dư dả.",
+    "harbor.lanterns_restore": "Sửa ngọn đèn lồng tiếp theo ({cost})",
+    "harbor.lanterns_tonight": "Ngọn đèn lồng mới tỏa sáng lần đầu tiên trong đêm nay. Ngọn tiếp theo có thể đợi đến mai.",
+    "harbor.lanterns_done": "Mọi ngọn đèn lồng dọc bến đều đã sáng trở lại.",
     "harbor.title": "Bến thuyền",
     "harbor.intro": "Sương mù trôi trên mặt nước đen. Người lái đò đứng đợi bên thuyền, ngọn đèn lồng đung đưa.",
     "harbor.go": "Ra bến thuyền  →",
@@ -741,6 +748,20 @@
     "decor.apron.name": "Tạp dề của Hedda",
 
     // Night events (one per night, see data/events.ron).
+    "event.week_quiet.name": "Một đêm bình thường",
+    "event.week_quiet.text": "Những câu chuyện đã được kể hết, nhưng cánh cửa vẫn mở. Một đêm yên bình để bắt đầu tuần mới, với ít linh hồn hơn thường lệ một chút.",
+    "event.week_rain.name": "Mưa trên mái nhà",
+    "event.week_rain.text": "Mưa nhẹ gõ lên cửa chớp. Cửa tiệm tối hơn một chút, và lũ ếch kéo nhau ra chơi.",
+    "event.week_regulars.name": "Đêm của khách quen",
+    "event.week_regulars.text": "Lời nhắn từ những vị khách quen đang đợi bạn ở chợ: họ muốn bạn giữ lại món ưa thích của họ cho đêm nay.",
+    "event.week_fog.name": "Sương mù bến thuyền",
+    "event.week_fog.text": "Sương mù tràn vào từ bến. Những linh hồn nhút nhát và các thủy thủ già tìm đường đến ánh đèn của bạn.",
+    "event.week_market.name": "Ngày phiên chợ",
+    "event.week_market.text": "Hôm nay các thương nhân mang đến thêm hàng đặc biệt, và các linh hồn đêm nay rất muốn chi tiêu.",
+    "event.week_wind.name": "Gió lạnh",
+    "event.week_wind.text": "Một cơn gió buốt thổi qua mặt nước. Người lái đò mang đến ít đi một thùng, và cửa tiệm lạnh hơn.",
+    "event.week_long_night.name": "Đêm dài",
+    "event.week_long_night.text": "Đêm cuối tuần kéo dài hơn những đêm khác. Các linh hồn nán lại lâu và trả tiền rất hậu trước khi một tuần mới bắt đầu.",
     "event.first_night.name": "Khởi đầu lặng lẽ",
     "event.first_night.text": "Tiếng tăm cửa tiệm của bạn hầu như chưa lan xa. Đêm nay chỉ vài linh hồn tìm được đến cửa.",
     "event.fog.name": "Sương mù trên sông",
@@ -856,6 +877,9 @@
     "tell.fake.5": "kêu đục",
 
     // The ghost book (pause menu and evening panel)
+    "book.lanterns": "Đèn lồng trên bến ({lit}/{total})",
+    "book.lantern_entry": "Đèn lồng {n} · thắp lần đầu vào đêm {night} · đêm đó: {who}",
+    "book.lantern_nobody": "một đêm yên ả, không ai đi vào ánh sáng",
     "book.open": "Sổ hồn ma",
     "book.tab.ghosts": "Hồn ma",
     "book.tab.keepsakes": "Kỷ vật",

@@ -99,6 +99,7 @@ HARBOR_SIZES = {
     "harbour_hut": (2.6, 2.9, 2.1),
     "lighthouse": (1.2, 4.3, 1.2),
     "lamp_post": (0.4, 2.7, 0.4),
+    "quay_lantern": (0.3, 2.2, 0.3),
     "village_house": (2.2, 2.4, 1.8),
     "barrel": (0.6, 0.72, 0.6),
     "mooring_post": (0.3, 0.6, 0.3),

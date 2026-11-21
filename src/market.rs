@@ -420,7 +420,7 @@ fn spawn_vendor_plaques(
     progress: Res<Progress>,
 ) {
     for (stall, Stall(index)) in &stalls {
-        if !data.vendors[*index].in_season(progress.calendar(&data)) {
+        if !data.vendors[*index].here(&data, progress.calendar(&data)) {
             continue;
         }
         let key = format!("vendor.{}.name", data.vendors[*index].id);
@@ -675,7 +675,7 @@ impl MarketDay {
             // A saved trading day keeps its offers and purchases in either build.
             let added = data.vendors.get(self.offers.len()..).unwrap_or_default();
             let removed = self.offers.get(data.vendors.len()..).unwrap_or_default();
-            if added.iter().all(|v| !v.in_season(night)) && removed.iter().all(Vec::is_empty) {
+            if added.iter().all(|v| !v.here(data, night)) && removed.iter().all(Vec::is_empty) {
                 self.offers.resize_with(data.vendors.len(), Vec::new);
                 return;
             }
@@ -706,7 +706,7 @@ impl MarketDay {
         }
         let mut rare = rare.into_iter();
         for vendor in &data.vendors {
-            if !vendor.in_season(night) {
+            if !vendor.here(data, night) {
                 self.offers.push(Vec::new());
                 continue;
             }
@@ -747,7 +747,9 @@ impl MarketDay {
                 .filter(|(_, (k, _))| matches!(k, WareKind::Decor(_) | WareKind::Upgrade(_)))
                 .map(|(n, _)| n)
                 .collect();
-            for _ in 0..vendor.specials {
+            // A market day of the free-play week brings more specials.
+            let extra = data.event(night).map_or(0, |e| e.market_specials);
+            for _ in 0..vendor.specials + extra {
                 if candidates.is_empty() {
                     break;
                 }
@@ -789,7 +791,7 @@ fn open_market(
     for (stall, Stall(i)) in &stalls {
         let vendor = &data.vendors[*i];
         // A seasonal trader's stall stands only in its season.
-        let here = vendor.in_season(night);
+        let here = vendor.here(&data, night);
         k.commands.entity(stall).insert(if here {
             Visibility::Inherited
         } else {

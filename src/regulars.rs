@@ -4,9 +4,11 @@
 //! (`regulars` in `config.ron`, names `regular.name.<n>` in the catalogs).
 //! They are kept in the save with the ghost book (`book.rs`).
 
+use bevy::prelude::*;
+
 use crate::book::Regular;
 use crate::data::{GameData, GhostDef};
-use crate::day_cycle::Progress;
+use crate::day_cycle::{Phase, Progress};
 use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::shop::ShopLayout;
@@ -218,9 +220,142 @@ pub fn tip_bonus(data: &GameData, regular: Option<&Regular>) -> f32 {
     })
 }
 
+pub struct RegularsPlugin;
+
+impl Plugin for RegularsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(Phase::Day), place_requests);
+    }
+}
+
+/// A day of the free-play week with `regular_requests`: that many regulars
+/// order their favourite for tonight. It is announced at the market, so it
+/// can still be bought, and collected like any other order.
+fn place_requests(
+    data: Res<GameData>,
+    lang: Res<Lang>,
+    mut progress: ResMut<Progress>,
+    mut rng: ResMut<Rng>,
+    mut log: ResMut<GameLog>,
+) {
+    for order in requests(&data, &progress, &mut rng) {
+        log.push(lang.f(
+            "log.regular_request",
+            &[
+                ("who", &order.customer(&lang)),
+                ("item", &lang.product(&order.product)),
+            ],
+        ));
+        progress.orders.push(order);
+    }
+}
+
+/// Tonight's requests from regulars who have not ordered for tonight yet
+/// (also after loading a save made at the market).
+pub fn requests(data: &GameData, progress: &Progress, rng: &mut Rng) -> Vec<crate::orders::Order> {
+    let night = progress.night;
+    let wanted = data
+        .event(progress.calendar(data))
+        .map_or(0, |e| e.regular_requests) as usize;
+    let ordered = |r: &Regular| {
+        progress
+            .orders
+            .iter()
+            .chain(&progress.journal.order_history)
+            .any(|o| o.night == night && o.regular_name == Some(r.name) && o.ghost == r.ghost)
+    };
+    let already = progress
+        .journal
+        .regulars
+        .iter()
+        .filter(|r| ordered(r))
+        .count();
+    let mut free: Vec<&Regular> = progress
+        .journal
+        .regulars
+        .iter()
+        .filter(|r| !ordered(r) && data.product(&r.favourite).is_some())
+        .collect();
+    let mut placed = Vec::new();
+    while already + placed.len() < wanted && !free.is_empty() {
+        let r = free.swap_remove(rng.index(free.len()));
+        placed.push(crate::orders::Order::new(
+            &r.ghost,
+            &r.favourite,
+            night,
+            Some(r.name),
+        ));
+    }
+    placed
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[cfg(not(feature = "demo"))]
+    fn on_the_regulars_evening_two_regulars_order_their_favourite_once() {
+        let data = GameData::load();
+        let day = data
+            .events
+            .iter()
+            .find(|e| e.regular_requests > 0)
+            .and_then(|e| e.week_day)
+            .expect("a week day with requests");
+        let mut progress = Progress::new(0);
+        // Free play: season 4 began the night after the finale.
+        progress.season = 4;
+        progress.season_start = data.config.last_night + 3;
+        progress.night = progress.season_start + day - 1;
+        assert_eq!(
+            data.event(progress.calendar(&data))
+                .map(|e| e.regular_requests),
+            Some(2)
+        );
+        for (name, (ghost, favourite)) in [
+            ("shy", "lavender"),
+            ("cat", "fish_bone"),
+            ("frog", "rain_jar"),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            progress.journal.regulars.push(Regular {
+                ghost: ghost.into(),
+                name: name as u32 + 1,
+                visits: 2,
+                favourite: favourite.into(),
+                last_purchase: None,
+                seen_keepsakes: Vec::new(),
+                encounters: Vec::new(),
+            });
+        }
+        let mut rng = Rng::new(3);
+        let orders = requests(&data, &progress, &mut rng);
+        assert_eq!(orders.len(), 2);
+        for o in &orders {
+            assert_eq!(o.night, progress.night, "for tonight");
+            let r = progress
+                .journal
+                .regulars
+                .iter()
+                .find(|r| Some(r.name) == o.regular_name)
+                .unwrap();
+            assert_eq!(
+                (o.ghost.as_str(), o.product.as_str()),
+                (r.ghost.as_str(), r.favourite.as_str())
+            );
+        }
+        progress.orders.extend(orders);
+        // Loading the market again adds nothing, nor does a collected order.
+        assert!(requests(&data, &progress, &mut rng).is_empty());
+        progress.archive_due_orders();
+        assert!(requests(&data, &progress, &mut rng).is_empty());
+        // Other days of the week bring no notes.
+        progress.night += 1;
+        assert!(requests(&data, &progress, &mut rng).is_empty());
+    }
 
     #[test]
     fn a_return_recalls_a_real_purchase_or_a_keepsake_seen_on_an_earlier_visit() {
