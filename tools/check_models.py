@@ -91,6 +91,8 @@ CRITTER_SIZES = {
     "fish": (0.08, 0.1, 0.26),
     "dog_body": (0.5, 0.36, 0.24),
     "dog_tail": (0.06, 0.16, 0.06),
+    "butterfly_body": (0.03, 0.03, 0.08),
+    "butterfly_wing": (0.12, 0.01, 0.1),
 }
 # The harbour scene (docs/MODEL_PROMPTS.md).
 HARBOR_SIZES = {

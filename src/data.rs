@@ -569,6 +569,8 @@ pub struct GameData {
     pub sets: Vec<crate::sets::SetDef>,
     /// Lost-and-found errands after a story (`errands.ron`).
     pub errands: Vec<crate::errands::ErrandDef>,
+    /// The credits at the end of the campaign (`credits.ron`).
+    pub credits: Vec<crate::ending::CreditSection>,
     /// Achievements of the full game (`achievements.ron`).
     pub achievements: Vec<crate::achievements::AchievementDef>,
     /// Broken things in the junk and their repair (`workbench.ron`).
@@ -717,6 +719,7 @@ impl GameData {
             incidents: load_ron("data/incidents.ron"),
             sets: load_ron("data/sets.ron"),
             errands: load_ron("data/errands.ron"),
+            credits: load_ron("data/credits.ron"),
             workbench: load_ron("data/workbench.ron"),
             achievements: if cfg!(feature = "demo") {
                 Vec::new()

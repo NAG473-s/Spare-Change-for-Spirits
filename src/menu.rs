@@ -793,6 +793,7 @@ fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
     );
     ui.menu_option(assists, &lang.t(hint_key), Action::ToggleChangeHint, hint);
     ui.dim(&lang.t("settings.assists_hint"));
+    ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
     ui.menu_option(root, &lang.t("menu.back"), Action::CloseSettings, false);
 }
 

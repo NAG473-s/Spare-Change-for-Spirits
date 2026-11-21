@@ -152,6 +152,13 @@ pub enum Action {
     /// Mend an errand's lost keepsake at the workbench / give it back.
     RepairErrand(usize),
     ReturnErrand(usize),
+    /// The campaign's closing sequence: on to the next view, choose the
+    /// keepsake for Hedda's ledger (index in `GameData::decor`), credits.
+    EndingContinue,
+    OpenLedgerChoice,
+    ChooseLedgerKeepsake(usize),
+    OpenCredits,
+    CloseCredits,
     /// Turn to a chapter of the book (its coloured tab).
     BookChapter(crate::book::Chapter),
     GhostProfile(usize),
@@ -2357,6 +2364,27 @@ fn build_demo_end_panel(
     } else {
         ui.text(&lang.t(&format!("season.{}.epilogue", progress.season)));
         ui.dim(&lang.t("end.thanks_full"));
+        // The campaign is complete: the ledger's last page (if the game was
+        // closed before it was chosen) and the credits, to see again.
+        if progress.journal.campaign_complete {
+            let root = ui.root();
+            if progress.journal.ledger_keepsake.is_none() {
+                ui.button_in(
+                    root,
+                    &lang.t("ending.ledger_choose"),
+                    Action::OpenLedgerChoice,
+                    false,
+                    true,
+                );
+            }
+            ui.button_in(
+                root,
+                &lang.t("credits.open"),
+                Action::OpenCredits,
+                false,
+                true,
+            );
+        }
         // On to a season with its own story, or simply keep the shop open.
         let next_story = data
             .stories

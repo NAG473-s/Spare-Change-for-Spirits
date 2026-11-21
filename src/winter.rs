@@ -14,10 +14,13 @@ use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
 
 use crate::data::{GameData, asset_exists};
-use crate::day_cycle::Progress;
+use crate::day_cycle::{Phase, Progress};
 use crate::harbor::HARBOR;
+use crate::harbor::Location;
+use crate::i18n::Lang;
 use crate::market::MARKET;
 use crate::rng::Rng;
+use crate::ui::GameLog;
 
 pub struct WinterPlugin;
 
@@ -28,9 +31,23 @@ impl Plugin for WinterPlugin {
         if !cfg!(feature = "demo") {
             app.add_systems(
                 Startup,
-                (spawn_snow, spawn_snow_cover, spawn_window_flowers),
+                (
+                    spawn_snow,
+                    spawn_snow_cover,
+                    spawn_window_flowers,
+                    spawn_butterfly,
+                ),
             )
-            .add_systems(Update, (fall_snow, settle_snow, show_window_flowers));
+            .add_systems(
+                Update,
+                (
+                    fall_snow,
+                    settle_snow,
+                    show_window_flowers,
+                    fly_butterfly,
+                    notice_butterfly,
+                ),
+            );
         }
     }
 }
@@ -448,4 +465,149 @@ fn show_window_flowers(
             *visibility = wanted;
         }
     }
+}
+
+/// A small butterfly that comes back to Mira's window boxes every day once
+/// they are all in bloom. Models (optional): `assets/models/critters/
+/// butterfly_body.glb` and `butterfly_wing.glb` (one wing, hinge at the
+/// origin, spreading along +X; the other is mirrored). The flight and the
+/// wing beat are done here.
+#[derive(Component)]
+struct Butterfly;
+
+#[derive(Component)]
+struct Wing(f32);
+
+/// Size of the placeholder wing, seconds from one window box to the next,
+/// how high it bobs above a box and how fast its wings beat.
+const WING_SIZE: Vec2 = Vec2::new(0.12, 0.1);
+const BOX_TO_BOX_SECS: f32 = 4.0;
+const FLUTTER_HEIGHT: f32 = 0.35;
+const WING_BEATS: f32 = 9.0;
+
+fn spawn_butterfly(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let root = commands
+        .spawn((
+            Butterfly,
+            Transform::from_translation(MARKET + WINDOW_FLOWERS[0]),
+            Visibility::Hidden,
+            Pickable::IGNORE,
+        ))
+        .id();
+    let body_model = "models/critters/butterfly_body.glb";
+    let wing_model = "models/critters/butterfly_wing.glb";
+    if asset_exists(body_model) {
+        commands.spawn((
+            WorldAssetRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(body_model))),
+            Transform::default(),
+            ChildOf(root),
+        ));
+    } else {
+        commands.spawn((
+            Mesh3d(meshes.add(Capsule3d::new(0.012, 0.06))),
+            MeshMaterial3d(materials.add(Color::srgb(0.25, 0.2, 0.25))),
+            Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+            NotShadowCaster,
+            ChildOf(root),
+        ));
+    }
+    let wing_material = materials.add(StandardMaterial {
+        base_color: Color::srgb(0.98, 0.7, 0.35),
+        emissive: LinearRgba::rgb(0.2, 0.12, 0.05),
+        cull_mode: None,
+        ..default()
+    });
+    for side in [1.0f32, -1.0] {
+        let wing = commands
+            .spawn((
+                Wing(side),
+                Transform::from_scale(Vec3::new(side, 1.0, 1.0)),
+                Visibility::default(),
+                ChildOf(root),
+            ))
+            .id();
+        if asset_exists(wing_model) {
+            commands.spawn((
+                WorldAssetRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(wing_model))),
+                Transform::default(),
+                ChildOf(wing),
+            ));
+        } else {
+            commands.spawn((
+                Mesh3d(meshes.add(Rectangle::new(WING_SIZE.x, WING_SIZE.y))),
+                MeshMaterial3d(wing_material.clone()),
+                Transform::from_xyz(WING_SIZE.x / 2.0, 0.0, 0.0)
+                    .with_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+                NotShadowCaster,
+                ChildOf(wing),
+            ));
+        }
+    }
+}
+
+/// From window box to window box, bobbing, with beating wings.
+fn fly_butterfly(
+    time: Res<Time>,
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    mut butterfly: Query<(&mut Transform, &mut Visibility), (With<Butterfly>, Without<Wing>)>,
+    mut wings: Query<(&Wing, &mut Transform), Without<Butterfly>>,
+) {
+    let show = blossom_level(&data, &progress) >= 1.0;
+    let t = time.elapsed_secs();
+    for (mut transform, mut visibility) in &mut butterfly {
+        let wanted = if show {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+        if *visibility != wanted {
+            *visibility = wanted;
+        }
+        if !show {
+            continue;
+        }
+        let leg = t / BOX_TO_BOX_SECS;
+        let i = leg.floor() as usize % WINDOW_FLOWERS.len();
+        let from = MARKET + WINDOW_FLOWERS[i];
+        let to = MARKET + WINDOW_FLOWERS[(i + 1) % WINDOW_FLOWERS.len()];
+        let k = leg.fract();
+        let k = k * k * (3.0 - 2.0 * k);
+        let mut pos = from.lerp(to, k);
+        pos.y += FLUTTER_HEIGHT * (1.0 + (k * std::f32::consts::PI).sin()) + 0.05 * (t * 5.0).sin();
+        let heading = (to - from).with_y(0.0);
+        transform.translation = pos;
+        if heading.length_squared() > 0.0 {
+            transform.look_to(heading, Vec3::Y);
+        }
+    }
+    for (wing, mut transform) in &mut wings {
+        let beat = 0.9 * (t * WING_BEATS * std::f32::consts::TAU).sin().abs();
+        transform.rotation = Quat::from_rotation_z(wing.0 * beat);
+    }
+}
+
+/// The first market day the butterfly is there, the log says so.
+fn notice_butterfly(
+    data: Res<GameData>,
+    mut progress: ResMut<Progress>,
+    phase: Res<State<Phase>>,
+    location: Res<Location>,
+    lang: Res<Lang>,
+    mut log: ResMut<GameLog>,
+) {
+    if *phase.get() != Phase::Day
+        || *location != Location::Market
+        || progress.journal.butterfly_seen
+        || blossom_level(&data, &progress) < 1.0
+    {
+        return;
+    }
+    progress.journal.butterfly_seen = true;
+    log.push(lang.t("log.butterfly"));
 }

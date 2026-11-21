@@ -18,6 +18,7 @@ mod critters;
 mod data;
 mod day_cycle;
 mod economy;
+mod ending;
 mod errands;
 mod ferry;
 mod finale;
@@ -134,6 +135,7 @@ fn main() {
             finale::FinalePlugin,
             errands::ErrandsPlugin,
             tower_clock::TowerClockPlugin,
+            ending::EndingPlugin,
             story_film::StoryFilmPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]

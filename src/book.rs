@@ -46,6 +46,12 @@ pub struct Journal {
     pub errands: BTreeMap<String, crate::errands::ErrandState>,
     /// The repaired tower clock has struck for the first time (`tower_clock.rs`).
     pub clock_struck: bool,
+    /// The butterfly at Mira's window boxes has been seen (`winter.rs`).
+    pub butterfly_seen: bool,
+    /// The last season's finale is done: the campaign is complete (`ending.rs`).
+    pub campaign_complete: bool,
+    /// The keepsake on the last page of Hedda's ledger (decor id).
+    pub ledger_keepsake: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -608,6 +614,13 @@ pub fn letters_page(
         ui.rule();
         ui.text(&lang.t(&format!("finale.{guest}.letter")));
     }
+    // The last page of Hedda's ledger, with the keepsake the player chose.
+    if let Some(item) = &journal.ledger_keepsake {
+        ui.rule();
+        ui.text(&lang.f("ending.ledger_page", &[("item", &lang.decor(item))]));
+        let root = ui.root();
+        ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
+    }
 }
 
 /// Where a keepsake came from: (story index, chapter number from 1).
@@ -746,6 +759,29 @@ pub fn keepsake_page(
             "quote",
             &[("text", &lang.t(&format!("story.{ghost}.{chapter}.thanks")))],
         ));
+        // The garden's last bloom, beside the seedling it grew from.
+        if data.stories[story].blossom
+            && d.id
+                == data.stories[story]
+                    .chapters
+                    .iter()
+                    .find_map(|c| c.keepsake.clone())
+                    .unwrap_or_default()
+            && progress.chapter(story) >= data.stories[story].chapters.len()
+        {
+            ui.section(&lang.t("book.final_bloom_title"));
+            let night = journal
+                .chapter_nights
+                .get(&story)
+                .and_then(|n| n.last().copied());
+            match night {
+                Some(night) => ui.text(&lang.f("book.final_bloom", &[("night", &night)])),
+                None => ui.text(&lang.t("book.final_bloom_undated")),
+            };
+            if journal.butterfly_seen {
+                ui.dim(&lang.t("book.final_bloom_butterfly"));
+            }
+        }
         // A logbook keeps one entry per chapter finished so far; later
         // chapters stay unwritten.
         if data.stories[story].logbook.as_deref() == Some(&d.id) {

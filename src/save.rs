@@ -662,7 +662,7 @@ fn autosave_next_season(state: GameState, profile: Res<ActiveProfile>) {
 }
 
 /// Dawn: the night is done; continue with the market of the next day.
-fn autosave_dawn(state: GameState, data: Res<GameData>, profile: Res<ActiveProfile>) {
+pub(crate) fn autosave_dawn(state: GameState, data: Res<GameData>, profile: Res<ActiveProfile>) {
     write_slot(profile.0, Slot::Auto, &dawn_snapshot(&state, &data));
 }
 

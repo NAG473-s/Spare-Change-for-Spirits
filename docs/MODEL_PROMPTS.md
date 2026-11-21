@@ -9,6 +9,9 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
+- Mira's butterfly (season 3): `butterfly_body` and `butterfly_wing` in
+  `assets/models/critters/` (see *Animals*). Until they arrive it is a tiny capsule with two
+  apricot quads.
 - Lotte's errand (season 2): the keepsake `toy_sledge` in `assets/models/decor/` (see
   *Keepsakes*) and the two clues `lotte_sledge_clue_1` and `lotte_sledge_clue_2` in
   `assets/models/errands/` (see *Errand clues*). Until they arrive the game shows a
@@ -392,6 +395,8 @@ Night colours, cute and simple, no rigs or animations.
 | `fish` | 0.08 × 0.1 × 0.26 | A small silvery fish, length along the Y axis, head towards −Y. Origin at the **centre**. |
 | `dog_body` | 0.5 × 0.36 × 0.24 | Pfote, a small fluffy ghost dog lying down with its head up, pale blue-white and slightly translucent-looking, a little bell on its collar, **without its tail**; head towards +X. |
 | `dog_tail` | 0.06 × 0.16 × 0.06 | Pfote's fluffy tail, pointing up and back. Origin at its **root (bottom end)**. |
+| `butterfly_body` | 0.03 × 0.03 × 0.08 | The slim body of a small spring butterfly with two curled antennae, **without wings**, head towards −Y. Origin at the **centre**. |
+| `butterfly_wing` | 0.12 × 0.01 × 0.1 | One butterfly wing (the right one), soft apricot with a cream edge and two small violet eye spots, lying flat. Origin at its **hinge on the body**, the wing spreading along +X; the game mirrors it for the left wing and beats both. |
 
 ## The village market – `assets/models/market/<id>.glb`
 

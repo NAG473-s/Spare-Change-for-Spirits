@@ -194,6 +194,16 @@ Special customers:
 - **Preparation nights** (`prepare` in `events.ron`) – the first winter night explains in the
   evening panel how the forecast, the ferry's crates and the shop's warmth fit together: which
   known likely guests the shop suits, who would turn round, and which furniture would help.
+- **Mira's window boxes** – once all of them bloom, a small butterfly comes back to the market
+  every day and flutters from box to box; the seedling pot's page in the book records the
+  garden's final bloom.
+- **The last crossing** (`ending.rs`) – the dawn after the ferryman's own crossing ends the
+  campaign: the view follows Kasimir down to the quay under Ida's lighthouse, then to the market
+  with the working tower clock and the flowering window boxes. The player chooses one keepsake
+  for the last page of Hedda's ledger (saved at once, also kept in the book's Letters chapter),
+  and the credits follow (`credits.ron`; skippable, and open again from the settings, the
+  epilogue or the book). The accounts, the epilogue and free play continue in the same profile;
+  closing the game at any point resumes at the epilogue with the ending kept.
 - **Lost-and-found errands** (`errands.ron`, `errands.rs`) – after Lotte's story she has lost
   her little sledge in the snow. Tracks on the quay (evening) and behind the market stalls (by
   day) are clicked to follow them; the sledge, found with a cracked runner, is mended at the
@@ -251,6 +261,7 @@ src/
   showcase.rs    the ware in the shop window
   sets.rs        furniture sets and tonight's ghost odds
   apprentice.rs  the helper ghost behind the counter
+  ending.rs      the campaign's closing sequence, Hedda's ledger, the credits
   errands.rs     lost-and-found errands with clues to click
   finale.rs      the quiet dawn scene after a season's finale
   weather.rs     rain, storm, snow and fog of tonight's event
@@ -265,7 +276,7 @@ src/
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
                  props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron, sets.ron,
-                 errands.ron,
+                 errands.ron, credits.ron,
                  achievements.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)

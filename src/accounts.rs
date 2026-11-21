@@ -29,7 +29,8 @@ impl Plugin for AccountsPlugin {
                 (
                     close_books,
                     // After a finale, the scene comes first (`finale.rs`).
-                    build_ledger.run_if(crate::finale::no_scene),
+                    build_ledger
+                        .run_if(crate::finale::no_scene.and_then(crate::ending::no_sequence)),
                 )
                     .chain()
                     .after(repay)
@@ -43,9 +44,11 @@ impl Plugin for AccountsPlugin {
                         in_state(Phase::Morning)
                             .and_then(
                                 resource_changed::<UiFont>
-                                    .or_else(resource_changed::<crate::finale::FinaleScene>),
+                                    .or_else(resource_changed::<crate::finale::FinaleScene>)
+                                    .or_else(resource_changed::<crate::ending::Ending>),
                             )
-                            .and_then(crate::finale::no_scene),
+                            .and_then(crate::finale::no_scene)
+                            .and_then(crate::ending::no_sequence),
                     ),
                 ),
             );

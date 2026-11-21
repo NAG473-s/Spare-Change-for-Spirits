@@ -1,0 +1,26 @@
+// The credits (src/ending.rs): each section has a heading from the language catalogs
+// (credits.<heading>) and lines that are names, titles or licences – proper names stay as they
+// are in every language. `lines_key` (optional) adds a translated line from the catalogs.
+// Keep this in step with assets/sounds/CREDITS.txt and THIRD_PARTY_LICENSES.txt.
+[
+    (heading: "made_by", lines_key: Some("credits.made_by_line"), lines: []),
+    (heading: "music", lines_key: Some("credits.music_line"), lines: []),
+    (heading: "voices", lines: [
+        "Thorsten Müller – Thorsten-Voice (CC0)",
+        "Linda Johnson & Keith Ito – LJ Speech Dataset (public domain)",
+        "Open Home Foundation – voice datasets (CC0)",
+        "rmcpantoja – Mexican Spanish speech (Unlicense)",
+        "National Library of Norway – Språkbanken (CC0)",
+        "Bryan Park – Finnish single-speaker speech (CC0)",
+        "Supertone Inc. – Supertonic (Open RAIL-M)",
+        "PyThaiNLP – MakHamTTS (Apache 2.0)",
+        "k2-fsa – sherpa-onnx (Apache 2.0)",
+    ]),
+    (heading: "fonts", lines: [
+        "Inter – Rasmus Andersson (SIL Open Font License)",
+        "Noto Sans, Noto Serif – Google (SIL Open Font License)",
+    ]),
+    (heading: "engine", lines: ["Bevy Engine (MIT / Apache 2.0)"],
+     lines_key: Some("credits.libraries_line")),
+    (heading: "thanks", lines_key: Some("credits.thanks_line"), lines: []),
+]

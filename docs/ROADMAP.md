@@ -32,9 +32,9 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 
 ## December 21–27 · The last crossing
 
-- [ ] Let Mira’s restored window boxes attract a small returning visitor. Give the garden’s final bloom a place beside her seedling pot in the book.
-- [ ] Follow Kasimir’s last fare down to the quay. Use the restored lighthouse, the working clock and the flowering market in the closing sequence. Let the player choose one earned keepsake for the last page of Hedda’s ledger.
-- [ ] Add credits that can be skipped and reopened. Save campaign completion before the credits, then offer free play in the same profile. Closing the game during the crossing, credits or epilogue must preserve the ending and the shop.
+- [x] Let Mira’s restored window boxes attract a small returning visitor. Give the garden’s final bloom a place beside her seedling pot in the book.
+- [x] Follow Kasimir’s last fare down to the quay. Use the restored lighthouse, the working clock and the flowering market in the closing sequence. Let the player choose one earned keepsake for the last page of Hedda’s ledger.
+- [x] Add credits that can be skipped and reopened. Save campaign completion before the credits, then offer free play in the same profile. Closing the game during the crossing, credits or epilogue must preserve the ending and the shop.
 
 ## December 28–January 3 · Life after the ending
 
