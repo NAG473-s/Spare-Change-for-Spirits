@@ -3,7 +3,8 @@
 // are in every language. `lines_key` (optional) adds a translated line from the catalogs.
 // Keep this in step with assets/sounds/CREDITS.txt and THIRD_PARTY_LICENSES.txt.
 [
-    (heading: "made_by", lines_key: Some("credits.made_by_line"), lines: []),
+    (heading: "made_by", lines_key: Some("credits.made_by_line"),
+     lines: ["Sebastian Rode", "Fennrivo Studios"]),
     (heading: "music", lines_key: Some("credits.music_line"), lines: []),
     (heading: "voices", lines: [
         "Thorsten Müller – Thorsten-Voice (CC0)",
