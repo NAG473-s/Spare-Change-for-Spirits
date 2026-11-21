@@ -109,7 +109,7 @@ jobs:
         if: steps.cross.outcome == 'success'
         run: x86_64-w64-mingw32-strip --strip-unneeded editions/{full,demo}/spare_change_for_spirits.exe
 
- - name: Save build cache
+      - name: Save build cache
         if: >-
           always() && steps.cache.outcome == 'success' && steps.cache.outputs.cache-hit != 'true' &&
           (steps.cross.outcome != 'success' || success())
@@ -136,7 +136,8 @@ jobs:
           for edition in full demo; do
             "${prefix[@]}" python tools/package_ci.py "$PLATFORM" "$edition" "$RUNNER_TEMP/steam" "${runner[@]}"
           done
-- name: Upload full game
+
+      - name: Upload full game
         uses: actions/upload-artifact@v7
         with:
           name: SpareChangeForSpirits-${{ inputs.platform }}
