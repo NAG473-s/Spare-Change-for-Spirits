@@ -37,6 +37,8 @@ pub struct Journal {
     /// The night each chapter of a story was finished (story index → nights
     /// in chapter order), for logbook keepsakes.
     pub chapter_nights: BTreeMap<usize, Vec<u32>>,
+    /// Finale guests whose farewell letter has been read (`finale.rs`).
+    pub finale_letters: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -572,11 +574,22 @@ pub fn ghost_profile(
     }
 }
 
-pub fn letters_page(ui: &mut PanelBuilder, lang: &Lang, data: &GameData, upgrades: &Upgrades) {
+pub fn letters_page(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    journal: &Journal,
+    upgrades: &Upgrades,
+) {
     ui.heading(&lang.t("book.letters"));
     for n in letters_found(data, upgrades) {
         ui.rule();
         ui.text(&lang.t(&format!("letter.{n}")));
+    }
+    // The farewell letters left at a finale, to read again.
+    for guest in &journal.finale_letters {
+        ui.rule();
+        ui.text(&lang.t(&format!("finale.{guest}.letter")));
     }
 }
 

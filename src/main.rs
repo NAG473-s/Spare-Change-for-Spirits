@@ -19,6 +19,7 @@ mod data;
 mod day_cycle;
 mod economy;
 mod ferry;
+mod finale;
 mod fx;
 mod gamepad;
 mod ghosts;
@@ -128,6 +129,7 @@ fn main() {
             showcase::ShowcasePlugin,
             apprentice::ApprenticePlugin,
             gamepad::GamepadPlugin,
+            finale::FinalePlugin,
             story_film::StoryFilmPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]

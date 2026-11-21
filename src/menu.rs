@@ -310,7 +310,7 @@ fn book_chapter_page(
         SaveMenu::GhostProfile(index) => {
             crate::book::ghost_profile(ui, lang, data, &progress.journal, index, assets)
         }
-        SaveMenu::Letters => crate::book::letters_page(ui, lang, data, upgrades),
+        SaveMenu::Letters => crate::book::letters_page(ui, lang, data, &progress.journal, upgrades),
         SaveMenu::Keepsakes => {
             crate::book::keepsakes_page(ui, lang, data, (layout, storeroom), assets)
         }

@@ -513,6 +513,17 @@ fn lighting_for(phase: Phase, location: Location) -> DaylightSettings {
             ),
             window: (0.0, cool_glass),
         },
+        // Dawn at the quay after a finale (`finale.rs`): still dim enough
+        // for the lighthouse beam to show.
+        Phase::Morning if location == Location::Harbor => DaylightSettings {
+            sky: (520.0, Color::srgb(0.80, 0.80, 0.98)),
+            sun: (
+                1300.0,
+                Color::srgb(1.0, 0.78, 0.62),
+                Vec3::new(6.0, 2.5, -4.0),
+            ),
+            window: (0.0, cool_glass),
+        },
         Phase::Morning | Phase::DemoEnd => DaylightSettings {
             sky: (750.0, Color::srgb(0.89, 0.92, 1.0)),
             sun: (

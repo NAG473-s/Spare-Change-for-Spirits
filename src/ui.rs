@@ -147,6 +147,8 @@ pub enum Action {
     BookBack,
     /// Close the book, back to where it was opened from.
     BookClose,
+    /// Leave the finale scene for the accounts.
+    FinaleContinue,
     /// Turn to a chapter of the book (its coloured tab).
     BookChapter(crate::book::Chapter),
     GhostProfile(usize),

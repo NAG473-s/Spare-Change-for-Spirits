@@ -181,7 +181,10 @@ Special customers:
   come only in their season: Ilse Icicle in winter, Bluma the florist in spring (`market.ron`).
 - **Hedda's letters** – the player inherited the shop from great-aunt Hedda. Her first letter
   waits on the first evening, the others turn up when improvements clear her old junk
-  (`letter` in `upgrades.ron`). At the finale she comes home through the shop door.
+  (`letter` in `upgrades.ron`). At the finale she comes home through the shop door. At the
+  following dawn the view goes out to the quay, where Ida's restored beam sweeps the water, and
+  Hedda's farewell letter waits; the accounts appear once the player continues, and the letter
+  stays in the book's Letters chapter (`finale.rs`).
 - **Ghost book** – seeing a visitor for the first time adds their name to the index, even if they turn away at the door. Select the name to see a painted portrait, a short character note and the traits you can use at the counter. The page also keeps track of visits, wishes heard and wares supplied. The book is one overlay with coloured chapter tabs along the top – ghosts, keepsakes, Hedda's letters, order slips, the first-sale guide and, in the full game, the achievements – so new pages become chapters instead of menu entries; Close returns to wherever the book was opened. Each keepsake has its own page with its picture, the ghost and chapter it came from and the words said when it was given; in the evening, clicking a keepsake standing in the shop opens that page. A keepsake marked `logbook` in `story.ron` keeps a log of its story: Ida's logbook lists each repair of the lighthouse with the night it was done, and later repairs stay unwritten. In the shop and at the harbour, the expected guest list links familiar names to their pages. An unfamiliar visitor is listed anonymously.
   Next-night orders have a slip showing the customer, ware, quantity and collection night. Pin a slip to mark its crate on the ferry. The book keeps the outcome when an order is collected or expires.
 - **Regulars** – a ghost served well may come back now and then by name (Mrs Wispel, Captain
@@ -234,6 +237,7 @@ src/
   showcase.rs    the ware in the shop window
   sets.rs        furniture sets and tonight's ghost odds
   apprentice.rs  the helper ghost behind the counter
+  finale.rs      the quiet dawn scene after a season's finale
   weather.rs     rain, storm, snow and fog of tonight's event
   gamepad.rs     controller: the sticks drive the mouse pointer, A/B click
   trailer.rs     helpers for trailers and screenshots (`--trailer`)

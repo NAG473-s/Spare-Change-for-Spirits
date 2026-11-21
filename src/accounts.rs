@@ -26,18 +26,35 @@ impl Plugin for AccountsPlugin {
             .add_systems(OnEnter(Phase::Night), open_register)
             .add_systems(
                 OnEnter(Phase::Morning),
-                (close_books, build_ledger).chain().after(repay),
+                (
+                    close_books,
+                    // After a finale, the scene comes first (`finale.rs`).
+                    build_ledger.run_if(crate::finale::no_scene),
+                )
+                    .chain()
+                    .after(repay)
+                    .in_set(LedgerSystems),
             )
             .add_systems(
                 Update,
                 (
                     count_visitors.run_if(in_state(Phase::Night)),
-                    build_ledger
-                        .run_if(in_state(Phase::Morning).and_then(resource_changed::<UiFont>)),
+                    build_ledger.run_if(
+                        in_state(Phase::Morning)
+                            .and_then(
+                                resource_changed::<UiFont>
+                                    .or_else(resource_changed::<crate::finale::FinaleScene>),
+                            )
+                            .and_then(crate::finale::no_scene),
+                    ),
                 ),
             );
     }
 }
+
+/// The dawn systems that close the books and show the ledger.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LedgerSystems;
 
 /// Money in and out of the drawer for the current day (dusk to dawn).
 #[derive(Resource, Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
