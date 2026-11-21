@@ -112,14 +112,10 @@ it finds the packaged assets.
 
 For Windows packages alone, choose **Actions → Windows builds → Run workflow**. This manual workflow builds the x86-64 full game and demo on one Ubuntu runner using MinGW-w64. Both editions share their compiled dependencies, and Wine runs the tests and starts each packaged executable. [Windows builds workflow](.github/workflows/windows.yml)
 
-| Platform | Full game artifact | Demo artifact |
-| --- | --- | --- |
-| Windows x86-64 | `SpareChangeForSpirits-windows` | `SpareChangeForSpirits-windows-demo` |
-| Linux x86-64 | `SpareChangeForSpirits-linux` | `SpareChangeForSpirits-linux-demo` |
-| macOS Universal (Apple Silicon and Intel) | `SpareChangeForSpirits-macos-universal` | `SpareChangeForSpirits-macos-universal-demo` |
-
-Download the artifacts from the run summary. The Windows download contains the executable and
-its files. Extract the Linux `.tar.gz` to keep the executable permissions. Extract the macOS
+Both workflows keep the packaged games on the runner for the duration of the job. Local runs
+of [`tools/package_ci.py`](tools/package_ci.py) leave the packages in `dist/full/<platform>/`
+and `dist/demo/<platform>/`. The Windows package contains the executable and its files.
+Extract the Linux `.tar.gz` to keep the executable permissions. Extract the macOS
 `.zip` to get the ad-hoc signed Universal `.app`. Each edition includes its Steam runtime,
 assets and licenses. All three platforms use the same five-night asset selection for the demo.
 

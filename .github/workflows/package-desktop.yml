@@ -109,10 +109,22 @@ jobs:
         if: steps.cross.outcome == 'success'
         run: x86_64-w64-mingw32-strip --strip-unneeded editions/{full,demo}/spare_change_for_spirits.exe
 
-      - name: Save build cache
+      - name: Remove game binaries from the dependency cache
+        id: prune
         if: >-
           always() && steps.cache.outcome == 'success' && steps.cache.outputs.cache-hit != 'true' &&
           (steps.cross.outcome != 'success' || success())
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            for arch in aarch64-apple-darwin x86_64-apple-darwin; do
+              cargo clean --release --package spare_change_for_spirits --target "$arch"
+            done
+          else
+            cargo clean --release --package spare_change_for_spirits
+          fi
+
+      - name: Save build cache
+        if: always() && steps.prune.outcome == 'success'
         uses: actions/cache/save@v6
         with:
           path: |
@@ -136,17 +148,3 @@ jobs:
           for edition in full demo; do
             "${prefix[@]}" python tools/package_ci.py "$PLATFORM" "$edition" "$RUNNER_TEMP/steam" "${runner[@]}"
           done
-
-      - name: Upload full game
-        uses: actions/upload-artifact@v7
-        with:
-          name: SpareChangeForSpirits-${{ inputs.platform }}
-          path: dist/full/${{ inputs.platform }}/
-          if-no-files-found: error
-
-      - name: Upload demo
-        uses: actions/upload-artifact@v7
-        with:
-          name: SpareChangeForSpirits-${{ inputs.platform }}-demo
-          path: dist/demo/${{ inputs.platform }}/
-          if-no-files-found: error
