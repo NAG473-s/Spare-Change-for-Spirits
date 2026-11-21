@@ -695,7 +695,7 @@ pub fn finale_nights(data: &GameData, strategy: Strategy, seed: u64) -> Vec<u32>
     game.finales
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "demo")))]
 /// Life after the ending: plays one game through every finale, then `nights`
 /// nights of free play (the calendar and its repeating week run on). Gives
 /// the stats of the free-play nights and the night free play began.

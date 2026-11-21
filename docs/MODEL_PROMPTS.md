@@ -9,12 +9,13 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- The quay lanterns (life after the ending): `quay_lantern` in `assets/models/harbor/` (see
-  *The harbour*). The game stands five of them along the quay and lights each one the player
-  restores. Until it arrives each is a thin iron post with a dark glass box.
+All model orders are delivered.
 
 ## Delivered models
 
+- All five quay lanterns use `assets/models/harbor/quay_lantern.glb`. A ladder bar sits
+  below the square glass housing, centred 1.95 m above the foot. The game lights each lantern
+  when the player restores it.
 - Lotte's repaired `toy_sledge` is in `assets/models/decor/`. The two snow trails
   `lotte_sledge_clue_1` and `lotte_sledge_clue_2` are in `assets/models/errands/`.
   The second trail ends at a red mitten.
