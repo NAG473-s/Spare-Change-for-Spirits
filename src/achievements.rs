@@ -158,6 +158,8 @@ pub fn achievements_page(
     data: &GameData,
     progress: &Progress,
     asset_server: &AssetServer,
+    // The main menu's own Back; inside the book the tabs and Close do it.
+    back: Option<crate::ui::Action>,
 ) {
     let done = progress.achievements.len();
     ui.heading(&lang.f(
@@ -166,12 +168,9 @@ pub fn achievements_page(
     ));
     // Back at the top as well: the list is long and scrolls.
     let root = ui.root();
-    ui.menu_option(
-        root,
-        &lang.t("menu.back"),
-        crate::ui::Action::CloseSaveMenu,
-        false,
-    );
+    if let Some(back) = back.clone() {
+        ui.menu_option(root, &lang.t("menu.back"), back, false);
+    }
     for a in data
         .achievements
         .iter()
@@ -228,13 +227,10 @@ pub fn achievements_page(
             crate::ui::TEXT_DIM,
         );
     }
-    let root = ui.root();
-    ui.menu_option(
-        root,
-        &lang.t("menu.back"),
-        crate::ui::Action::CloseSaveMenu,
-        false,
-    );
+    if let Some(back) = back {
+        let root = ui.root();
+        ui.menu_option(root, &lang.t("menu.back"), back, false);
+    }
 }
 
 /// Size of an achievement's icon on the page (interface pixels).

@@ -603,6 +603,7 @@ fn on_cell_click(
     mut log: ResMut<GameLog>,
     lang: Res<Lang>,
     upgrades: Res<Upgrades>,
+    mut actions: MessageWriter<Action>,
 ) {
     if *phase.get() != Phase::Evening || click.button != PointerButton::Primary {
         return;
@@ -612,7 +613,16 @@ fn on_cell_click(
     };
     let idx = *idx;
     match &*tool {
-        Tool::None => {}
+        // A keepsake standing in the shop opens its page in the book.
+        Tool::None => {
+            if let Some(i) = layout.cells[idx].decor.as_deref().and_then(|d| {
+                data.decor
+                    .iter()
+                    .position(|def| def.id == d && def.keepsake)
+            }) {
+                actions.write(Action::KeepsakePage(i));
+            }
+        }
         Tool::Remove => clear_cell(&mut layout, idx, &mut storeroom),
         Tool::Place(id) => {
             if let Err(key) =

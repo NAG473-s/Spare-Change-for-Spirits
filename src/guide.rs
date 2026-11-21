@@ -53,7 +53,6 @@ pub fn book_page(
     phase: crate::day_cycle::Phase,
 ) {
     ui.heading(&lang.t("guide_title"));
-    ui.menu_option(ui.root(), &lang.t("menu.back"), Action::OpenBook, false);
     for step in [
         "guide_buy",
         "guide_shelf",

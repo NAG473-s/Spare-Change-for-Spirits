@@ -133,7 +133,6 @@ pub fn book_page(
     page: usize,
 ) {
     ui.heading(&lang.t("order_slips.title"));
-    ui.menu_option(ui.root(), &lang.t("menu.back"), Action::OpenBook, false);
     if progress.orders.is_empty() && progress.journal.order_history.is_empty() {
         ui.dim(&lang.t("order_slips.empty"));
     }

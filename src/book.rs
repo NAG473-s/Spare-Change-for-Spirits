@@ -3,6 +3,10 @@
 //! pays and which wishes it has whispered so far – with the regulars, Hedda's
 //! letters and the keepsakes. Opened from the pause menu or the evening panel.
 //!
+//! The book is one overlay with coloured chapter tabs along the top (ghosts,
+//! keepsakes, letters, order slips, the first-sale guide and, in the full
+//! game, the achievements), so new pages join the book instead of the menus.
+//!
 //! The book lives in the save as part of [`Journal`], together with the
 //! regulars (`regulars.rs`) and the ware in the shop window (`showcase.rs`).
 
@@ -173,6 +177,121 @@ impl Journal {
     }
 }
 
+/// The book's chapters: one coloured tab each along the top of the page.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Chapter {
+    Ghosts,
+    Keepsakes,
+    Letters,
+    Orders,
+    Guide,
+    /// Full game only.
+    Achievements,
+}
+
+impl Chapter {
+    fn all() -> impl Iterator<Item = Chapter> {
+        [
+            Chapter::Ghosts,
+            Chapter::Keepsakes,
+            Chapter::Letters,
+            Chapter::Orders,
+            Chapter::Guide,
+            Chapter::Achievements,
+        ]
+        .into_iter()
+        // The demo has no achievements.
+        .filter(|c| *c != Chapter::Achievements || !cfg!(feature = "demo"))
+    }
+
+    fn key(self) -> &'static str {
+        match self {
+            Chapter::Ghosts => "book.tab.ghosts",
+            Chapter::Keepsakes => "book.tab.keepsakes",
+            Chapter::Letters => "book.tab.letters",
+            Chapter::Orders => "book.tab.orders",
+            Chapter::Guide => "book.tab.guide",
+            Chapter::Achievements => "book.tab.achievements",
+        }
+    }
+
+    /// The tab's ribbon colour (the tab also carries its name, so the colour
+    /// is never the only sign).
+    fn color(self) -> Color {
+        match self {
+            Chapter::Ghosts => Color::srgb_u8(150, 140, 220),
+            Chapter::Keepsakes => Color::srgb_u8(226, 168, 82),
+            Chapter::Letters => Color::srgb_u8(214, 120, 140),
+            Chapter::Orders => Color::srgb_u8(120, 182, 120),
+            Chapter::Guide => Color::srgb_u8(108, 164, 214),
+            Chapter::Achievements => Color::srgb_u8(236, 206, 96),
+        }
+    }
+}
+
+/// Height of a tab's coloured ribbon.
+const RIBBON: f32 = 6.0;
+
+/// The row of chapter tabs at the top of every book page, and the button
+/// that closes the book.
+pub fn tabs(ui: &mut PanelBuilder, lang: &Lang, current: Chapter) {
+    let root = ui.root();
+    let row = ui.node(
+        root,
+        Node {
+            flex_wrap: FlexWrap::Wrap,
+            column_gap: px(4),
+            row_gap: px(4),
+            align_items: AlignItems::End,
+            ..default()
+        },
+    );
+    for chapter in Chapter::all() {
+        let tab = ui.icon_button_in(
+            row,
+            None,
+            &lang.t(chapter.key()),
+            Action::BookChapter(chapter),
+            chapter == current,
+            true,
+        );
+        // The open chapter's tab stands a little taller, like a bookmark;
+        // the label sits below the ribbon.
+        let height = if chapter == current {
+            RIBBON * 2.0
+        } else {
+            RIBBON
+        };
+        ui.adjust(tab, move |node| node.padding.top = px(height + 4.0));
+        ui.node(
+            tab,
+            (
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: px(0),
+                    left: px(0),
+                    right: px(0),
+                    height: px(height),
+                    border_radius: BorderRadius::top(px(4)),
+                    ..default()
+                },
+                BackgroundColor(chapter.color()),
+                Pickable::IGNORE,
+            ),
+        );
+    }
+    let close = ui.icon_button_in(
+        row,
+        None,
+        &lang.t("book.close"),
+        Action::BookClose,
+        false,
+        true,
+    );
+    ui.adjust(close, |node| node.margin.left = auto());
+    ui.rule();
+}
+
 fn seen_ghosts<'a>(
     data: &'a GameData,
     journal: &'a Journal,
@@ -240,7 +359,6 @@ pub fn book_page(ui: &mut PanelBuilder, lang: &Lang, data: &GameData, journal: &
         &[("met", &met), ("total", &data.ghosts.len())],
     ));
     let root = ui.root();
-    ui.menu_option(root, &lang.t("menu.back"), Action::BookBack, false);
     if met == 0 {
         ui.dim(&lang.t("book.empty"));
     } else {
@@ -263,15 +381,6 @@ pub fn book_page(ui: &mut PanelBuilder, lang: &Lang, data: &GameData, journal: &
             );
         }
     }
-    ui.rule();
-    ui.menu_option(root, &lang.t("book.archive"), Action::BookArchive, false);
-    ui.menu_option(
-        root,
-        &lang.t("order_slips.title"),
-        Action::OpenOrders(0),
-        false,
-    );
-    ui.menu_option(root, &lang.t("guide_title"), Action::OpenGuide, false);
 }
 
 /// A sheet can supply the first idle frame if the individual portrait is missing.
@@ -460,38 +569,154 @@ pub fn ghost_profile(
     }
 }
 
-pub fn archive_page(
+pub fn letters_page(ui: &mut PanelBuilder, lang: &Lang, data: &GameData, upgrades: &Upgrades) {
+    ui.heading(&lang.t("book.letters"));
+    for n in letters_found(data, upgrades) {
+        ui.rule();
+        ui.text(&lang.t(&format!("letter.{n}")));
+    }
+}
+
+/// Where a keepsake came from: (story index, chapter number from 1).
+fn keepsake_origin(data: &GameData, id: &str) -> Option<(usize, usize)> {
+    data.stories.iter().enumerate().find_map(|(i, story)| {
+        story
+            .chapters
+            .iter()
+            .position(|c| c.keepsake.as_deref() == Some(id))
+            .map(|c| (i, c + 1))
+    })
+}
+
+/// Keepsakes the player owns: standing in the shop or in the storeroom.
+fn owned_keepsakes<'a>(
+    data: &'a GameData,
+    layout: &'a ShopLayout,
+    storeroom: &'a Storeroom,
+) -> impl Iterator<Item = (usize, &'a crate::data::DecorDef)> {
+    data.decor
+        .iter()
+        .enumerate()
+        .filter(move |(_, d)| d.keepsake && (storeroom.count(&d.id) > 0 || placed(layout, &d.id)))
+}
+
+fn placed(layout: &ShopLayout, id: &str) -> bool {
+    layout.cells.iter().any(|c| c.decor.as_deref() == Some(id))
+}
+
+/// Size of a keepsake's picture on its page.
+const KEEPSAKE_PICTURE: f32 = 96.0;
+
+/// The keepsakes chapter: each one the player owns opens its page.
+pub fn keepsakes_page(
     ui: &mut PanelBuilder,
     lang: &Lang,
     data: &GameData,
-    layout: &ShopLayout,
-    storeroom: &Storeroom,
-    upgrades: &Upgrades,
+    (layout, storeroom): (&ShopLayout, &Storeroom),
+    assets: &AssetServer,
 ) {
-    ui.heading(&lang.t("book.archive"));
-    ui.menu_option(ui.root(), &lang.t("menu.back"), Action::BookBack, false);
-    ui.section(&lang.t("book.letters"));
-    for n in letters_found(data, upgrades) {
-        ui.dim(&lang.t(&format!("letter.{n}")));
-    }
-    let keepsakes: Vec<String> = data
-        .decor
-        .iter()
-        .filter(|d| d.keepsake)
-        .filter(|d| {
-            storeroom.count(&d.id) > 0
-                || layout
-                    .cells
-                    .iter()
-                    .any(|c| c.decor.as_deref() == Some(&d.id))
-        })
-        .map(|d| lang.decor(&d.id))
-        .collect();
-    ui.section(&lang.t("book.keepsakes"));
-    if keepsakes.is_empty() {
+    ui.heading(&lang.t("book.keepsakes"));
+    let owned: Vec<_> = owned_keepsakes(data, layout, storeroom).collect();
+    if owned.is_empty() {
         ui.dim(&lang.t("book.no_keepsakes"));
+        return;
+    }
+    ui.dim(&lang.t("book.keepsakes_hint"));
+    let root = ui.root();
+    let grid = ui.node(
+        root,
+        Node {
+            display: Display::Grid,
+            grid_template_columns: RepeatedGridTrack::flex(2, 1.0),
+            column_gap: px(6),
+            row_gap: px(5),
+            ..default()
+        },
+    );
+    for (i, d) in owned {
+        let icon = format!("sprites/decor/{}.png", d.id);
+        let icon = asset_exists(&icon).then(|| assets.load(icon));
+        ui.icon_button_in(
+            grid,
+            icon,
+            &lang.decor(&d.id),
+            Action::KeepsakePage(i),
+            false,
+            true,
+        );
+    }
+}
+
+/// One keepsake's page: its picture, who left it and the words they said
+/// when they gave it. Only chapters already lived through are told.
+pub fn keepsake_page(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    journal: &Journal,
+    (layout, storeroom): (&ShopLayout, &Storeroom),
+    index: usize,
+    assets: &AssetServer,
+) {
+    let Some(d) = data
+        .decor
+        .get(index)
+        .filter(|d| owned_keepsakes(data, layout, storeroom).any(|(_, o)| o.id == d.id))
+    else {
+        keepsakes_page(ui, lang, data, (layout, storeroom), assets);
+        return;
+    };
+    ui.heading(&lang.decor(&d.id));
+    let root = ui.root();
+    ui.menu_option(root, &lang.t("menu.back"), Action::BookBack, false);
+    let header = ui.node(
+        root,
+        Node {
+            column_gap: px(14),
+            align_items: AlignItems::Center,
+            ..default()
+        },
+    );
+    let icon = format!("sprites/decor/{}.png", d.id);
+    if asset_exists(&icon) {
+        ui.image_sized(header, assets.load(icon), Vec2::splat(KEEPSAKE_PICTURE));
+    }
+    let notes = ui.node(
+        header,
+        Node {
+            flex_direction: FlexDirection::Column,
+            flex_shrink: 1.0,
+            row_gap: px(4),
+            ..default()
+        },
+    );
+    let place = if placed(layout, &d.id) {
+        "book.keepsake_placed"
     } else {
-        ui.text(&lang.join(&keepsakes));
+        "book.keepsake_stored"
+    };
+    if let Some((story, chapter)) = keepsake_origin(data, &d.id) {
+        let ghost = &data.stories[story].ghost;
+        ui.add_text(
+            notes,
+            &lang.f(
+                "book.keepsake_from",
+                &[("ghost", &lang.ghost(ghost)), ("chapter", &chapter)],
+            ),
+            true,
+            15.0,
+            TEXT,
+        );
+        ui.add_text(notes, &lang.t(place), false, 13.0, crate::ui::TEXT_DIM);
+        ui.text(&lang.f(
+            "quote",
+            &[("text", &lang.t(&format!("story.{ghost}.{chapter}.thanks")))],
+        ));
+        if let Some(i) = data.ghost_index(ghost).filter(|_| journal.has_seen(ghost)) {
+            ui.menu_option(root, &lang.ghost(ghost), Action::GhostProfile(i), false);
+        }
+    } else {
+        ui.add_text(notes, &lang.t(place), false, 13.0, crate::ui::TEXT_DIM);
     }
 }
 
@@ -556,12 +781,6 @@ mod tests {
                 })
                 .collect();
             assert_eq!(cards, [shy]);
-            assert!(
-                world
-                    .query::<&ActionButton>()
-                    .iter(world)
-                    .any(|button| button.0 == Action::BookBack)
-            );
             assert!(
                 !world
                     .query::<&Text>()

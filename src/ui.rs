@@ -145,10 +145,14 @@ pub enum Action {
     /// The ghost book (pauses the game).
     OpenBook,
     BookBack,
+    /// Close the book, back to where it was opened from.
+    BookClose,
+    /// Turn to a chapter of the book (its coloured tab).
+    BookChapter(crate::book::Chapter),
     GhostProfile(usize),
-    BookArchive,
+    /// A keepsake's page in the book (index in `GameData::decor`).
+    KeepsakePage(usize),
     RegularHistory(u32, usize),
-    OpenGuide,
     OpenOrders(usize),
     PinOrder(usize),
     SkipGuide,
@@ -2311,6 +2315,51 @@ pub(crate) fn overlay(
 
 /// Lets a panel body scroll when it is taller than the window (a large
 /// interface size on a small screen), so every button stays reachable.
+/// The book: like `overlay`, with a fixed header (the chapter tabs) above a
+/// page that scrolls on its own. Returns (layer, header, page).
+pub(crate) fn book_overlay(
+    commands: &mut Commands,
+    theme: &UiTheme,
+    width: f32,
+    height: f32,
+) -> (Entity, Entity, Entity) {
+    let (layer, body) = overlay(commands, theme, 0.6, width);
+    commands
+        .entity(body)
+        .queue(move |mut entity: EntityWorldMut| {
+            if let Some(mut node) = entity.get_mut::<Node>() {
+                node.overflow = Overflow::visible();
+                node.min_height = px(height);
+                node.max_height = px(height);
+            }
+        });
+    let header = commands
+        .spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                row_gap: px(10),
+                flex_shrink: 0.0,
+                ..default()
+            },
+            ChildOf(body),
+        ))
+        .id();
+    let page = commands
+        .spawn((
+            Node {
+                flex_grow: 1.0,
+                min_height: px(0),
+                flex_direction: FlexDirection::Column,
+                row_gap: px(10),
+                ..default()
+            },
+            ChildOf(body),
+        ))
+        .id();
+    scroll_y(commands, page);
+    (layer, header, page)
+}
+
 pub(crate) fn scroll_y(commands: &mut Commands, panel: Entity) {
     commands
         .entity(panel)
@@ -2373,6 +2422,18 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
     }
 
     /// A picture of any size under `parent`.
+    /// Changes the layout of an entity this builder made (padding, margins).
+    pub(crate) fn adjust(
+        &mut self,
+        entity: Entity,
+        f: impl FnOnce(&mut Node) + Send + Sync + 'static,
+    ) {
+        self.commands
+            .entity(entity)
+            .entry::<Node>()
+            .and_modify(move |mut node| f(&mut node));
+    }
+
     pub(crate) fn image_sized(&mut self, parent: Entity, image: Handle<Image>, size: Vec2) {
         self.commands.spawn((
             ImageNode::new(image),

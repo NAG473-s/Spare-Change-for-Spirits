@@ -88,30 +88,81 @@ pub enum SaveMenu {
     /// The ghost book (pause menu).
     Book,
     GhostProfile(usize),
-    BookArchive,
+    /// Hedda's letters.
+    Letters,
+    /// The keepsakes, and one keepsake's page (index in `GameData::decor`).
+    Keepsakes,
+    Keepsake(usize),
     RegularHistory(u32, usize),
     FirstSale,
     Orders(usize),
+}
+
+impl SaveMenu {
+    /// The book chapter this page belongs to, if it is a book page. The
+    /// achievements count as one only inside a game (`in_game`).
+    fn chapter(self, in_game: bool) -> Option<crate::book::Chapter> {
+        use crate::book::Chapter;
+        Some(match self {
+            SaveMenu::Book | SaveMenu::GhostProfile(_) | SaveMenu::RegularHistory(_, _) => {
+                Chapter::Ghosts
+            }
+            SaveMenu::Keepsakes | SaveMenu::Keepsake(_) => Chapter::Keepsakes,
+            SaveMenu::Letters => Chapter::Letters,
+            SaveMenu::Orders(_) => Chapter::Orders,
+            SaveMenu::FirstSale => Chapter::Guide,
+            SaveMenu::Achievements if in_game => Chapter::Achievements,
+            _ => return None,
+        })
+    }
+
+    /// The first page of a chapter.
+    fn of_chapter(chapter: crate::book::Chapter) -> Self {
+        use crate::book::Chapter;
+        match chapter {
+            Chapter::Ghosts => SaveMenu::Book,
+            Chapter::Keepsakes => SaveMenu::Keepsakes,
+            Chapter::Letters => SaveMenu::Letters,
+            Chapter::Orders => SaveMenu::Orders(0),
+            Chapter::Guide => SaveMenu::FirstSale,
+            Chapter::Achievements => SaveMenu::Achievements,
+        }
+    }
 }
 
 /// The game is paused and the pause menu is open.
 #[derive(Resource, Default)]
 pub struct Paused(pub bool);
 
-/// The first book page opened directly from play. Closing it returns to the
-/// same shop or harbour view; a book opened from Pause leads back to Pause.
+/// Where the book was opened. Closing it returns there: to the running shop
+/// or harbour view when it was opened from play, to Pause otherwise. `entry`
+/// is the page it was opened at; Back on that page closes the book too.
 #[derive(Resource, Default)]
-struct BookOrigin(Option<SaveMenu>);
+struct BookOrigin {
+    entry: Option<SaveMenu>,
+    from_play: bool,
+}
 
 impl BookOrigin {
     fn open(&mut self, page: SaveMenu, paused: &mut Paused, menu: &mut SaveMenu) {
         if !paused.0 {
-            self.0 = Some(page);
+            self.entry = Some(page);
+            self.from_play = true;
         } else if *menu == SaveMenu::Closed {
-            self.0 = None;
+            self.entry = Some(page);
+            self.from_play = false;
         }
         paused.0 = true;
         *menu = page;
+    }
+
+    fn close(&mut self, paused: &mut Paused, menu: &mut SaveMenu) {
+        *menu = SaveMenu::Closed;
+        if self.from_play {
+            paused.0 = false;
+        }
+        self.entry = None;
+        self.from_play = false;
     }
 
     fn back(
@@ -124,17 +175,21 @@ impl BookOrigin {
         if !paused.0 {
             return false;
         }
-        if self.0 == Some(*menu) {
-            *menu = SaveMenu::Closed;
-            paused.0 = false;
-            self.0 = None;
+        if self.entry == Some(*menu) {
+            self.close(paused, menu);
             return true;
         }
-        if let Some(parent) = book_parent(*menu, journal, data) {
-            *menu = parent;
-            return true;
+        match book_parent(*menu, journal, data) {
+            Some(SaveMenu::Closed) => {
+                self.close(paused, menu);
+                true
+            }
+            Some(parent) => {
+                *menu = parent;
+                true
+            }
+            None => false,
         }
-        false
     }
 }
 
@@ -225,6 +280,69 @@ fn title_layout(
     crate::ui::scroll_y(commands, panel);
     (layer, panel, has_logo)
 }
+
+/// One page of the book, below its tabs.
+fn book_chapter_page(
+    ui: &mut PanelBuilder,
+    save_menu: &SaveMenu,
+    lang: &Lang,
+    data: &GameData,
+    progress: &Progress,
+    shop: &(
+        Res<ShopLayout>,
+        Res<crate::shop::Storeroom>,
+        Res<crate::upgrades::Upgrades>,
+        Res<AssetServer>,
+        Res<crate::inventory::Stock>,
+    ),
+    phase: Phase,
+) {
+    let (layout, storeroom, upgrades, assets, stock) = &shop;
+    match *save_menu {
+        SaveMenu::Achievements => {
+            crate::achievements::achievements_page(ui, lang, data, progress, assets, None)
+        }
+        SaveMenu::Orders(page) => crate::orders::book_page(ui, lang, progress, stock, page),
+        SaveMenu::FirstSale => crate::guide::book_page(ui, lang, progress, phase),
+        SaveMenu::RegularHistory(name, page) => {
+            crate::book::regular_history_page(ui, lang, &progress.journal, name, page)
+        }
+        SaveMenu::GhostProfile(index) => {
+            crate::book::ghost_profile(ui, lang, data, &progress.journal, index, assets)
+        }
+        SaveMenu::Letters => crate::book::letters_page(ui, lang, data, upgrades),
+        SaveMenu::Keepsakes => {
+            crate::book::keepsakes_page(ui, lang, data, (layout, storeroom), assets)
+        }
+        SaveMenu::Keepsake(index) => crate::book::keepsake_page(
+            ui,
+            lang,
+            data,
+            &progress.journal,
+            (layout, storeroom),
+            index,
+            assets,
+        ),
+        _ => crate::book::book_page(ui, lang, data, &progress.journal),
+    }
+    // A short page leaves room below; this takes it, so buttons keep
+    // their height instead of stretching into it.
+    let root = ui.root();
+    ui.node(
+        root,
+        Node {
+            flex_grow: BOOK_FILLER,
+            ..default()
+        },
+    );
+}
+
+/// Width of the book (all its chapters).
+const BOOK_WIDTH: f32 = 640.0;
+/// Height of the book's page (it scrolls when a chapter is longer).
+const BOOK_HEIGHT: f32 = 520.0;
+/// Far more than all buttons' growth together, so the filler takes the room.
+const BOOK_FILLER: f32 = 10_000.0;
 
 /// Width of the logo above the main menu.
 const LOGO_WIDTH: f32 = 400.0;
@@ -326,6 +444,7 @@ fn build_main_menu(
                 &data,
                 &all,
                 &asset_server,
+                Some(Action::CloseSaveMenu),
             );
         }
         SaveMenu::RegularHistory(_, _) => {}
@@ -333,7 +452,9 @@ fn build_main_menu(
         | SaveMenu::Save
         | SaveMenu::Book
         | SaveMenu::GhostProfile(_)
-        | SaveMenu::BookArchive
+        | SaveMenu::Letters
+        | SaveMenu::Keepsakes
+        | SaveMenu::Keepsake(_)
         | SaveMenu::FirstSale
         | SaveMenu::Orders(_) => {}
     }
@@ -730,11 +851,15 @@ fn book_parent(
     data: &GameData,
 ) -> Option<SaveMenu> {
     match page {
-        SaveMenu::Book => Some(SaveMenu::Closed),
-        SaveMenu::GhostProfile(_)
-        | SaveMenu::BookArchive
+        // A chapter's first page: Back closes the book.
+        SaveMenu::Book
+        | SaveMenu::Keepsakes
+        | SaveMenu::Letters
         | SaveMenu::FirstSale
-        | SaveMenu::Orders(0) => Some(SaveMenu::Book),
+        | SaveMenu::Achievements
+        | SaveMenu::Orders(0) => Some(SaveMenu::Closed),
+        SaveMenu::GhostProfile(_) => Some(SaveMenu::Book),
+        SaveMenu::Keepsake(_) => Some(SaveMenu::Keepsakes),
         SaveMenu::Orders(page) => Some(SaveMenu::Orders(page - 1)),
         SaveMenu::RegularHistory(name, 0) => Some(
             journal
@@ -777,8 +902,7 @@ fn pause_actions(
                 continue;
             }
             Action::OpenOrders(page) => {
-                paused.0 = true;
-                *save_menu = SaveMenu::Orders(*page);
+                origin.open(SaveMenu::Orders(*page), &mut paused, &mut save_menu);
                 continue;
             }
             Action::PinOrder(index) if matches!(*save_menu, SaveMenu::Orders(_)) => {
@@ -793,11 +917,6 @@ fn pause_actions(
                         write_slot(profile.0, Slot::Auto, &save);
                     }
                 }
-                continue;
-            }
-            Action::OpenGuide => {
-                paused.0 = true;
-                *save_menu = SaveMenu::FirstSale;
                 continue;
             }
             Action::SkipGuide if state.progress.guiding_first_sale() => {
@@ -845,9 +964,16 @@ fn pause_actions(
                 }
                 continue;
             }
-            Action::BookArchive => {
-                paused.0 = true;
-                *save_menu = SaveMenu::BookArchive;
+            Action::BookChapter(chapter) => {
+                origin.open(SaveMenu::of_chapter(*chapter), &mut paused, &mut save_menu);
+                continue;
+            }
+            Action::KeepsakePage(index) => {
+                origin.open(SaveMenu::Keepsake(*index), &mut paused, &mut save_menu);
+                continue;
+            }
+            Action::BookClose => {
+                origin.close(&mut paused, &mut save_menu);
                 continue;
             }
             Action::OpenBook => {
@@ -931,52 +1057,37 @@ fn sync_pause(
         return;
     }
     time.pause();
-    let width = if matches!(
-        *save_menu,
-        SaveMenu::Book
-            | SaveMenu::GhostProfile(_)
-            | SaveMenu::BookArchive
-            | SaveMenu::FirstSale
-            | SaveMenu::Orders(_)
-            | SaveMenu::RegularHistory(_, _)
-    ) {
-        580.0
-    } else {
-        420.0
-    };
-    let (layer, panel) = overlay(&mut commands, &theme, 0.6, width);
+    // Book pages share one wider overlay with the chapter tabs on top.
+    let chapter = (!settings_menu.0)
+        .then(|| save_menu.chapter(true))
+        .flatten();
+    if let Some(chapter) = chapter {
+        let (layer, header, page) =
+            crate::ui::book_overlay(&mut commands, &theme, BOOK_WIDTH, BOOK_HEIGHT);
+        commands.entity(layer).insert(PauseRoot);
+        // The tabs stay at the top; only the page below them scrolls.
+        crate::book::tabs(
+            &mut PanelBuilder::new(&mut commands, header, &font),
+            &lang,
+            chapter,
+        );
+        let mut ui = PanelBuilder::new(&mut commands, page, &font);
+        book_chapter_page(
+            &mut ui,
+            &save_menu,
+            &lang,
+            &data,
+            &progress,
+            &shop,
+            *phase.get(),
+        );
+        return;
+    }
+    let (layer, panel) = overlay(&mut commands, &theme, 0.6, 420.0);
     commands.entity(layer).insert(PauseRoot);
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     if settings_menu.0 {
         settings_page(&mut ui, &settings, &lang);
-        return;
-    }
-    if *save_menu == SaveMenu::Achievements {
-        crate::achievements::achievements_page(&mut ui, &lang, &data, &progress, &shop.3);
-        return;
-    }
-    if let SaveMenu::Orders(page) = *save_menu {
-        crate::orders::book_page(&mut ui, &lang, &progress, &shop.4, page);
-        return;
-    }
-    if *save_menu == SaveMenu::FirstSale {
-        crate::guide::book_page(&mut ui, &lang, &progress, *phase.get());
-        return;
-    }
-    if let SaveMenu::RegularHistory(name, page) = *save_menu {
-        crate::book::regular_history_page(&mut ui, &lang, &progress.journal, name, page);
-        return;
-    }
-    if let SaveMenu::GhostProfile(index) = *save_menu {
-        crate::book::ghost_profile(&mut ui, &lang, &data, &progress.journal, index, &shop.3);
-        return;
-    }
-    if *save_menu == SaveMenu::BookArchive {
-        crate::book::archive_page(&mut ui, &lang, &data, &shop.0, &shop.1, &shop.2);
-        return;
-    }
-    if *save_menu == SaveMenu::Book {
-        crate::book::book_page(&mut ui, &lang, &data, &progress.journal);
         return;
     }
     if *save_menu == SaveMenu::Save {
@@ -1002,16 +1113,8 @@ fn sync_pause(
         _ => "pause.save_quit",
     };
     ui.menu_option(root, &lang.t(quit_label), Action::QuitToMenu, false);
+    // The achievements are a chapter of the book.
     ui.menu_option(root, &lang.t("book.open"), Action::OpenBook, false);
-    // The demo has no achievements.
-    if !cfg!(feature = "demo") {
-        ui.menu_option(
-            root,
-            &lang.t("pause.achievements"),
-            Action::OpenAchievements,
-            false,
-        );
-    }
     ui.menu_option(root, &lang.t("menu.settings"), Action::OpenSettings, false);
     ui.menu_option(root, &lang.t("pause.quit_game"), Action::QuitGame, false);
     ui.dim(&lang.t("pause.hint"));
@@ -1150,19 +1253,52 @@ mod tests {
         // The same links work from an index opened during play or from Pause.
         for from_pause in [false, true] {
             paused.0 = from_pause;
+            page = SaveMenu::Closed;
             origin.open(SaveMenu::Book, &mut paused, &mut page);
             origin.open(profile, &mut paused, &mut page);
             assert!(origin.back(&mut paused, &mut page, &journal, &data));
             assert!(paused.0 && page == SaveMenu::Book);
-            page = SaveMenu::Orders(1);
+            // Turning to another chapter keeps where the book was opened.
+            origin.open(SaveMenu::Orders(1), &mut paused, &mut page);
             assert!(origin.back(&mut paused, &mut page, &journal, &data));
             assert!(paused.0 && page == SaveMenu::Orders(0));
-            assert!(origin.back(&mut paused, &mut page, &journal, &data));
-            assert!(paused.0 && page == SaveMenu::Book);
+            // Back on a chapter's first page closes the book.
             assert!(origin.back(&mut paused, &mut page, &journal, &data));
             assert!(page == SaveMenu::Closed);
             assert_eq!(paused.0, from_pause);
         }
+
+        // Close goes straight back, from any page.
+        paused.0 = false;
+        page = SaveMenu::Closed;
+        origin.open(SaveMenu::Keepsakes, &mut paused, &mut page);
+        origin.open(SaveMenu::Keepsake(3), &mut paused, &mut page);
+        origin.close(&mut paused, &mut page);
+        assert!(!paused.0 && page == SaveMenu::Closed);
+    }
+
+    #[test]
+    fn every_book_page_belongs_to_a_chapter_with_a_first_page() {
+        use crate::book::Chapter;
+        for page in [
+            SaveMenu::Book,
+            SaveMenu::GhostProfile(0),
+            SaveMenu::RegularHistory(1, 2),
+            SaveMenu::Keepsakes,
+            SaveMenu::Keepsake(0),
+            SaveMenu::Letters,
+            SaveMenu::Orders(2),
+            SaveMenu::FirstSale,
+        ] {
+            let chapter = page.chapter(true).unwrap();
+            assert_eq!(SaveMenu::of_chapter(chapter).chapter(true), Some(chapter));
+        }
+        // The main menu's achievements are no book page; in a game they are.
+        assert_eq!(SaveMenu::Achievements.chapter(false), None);
+        assert_eq!(
+            SaveMenu::Achievements.chapter(true),
+            Some(Chapter::Achievements)
+        );
     }
 
     #[test]
