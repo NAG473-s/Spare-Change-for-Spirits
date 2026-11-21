@@ -103,6 +103,7 @@ class DemoAssets:
         self.companions = set()
         self.finale_guests = set()
         self.flowers = False
+        self.butterfly = False
         self.fares = False
         keepsakes = set()
         story_wares = set()
@@ -124,6 +125,7 @@ class DemoAssets:
                     keepsakes.add(gift)
             if len(available) == len(chapters):
                 self.films.add(ghost)
+                self.butterfly |= story.get("blossom") == "true"
                 if visitor := option(story.get("finale_guest", "None")):
                     self.finale_guests.add(visitor)
                 if pet := option(story.get("companion", "None")):
@@ -137,6 +139,11 @@ class DemoAssets:
             stories.append(story)
         check_saved_indices(story_rows, stories, "ghost")
         self.tables["story"] = sequence(map(record, stories))
+        # Lost-and-found errands open when their owner's story is complete.
+        errands = [e for e in rows("errands") if json.loads(e["ghost"]) in self.films]
+        self.tables["errands"] = sequence(map(record, errands))
+        self.errands = {json.loads(e["id"]) for e in errands}
+        keepsakes.update(json.loads(e["item"]) for e in errands)
 
         self.products = select("products", [p for p in rows("products")
                                             if unlocked(p) or json.loads(p["id"]) in story_wares], "product")
@@ -206,6 +213,8 @@ class DemoAssets:
         namespace = parts[0]
         if namespace in self.catalog_ids:
             return parts[1] in self.catalog_ids[namespace]
+        if namespace == "errand":
+            return parts[1] in self.errands if len(parts) > 2 else bool(self.errands)
         if namespace == "story" and len(parts) > 2:
             ghost, chapter = parts[1:3]
             if chapter == "ending":
@@ -263,6 +272,10 @@ class DemoAssets:
                 return self.flowers
         if parts[:2] == ("models", "critters") and stem.startswith("dog_"):
             return "dog" in self.companions
+        if parts[:2] == ("models", "critters") and stem.startswith("butterfly_"):
+            return self.butterfly
+        if parts[:2] == ("models", "errands"):
+            return stem.rpartition("_clue_")[0] in self.errands
         # Remaining assets are shared: the town and shop, equipment, weather,
         # opening, language/font support, common music, UI and effect sounds.
         return True

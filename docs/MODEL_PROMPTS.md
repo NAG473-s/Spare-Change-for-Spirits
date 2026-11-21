@@ -9,16 +9,15 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- Mira's butterfly (season 3): `butterfly_body` and `butterfly_wing` in
-  `assets/models/critters/` (see *Animals*). Until they arrive it is a tiny capsule with two
-  apricot quads.
-- Lotte's errand (season 2): the keepsake `toy_sledge` in `assets/models/decor/` (see
-  *Keepsakes*) and the two clues `lotte_sledge_clue_1` and `lotte_sledge_clue_2` in
-  `assets/models/errands/` (see *Errand clues*). Until they arrive the game shows a
-  placeholder box and little paw prints built from primitives.
+All model orders are delivered.
 
-Delivered, including:
+## Delivered models
 
+- Lotte's repaired `toy_sledge` is in `assets/models/decor/`. The two snow trails
+  `lotte_sledge_clue_1` and `lotte_sledge_clue_2` are in `assets/models/errands/`.
+  The second trail ends at a red mitten.
+- Mira's `butterfly_body` and `butterfly_wing` are in `assets/models/critters/`.
+  The game mirrors the right wing and animates both from their hinges.
 - The seasonal market stalls and traders `stall_frost`, `vendor_frost`, `stall_florist`
   and `vendor_florist`, plus the daily offer's `special_tag`, in `assets/models/market/`.
   Their furniture `fairy_lights`, `fur_rug`, `flower_pot` and `birdhouse` is in

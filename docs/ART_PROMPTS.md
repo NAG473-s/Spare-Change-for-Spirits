@@ -25,14 +25,10 @@ python3 tools/check_models.py
 
 ## Delivery status
 
-Open order:
+All image orders are delivered. Lotte's keepsake icon is in
+`assets/sprites/decor/toy_sledge.png` (96 × 96, transparent PNG).
 
-- The keepsake icon `toy_sledge` (96 × 96, kind `decor`, `assets/sprites/decor/toy_sledge.png`):
-  Lotte's little wooden toy sledge with curved runners and a red-painted seat, a short pull rope
-  (prompt as its model in [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Until it arrives its button
-  shows only text.
-
-All other image orders are delivered. The helper behind the counter uses
+The helper behind the counter uses
 `assets/sprites/ghosts/apprentice.png`, a transparent 176 × 264 portrait. Its replacement
 prompt is listed under *Helpers* below.
 
@@ -364,6 +360,7 @@ the later ones:
 | `sea_chart` | A framed, yellowed sea chart of a small harbour with a lighthouse. |
 | `lifebuoy` | A red-and-white striped ring lifebuoy with a coil of rope. |
 | `apron` | A faded lavender shop apron on a hook, a sprig of dried lavender in its pocket. |
+| `toy_sledge` | Lotte's little wooden sledge with curled runners, a red seat painted with a worn ivory flower, a short flax pull rope and a small brass repair plate. |
 
 ## Achievement icons – canvas 1024 × 1024 (done)
 

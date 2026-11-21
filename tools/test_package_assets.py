@@ -39,16 +39,21 @@ class PackageAssetsTests(unittest.TestCase):
                         "sprites/ghosts/hedda.png", "sprites/ghosts/lantern_child.png", "sprites/ghosts/ida_pay.png",
                         "sprites/ghosts/shade_pay.png", "sprites/ghosts/edwin_flee.png",
                         "models/products/storm_lantern.glb", "models/decor/apron.glb", "models/critters/dog_tail.glb",
+                        "models/decor/toy_sledge.glb", "sprites/decor/toy_sledge.png",
+                        "models/errands/lotte_sledge_clue_1.glb", "models/errands/lotte_sledge_clue_2.glb",
+                        "models/critters/butterfly_body.glb", "models/critters/butterfly_wing.glb",
                         "models/market/vendor_frost.glb", "models/market/window_flowers.glb", "sounds/evening_music_spring.ogg"):
                 with self.subTest(asset=rel):
                     self.assertFalse((demo / rel).exists())
 
             english = read_catalog(demo / "i18n/en.ron")
+            self.assertEqual(items((demo / "data/errands.ron").read_text(encoding="utf-8")), [])
             for key in ("book.note.shade", "story.edwin.5.thanks", "story.edwin.ending", "letter.4", "story.plainly",
                         "event.all_souls.name", "end.carry_over", "set.edwins_porch.name", "register.undo_hint"):
                 self.assertIn(key, english)
             for key in ("book.note.ida", "story.ida.1.intro", "finale.hedda.arrives", "season.1.epilogue",
-                        "event.new_moon.name", "set.seafarers_corner.name", "achievement.edwin.name"):
+                        "event.new_moon.name", "set.seafarers_corner.name", "achievement.edwin.name",
+                        "errand.lotte_sledge.hint.1", "errand.clue_title"):
                 self.assertNotIn(key, english)
 
             # The registry, translation files and voice assets must agree.
@@ -62,6 +67,32 @@ class PackageAssetsTests(unittest.TestCase):
                     self.assertEqual(retained, {k: v for k, v in read_catalog(full / rel).items() if k in english})
                     for rel in (f"sounds/intro_voice_{locale}.ogg", f"sounds/endings/edwin/{locale}.ogg"):
                         self.assertEqual((demo / rel).read_bytes(), (full / rel).read_bytes())
+
+    def test_errand_and_butterfly_assets_follow_story_completion(self):
+        with TemporaryDirectory() as tmp:
+            source = Path(tmp) / "assets"
+            shutil.copytree(ASSETS / "data", source / "data")
+            # Give the first demo story a lost item and a flowering window box.
+            for table, old, new in [
+                ("errands", 'ghost: "lotte"', 'ghost: "edwin"'),
+                ("story", 'ghost: "edwin",', 'ghost: "edwin", blossom: true,'),
+            ]:
+                path = source / "data" / f"{table}.ron"
+                path.write_text(path.read_text(encoding="utf-8").replace(old, new, 1), encoding="utf-8")
+            config = source / "data/config.ron"
+            original = config.read_text(encoding="utf-8")
+            for nights in (4, 5):
+                config.write_text(original.replace("demo_nights: 5,", f"demo_nights: {nights},"), encoding="utf-8")
+                demo = DemoAssets(source)
+                complete = nights == 5
+                with self.subTest(nights=nights):
+                    self.assertTrue(demo.include_file(Path("models/market/window_flowers.glb")))
+                    for rel in ("models/critters/butterfly_wing.glb", "models/errands/lotte_sledge_clue_2.glb",
+                                "models/decor/toy_sledge.glb", "sprites/decor/toy_sledge.png"):
+                        self.assertEqual(demo.include_file(Path(rel)), complete)
+                    self.assertEqual(bool(items(demo.tables["errands"])), complete)
+                    self.assertEqual(demo.include_key("errand.lotte_sledge.title"), complete)
+                    self.assertEqual(demo.include_key("errand.clue_title"), complete)
 
     def test_incompatible_saved_offer_indices_are_rejected(self):
         with TemporaryDirectory() as tmp:

@@ -583,7 +583,8 @@ fn fly_butterfly(
         let heading = (to - from).with_y(0.0);
         transform.translation = pos;
         if heading.length_squared() > 0.0 {
-            transform.look_to(heading, Vec3::Y);
+            // The butterfly's head faces glTF +Z. Bevy's look_to aligns -Z.
+            transform.look_to(-heading, Vec3::Y);
         }
     }
     for (wing, mut transform) in &mut wings {

@@ -132,6 +132,8 @@ ORIGIN_AXES = {
     "cat_tail": ("centre", "maximum", "centre"),
     "bat_body": ("centre", "centre", "centre"),
     "bat_wing": ("minimum", "centre", "centre"),
+    "butterfly_body": ("centre", "centre", "centre"),
+    "butterfly_wing": ("minimum", "centre", "centre"),
     "fish": ("centre", "centre", "centre"),
     "bell_post": (None, "minimum", "centre"),
     "ferry_bell": ("centre", "maximum", "centre"),
@@ -309,7 +311,8 @@ def check(path, target, budget):
         if anchor is None:
             continue
         anchors = {"minimum": lo[i], "maximum": hi[i], "centre": (lo[i] + hi[i]) / 2}
-        tolerance = 0.05 if i == 1 else 0.15
+        # A small critter can fit entirely inside the furniture's origin tolerance.
+        tolerance = min(0.05 if i == 1 else 0.15, max(0.001, 0.15 * size[i]))
         if abs(anchors[anchor]) > tolerance:
             problems.append(f"origin should be at the {anchor} on the {'xyz'[i]} axis")
     if target:
