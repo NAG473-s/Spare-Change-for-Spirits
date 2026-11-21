@@ -386,6 +386,10 @@ pub struct StoryDef {
     /// Once this story is finished the ferryman wears his name.
     #[serde(default)]
     pub names_ferryman: bool,
+    /// A keepsake that keeps a log of this story: its book page lists one
+    /// entry per finished chapter (`story.<ghost>.<n>.log`).
+    #[serde(default)]
+    pub logbook: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

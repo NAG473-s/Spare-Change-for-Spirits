@@ -184,6 +184,12 @@ impl Progress {
         self.story[i] += 1;
         self.story_tries[i] = 0;
         self.parcels.retain(|p| *p != i);
+        // For logbook keepsakes: when each chapter was finished.
+        self.journal
+            .chapter_nights
+            .entry(i)
+            .or_default()
+            .push(self.night);
     }
 
     /// A counter for the achievements.

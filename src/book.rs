@@ -34,6 +34,9 @@ pub struct Journal {
     pub regulars: Vec<Regular>,
     /// The ware shown in the shop window (product id).
     pub showcase: Option<String>,
+    /// The night each chapter of a story was finished (story index → nights
+    /// in chapter order), for logbook keepsakes.
+    pub chapter_nights: BTreeMap<usize, Vec<u32>>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -653,11 +656,12 @@ pub fn keepsake_page(
     ui: &mut PanelBuilder,
     lang: &Lang,
     data: &GameData,
-    journal: &Journal,
+    progress: &crate::day_cycle::Progress,
     (layout, storeroom): (&ShopLayout, &Storeroom),
     index: usize,
     assets: &AssetServer,
 ) {
+    let journal = &progress.journal;
     let Some(d) = data
         .decor
         .get(index)
@@ -712,6 +716,24 @@ pub fn keepsake_page(
             "quote",
             &[("text", &lang.t(&format!("story.{ghost}.{chapter}.thanks")))],
         ));
+        // A logbook keeps one entry per chapter finished so far; later
+        // chapters stay unwritten.
+        if data.stories[story].logbook.as_deref() == Some(&d.id) {
+            ui.section(&lang.t("book.log_title"));
+            let done = progress
+                .chapter(story)
+                .min(data.stories[story].chapters.len());
+            let nights = journal.chapter_nights.get(&story);
+            for n in 1..=done {
+                let text = lang.t(&format!("story.{ghost}.{n}.log"));
+                match nights.and_then(|nights| nights.get(n - 1)) {
+                    Some(night) => {
+                        ui.text(&lang.f("book.log_entry", &[("night", night), ("text", &text)]))
+                    }
+                    None => ui.text(&text),
+                };
+            }
+        }
         if let Some(i) = data.ghost_index(ghost).filter(|_| journal.has_seen(ghost)) {
             ui.menu_option(root, &lang.ghost(ghost), Action::GhostProfile(i), false);
         }
@@ -809,6 +831,34 @@ mod tests {
                 .iter(world)
                 .any(|image| image.image == portrait)
         );
+    }
+
+    #[test]
+    fn a_logbook_has_an_entry_for_every_chapter_and_records_its_night() {
+        let data = GameData::load();
+        let lang = Lang::load("en");
+        let mut found = false;
+        for (i, story) in data.stories.iter().enumerate() {
+            let Some(book) = &story.logbook else { continue };
+            found = true;
+            assert_eq!(
+                keepsake_origin(&data, book).map(|(s, _)| s),
+                Some(i),
+                "{book} is left by {}",
+                story.ghost
+            );
+            for n in 1..=story.chapters.len() {
+                let key = format!("story.{}.{n}.log", story.ghost);
+                assert_ne!(lang.t(&key), key, "missing {key}");
+            }
+            let mut progress = crate::day_cycle::Progress::new(0);
+            progress.night = 7;
+            progress.finish_chapter(i);
+            progress.night = 9;
+            progress.finish_chapter(i);
+            assert_eq!(progress.journal.chapter_nights[&i], [7, 9]);
+        }
+        assert!(found, "Ida's logbook keeps the lighthouse log");
     }
 
     #[test]

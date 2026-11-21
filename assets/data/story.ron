@@ -15,6 +15,8 @@
 //   the market's windows. names_ferryman: once finished, the ferryman wears his name.
 // fare: true in a chapter: instead of a ware the ghost asks for one coin from the drawer.
 // keepsake: decor (keepsake: true in decor.ron) left in your storeroom as thanks.
+// logbook (optional): a keepsake whose book page lists one entry per finished chapter
+//   (story.<ghost>.<n>.log), with the night it was finished.
 // Texts: assets/i18n/<language>.ron (story.<ghost>.arrives, story.<ghost>.<n>.intro,
 // story.<ghost>.<n>.thanks, story.<ghost>.ending).
 [
@@ -40,6 +42,8 @@
         finale: true,
         finale_guest: Some("hedda"),
         lighthouse: true,
+        // Ida's logbook records each repair of the lighthouse.
+        logbook: Some("logbook"),
         chapters: [
             (wish: "polishing_cloth", keepsake: Some("logbook")),
             (wish: "pocket_watch", keepsake: Some("ship_bell")),

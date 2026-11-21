@@ -314,15 +314,9 @@ fn book_chapter_page(
         SaveMenu::Keepsakes => {
             crate::book::keepsakes_page(ui, lang, data, (layout, storeroom), assets)
         }
-        SaveMenu::Keepsake(index) => crate::book::keepsake_page(
-            ui,
-            lang,
-            data,
-            &progress.journal,
-            (layout, storeroom),
-            index,
-            assets,
-        ),
+        SaveMenu::Keepsake(index) => {
+            crate::book::keepsake_page(ui, lang, data, progress, (layout, storeroom), index, assets)
+        }
         _ => crate::book::book_page(ui, lang, data, &progress.journal),
     }
     // A short page leaves room below; this takes it, so buttons keep
