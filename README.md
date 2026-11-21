@@ -119,6 +119,17 @@ Extract the Linux `.tar.gz` to keep the executable permissions. Extract the macO
 `.zip` to get the ad-hoc signed Universal `.app`. Each edition includes its Steam runtime,
 assets and licenses. All three platforms use the same five-night asset selection for the demo.
 
+The run's artifacts: the Windows edition is the game folder, which GitHub hands out as a ZIP.
+The macOS `.zip` and the Linux `.tar.gz` are uploaded as they are (`archive: false`), so the
+download is the archive itself and not a ZIP inside a ZIP. Double-click the macOS `.zip` in
+Finder to get the `.app`. The app is ad-hoc signed, not notarized: macOS blocks it after a
+browser download. Allow it once under *System Settings → Privacy & Security → Open Anyway*, or
+remove the download mark in Terminal:
+
+```bash
+xattr -dr com.apple.quarantine "Spare Change for Spirits.app"
+```
+
 The workflow runs on pushes to `main` and tags matching `v*`, and can be started manually under
 *Actions → Desktop builds → Run workflow*. Commits marked `[skip ci]` skip the automatic run.
 Runs for the same ref queue behind the current run.

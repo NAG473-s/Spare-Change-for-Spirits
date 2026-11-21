@@ -137,7 +137,11 @@ jobs:
             "${prefix[@]}" python tools/package_ci.py "$PLATFORM" "$edition" "$RUNNER_TEMP/steam" "${runner[@]}"
           done
 
+      # Windows uploads the game folder, which GitHub zips. macOS and Linux
+      # are already one archive each (ditto ZIP / tar.gz): upload that file
+      # as it is, so the download is not a ZIP inside a ZIP.
       - name: Upload full game
+        if: inputs.platform == 'windows'
         uses: actions/upload-artifact@v7
         with:
           name: SpareChangeForSpirits-${{ inputs.platform }}
@@ -145,8 +149,25 @@ jobs:
           if-no-files-found: error
 
       - name: Upload demo
+        if: inputs.platform == 'windows'
         uses: actions/upload-artifact@v7
         with:
           name: SpareChangeForSpirits-${{ inputs.platform }}-demo
           path: dist/demo/${{ inputs.platform }}/
+          if-no-files-found: error
+
+      - name: Upload full game archive
+        if: inputs.platform != 'windows'
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/full/${{ inputs.platform }}/*
+          archive: false
+          if-no-files-found: error
+
+      - name: Upload demo archive
+        if: inputs.platform != 'windows'
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/demo/${{ inputs.platform }}/*
+          archive: false
           if-no-files-found: error
