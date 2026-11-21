@@ -18,6 +18,8 @@ demo = []
 bevy = { version = "0.20.1", features = ["complex_script_segmentation"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 keyvalues-parser = { version = "0.2.4", default-features = false }
+# Kept at 0.8 on purpose (owner, 2026-11-21): wgpu and ash use 0.8, a newer
+# major version would put a second copy into the build.
 libloading = "0.8.9"
 ron = "0.12.3"
 serde = { version = "1.0.229", features = ["derive"] }
