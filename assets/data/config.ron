@@ -11,10 +11,10 @@
     night_length_secs: 240.0,
     // Time between new ghosts (min, max) in seconds.
     spawn_interval_secs: (7.0, 13.0),
-    max_ghosts_in_shop: 6,
+    max_ghosts_in_shop: 5,
     // Reputation shortens the time between ghosts by `per_point` per point (negative reputation
     // lengthens it), but never below `fastest` or above `slowest` times the normal interval.
-    reputation_spawn: (per_point: 0.01, fastest: 0.65, slowest: 1.5),
+    reputation_spawn: (per_point: 0.01, fastest: 0.75, slowest: 1.5),
     // A good reputation also brings tips for exact change (a chance of `tip_chance_per_point`
     // per point from `tip_from` on, at most `tip_chance_max`; candle stubs from
     // `candle_tip_from`), and the Reaper sells his rare pieces only from `rare_from` on.
@@ -31,8 +31,9 @@
     incidents: (from_night: 2, per_night: (0, 2), arrive_at: (0.15, 0.8)),
     // A ghost whose wish is not in stock can order it for the next night (at most `max_per_night`
     // orders): it comes back early and pays `price_bonus` more; still missing costs
-    // `missed_penalty` reputation.
-    orders: (max_per_night: 3, price_bonus: 0.5, missed_penalty: 2, arrive_at: (0.08, 0.4)),
+    // `missed_penalty` reputation. It came on purpose, so it waits `patience_factor` times as long.
+    orders: (max_per_night: 3, price_bonus: 0.5, missed_penalty: 2, arrive_at: (0.08, 0.4),
+             patience_factor: 1.5),
     // A ghost served well may become a regular (`become_chance`, at most `max`): it gets a name,
     // comes back now and then as one of its kind (`return_chance`), often for its favourite ware
     // (`favourite_chance`), and tips more often the more it visits (`tip_per_visit` up to

@@ -7,15 +7,26 @@ strategies and prints averages per night:
 BEVY_ASSET_ROOT=. cargo run --release -- --simulate 500
 ```
 
-It models arrivals, browsing, the queue at the counter (9 s per sale, 3 s to turn a ghost away),
-patience, fading wares, the poltergeist, counterfeits (70 % spotted) and the ferryman's loan. The
-player gives the right change and is honest. Strategies:
+It models arrivals, browsing, the queue at the counter (9 s per sale, 3 s to turn a ghost away,
+5 s to write an order slip), patience, fading wares, the poltergeist, counterfeits (70 % spotted),
+the ferryman's loan, next-night orders and the workbench. The player gives the right change and
+is honest. Strategies:
 
 - **demand** – orders what the ghosts will want until the ware fades (or the game ends), when it
   pays off. A sensible player.
 - **demand + furniture** – the same, and buys furniture at the market so that more ghosts stay.
 - **eager** – like demand, but always fills every crate.
 - **cheapest** – always the cheapest crates, whatever the ghosts want. The careless player.
+
+Every strategy except *cheapest* offers a ghost whose wish is missing an order for the next
+night (up to `max_per_night`) and buys the crate for it the next evening. The furniture
+strategies also buy the workbench, rummage once an evening and repair the broken thing that
+sells for the most above its repair cost.
+
+Below each strategy's nights the simulation prints one line per season: what the drawer gained,
+the share of wishes fulfilled, unhappy ghosts (and how many of them gave up waiting), the
+average and longest wait at the counter, loans and what was paid back, orders taken and the
+share collected, and repairs with their cost.
 
 ## Comparing with real games
 
@@ -121,7 +132,8 @@ Findings:
 The simulation now plays all 20 nights. 100 runs: demand +1088, demand + furniture +2493,
 demand + furniture + improvements +2581, cheapest crates −92 (loans in 38 % of the nights);
 39–42 % of the wishes fulfilled. Money grows about twice as much over twice the nights, so the
-winter neither breaks nor starves the shop. Not simulated yet: orders, mishaps, the workbench.
+winter neither breaks nor starves the shop. Not simulated yet: mishaps (orders and the
+workbench since pass 3).
 
 ## Season 3 (nights 21–30)
 
@@ -156,3 +168,52 @@ drawer cannot pay it until the next evening. The game handles that late finale: 
 waits for it. `sim::tests::every_season_reaches_its_finale_with_a_full_or_a_struggling_shop`
 checks the pacing for every strategy.
 
+
+## Pass 3: orders, repairs and the queue (Nov 2026)
+
+The simulation now takes next-night orders and repairs at the workbench, and reports waiting
+times and loan repayments per season (see the top of this file).
+
+**Finding:** the counter is the bottleneck. Orders keep the shelves fuller, so more ghosts are
+served, every sale holds the counter for 9 s and the queue grows. With orders the sensible shop
+earned more (+2215 against +1859 over 30 nights), but 11 % of its ghosts left unhappy (5 %
+before) and 18–26 % of the orders were lost, almost all because the ghost back for its order
+gave up in the queue. The four big nights (5, 10, 20, 30) were the worst, with up to 17 % unhappy.
+Reputation reached 35 by night 4, after which every night ran at the fastest arrival rate.
+
+Changes:
+
+- `orders.patience_factor` 1.5 (new in `config.ron`): a ghost back for its order came on purpose
+  and waits longer (game and simulation).
+- `reputation_spawn.fastest` 0.65 → 0.75: a famous shop is busy, not overrun.
+- `max_ghosts_in_shop` 6 → 5.
+- The big nights' `spawn_factor` 0.65–0.7 → 0.8 (All Souls, the Longest Night, Midwinter, the
+  Last Crossing); they keep their higher prices and longer nights.
+- The six least patient customers wait 6 s longer (`patience_secs` 12–18 → 18–24); the shade
+  keeps its 10 s.
+
+Result (300 runs, start 92, money at dawn after repaying the ferryman):
+
+| Strategy | Night 1 | 3 | 5 | 30 | Wishes fulfilled | Unhappy | Orders collected |
+|---|---|---|---|---|---|---|---|
+| demand | 73 | 183 | 352 | +2174 | 48 % | 5 % | 93–97 % |
+| demand + furniture | 73 | 174 | 395 | +3857 | 50 % | 6 % | 94–97 % |
+| demand + furniture + improvements | 73 | 137 | 285 | +4035 | 60 % | 5 % | 91–96 % |
+| cheapest | 58 | 17 | 6 | −89 | 2 % | 0 % | – |
+
+Per season for the sensible shop: +699, +731, +745; 45 %, 48 %, 50 % fulfilled; 4.5 %, 5.5 %,
+6.3 % unhappy; an average wait of 10–12 s with the longest about 29 s. On the big nights
+2–4 of 35–47 ghosts leave unhappy (was 6–10 of 44–62). The workbench repairs about one broken
+thing a night for 2–3 coins; it pays a little but mainly gives the evening something to do.
+
+Open points:
+
+- **No loans any more:** the careless shop never qualifies for the ferryman's loan, because its
+  unsold cheap stock counts as wares (`loan::is_stuck`). It limps along near zero instead. In
+  rare runs its empty drawer cannot pay the ferryman's coin fare, and season 3's finale comes a
+  night or two late. The game waits for it, and the pacing test allows that for this strategy.
+- **Orders are always full:** three slips a night are taken every night, with about 10 wishes
+  missed a night. A fourth slip, or a slip limit that grows with a shop improvement, would turn
+  more missed wishes into income.
+- The service times are assumptions. Compare them with `tools/playtest_report.py` from real
+  nights, especially the late-game queue.

@@ -846,7 +846,7 @@ fn spawn_ordering(
         plain: true,
         order: Some(index),
         flees: false,
-        patience_factor: upgrades.patience_factor(&data),
+        patience_factor: upgrades.patience_factor(&data) * data.config.orders.patience_factor,
         regular,
     };
     spawn_ghost(

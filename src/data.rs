@@ -510,6 +510,8 @@ pub struct OrdersConfig {
     pub missed_penalty: i32,
     /// When the ordering ghosts come back, as a fraction of the night (from, to).
     pub arrive_at: (f32, f32),
+    /// A ghost back for its order waits this much longer at the counter.
+    pub patience_factor: f32,
 }
 
 /// When the shade comes to steal (config.ron).

@@ -12,13 +12,13 @@
      needs: [AtMost(Light, 3)],
      wishes: ["letter_paper", "lavender", "faceless_photo", "tea_tin"]),
     (id: "vain", color: (1.0, 0.82, 0.95),
-     spawn_weight: 2.0, pay_multiplier: 1.5, patience_secs: 16.0, voice: 1.05,
+     spawn_weight: 2.0, pay_multiplier: 1.5, patience_secs: 22.0, voice: 1.05,
      needs: [AtLeast(Reflection, 1)],
      wishes: ["powder_compact", "faceless_photo", "pocket_watch"]),
     // Knocks items off shelves unless the shop is quiet enough, and sometimes
     // pays with a counterfeit coin.
     (id: "poltergeist", color: (0.95, 0.55, 0.45),
-     spawn_weight: 2.0, pay_multiplier: 0.8, patience_secs: 16.0, voice: 0.9,
+     spawn_weight: 2.0, pay_multiplier: 0.8, patience_secs: 22.0, voice: 0.9,
      needs: [],
      wishes: ["tin_soldier", "rusty_key", "marbles"],
      quirks: (knock_chance: 0.6, calm_with: Some(AtLeast(Silence, 5)), counterfeit_chance: 0.4)),
@@ -29,7 +29,7 @@
      // Sometimes forgets it has paid – keep the second payment or be honest?
      quirks: (double_pay_chance: 0.5)),
     (id: "child", color: (0.7, 1.0, 0.78),
-     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 14.0, voice: 1.4,
+     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 20.0, voice: 1.4,
      needs: [AtLeast(Warmth, 2)],
      wishes: ["marbles", "music_box", "tin_soldier"],
      pays_with: [Button]),
@@ -57,7 +57,7 @@
 
     // Customers who first appear on later nights (unlock_night).
     (id: "cat", color: (0.8, 0.85, 0.95), unlock_night: 2,
-     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 12.0, voice: 1.55,
+     spawn_weight: 2.0, pay_multiplier: 1.0, patience_secs: 18.0, voice: 1.55,
      needs: [AtLeast(Warmth, 3)],
      wishes: ["fish_bone", "ball_of_yarn", "marbles"],
      pays_with: [Button]),
@@ -81,7 +81,7 @@
      needs: [AtMost(Warmth, 2)],
      wishes: ["wool_scarf", "snow_globe", "little_bell"]),
     (id: "lantern_child", color: (1.0, 0.85, 0.5), unlock_night: 13,
-     spawn_weight: 1.5, pay_multiplier: 1.0, patience_secs: 18.0, voice: 1.35,
+     spawn_weight: 1.5, pay_multiplier: 1.0, patience_secs: 24.0, voice: 1.35,
      needs: [AtLeast(Light, 2)],
      wishes: ["little_bell", "marbles", "music_box"],
      pays_with: [Button, Candle]),
@@ -102,7 +102,7 @@
      needs: [AtMost(Warmth, 3)],
      wishes: ["rain_jar", "watering_can", "fish_bone"]),
     (id: "butterfly", color: (0.95, 0.75, 0.95), unlock_night: 23,
-     spawn_weight: 1.5, pay_multiplier: 1.2, patience_secs: 16.0, voice: 1.5,
+     spawn_weight: 1.5, pay_multiplier: 1.2, patience_secs: 22.0, voice: 1.5,
      needs: [AtLeast(Light, 3)],
      wishes: ["pressed_flower", "lavender", "seed_packet"],
      pays_with: [Button, Candle]),
