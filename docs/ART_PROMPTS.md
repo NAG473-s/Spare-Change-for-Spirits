@@ -361,7 +361,9 @@ the later ones:
 ## Achievement icons – canvas 1024 × 1024 (done)
 
 All 18 icon pairs are delivered in `art/steam/achievements/`. The prompts below can be
-used to redraw them.
+used to redraw them. The game's achievements page shows 128 × 128 copies from
+`assets/sprites/achievements/` (the grey one while locked); after replacing Steam artwork run
+`python3 tools/achievement_icons.py` to refresh them.
 
 For Steam (full game only, list in [STEAM.md](STEAM.md)). One image per achievement in the
 style block's look, a single bold motif on a round dark plum badge with a thin brass rim, no

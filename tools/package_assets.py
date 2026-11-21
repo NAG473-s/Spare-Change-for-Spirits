@@ -229,7 +229,8 @@ class DemoAssets:
             return True
         parts = path.parts
         stem = path.stem
-        if parts == ("data", "achievements.ron"):
+        # The demo has no achievements: neither their data nor their icons.
+        if parts == ("data", "achievements.ron") or parts[:2] == ("sprites", "achievements"):
             return False
         if parts[:2] == ("videos", "endings"):
             return stem in self.films

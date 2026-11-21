@@ -320,7 +320,13 @@ fn build_main_menu(
         // All profiles together: unlocked in any of them.
         SaveMenu::Achievements => {
             let all = crate::achievements::across_profiles();
-            return crate::achievements::achievements_page(&mut ui, &lang, &data, &all);
+            return crate::achievements::achievements_page(
+                &mut ui,
+                &lang,
+                &data,
+                &all,
+                &asset_server,
+            );
         }
         SaveMenu::RegularHistory(_, _) => {}
         SaveMenu::Closed
@@ -946,7 +952,7 @@ fn sync_pause(
         return;
     }
     if *save_menu == SaveMenu::Achievements {
-        crate::achievements::achievements_page(&mut ui, &lang, &data, &progress);
+        crate::achievements::achievements_page(&mut ui, &lang, &data, &progress, &shop.3);
         return;
     }
     if let SaveMenu::Orders(page) = *save_menu {

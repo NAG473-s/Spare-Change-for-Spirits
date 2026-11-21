@@ -157,6 +157,7 @@ pub fn achievements_page(
     lang: &Lang,
     data: &GameData,
     progress: &Progress,
+    asset_server: &AssetServer,
 ) {
     let done = progress.achievements.len();
     ui.heading(&lang.f(
@@ -184,11 +185,48 @@ pub fn achievements_page(
         } else {
             lang.t("achievements.locked")
         };
-        ui.section(&format!(
-            "{} – {state}",
-            lang.t(&format!("achievement.{}.name", a.id))
-        ));
-        ui.dim(&lang.t(&format!("achievement.{}.text", a.id)));
+        // The icon (grey while locked) beside the name, the state in words
+        // and what to do.
+        let root = ui.root();
+        let row = ui.node(
+            root,
+            Node {
+                column_gap: px(10),
+                align_items: AlignItems::Center,
+                margin: UiRect::top(px(6)),
+                ..default()
+            },
+        );
+        let icon = icon_path(&a.id, unlocked);
+        if crate::data::asset_exists(&icon) {
+            ui.image_sized(row, asset_server.load(icon), Vec2::splat(ICON_SIZE));
+        }
+        let words = ui.node(
+            row,
+            Node {
+                flex_direction: FlexDirection::Column,
+                flex_shrink: 1.0,
+                row_gap: px(2),
+                ..default()
+            },
+        );
+        ui.add_text(
+            words,
+            &format!(
+                "{} – {state}",
+                lang.t(&format!("achievement.{}.name", a.id))
+            ),
+            true,
+            15.0,
+            crate::ui::TEXT,
+        );
+        ui.add_text(
+            words,
+            &lang.t(&format!("achievement.{}.text", a.id)),
+            false,
+            13.0,
+            crate::ui::TEXT_DIM,
+        );
     }
     let root = ui.root();
     ui.menu_option(
@@ -197,6 +235,20 @@ pub fn achievements_page(
         crate::ui::Action::CloseSaveMenu,
         false,
     );
+}
+
+/// Size of an achievement's icon on the page (interface pixels).
+const ICON_SIZE: f32 = 48.0;
+
+/// The in-game icon: `assets/sprites/achievements/<id>.png`, or
+/// `<id>_locked.png` while locked (made from Steam's artwork by
+/// `tools/achievement_icons.py`).
+pub fn icon_path(id: &str, unlocked: bool) -> String {
+    if unlocked {
+        format!("sprites/achievements/{id}.png")
+    } else {
+        format!("sprites/achievements/{id}_locked.png")
+    }
 }
 
 /// The achievements of all profiles together, for the main menu: unlocked

@@ -2318,6 +2318,9 @@ pub(crate) fn scroll_y(commands: &mut Commands, panel: Entity) {
         .queue(|mut entity: EntityWorldMut| {
             if let Some(mut node) = entity.get_mut::<Node>() {
                 node.overflow = Overflow::scroll_y();
+                // Clip at the content, not in the padding: the padding lies on
+                // the painted wooden frame, which scrolled text must not cover.
+                node.overflow_clip_margin = OverflowClipMargin::content_box();
             }
         });
 }

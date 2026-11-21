@@ -255,6 +255,7 @@ fn build_ledger(
                 padding: UiRect::all(px(14)),
                 border_radius: BorderRadius::all(px(4)),
                 overflow: Overflow::scroll_y(),
+                overflow_clip_margin: OverflowClipMargin::content_box(),
                 ..default()
             },
             paper(true),
@@ -456,6 +457,7 @@ fn build_ledger(
                 padding: UiRect::all(px(14)),
                 border_radius: BorderRadius::all(px(4)),
                 overflow: Overflow::scroll_y(),
+                overflow_clip_margin: OverflowClipMargin::content_box(),
                 ..default()
             },
             paper(false),
