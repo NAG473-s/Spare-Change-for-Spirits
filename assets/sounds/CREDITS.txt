@@ -3,8 +3,8 @@ Opening music, seasonal audio and story narration
 
 The story is written for this game. Its translations are in assets/i18n.
 The four-bar score is composed and synthesised in tools/make_sounds.py.
-The evening tunes and night ambiences of every season are composed and
-synthesised in the same script.
+The evening tunes and night ambiences of every season, and the tower clock's
+ticking and strike, are composed and synthesised in the same script.
 The opening narration reads the three lines of the introduction. Each of
 the six story endings has its own reading of the corresponding translated
 catalog text. Voices were synthesised during production and the game

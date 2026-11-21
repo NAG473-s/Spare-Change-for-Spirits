@@ -3,6 +3,8 @@
 // price_factor: multiplies what ghosts pay. crate_bonus: extra crates from the ferryman.
 // atmosphere: added to the shop's atmosphere. ghost_weights: (ghost id, factor) for how often it comes.
 // length_factor: multiplies how long the night lasts.
+// prepare: the evening panel explains how forecast, ferry and atmosphere fit together
+//   (event.<id>.prepare).
 // weather: what shows outside the window and over the harbour – Some(Rain), Some(Storm),
 // Some(Snow), Some(Blizzard) (a snowstorm) or Some(Fog).
 // Nights 1–5 are the demo; 6–10 belong to the full game and get busier towards the finale.
@@ -25,7 +27,7 @@
      ghost_weights: [("sailor", 3.0), ("poltergeist", 1.5)]),
     (id: "longest_night", night: 10, spawn_factor: 0.65, price_factor: 1.5, length_factor: 1.3),
     // Season 2, "The Long Winter": nights 11–20, colder and darker towards midwinter.
-    (id: "frost_night", night: 11, weather: Some(Snow), atmosphere: (warmth: -1), ghost_weights: [("snow", 2.0)]),
+    (id: "frost_night", night: 11, weather: Some(Snow), prepare: true, atmosphere: (warmth: -1), ghost_weights: [("snow", 2.0)]),
     (id: "carol_singers", night: 12, spawn_factor: 0.85, atmosphere: (silence: -1)),
     (id: "stopped_clocks", night: 13, length_factor: 1.15),
     (id: "icy_harbour", night: 14, weather: Some(Snow), crate_bonus: -1, price_factor: 1.15),

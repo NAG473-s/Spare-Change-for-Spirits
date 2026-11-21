@@ -44,6 +44,8 @@ pub struct Journal {
     pub set_aside: Vec<usize>,
     /// Lost-and-found errands and how far each has come (`errands.rs`).
     pub errands: BTreeMap<String, crate::errands::ErrandState>,
+    /// The repaired tower clock has struck for the first time (`tower_clock.rs`).
+    pub clock_struck: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

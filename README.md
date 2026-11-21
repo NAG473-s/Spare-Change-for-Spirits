@@ -186,6 +186,14 @@ Special customers:
   following dawn the view goes out to the quay, where Ida's restored beam sweeps the water, and
   Hedda's farewell letter waits; the accounts appear once the player continues, and the letter
   stays in the book's Letters chapter (`finale.rs`).
+- **The tower clock** (`tower_clock.rs`) – at the market it is silent while stopped, ticks
+  slowly and unevenly once Anselm has wound it and steadily once it is set right. On the first
+  market day after his finale the hands sweep round to twelve, the bell strikes twelve times and
+  the first snow settles on the square and the quay; a caption (and the log) tells the moment in
+  words, so it also reads with the sound off.
+- **Preparation nights** (`prepare` in `events.ron`) – the first winter night explains in the
+  evening panel how the forecast, the ferry's crates and the shop's warmth fit together: which
+  known likely guests the shop suits, who would turn round, and which furniture would help.
 - **Lost-and-found errands** (`errands.ron`, `errands.rs`) – after Lotte's story she has lost
   her little sledge in the snow. Tracks on the quay (evening) and behind the market stalls (by
   day) are clicked to follow them; the sledge, found with a cracked runner, is mended at the
@@ -247,6 +255,7 @@ src/
   finale.rs      the quiet dawn scene after a season's finale
   weather.rs     rain, storm, snow and fog of tonight's event
   gamepad.rs     controller: the sticks drive the mouse pointer, A/B click
+  tower_clock.rs the tower clock's ticking and its first strike
   trailer.rs     helpers for trailers and screenshots (`--trailer`)
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation
   guide.rs       Hedda's guided first sale on the first evening and night

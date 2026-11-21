@@ -26,8 +26,11 @@ impl Plugin for WinterPlugin {
         app.add_systems(Startup, spawn_clock_tower)
             .add_systems(Update, turn_clock_hands);
         if !cfg!(feature = "demo") {
-            app.add_systems(Startup, (spawn_snow, spawn_window_flowers))
-                .add_systems(Update, (fall_snow, show_window_flowers));
+            app.add_systems(
+                Startup,
+                (spawn_snow, spawn_snow_cover, spawn_window_flowers),
+            )
+            .add_systems(Update, (fall_snow, settle_snow, show_window_flowers));
         }
     }
 }
@@ -182,11 +185,18 @@ fn turn_clock_hands(
     time: Res<Time>,
     data: Res<GameData>,
     progress: Res<Progress>,
+    strike: Res<crate::tower_clock::ClockStrike>,
     mut hands: Query<(&Hand, &mut Transform)>,
     mut running: Local<f32>,
 ) {
     let level = clock_level(&data, &progress);
-    let minutes = if level >= 1.0 {
+    let minutes = if let Some(t) = strike.0.filter(|t| *t < crate::tower_clock::SWEEP_SECS) {
+        // The first strike: the minute hand sweeps a whole round up to
+        // twelve, so the moment shows even with the sound off.
+        let k = t / crate::tower_clock::SWEEP_SECS;
+        *running = 60.0 * k * k * (3.0 - 2.0 * k);
+        60.0 + *running
+    } else if level >= 1.0 {
         *running += time.delta_secs() * RUNNING_SPEED * 60.0;
         60.0 + *running
     } else {
@@ -279,6 +289,73 @@ fn fall_snow(
         p.x += 0.12 * (t * 0.8 + f.phase).sin() * dt;
         if p.y < f.centre.y - f.half.y {
             p.y += 2.0 * f.half.y;
+        }
+    }
+}
+
+/// Snow lying on the market square and the quay once the tower clock has
+/// struck: (centre, size) of each patch, how opaque it gets and how many
+/// seconds it takes to settle.
+const SNOW_COVER: [(Vec3, Vec2); 2] = [
+    (Vec3::new(0.5, 0.03, -1.5), Vec2::new(17.0, 9.0)),
+    (Vec3::new(1.0, 0.012, -3.2), Vec2::new(20.0, 4.6)),
+];
+const SNOW_COVER_ALPHA: f32 = 0.5;
+const SNOW_SETTLE_SECS: f32 = 10.0;
+
+/// A patch of settled snow and its material (faded in by `settle_snow`).
+#[derive(Component)]
+struct SnowCover(Handle<StandardMaterial>);
+
+fn spawn_snow_cover(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (i, (centre, size)) in SNOW_COVER.into_iter().enumerate() {
+        let origin = if i == 0 { MARKET } else { HARBOR };
+        let material = materials.add(StandardMaterial {
+            base_color: Color::srgba(0.95, 0.97, 1.0, 0.0),
+            perceptual_roughness: 1.0,
+            alpha_mode: AlphaMode::Blend,
+            ..default()
+        });
+        commands.spawn((
+            SnowCover(material.clone()),
+            Mesh3d(meshes.add(Plane3d::new(Vec3::Y, size / 2.0))),
+            MeshMaterial3d(material),
+            Transform::from_translation(origin + centre),
+            NotShadowCaster,
+            Pickable::IGNORE,
+        ));
+    }
+}
+
+/// The snow settles slowly after the first strike and stays all winter.
+fn settle_snow(
+    time: Res<Time<Real>>,
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    covers: Query<&SnowCover>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let target = if snowing(&data, &progress) && progress.journal.clock_struck {
+        SNOW_COVER_ALPHA
+    } else {
+        0.0
+    };
+    let step = SNOW_COVER_ALPHA * time.delta_secs() / SNOW_SETTLE_SECS;
+    for cover in &covers {
+        let Some(m) = materials.get(&cover.0) else {
+            continue;
+        };
+        let alpha = m.base_color.alpha();
+        if (alpha - target).abs() < f32::EPSILON {
+            continue;
+        }
+        let next = alpha + (target - alpha).clamp(-step, step);
+        if let Some(mut m) = materials.get_mut(&cover.0) {
+            m.base_color.set_alpha(next);
         }
     }
 }

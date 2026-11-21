@@ -1327,6 +1327,17 @@ fn build_evening_panel(
             &[("name", &lang.t(&format!("event.{}.name", event.id)))],
         ));
         event_detail(&mut ui, &lang, event, &progress);
+        if event.prepare {
+            prepare_section(
+                &mut ui,
+                &lang,
+                &data,
+                (&progress, &layout, &storeroom),
+                event,
+                &odds,
+                max_crates,
+            );
+        }
     }
     evening_visits(&mut ui, &lang, &data, &progress, &odds);
 
@@ -1524,6 +1535,97 @@ fn evening_visits(
         false,
         true,
     );
+}
+
+/// Ghosts of the forecast whose needs the preparation section explains.
+const PREPARE_GUESTS: usize = 4;
+
+/// A night that teaches preparation: before a coin is spent, the forecast,
+/// the ferry's crates and the shop's atmosphere side by side, in words – who
+/// is likely to come and whether the shop suits them, and what would help.
+fn prepare_section(
+    ui: &mut PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    (progress, layout, storeroom): (&Progress, &ShopLayout, &Storeroom),
+    event: &crate::data::NightEvent,
+    odds: &[f32],
+    max_crates: u32,
+) {
+    use crate::data::Need;
+    let night = progress.calendar(data);
+    let atmosphere = layout.atmosphere(data, night);
+    ui.section(&lang.t("evening.prepare_title"));
+    ui.text(&lang.t(&format!("event.{}.prepare", event.id)));
+    ui.text(&lang.f("evening.prepare_ferry", &[("max", &max_crates)]));
+    ui.text(&lang.f(
+        "evening.prepare_atmosphere",
+        &[("atmosphere", &atmosphere.describe(lang))],
+    ));
+    // The likely guests the player already knows, and whether they would stay.
+    let mut likely: Vec<usize> = (0..odds.len()).filter(|&i| odds[i] > 0.0).collect();
+    likely.sort_by(|&a, &b| odds[b].total_cmp(&odds[a]));
+    let mut missing = Vec::new();
+    for i in likely
+        .into_iter()
+        .filter(|&i| progress.journal.has_seen(&data.ghosts[i].id))
+        .take(PREPARE_GUESTS)
+    {
+        let ghost = &data.ghosts[i];
+        for need in &ghost.needs {
+            let key = if need.is_met(&atmosphere) {
+                "evening.prepare_suits"
+            } else {
+                if let Need::AtLeast(stat, _) = need
+                    && !missing.contains(stat)
+                {
+                    missing.push(*stat);
+                }
+                "evening.prepare_turns_round"
+            };
+            ui.dim(&lang.f(
+                key,
+                &[
+                    ("ghost", &lang.ghost(&ghost.id)),
+                    ("need", &need.describe(lang)),
+                ],
+            ));
+        }
+    }
+    // What would raise what is missing: furniture already owned first,
+    // otherwise what the market sells tonight.
+    for stat in missing {
+        let helps = |d: &&crate::data::DecorDef| d.effect.get(stat) > 0;
+        let owned: Vec<_> = data
+            .decor
+            .iter()
+            .filter(helps)
+            .filter(|d| storeroom.count(&d.id) > 0)
+            .collect();
+        let pieces = if owned.is_empty() {
+            let mut sold: Vec<_> = data
+                .decor
+                .iter()
+                .filter(helps)
+                .filter(|d| !d.keepsake && d.unlock_night <= night)
+                .collect();
+            sold.sort_by_key(|d| d.cost);
+            sold.truncate(2);
+            sold
+        } else {
+            owned
+        };
+        let names: Vec<String> = pieces
+            .iter()
+            .map(|d| format!("{} ({})", lang.decor(&d.id), d.effect.changes(lang)))
+            .collect();
+        if !names.is_empty() {
+            ui.dim(&lang.f(
+                "evening.prepare_fix",
+                &[("stat", &lang.t(stat.key())), ("items", &lang.join(&names))],
+            ));
+        }
+    }
 }
 
 fn event_detail(

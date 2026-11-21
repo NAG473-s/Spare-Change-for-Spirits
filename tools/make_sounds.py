@@ -433,6 +433,48 @@ def night_ambience_spring():
     return normalise(air * 0.6 + 0.08 * crickets + 0.12 * lowpass_fft(frogs, 900), 0.3)
 
 
+def clock_click(freq, seed, length=0.08):
+    """One tick of a tower clock: a short knock with a ringing body."""
+    local = np.random.default_rng(seed)
+    t = t_axis(length)
+    knock = bandpass_fft(local.standard_normal(len(t)), freq * 0.6, freq * 1.6)
+    body = np.sin(2 * np.pi * freq * t) * 0.6
+    return (normalise(knock, 1.0) + body) * np.exp(-t / 0.018)
+
+
+def clock_loop(times, seconds):
+    """A seamless loop with a tick (high) or tock (low) at each time."""
+    out = np.zeros(int(seconds * SR))
+    for i, at in enumerate(times):
+        freq = 2100 if i % 2 == 0 else 1500
+        place(out, clock_click(freq, i), at)
+    return normalise(reverb(out, 0.35), 0.28)
+
+
+def clock_tick_slow():
+    """Just wound: the works catch and stumble, slow and uneven."""
+    return clock_loop([0.0, 1.55, 2.25, 4.1], 5.0)
+
+
+def clock_tick():
+    """Set right: a steady tick-tock, once a second."""
+    return clock_loop([0.0, 1.0], 2.0)
+
+
+def tower_bell(freq, seconds=4.5):
+    partials = [(1.0, 1.0, 2.6), (2.0, 0.55, 1.6), (2.76, 0.35, 1.1), (5.4, 0.18, 0.5), (0.5, 0.4, 3.2)]
+    return tone(freq, seconds, partials, attack=0.004)
+
+
+def clock_strike():
+    """Twelve strokes of the tower bell, the first time it strikes again."""
+    stroke = 1.25
+    out = np.zeros(int((12 * stroke + 4.5) * SR))
+    for i in range(12):
+        place(out, 0.8 * tower_bell(midi_hz(50)), i * stroke)
+    return normalise(reverb(out, 0.45), 0.45)
+
+
 SOUNDS = {
     "bell": bell,
     "coins": coins,
@@ -457,6 +499,9 @@ SOUNDS = {
     "night_ambience_winter": night_ambience_winter,
     "evening_music_spring": evening_music_spring,
     "night_ambience_spring": night_ambience_spring,
+    "clock_tick_slow": clock_tick_slow,
+    "clock_tick": clock_tick,
+    "clock_strike": clock_strike,
 }
 
 
@@ -467,6 +512,8 @@ LOOPS = {
     "night_ambience_winter",
     "evening_music_spring",
     "night_ambience_spring",
+    "clock_tick_slow",
+    "clock_tick",
 }
 
 

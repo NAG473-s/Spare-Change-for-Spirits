@@ -334,6 +334,11 @@ pub struct NightEvent {
     /// What it looks like outside (rain, storm, snow, fog), see `weather.rs`.
     #[serde(default)]
     pub weather: Option<crate::weather::Weather>,
+    /// A night that teaches preparation: the evening panel says how the
+    /// forecast, the ferry and the shop's atmosphere fit together
+    /// (`event.<id>.prepare`).
+    #[serde(default)]
+    pub prepare: bool,
 }
 
 fn default_size() -> (f32, f32, f32) {

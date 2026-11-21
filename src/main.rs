@@ -48,6 +48,7 @@ mod sim;
 mod story_film;
 mod title;
 mod tooltip;
+mod tower_clock;
 mod trailer;
 mod ui;
 mod upgrades;
@@ -132,6 +133,7 @@ fn main() {
             gamepad::GamepadPlugin,
             finale::FinalePlugin,
             errands::ErrandsPlugin,
+            tower_clock::TowerClockPlugin,
             story_film::StoryFilmPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
