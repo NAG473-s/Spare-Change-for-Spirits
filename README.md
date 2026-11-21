@@ -29,7 +29,8 @@ Debug builds keep only line tables (`Cargo.toml`), so they stay small. Each buil
 if disk space runs short.
 
 Balancing simulation (no window; plays every night many times with simple strategies and prints
-money, reputation, sales, missed wishes, fled and unhappy ghosts per night):
+money, reputation, sales, missed wishes, fled and unhappy ghosts, story chapters and parcels per
+night, and the nights on which each season's finale was done):
 
 ```bash
 BEVY_ASSET_ROOT=. cargo run --release -- --simulate 500

@@ -1488,7 +1488,10 @@ fn evening_visits(
             true,
         );
     }
-    if stories.iter().any(|(i, _)| progress.parcels.contains(i)) {
+    if stories
+        .iter()
+        .any(|(i, _)| progress.parcels.contains(i) && !progress.journal.set_aside.contains(i))
+    {
         ui.text(&lang.t("discovery.parcel_waits"));
     }
     if !known.is_empty() || unfamiliar {
@@ -2049,7 +2052,18 @@ fn build_night_panel(
             let parcel = ghost
                 .chapter
                 .is_some_and(|(story, _)| progress.parcels.contains(&story));
-            if parcel {
+            let set_aside = ghost
+                .chapter
+                .is_some_and(|(story, _)| progress.journal.set_aside.contains(&story));
+            if set_aside {
+                ui.section(&lang.f(
+                    "night.set_aside_waits",
+                    &[
+                        ("item", &lang.product(&ghost.wish)),
+                        ("name", &lang.ghost(&def.id)),
+                    ],
+                ));
+            } else if parcel {
                 ui.section(&lang.f("evening.parcel_waits", &[("name", &lang.ghost(&def.id))]));
             }
             ui.section(&lang.t("night.what_hand_over"));
@@ -2129,7 +2143,15 @@ fn build_night_panel(
             if !(ghost.first_customer && progress.guiding_first_sale()) {
                 ui.button_in(root, &lang.t("night.decline"), Action::Decline, false, true);
             }
-            if parcel {
+            if set_aside {
+                ui.primary(
+                    &lang.f(
+                        "night.give_set_aside",
+                        &[("item", &lang.product(&ghost.wish))],
+                    ),
+                    Action::HandParcel,
+                );
+            } else if parcel {
                 ui.primary(
                     &lang.f("night.parcel", &[("name", &lang.ghost(&def.id))]),
                     Action::HandParcel,

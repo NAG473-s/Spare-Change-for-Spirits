@@ -184,6 +184,7 @@ impl Progress {
         self.story[i] += 1;
         self.story_tries[i] = 0;
         self.parcels.retain(|p| *p != i);
+        self.journal.set_aside.retain(|p| *p != i);
         // For logbook keepsakes: when each chapter was finished.
         self.journal
             .chapter_nights
@@ -408,7 +409,7 @@ fn close_at_dawn(
 /// once – gets a parcel holding exactly what it needs.
 pub fn deliver_parcels(
     data: Res<GameData>,
-    stock: Res<Stock>,
+    mut stock: ResMut<Stock>,
     mut progress: ResMut<Progress>,
     mut log: ResMut<GameLog>,
     lang: Res<Lang>,
@@ -431,6 +432,26 @@ pub fn deliver_parcels(
             continue;
         }
         let wish = &chapter.wish;
+        // The announced ware is in stock: one is set aside for the story
+        // ghost, so the ordinary customers cannot take the last one before it
+        // comes. It is handed over like a parcel.
+        if progress.tries(i) == 0 && stock.take_one(wish) {
+            progress.parcels.push(i);
+            progress.journal.set_aside.push(i);
+            let message = if progress.journal.has_seen(&story.ghost) {
+                lang.f(
+                    "log.set_aside",
+                    &[
+                        ("item", &lang.product(wish)),
+                        ("name", &lang.ghost(&story.ghost)),
+                    ],
+                )
+            } else {
+                lang.f("discovery.set_aside", &[("item", &lang.product(wish))])
+            };
+            log.push(message);
+            continue;
+        }
         if stock.count(wish) == 0 || progress.tries(i) > 0 {
             progress.parcels.push(i);
             let message = if progress.journal.has_seen(&story.ghost) {
@@ -633,6 +654,38 @@ mod tests {
         assert_eq!((third.season, third.night), (3, 3 * len));
         assert!(!crate::winter::snowing(&data, &third));
         assert_eq!(crate::winter::blossom_level(&data, &third), 1.0);
+    }
+
+    #[test]
+    fn an_announced_ware_in_stock_is_set_aside_for_the_story_ghost() {
+        use bevy::ecs::system::RunSystemOnce;
+        let data = GameData::load();
+        let edwin = data
+            .stories
+            .iter()
+            .position(|s| s.ghost == "edwin")
+            .unwrap();
+        let wish = data.stories[edwin].chapters[0].wish.clone();
+        let mut world = World::new();
+        let mut stock = Stock::default();
+        stock.add(&wish, 1);
+        let mut progress = Progress::new(0);
+        progress.night = data.stories[edwin].start_night;
+        world.insert_resource(stock);
+        world.insert_resource(progress);
+        world.insert_resource(data);
+        world.insert_resource(Lang::load("en"));
+        world.init_resource::<GameLog>();
+        world.run_system_once(deliver_parcels).unwrap();
+        // The last one is kept back for Edwin, not sold to anyone else.
+        assert_eq!(world.resource::<Stock>().count(&wish), 0);
+        let progress = world.resource::<Progress>();
+        assert!(progress.parcels.contains(&edwin));
+        assert!(progress.journal.set_aside.contains(&edwin));
+        // Once his chapter is done, nothing stays set aside.
+        let mut progress = world.resource_mut::<Progress>();
+        progress.finish_chapter(edwin);
+        assert!(progress.parcels.is_empty() && progress.journal.set_aside.is_empty());
     }
 
     #[test]

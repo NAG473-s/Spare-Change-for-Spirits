@@ -319,6 +319,16 @@ fn serve_front_ghost(
                 if !parcel && !stock.take_one(product) {
                     continue;
                 }
+                // A story ghost served from the shelf: the ware set aside for
+                // it goes back into stock.
+                if !parcel
+                    && let Some((story, _)) = ghost.chapter
+                    && progress.journal.set_aside.contains(&story)
+                {
+                    stock.add(product, 1);
+                    progress.journal.set_aside.retain(|s| *s != story);
+                    progress.parcels.retain(|s| *s != story);
+                }
                 let base = data.product(product).map_or(1, |p| p.price);
                 let mut factor = def.pay_multiplier * data.price_factor(progress.calendar(&data));
                 if ghost.order.is_some() {

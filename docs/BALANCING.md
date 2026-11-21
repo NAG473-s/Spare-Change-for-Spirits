@@ -128,3 +128,31 @@ winter neither breaks nor starves the shop. Not simulated yet: orders, mishaps, 
 100 runs over all 30 nights: demand +1685, demand + furniture +3737, demand + furniture +
 improvements +4151, eager +1676, cheapest crates −92 (loans in 42 % of the nights); 40–47 % of
 the wishes fulfilled. The money keeps growing at about the same pace per season.
+
+## Story pacing (Nov 2026)
+
+The simulation now plays the stories with the game's own rules (`Progress`): story ghosts come
+while their chapter is due, get their ware from stock or from a parcel, or try again the next
+night, and each season ends once its finale is done (it plays on past night 30 until the last
+finale). The table has two more columns, chapters finished (`story`) and ferryman parcels
+(`parcels`), and each strategy ends with the nights of the seasons' finales.
+
+**Finding:** shopkeepers who planned ahead were punished. With the announced ware in stock no
+parcel came, ordinary customers often bought the last one before the story ghost arrived, and
+the chapter slipped by a night. Over 200 runs the finales came on these nights:
+
+| Shop | Season 1 | Season 2 | Season 3 |
+|---|---|---|---|
+| demand (buys the story ware) | 11.3 (10–13) | 21.8 (20–24) | 32.5 (30–36) |
+| demand + furniture + improvements | 10.1 (10–11) | 20.4 (20–22) | 31.0 (30–33) |
+| cheapest crates (never has it) | 10.0 | 20.0 | 30.0 (30–32) |
+
+**Change:** at the start of a night one unit of the announced ware in stock is set aside for
+the story ghost (`deliver_parcels`) and handed over like a parcel; if the ghost brings another one
+from the shelf, the set-aside unit goes back into stock. After the change every strategy reaches
+the finales on nights 10, 20 and 30. Only a bankrupt shop can still reach season 3's finale a
+night or two late: its last chapter asks for one coin as the ferryman's fare, and an empty
+drawer cannot pay it until the next evening. The game handles that late finale: the season
+waits for it. `sim::tests::every_season_reaches_its_finale_with_a_full_or_a_struggling_shop`
+checks the pacing for every strategy.
+

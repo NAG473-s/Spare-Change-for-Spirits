@@ -39,6 +39,9 @@ pub struct Journal {
     pub chapter_nights: BTreeMap<usize, Vec<u32>>,
     /// Finale guests whose farewell letter has been read (`finale.rs`).
     pub finale_letters: Vec<String>,
+    /// Stories whose parcel tonight is a ware set aside from the player's
+    /// own stock (the others come from the ferryman).
+    pub set_aside: Vec<usize>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

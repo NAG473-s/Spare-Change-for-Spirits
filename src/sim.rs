@@ -12,9 +12,17 @@
 //! after another; a ghost that waits longer than its patience leaves
 //! unhappy. The player is assumed to give the right change and to be
 //! honest; counterfeits are caught with a fixed chance.
+//!
+//! The stories are played with the game's own rules (`Progress`): each
+//! story ghost comes while its chapter is due, gets its wish from the stock
+//! or from the ferryman's parcel, or tries again the next night, and a
+//! season ends once its finale is done. The shopkeepers who plan ahead buy
+//! the announced story ware; the one who buys the cheapest crates never
+//! does and relies on the parcels.
 
 use crate::data::DecorDef;
 use crate::data::GameData;
+use crate::day_cycle::Progress;
 use crate::economy::Purse;
 use crate::ferry::sale_price;
 use crate::inventory::Stock;
@@ -101,6 +109,9 @@ pub struct NightStats {
     /// 1 if the ferryman had to lend money this evening.
     pub loans: f64,
     pub owed: f64,
+    /// Story chapters finished tonight, and how many of them by parcel.
+    pub chapters: f64,
+    pub parcels: f64,
 }
 
 impl NightStats {
@@ -118,6 +129,8 @@ impl NightStats {
         self.furniture += o.furniture;
         self.loans += o.loans;
         self.owed += o.owed;
+        self.chapters += o.chapters;
+        self.parcels += o.parcels;
     }
 
     fn scaled(&self, f: f64) -> NightStats {
@@ -135,6 +148,8 @@ impl NightStats {
             furniture: self.furniture * f,
             loans: self.loans * f,
             owed: self.owed * f,
+            chapters: self.chapters * f,
+            parcels: self.parcels * f,
         }
     }
 }
@@ -152,6 +167,10 @@ struct Game<'a> {
     upgrades: Upgrades,
     /// Products on the shelves tonight; the others must be fetched.
     displayed: Vec<String>,
+    /// The stories and seasons, kept by the game's own rules.
+    progress: Progress,
+    /// The night each season's finale was done (season 1 first).
+    finales: Vec<u32>,
 }
 
 impl<'a> Game<'a> {
@@ -167,6 +186,88 @@ impl<'a> Game<'a> {
             owed: 0,
             upgrades: Upgrades::default(),
             displayed: Vec::new(),
+            progress: Progress::new(data.config.start_reputation),
+            finales: Vec::new(),
+        }
+    }
+
+    /// Stories whose ghost comes tonight.
+    fn stories_due(&self) -> Vec<usize> {
+        (0..self.data.stories.len())
+            .filter(|&i| self.progress.story_due(self.data, i))
+            .collect()
+    }
+
+    /// Evening: a shopkeeper who plans ahead buys the announced story ware
+    /// (`Cheapest` never does). Then, as in `day_cycle::deliver_parcels`, a
+    /// ware in stock is set aside for each story ghost due tonight, and the
+    /// ferryman leaves a parcel for the others.
+    fn prepare_stories(&mut self, strategy: Strategy) {
+        let data = self.data;
+        for i in self.stories_due() {
+            let chapter = &data.stories[i].chapters[self.progress.chapter(i)];
+            if chapter.fare {
+                continue;
+            }
+            if strategy != Strategy::Cheapest
+                && self.stock.count(&chapter.wish) == 0
+                && let Some(p) = data
+                    .product(&chapter.wish)
+                    .filter(|p| p.crate_cost <= self.drawer)
+            {
+                self.drawer -= p.crate_cost;
+                self.stock.add(&p.id, p.crate_size);
+            }
+            if self.progress.parcels.contains(&i) {
+                continue;
+            }
+            // In stock: one is set aside for the story ghost. Otherwise (or
+            // after a failed night) the ferryman brings a parcel.
+            if self.progress.tries(i) == 0 && self.stock.take_one(&chapter.wish) {
+                self.progress.parcels.push(i);
+                self.progress.journal.set_aside.push(i);
+            } else if self.stock.count(&chapter.wish) == 0 || self.progress.tries(i) > 0 {
+                self.progress.parcels.push(i);
+            }
+        }
+    }
+
+    /// The story ghosts' visits tonight.
+    fn story_visits(&mut self, stats: &mut NightStats) {
+        let data = self.data;
+        for i in self.stories_due() {
+            let chapter = &data.stories[i].chapters[self.progress.chapter(i)];
+            let price = data.product(&chapter.wish).map_or(0, |p| p.price);
+            let done = if chapter.fare {
+                // The ferryman's fare: his most precious coin.
+                let coin = [25, 5, 1].into_iter().find(|v| *v <= self.drawer);
+                coin.inspect(|v| self.drawer -= v).is_some()
+            } else if self.progress.parcels.contains(&i) {
+                if !self.progress.journal.set_aside.contains(&i) {
+                    stats.parcels += 1.0;
+                }
+                self.drawer += price;
+                true
+            } else if self.stock.take_one(&chapter.wish) {
+                self.drawer += price;
+                true
+            } else {
+                false
+            };
+            if done {
+                self.progress.finish_chapter(i);
+                stats.chapters += 1.0;
+            } else {
+                self.progress.fail_chapter(i);
+            }
+        }
+    }
+
+    /// Dawn: a season whose finale is done ends, and the next begins.
+    fn end_of_season(&mut self) {
+        if self.progress.season_over(self.data) {
+            self.finales.push(self.progress.night);
+            self.progress.next_season();
         }
     }
 
@@ -539,16 +640,55 @@ pub fn play(data: &GameData, strategy: Strategy, seed: u64) -> Vec<NightStats> {
     let mut nights = Vec::new();
     for night in 1..=data.config.final_night() {
         game.night = night;
+        game.progress.night = night;
         let mut stats = NightStats {
             furniture: game.market(strategy) as f64,
             ..Default::default()
         };
         game.evening(strategy, &mut stats);
+        game.prepare_stories(strategy);
         game.night(&mut stats);
+        game.story_visits(&mut stats);
         game.morning(&mut stats);
+        game.end_of_season();
         nights.push(stats);
     }
     nights
+}
+
+/// Seasons whose story ends with a finale.
+fn finale_seasons(data: &GameData) -> usize {
+    let mut seasons: Vec<u32> = data
+        .stories
+        .iter()
+        .filter(|s| s.finale)
+        .map(|s| data.season_of(s.start_night))
+        .collect();
+    seasons.dedup();
+    seasons.len()
+}
+
+/// The night each season's finale was done in one game. Like the game, it
+/// plays on past the last written night until every finale is done (a
+/// late finale pushes the next season back), within a generous limit.
+pub fn finale_nights(data: &GameData, strategy: Strategy, seed: u64) -> Vec<u32> {
+    let mut game = Game::new(data, seed);
+    let seasons = finale_seasons(data);
+    for night in 1..=data.config.final_night() * 2 {
+        if game.finales.len() >= seasons {
+            break;
+        }
+        game.night = night;
+        game.progress.night = night;
+        game.market(strategy);
+        game.evening(strategy, &mut NightStats::default());
+        game.prepare_stories(strategy);
+        game.night(&mut NightStats::default());
+        game.story_visits(&mut NightStats::default());
+        game.morning(&mut NightStats::default());
+        game.end_of_season();
+    }
+    game.finales
 }
 
 /// Averages over many runs, per strategy and night.
@@ -577,7 +717,7 @@ pub fn run(data: &GameData, runs: u32) {
     for strategy in Strategy::ALL {
         println!("== {}", strategy.name());
         println!(
-            "{:>5} {:>7} {:>6} {:>8} {:>6} {:>8} {:>7} {:>6} {:>7} {:>6} {:>6} {:>7} {:>6} {:>6}",
+            "{:>5} {:>7} {:>6} {:>8} {:>6} {:>8} {:>7} {:>6} {:>7} {:>6} {:>6} {:>7} {:>6} {:>6} {:>6} {:>7}",
             "night",
             "money",
             "rep",
@@ -591,12 +731,14 @@ pub fn run(data: &GameData, runs: u32) {
             "crates",
             "furnit.",
             "loans",
-            "owed"
+            "owed",
+            "story",
+            "parcels"
         );
         let nights = averages(data, strategy, runs);
         for (i, n) in nights.iter().enumerate() {
             println!(
-                "{:>5} {:>7.1} {:>6.1} {:>8.1} {:>6.1} {:>8.1} {:>7.1} {:>6.1} {:>7.1} {:>6.1} {:>6.1} {:>7.1} {:>5.0}% {:>6.1}",
+                "{:>5} {:>7.1} {:>6.1} {:>8.1} {:>6.1} {:>8.1} {:>7.1} {:>6.1} {:>7.1} {:>6.1} {:>6.1} {:>7.1} {:>5.0}% {:>6.1} {:>6.2} {:>7.2}",
                 i + 1,
                 n.money,
                 n.reputation,
@@ -610,7 +752,9 @@ pub fn run(data: &GameData, runs: u32) {
                 n.crates,
                 n.furniture,
                 n.loans * 100.0,
-                n.owed
+                n.owed,
+                n.chapters,
+                n.parcels
             );
         }
         let total = |f: fn(&NightStats) -> f64| nights.iter().map(f).sum::<f64>();
@@ -625,6 +769,33 @@ pub fn run(data: &GameData, runs: u32) {
             100.0 * unhappy / visitors.max(1.0),
             100.0 * total(|n| n.loans) / nights.len().max(1) as f64,
         );
+        // When the seasons' finales were done, over all runs.
+        let mut seasons: Vec<Vec<u32>> = Vec::new();
+        for seed in 0..runs {
+            for (i, night) in finale_nights(data, strategy, seed as u64 + 1)
+                .into_iter()
+                .enumerate()
+            {
+                if seasons.len() <= i {
+                    seasons.push(Vec::new());
+                }
+                seasons[i].push(night);
+            }
+        }
+        let finales: Vec<String> = seasons
+            .iter()
+            .enumerate()
+            .map(|(i, nights)| {
+                let avg = nights.iter().sum::<u32>() as f64 / nights.len() as f64;
+                let (min, max) = (nights.iter().min().unwrap(), nights.iter().max().unwrap());
+                format!(
+                    "season {} night {avg:.1} ({min}–{max}, {} of {runs} runs)",
+                    i + 1,
+                    nights.len()
+                )
+            })
+            .collect();
+        println!("finales: {}", finales.join(" · "));
         println!();
     }
 }
@@ -641,6 +812,34 @@ mod tests {
             let b = play(&data, strategy, 7);
             assert_eq!(a.len(), data.config.final_night() as usize);
             assert_eq!(format!("{a:?}"), format!("{b:?}"));
+        }
+    }
+
+    #[test]
+    #[cfg(not(feature = "demo"))]
+    fn every_season_reaches_its_finale_with_a_full_or_a_struggling_shop() {
+        let data = GameData::load();
+        let seasons = finale_seasons(&data);
+        for strategy in Strategy::ALL {
+            for seed in 1..=30 {
+                let finales = finale_nights(&data, strategy, seed);
+                assert_eq!(
+                    finales.len(),
+                    seasons,
+                    "{strategy:?} seed {seed}: {finales:?}"
+                );
+                let mut planned_end = 0;
+                for night in finales {
+                    planned_end += data.config.season_length;
+                    // A ware in stock is set aside and a missing one comes
+                    // as a parcel, so a story never waits for its ware.
+                    assert!(
+                        night <= planned_end,
+                        "{strategy:?} seed {seed}: finale on night {night}, planned {planned_end}"
+                    );
+                    planned_end = planned_end.max(night);
+                }
+            }
         }
     }
 

@@ -22,7 +22,7 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 
 - [x] Let a placed keepsake open its page in the ghost book. Edwin’s wedding photograph recalls Margaret. Ida’s logbook records which part of the lighthouse she repaired. Undiscovered chapters stay hidden.
 - [x] Stage Ida’s restored beam sweeping the water from the fixed quay view. Give Hedda’s farewell a quiet pause before the accounts appear. The scene can be skipped and its letter read again.
-- [ ] Play through the first ten story nights with both well-stocked and struggling shops. Check the demo ending after night five, its save opening on night six in the full game, and a delayed lighthouse finale.
+- [x] Play through the first ten story nights with both well-stocked and struggling shops. Check the demo ending after night five, its save opening on night six in the full game, and a delayed lighthouse finale.
 
 ## December 14–20 · A village through winter
 
