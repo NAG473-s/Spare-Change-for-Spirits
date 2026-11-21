@@ -220,7 +220,11 @@ fn build_ledger(
     let (layer, panel) = overlay(&mut commands, &theme, 0.55, 860.0);
     commands
         .entity(layer)
-        .insert((Ledger, DespawnOnExit(Phase::Morning), Pickable::IGNORE));
+        .insert((Ledger, DespawnOnExit(Phase::Morning), Pickable::IGNORE))
+        // Centred over the shop, leaving the side panel (tips, tomorrow)
+        // and the log beside it readable.
+        .entry::<Node>()
+        .and_modify(|mut node| node.right = px(crate::ui::PANEL_WIDTH));
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     let root = ui.root();
     ui.heading(&lang.f("accounts.title", &[("night", &progress.night)]));

@@ -24,6 +24,10 @@ cargo test
 
 tests the game logic and loads every data file.
 
+Debug builds keep only line tables (`Cargo.toml`), so they stay small. Each build variant
+(features, targets) still adds its own copies under `target/`; run `cargo clean` now and then
+if disk space runs short.
+
 Balancing simulation (no window; plays every night many times with simple strategies and prints
 money, reputation, sales, missed wishes, fled and unhappy ghosts per night):
 

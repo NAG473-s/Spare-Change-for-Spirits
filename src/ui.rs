@@ -803,7 +803,25 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
         Pickable::IGNORE,
         ChildOf(log_frame),
     ));
+    // The oldest line fades out at the top instead of ending in a hard cut.
+    let frame_top = Color::srgb_u8(51, 36, 42);
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            top: px(0),
+            left: px(0),
+            right: px(0),
+            height: px(LOG_FADE),
+            ..default()
+        },
+        finish(frame_top, frame_top.with_alpha(0.0)),
+        Pickable::IGNORE,
+        ChildOf(log_frame),
+    ));
 }
+
+/// Height of the fade over the oldest log line.
+const LOG_FADE: f32 = 26.0;
 
 fn on_activate(
     activate: On<Activate>,
@@ -1184,8 +1202,15 @@ fn build_evening_panel(
     if *location == Location::Harbor {
         ui.heading(&lang.t("harbor.title"));
         if progress.guiding_first_sale() {
-            crate::guide::prompt(&mut ui, &lang, crate::guide::evening_step(&layout, &stock));
-            if crate::guide::evening_step(&layout, &stock) != "guide_buy" {
+            let step = crate::guide::evening_step(&layout, &stock);
+            // Already at the harbour: say what to do here.
+            let text = if step == "guide_buy" {
+                "guide_buy_here"
+            } else {
+                step
+            };
+            crate::guide::prompt(&mut ui, &lang, text);
+            if step != "guide_buy" {
                 ui.button_in(
                     ui.root(),
                     &lang.t("harbor.back"),
@@ -1750,7 +1775,7 @@ fn refresh_change(
     lang: Res<Lang>,
     mut commands: Commands,
     mut lines: Query<&mut Text, With<CountedLine>>,
-    mut buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered, &mut Node)>,
+    mut buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered, &mut Visibility)>,
     mut texts: Query<&mut Text, Without<CountedLine>>,
     mut colors: Query<&mut TextColor>,
     mut images: Query<&mut ImageNode>,
@@ -1764,14 +1789,17 @@ fn refresh_change(
             line.0 = want;
         }
     }
-    for (entity, coin, children, hovered, mut node) in &mut buttons {
+    for (entity, coin, children, hovered, mut visibility) in &mut buttons {
         let (label, enabled) = coin.label(&lang, &drawer, sale);
         if matches!(coin, ChangeCoin::Tray(_)) {
-            node.display = if enabled {
-                Display::Flex
+            let wanted = if enabled {
+                Visibility::Inherited
             } else {
-                Display::None
+                Visibility::Hidden
             };
+            if *visibility != wanted {
+                *visibility = wanted;
+            }
         }
         let tone = ButtonTone::option(enabled, false);
         let (surface, trim) = tone.paint(hovered.get() && enabled);
@@ -1908,7 +1936,10 @@ fn build_night_panel(
         let counted = ui.text(&counted_line(&lang, sale));
         ui.commands.entity(counted).insert(CountedLine);
         ui.dim(&lang.t("register.undo_hint"));
-        for tray in [true, false] {
+        // Coins from the drawer first, the tray below: the tray's buttons
+        // keep their place while hidden, so nothing moves under the pointer
+        // when the first coin is laid out.
+        for tray in [false, true] {
             let row = ui.row();
             for coin in Coin::ASCENDING {
                 let (control, action) = if tray {
@@ -1922,9 +1953,7 @@ fn build_night_panel(
                 let mut entity = ui.commands.entity(button);
                 entity.insert(control);
                 if tray && !enabled {
-                    entity
-                        .entry::<Node>()
-                        .and_modify(|mut node| node.display = Display::None);
+                    entity.insert(Visibility::Hidden);
                 }
                 ui.coin_pointer_target(button, coin);
             }
@@ -2008,6 +2037,15 @@ fn build_night_panel(
                 ui.section(&lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))]));
             }
             ui.text(&lang.f("quote", &[("text", &ghost.whisper(&lang))]));
+            // The ferryman's parcel holds exactly what a story ghost needs:
+            // said in words and offered as the main button, so it is not
+            // mistaken for an ordinary ware.
+            let parcel = ghost
+                .chapter
+                .is_some_and(|(story, _)| progress.parcels.contains(&story));
+            if parcel {
+                ui.section(&lang.f("evening.parcel_waits", &[("name", &lang.ghost(&def.id))]));
+            }
             ui.section(&lang.t("night.what_hand_over"));
             let row = ui.row();
             let mut any = false;
@@ -2025,19 +2063,6 @@ fn build_night_panel(
                     }
                     None => ui.dim(&lang.t("night.fare_empty")),
                 }
-            }
-            // The ferryman's parcel holds exactly what a story ghost needs.
-            let parcel = ghost
-                .chapter
-                .is_some_and(|(story, _)| progress.parcels.contains(&story));
-            if parcel {
-                ui.button_in(
-                    row,
-                    &lang.f("night.parcel", &[("name", &lang.ghost(&def.id))]),
-                    Action::HandParcel,
-                    false,
-                    true,
-                );
             }
             // Its wish was not on display (or it would have brought it), so
             // everything in the storeroom is offered: the wares on display
@@ -2097,6 +2122,12 @@ fn build_night_panel(
             }
             if !(ghost.first_customer && progress.guiding_first_sale()) {
                 ui.button_in(root, &lang.t("night.decline"), Action::Decline, false, true);
+            }
+            if parcel {
+                ui.primary(
+                    &lang.f("night.parcel", &[("name", &lang.ghost(&def.id))]),
+                    Action::HandParcel,
+                );
             }
         }
         _ => {
@@ -2860,7 +2891,9 @@ mod tests {
             .find(|(_, action)| action.0 == Action::RemoveChange(Coin::Candle))
             .unwrap()
             .0;
-        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::None);
+        // Hidden but still taking its place, so the buttons above never move.
+        assert_eq!(world.get::<Visibility>(tray), Some(&Visibility::Hidden));
+        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::Flex);
         world
             .resource_mut::<Register>()
             .sale
@@ -2870,7 +2903,7 @@ mod tests {
             .candles = 1;
         app.update();
         let world = app.world_mut();
-        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::Flex);
+        assert_eq!(world.get::<Visibility>(tray), Some(&Visibility::Inherited));
         assert!(world.get::<InteractionDisabled>(tray).is_none());
         assert!(has_text(world, "Your change tray · 5"));
         assert!(
