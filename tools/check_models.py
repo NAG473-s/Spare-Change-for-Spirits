@@ -36,6 +36,7 @@ TRIANGLE_BUDGET = {
     "critters": 2000,
     "market": 6000,
     "incidents": 1500,
+    "errands": 1500,
 }
 # The village market (src/market.rs): a stall and a trader for each vendor in
 # assets/data/market.ron, and the Reaper's hourglass.
@@ -196,6 +197,21 @@ def incident_sizes():
     return out
 
 
+# Clues of the lost-and-found errands (assets/data/errands.ron, src/errands.rs):
+# tracks lying on the ground, origin at their centre on the ground.
+ERRAND_CLUE_SIZE = (1.0, 0.08, 0.5)
+
+
+def errand_sizes():
+    """One clue model per clue of each errand: <errand>_clue_<n>."""
+    text = (ROOT / "assets/data/errands.ron").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'\(id: "([^"]+)".*?clues: \[(.*?)\]', text, re.S):
+        for n in range(1, m.group(2).count("place:") + 1):
+            out[f"{m.group(1)}_clue_{n}"] = ERRAND_CLUE_SIZE
+    return out
+
+
 def decor_sizes():
     text = (ROOT / "assets/data/decor.ron").read_text(encoding="utf-8")
     out = {}
@@ -347,6 +363,7 @@ def main():
         "critters": CRITTER_SIZES,
         "market": MARKET_SIZES,
         "incidents": incident_sizes(),
+        "errands": errand_sizes(),
     }
     failures = 0
     for folder, targets in expected.items():

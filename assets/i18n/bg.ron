@@ -719,6 +719,7 @@
     "decor.oar.name": "Старият прът на лодкаря",
     "decor.chalk_drawing.name": "Рисунката на Лоте с тебешир",
     "decor.dog_basket.name": "Кошничката на Пфоте",
+    "decor.toy_sledge.name": "Шейничката на Лоте",
     "decor.cog_wheel.name": "Старо колело от кулата",
     "decor.cuckoo_clock.name": "Часовникът с кукувица на Анселм",
     "rep_tip.title": "Репутация {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Чиракът ти обслужи: {who} – {item} за {price}.",
     "morning.apprentice": "Чиракът ти обслужи снощи клиенти: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Изгубената шейничка на Лоте",
+    "errand.lotte_sledge.start": "Лоте вика през процепа за писма: „Изгубих шейничката си в снега! Пфоте ѝ надушва миризмата – все души към пристанището.“",
+    "errand.lotte_sledge.hint.1": "Пфоте все души към пристанището. Потърси следи на кея вечерта.",
+    "errand.lotte_sledge.clue.1": "Малки следи от лапички и тънките бразди от плазовете на шейна водят покрай кея – към селото.",
+    "errand.lotte_sledge.hint.2": "Следите от плазовете водят до селския пазар. Огледай се около сергиите денем.",
+    "errand.lotte_sledge.clue.2": "Зад сергиите, наполовина заровена в снега: шейничката на Лоте. Единият плаз е пукнат.",
+    "errand.lotte_sledge.repair_hint": "Единият плаз на шейничката е пукнат. Може да се поправи на работната маса.",
+    "errand.lotte_sledge.return": "Върни на Лоте шейничката",
+    "errand.lotte_sledge.thanks": "Шейничката ми! Като нова е! …Пфоте обича да спи на нея. Може ли да остане при него, тук, в твоя магазин?",
+    "errand.lotte_sledge.memory": "Нощ {night}: ти поправи шейничката ѝ, а тя я подари на Пфоте.",
+    "errand.clue_title": "Следи в снега",
+    "errand.clue_hint": "Щракни, за да ги последваш.",
+    "errand.repair": "Поправи: {item} ({cost})",
+    "errand.needs_workbench": "За поправката ти трябва работна маса в магазина; дърводелецът на пазара продава такава.",
+    "errand.can_wait": "Няма бързане – това може да почака до друга вечер.",
+    "log.repaired_keepsake": "Поправено на работната маса: {item}.",
+    "book.keepsake_errand": "От {ghost} – благодарност за намерена изгубена вещ",
 }

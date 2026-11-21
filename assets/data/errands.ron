@@ -1,0 +1,13 @@
+// Lost-and-found errands: after a ghost's story is finished it asks for help with something it
+// lost. Each clue lies at the harbour (found in the evening) or on the market square (found by
+// day); `pos` is relative to that place. The last clue turns up `item` (a keepsake in
+// decor.ron), damaged; the workbench mends it for `repair_cost`, and the player gives it back.
+// Texts: assets/i18n/<language>.ron (errand.<id>.*). Models (optional):
+// assets/models/errands/<id>_clue_<n>.glb.
+[
+    (id: "lotte_sledge", ghost: "lotte", item: "toy_sledge", repair_cost: 6,
+     clues: [
+        (place: Harbor, pos: (-1.3, 0.0, -2.3)),
+        (place: Market, pos: (1.6, 0.0, -1.0)),
+     ]),
+]

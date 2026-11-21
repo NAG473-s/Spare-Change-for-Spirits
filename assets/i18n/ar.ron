@@ -719,6 +719,7 @@
     "decor.oar.name": "عصا الملّاح القديمة",
     "decor.chalk_drawing.name": "رسمة لوته بالطباشير",
     "decor.dog_basket.name": "سلّة بفوته",
+    "decor.toy_sledge.name": "مزلجة لوته",
     "decor.cog_wheel.name": "ترس البرج القديم",
     "decor.cuckoo_clock.name": "ساعة وقواق أنسلم",
     "rep_tip.title": "السمعة {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "خدم متدرّبك {who}: {item} مقابل {price}.",
     "morning.apprentice": "عدد الزبائن الذين خدمهم متدرّبك الليلة الماضية: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "مزلجة لوته الضائعة",
+    "errand.lotte_sledge.start": "تنادي لوته عبر فتحة البريد: «أضعتُ مزلجتي الصغيرة في الثلج! بفوته يشمّ رائحتها – إنه لا يكفّ عن التشمّم نحو الميناء.»",
+    "errand.lotte_sledge.hint.1": "لا يكفّ بفوته عن التشمّم نحو الميناء. ابحث عن آثار على الرصيف في المساء.",
+    "errand.lotte_sledge.clue.1": "آثار أقدام صغيرة وخطوط رفيعة خلّفتها شفرتا مزلجة تمتدّ على طول الرصيف – نحو القرية.",
+    "errand.lotte_sledge.hint.2": "تقود آثار الشفرتين إلى سوق القرية. تفقّد ما حول البسطات في النهار.",
+    "errand.lotte_sledge.clue.2": "خلف البسطات، نصف مدفونة في الثلج: مزلجة لوته الصغيرة. إحدى شفرتيها متشقّقة.",
+    "errand.lotte_sledge.repair_hint": "إحدى شفرتي المزلجة متشقّقة. يمكن إصلاحها على طاولة العمل.",
+    "errand.lotte_sledge.return": "أعِد إلى لوته مزلجتها",
+    "errand.lotte_sledge.thanks": "مزلجتي! صارت كأنها جديدة! … بفوته يحب النوم عليها. هل يمكن أن تبقى معه، هنا في متجرك؟",
+    "errand.lotte_sledge.memory": "الليلة {night}: أصلحتَ مزلجتها، فأهدتها إلى بفوته.",
+    "errand.clue_title": "آثار في الثلج",
+    "errand.clue_hint": "انقر لتتبّعها.",
+    "errand.repair": "إصلاح: {item} ({cost})",
+    "errand.needs_workbench": "يحتاج الإصلاح إلى طاولة عمل في المتجر؛ والنجّار في السوق يبيعها.",
+    "errand.can_wait": "لا عجلة – يمكن أن ينتظر هذا إلى مساء آخر.",
+    "log.repaired_keepsake": "أُصلح على طاولة العمل: {item}.",
+    "book.keepsake_errand": "من {ghost} – شكرًا على إيجاد شيء ضائع",
 }

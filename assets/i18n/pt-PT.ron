@@ -719,6 +719,7 @@
     "decor.oar.name": "Vara velha do barqueiro",
     "decor.chalk_drawing.name": "Desenho a giz da Lotte",
     "decor.dog_basket.name": "Cestinho do Pfote",
+    "decor.toy_sledge.name": "Trenó da Lotte",
     "decor.cog_wheel.name": "Engrenagem velha da torre",
     "decor.cuckoo_clock.name": "Relógio de cuco do Anselm",
     "rep_tip.title": "Reputação {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Atendido pelo teu aprendiz – {who}: {item} por {price}.",
     "morning.apprentice": "O teu aprendiz atendeu {count} clientes durante a noite.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "O trenó perdido da Lotte",
+    "errand.lotte_sledge.start": "A Lotte chama pela ranhura do correio: «Perdi o meu trenozinho na neve! O Pfote sente-lhe o cheiro – não para de farejar na direção do porto.»",
+    "errand.lotte_sledge.hint.1": "O Pfote não para de farejar na direção do porto. Procura rastos no cais ao anoitecer.",
+    "errand.lotte_sledge.clue.1": "Pequenas pegadas de patas e as linhas finas dos patins de um trenó seguem pelo cais – em direção à aldeia.",
+    "errand.lotte_sledge.hint.2": "Os rastos dos patins levam ao mercado da aldeia. Dá uma vista de olhos pelas bancas durante o dia.",
+    "errand.lotte_sledge.clue.2": "Atrás das bancas, meio enterrado na neve: o trenozinho da Lotte. Um dos patins está rachado.",
+    "errand.lotte_sledge.repair_hint": "Um dos patins do trenó está rachado. Pode ser reparado na bancada.",
+    "errand.lotte_sledge.return": "Devolver o trenó à Lotte",
+    "errand.lotte_sledge.thanks": "O meu trenó! Está como novo! … O Pfote gosta de dormir em cima dele. Pode ficar com o Pfote, aqui na tua loja?",
+    "errand.lotte_sledge.memory": "Noite {night}: reparaste o trenó dela, e ela deu-o ao Pfote.",
+    "errand.clue_title": "Rastos na neve",
+    "errand.clue_hint": "Clica para os seguires.",
+    "errand.repair": "Reparar: {item} ({cost})",
+    "errand.needs_workbench": "Para o reparar, é preciso uma bancada na loja; o carpinteiro do mercado vende uma.",
+    "errand.can_wait": "Não há pressa – isto pode esperar por outro anoitecer.",
+    "log.repaired_keepsake": "Reparação concluída na bancada: {item}.",
+    "book.keepsake_errand": "De {ghost} – em agradecimento por encontrar algo perdido",
 }

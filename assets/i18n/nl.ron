@@ -719,6 +719,7 @@
     "decor.oar.name": "Oude vaarboom van de veerman",
     "decor.chalk_drawing.name": "Lottes krijttekening",
     "decor.dog_basket.name": "Pfotes mandje",
+    "decor.toy_sledge.name": "Lottes sleetje",
     "decor.cog_wheel.name": "Oud tandwiel van de toren",
     "decor.cuckoo_clock.name": "Anselms koekoeksklok",
     "rep_tip.title": "Reputatie {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Geholpen door je leerling – {who}: {item} voor {price}.",
     "morning.apprentice": "Je leerling heeft vannacht {count} klanten geholpen.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lottes verloren sleetje",
+    "errand.lotte_sledge.start": "Lotte roept door de brievenbus: “Ik ben mijn sleetje kwijt in de sneeuw! Pfote kan het ruiken – hij snuffelt steeds richting de haven.”",
+    "errand.lotte_sledge.hint.1": "Pfote snuffelt steeds richting de haven. Zoek 's avonds naar sporen op de kade.",
+    "errand.lotte_sledge.clue.1": "Kleine pootafdrukken en de dunne lijnen van sleeglijders lopen langs de kade – richting het dorp.",
+    "errand.lotte_sledge.hint.2": "De sporen van de glijders leiden naar de dorpsmarkt. Kijk overdag rond bij de kraampjes.",
+    "errand.lotte_sledge.clue.2": "Achter de kraampjes, half begraven in de sneeuw: Lottes sleetje. Eén glijder is gebarsten.",
+    "errand.lotte_sledge.repair_hint": "Eén glijder van het sleetje is gebarsten. Je kunt hem repareren aan de werkbank.",
+    "errand.lotte_sledge.return": "Lotte haar sleetje teruggeven",
+    "errand.lotte_sledge.thanks": "Mijn sleetje! Het is zo goed als nieuw! … Pfote slaapt er graag op. Mag het bij hem blijven, hier in jouw winkel?",
+    "errand.lotte_sledge.memory": "Nacht {night}: je hebt haar sleetje gerepareerd, en zij gaf het aan Pfote.",
+    "errand.clue_title": "Sporen in de sneeuw",
+    "errand.clue_hint": "Klik om ze te volgen.",
+    "errand.repair": "Repareren: {item} ({cost})",
+    "errand.needs_workbench": "Daarvoor heb je een werkbank in de winkel nodig; de timmerman op de markt verkoopt er een.",
+    "errand.can_wait": "Geen haast – dit kan wachten tot een andere avond.",
+    "log.repaired_keepsake": "Gerepareerd aan de werkbank: {item}.",
+    "book.keepsake_errand": "Van {ghost} – als dank voor een zoektocht naar iets verlorens",
 }

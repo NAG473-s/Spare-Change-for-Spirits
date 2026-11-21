@@ -719,6 +719,7 @@
     "decor.oar.name": "Alte Stakstange",
     "decor.chalk_drawing.name": "Lottes Kreidezeichnung",
     "decor.dog_basket.name": "Pfotes Körbchen",
+    "decor.toy_sledge.name": "Lottes Schlitten",
     "decor.cog_wheel.name": "Altes Turmzahnrad",
     "decor.cuckoo_clock.name": "Anselms Kuckucksuhr",
     "rep_tip.title": "Ansehen {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Vom Lehrling bedient – {who}: {item} für {price}.",
     "morning.apprentice": "Dein Lehrling hat letzte Nacht {count} Gäste bedient.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lottes verlorener Schlitten",
+    "errand.lotte_sledge.start": "Lotte ruft durch den Briefschlitz: „Ich hab meinen kleinen Schlitten im Schnee verloren! Pfote kann ihn riechen – er schnüffelt immer in Richtung Hafen.“",
+    "errand.lotte_sledge.hint.1": "Pfote schnüffelt immer wieder in Richtung Hafen. Such am Abend am Kai nach Spuren.",
+    "errand.lotte_sledge.clue.1": "Kleine Pfotenabdrücke und die dünnen Linien von Schlittenkufen führen am Kai entlang – Richtung Dorf.",
+    "errand.lotte_sledge.hint.2": "Die Kufenspuren führen zum Dorfmarkt. Sieh dich tagsüber bei den Ständen um.",
+    "errand.lotte_sledge.clue.2": "Hinter den Ständen, halb im Schnee vergraben: Lottes kleiner Schlitten. Eine Kufe hat einen Riss.",
+    "errand.lotte_sledge.repair_hint": "Eine Kufe des Schlittens hat einen Riss. An der Werkbank lässt sie sich ausbessern.",
+    "errand.lotte_sledge.return": "Lotte ihren Schlitten zurückgeben",
+    "errand.lotte_sledge.thanks": "Mein Schlitten! Der ist ja wie neu! … Pfote schläft so gern drauf. Darf er bei ihm bleiben, hier in deinem Laden?",
+    "errand.lotte_sledge.memory": "Nacht {night}: Du hast ihren Schlitten repariert, und sie hat ihn Pfote geschenkt.",
+    "errand.clue_title": "Spuren im Schnee",
+    "errand.clue_hint": "Klick darauf, um ihnen zu folgen.",
+    "errand.repair": "Ausbessern: {item} ({cost})",
+    "errand.needs_workbench": "Dafür brauchst du eine Werkbank im Laden; der Schreiner auf dem Markt verkauft eine.",
+    "errand.can_wait": "Keine Eile – das kann bis zu einem anderen Abend warten.",
+    "log.repaired_keepsake": "An der Werkbank ausgebessert: {item}.",
+    "book.keepsake_errand": "Von {ghost} – als Dank für eine Suche nach Verlorenem",
 }

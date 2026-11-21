@@ -719,6 +719,7 @@
     "decor.oar.name": "Stara tyka przewoźnika",
     "decor.chalk_drawing.name": "Kredowy rysunek Lotte",
     "decor.dog_basket.name": "Koszyk Pfote",
+    "decor.toy_sledge.name": "Sanki Lotte",
     "decor.cog_wheel.name": "Stare koło zębate z wieży",
     "decor.cuckoo_clock.name": "Zegar z kukułką Anselma",
     "rep_tip.title": "Reputacja {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Twój uczeń obsłużył klienta – {who}: {item} za {price}.",
     "morning.apprentice": "Ostatniej nocy twój uczeń obsłużył klientów: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Zgubione sanki Lotte",
+    "errand.lotte_sledge.start": "Lotte woła przez szparę na listy: „Zgubiłam moje małe sanki w śniegu! Pfote czuje ich zapach – ciągle węszy w stronę przystani.”",
+    "errand.lotte_sledge.hint.1": "Pfote ciągle węszy w stronę przystani. Wieczorem poszukaj śladów na nabrzeżu.",
+    "errand.lotte_sledge.clue.1": "Małe ślady łapek i cienkie linie płóz od sanek biegną wzdłuż nabrzeża – w stronę wioski.",
+    "errand.lotte_sledge.hint.2": "Ślady płóz prowadzą na wiejski targ. Za dnia rozejrzyj się wokół straganów.",
+    "errand.lotte_sledge.clue.2": "Za straganami, do połowy zasypane śniegiem: małe sanki Lotte. Jedna płoza jest pęknięta.",
+    "errand.lotte_sledge.repair_hint": "Jedna płoza sanek jest pęknięta. Można ją naprawić przy stole warsztatowym.",
+    "errand.lotte_sledge.return": "Oddaj Lotte jej sanki",
+    "errand.lotte_sledge.thanks": "Moje sanki! Są jak nowe! … Pfote lubi na nich spać. Mogą zostać u niego, tu, w twoim sklepie?",
+    "errand.lotte_sledge.memory": "Noc {night}: dzięki tobie jej sanki znów są całe, a ona dała je Pfote.",
+    "errand.clue_title": "Ślady na śniegu",
+    "errand.clue_hint": "Kliknij, aby za nimi pójść.",
+    "errand.repair": "Napraw: {item} ({cost})",
+    "errand.needs_workbench": "Do naprawy potrzebny jest stół warsztatowy w sklepie; stolarz na targu go sprzedaje.",
+    "errand.can_wait": "Bez pośpiechu – to może poczekać do innego wieczoru.",
+    "log.repaired_keepsake": "Naprawa gotowa przy stole warsztatowym: {item}.",
+    "book.keepsake_errand": "Od: {ghost} – podziękowanie za odnalezienie zguby",
 }

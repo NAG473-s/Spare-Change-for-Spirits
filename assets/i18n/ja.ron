@@ -719,6 +719,7 @@
     "decor.oar.name": "古い渡し棹",
     "decor.chalk_drawing.name": "ロッテのチョークの絵",
     "decor.dog_basket.name": "プフォーテのかご",
+    "decor.toy_sledge.name": "ロッテのそり",
     "decor.cog_wheel.name": "時計塔の古い歯車",
     "decor.cuckoo_clock.name": "アンセルムの鳩時計",
     "rep_tip.title": "評判 {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "見習い店員が{who}を接客した：{item}を{price}で。",
     "morning.apprentice": "昨夜、見習い店員が{count}人のお客を接客した。",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "ロッテのなくしたそり",
+    "errand.lotte_sledge.start": "ロッテが郵便受けの口から呼びかける。「雪の中で、わたしの小さなそり、なくしちゃったの！プフォーテはにおいがわかるみたい – ずっと船着き場のほうをくんくんしてるの」",
+    "errand.lotte_sledge.hint.1": "プフォーテはずっと船着き場のほうをくんくんしています。夕方、波止場で足あとを探してみましょう。",
+    "errand.lotte_sledge.clue.1": "小さな足あとと、そりのすべり木の細いあとが、波止場に沿って続いている – 村のほうへ。",
+    "errand.lotte_sledge.hint.2": "すべり木のあとは村の市場へ続いています。昼間、屋台のまわりを探してみましょう。",
+    "errand.lotte_sledge.clue.2": "屋台の裏で、雪に半分うもれて：ロッテの小さなそり。すべり木が一本ひび割れている。",
+    "errand.lotte_sledge.repair_hint": "そりのすべり木が一本ひび割れています。作業台で直せます。",
+    "errand.lotte_sledge.return": "ロッテにそりを返す",
+    "errand.lotte_sledge.thanks": "わたしのそり！新品みたい！……プフォーテはこの上で寝るのが好きなの。あの子といっしょに、このお店に置いてもらってもいい？",
+    "errand.lotte_sledge.memory": "{night}日目の夜：ロッテのそりを直してあげると、ロッテはそれをプフォーテにあげた。",
+    "errand.clue_title": "雪の上の足あと",
+    "errand.clue_hint": "クリックすると、あとをたどれます。",
+    "errand.repair": "{item}を直す（{cost}）",
+    "errand.needs_workbench": "直すには店に作業台が必要です。市場の大工が売っています。",
+    "errand.can_wait": "急がなくて大丈夫 – また別の夕方でもかまいません。",
+    "log.repaired_keepsake": "作業台で直した：{item}。",
+    "book.keepsake_errand": "贈り主：{ghost} – 落とし物探しのお礼",
 }

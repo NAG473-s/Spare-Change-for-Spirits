@@ -9,7 +9,12 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-None. All currently ordered models are delivered, including:
+- Lotte's errand (season 2): the keepsake `toy_sledge` in `assets/models/decor/` (see
+  *Keepsakes*) and the two clues `lotte_sledge_clue_1` and `lotte_sledge_clue_2` in
+  `assets/models/errands/` (see *Errand clues*). Until they arrive the game shows a
+  placeholder box and little paw prints built from primitives.
+
+Delivered, including:
 
 - The seasonal market stalls and traders `stall_frost`, `vendor_frost`, `stall_florist`
   and `vendor_florist`, plus the daily offer's `special_tag`, in `assets/models/market/`.
@@ -132,6 +137,7 @@ Placed like furniture on one floor cell; origin at the bottom centre, front towa
 | `flower_box` | 0.8 × 0.5 × 0.3 | A painted wooden flower box on short legs, overflowing with pink, yellow and violet spring flowers and trailing ivy. |
 | `nameplate` | 0.6 × 0.9 × 0.2 | A weathered little wooden board on a post, painted by hand with a simple rowing boat and a lantern; no lettering. |
 | `oar` | 0.3 × 1.8 × 0.3 | The ferryman's old punting pole, dark and worn smooth, standing upright in a small iron stand with a rope wound round its top. |
+| `toy_sledge` | 0.7 × 0.3 × 0.35 | Lotte's little wooden toy sledge with curved runners, a red-painted seat with a worn flower pattern and a short rope to pull it; one runner freshly mended with a small brass plate. |
 
 ## Mishaps – `assets/models/incidents/<id>.glb`
 
@@ -144,6 +150,17 @@ the crow hop, the leaves swirl and the puddle shimmer.
 | `draught` | 0.45 × 0.25 × 0.2 | Three dry autumn leaves (orange, brown, ochre) caught in a little swirl of wind, floating just above a window sill; no sill, only the leaves and a faint curl of pale wind ribbon. |
 | `crow` | 0.3 × 0.32 × 0.4 | A small, glossy black crow standing on two feet, beak half open as if cawing, head slightly cocked, wings folded; friendly, a little scruffy. |
 | `leak` | 0.6 × 0.04 × 0.6 | A flat, irregular puddle of water on the floor with two small ripple rings and a single drop splashing in the middle. |
+
+## Errand clues – `assets/models/errands/<errand>_clue_<n>.glb`
+
+Tracks for the lost-and-found errands (`assets/data/errands.ron`), lying on the quay or the
+market square. Origin at the centre on the ground, front towards −Y, flat and static – the
+game adds the pulsing glow that makes them easy to spot.
+
+| id | Size (w × h × d, m) | Prompt |
+|---|---|---|
+| `lotte_sledge_clue_1` | 1.0 × 0.08 × 0.5 | A short trail in a thin layer of snow on stone: small dog paw prints beside the two narrow parallel grooves of sledge runners, curving slightly. |
+| `lotte_sledge_clue_2` | 1.0 × 0.08 × 0.5 | Runner grooves and paw prints in snow ending at a little heap of snow with a dropped red knitted mitten on top. |
 
 ### The tower clock (season 2)
 

@@ -719,6 +719,7 @@
     "decor.oar.name": "낡은 나룻배 삿대",
     "decor.chalk_drawing.name": "로테의 분필 그림",
     "decor.dog_basket.name": "포테의 바구니",
+    "decor.toy_sledge.name": "로테의 썰매",
     "decor.cog_wheel.name": "시계탑의 낡은 톱니바퀴",
     "decor.cuckoo_clock.name": "안셀름의 뻐꾸기시계",
     "rep_tip.title": "평판 {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "견습생이 {who} 손님을 응대했다: {item}, {price}.",
     "morning.apprentice": "어젯밤 견습생이 손님 {count}명을 응대했다.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "로테의 잃어버린 썰매",
+    "errand.lotte_sledge.start": "로테가 문의 우편 투입구로 외친다. “눈 속에서 제 작은 썰매를 잃어버렸어요! 포테가 냄새를 맡을 수 있어요 – 자꾸 선착장 쪽으로 킁킁거려요.”",
+    "errand.lotte_sledge.hint.1": "포테가 자꾸 선착장 쪽으로 킁킁거려요. 저녁에 부두에서 발자국을 찾아보세요.",
+    "errand.lotte_sledge.clue.1": "작은 발자국과 썰매 날이 남긴 가느다란 자국이 부두를 따라 이어져 있다 – 마을 쪽으로.",
+    "errand.lotte_sledge.hint.2": "썰매 날 자국은 마을 장터로 이어져요. 낮에 가판대 주변을 둘러보세요.",
+    "errand.lotte_sledge.clue.2": "가판대 뒤, 눈에 반쯤 파묻힌 채로: 로테의 작은 썰매. 썰매 날 하나에 금이 가 있다.",
+    "errand.lotte_sledge.repair_hint": "썰매 날 하나에 금이 갔어요. 작업대에서 고칠 수 있어요.",
+    "errand.lotte_sledge.return": "로테에게 썰매 돌려주기",
+    "errand.lotte_sledge.thanks": "제 썰매예요! 새것 같아요! … 포테가 이 위에서 자는 걸 좋아해요. 여기 가게에서 포테 곁에 둬도 돼요?",
+    "errand.lotte_sledge.memory": "{night}번째 밤: 썰매를 고쳐 주자, 로테는 그 썰매를 포테에게 주었어요.",
+    "errand.clue_title": "눈 위의 발자국",
+    "errand.clue_hint": "클릭해서 따라가 보세요.",
+    "errand.repair": "고치기: {item} ({cost})",
+    "errand.needs_workbench": "고치려면 가게에 작업대가 있어야 해요. 장터의 목수가 팔아요.",
+    "errand.can_wait": "서두를 필요 없어요 – 다른 저녁에 해도 돼요.",
+    "log.repaired_keepsake": "작업대에서 고쳤다: {item}.",
+    "book.keepsake_errand": "남긴 유령: {ghost} – 잃어버린 물건을 찾아 준 감사의 선물",
 }

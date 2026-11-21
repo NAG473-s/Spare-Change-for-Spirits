@@ -719,6 +719,7 @@
     "decor.oar.name": "Vieja pértiga del barquero",
     "decor.chalk_drawing.name": "Dibujo de tiza de Lotte",
     "decor.dog_basket.name": "Cesta de Pfote",
+    "decor.toy_sledge.name": "Trineo de Lotte",
     "decor.cog_wheel.name": "Viejo engranaje de la torre",
     "decor.cuckoo_clock.name": "Reloj de cuco de Anselm",
     "rep_tip.title": "Reputación {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Atendido por tu aprendiz – {who}: {item} por {price}.",
     "morning.apprentice": "Tu aprendiz atendió anoche a {count} clientes.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "El trineo perdido de Lotte",
+    "errand.lotte_sledge.start": "Lotte llama por la rendija del correo: «¡He perdido mi trineo pequeñito en la nieve! Pfote puede olerlo – no para de olfatear hacia el puerto.»",
+    "errand.lotte_sledge.hint.1": "Pfote no para de olfatear hacia el puerto. Busca huellas en el muelle al atardecer.",
+    "errand.lotte_sledge.clue.1": "Pequeñas huellas de patas y las finas líneas de los patines de un trineo recorren el muelle – hacia el pueblo.",
+    "errand.lotte_sledge.hint.2": "Las huellas de los patines llevan al mercado del pueblo. Echa un vistazo entre los puestos de día.",
+    "errand.lotte_sledge.clue.2": "Detrás de los puestos, medio enterrado en la nieve: el trineo pequeñito de Lotte. Uno de los patines está agrietado.",
+    "errand.lotte_sledge.repair_hint": "Uno de los patines del trineo está agrietado. Se puede arreglar en el banco de trabajo.",
+    "errand.lotte_sledge.return": "Devolverle el trineo a Lotte",
+    "errand.lotte_sledge.thanks": "¡Mi trineo! ¡Está como nuevo! … A Pfote le gusta dormir encima. ¿Puede quedarse con él, aquí en tu tienda?",
+    "errand.lotte_sledge.memory": "Noche {night}: le arreglaste el trineo, y ella se lo regaló a Pfote.",
+    "errand.clue_title": "Huellas en la nieve",
+    "errand.clue_hint": "Haz clic para seguirlas.",
+    "errand.repair": "Arreglar: {item} ({cost})",
+    "errand.needs_workbench": "Para arreglarlo hace falta un banco de trabajo en la tienda; el carpintero del mercado vende uno.",
+    "errand.can_wait": "No hay prisa – puede esperar a otro atardecer.",
+    "log.repaired_keepsake": "Arreglo listo en el banco de trabajo: {item}.",
+    "book.keepsake_errand": "De {ghost} – en agradecimiento por encontrar algo perdido",
 }

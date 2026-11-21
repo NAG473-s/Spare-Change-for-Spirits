@@ -719,6 +719,7 @@
     "decor.oar.name": "旧船篙",
     "decor.chalk_drawing.name": "洛蒂的粉笔画",
     "decor.dog_basket.name": "普福特的篮子",
+    "decor.toy_sledge.name": "洛蒂的雪橇",
     "decor.cog_wheel.name": "钟楼的旧齿轮",
     "decor.cuckoo_clock.name": "安塞尔姆的布谷鸟钟",
     "rep_tip.title": "声望 {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "你的小学徒接待了{who}：{item}，收{price}。",
     "morning.apprentice": "昨晚你的小学徒接待了{count}位客人。",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "洛蒂丢失的雪橇",
+    "errand.lotte_sledge.start": "洛蒂隔着门上的信箱口喊道：“我的小雪橇丢在雪里了！普福特闻得到它的味道 – 他一直朝码头那边嗅。”",
+    "errand.lotte_sledge.hint.1": "普福特一直朝码头那边嗅。傍晚去码头上找找脚印吧。",
+    "errand.lotte_sledge.clue.1": "小小的爪印和雪橇滑板留下的细痕沿着码头延伸 – 通往村子。",
+    "errand.lotte_sledge.hint.2": "滑板的痕迹通往村中集市。白天去摊位附近看看吧。",
+    "errand.lotte_sledge.clue.2": "摊位后面，半埋在雪里：洛蒂的小雪橇。有一根滑板裂了。",
+    "errand.lotte_sledge.repair_hint": "雪橇有一根滑板裂了。可以在工作台修好。",
+    "errand.lotte_sledge.return": "把雪橇还给洛蒂",
+    "errand.lotte_sledge.thanks": "我的雪橇！跟新的一样！……普福特喜欢睡在上面。能让雪橇陪着他，留在你的店里吗？",
+    "errand.lotte_sledge.memory": "第{night}夜：你修好了她的雪橇，她把它送给了普福特。",
+    "errand.clue_title": "雪中的足迹",
+    "errand.clue_hint": "点击即可跟随足迹。",
+    "errand.repair": "修补{item}（{cost}）",
+    "errand.needs_workbench": "修补需要店里有工作台；集市的木匠有卖。",
+    "errand.can_wait": "不着急 – 可以留到别的傍晚再说。",
+    "log.repaired_keepsake": "在工作台修好了：{item}。",
+    "book.keepsake_errand": "来自{ghost} – 感谢你帮忙寻回失物",
 }

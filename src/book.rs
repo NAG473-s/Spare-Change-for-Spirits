@@ -42,6 +42,8 @@ pub struct Journal {
     /// Stories whose parcel tonight is a ware set aside from the player's
     /// own stock (the others come from the ferryman).
     pub set_aside: Vec<usize>,
+    /// Lost-and-found errands and how far each has come (`errands.rs`).
+    pub errands: BTreeMap<String, crate::errands::ErrandState>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -554,6 +556,16 @@ pub fn ghost_profile(
             ui.dim(&line);
         }
     }
+    // Errands done for this ghost, as it remembers them.
+    for errand in data.errands.iter().filter(|e| e.ghost == ghost.id) {
+        if let Some(night) = journal.errands.get(&errand.id).and_then(|s| s.returned) {
+            ui.section(&lang.t(&format!("errand.{}.title", errand.id)));
+            ui.text(&lang.f(
+                &format!("errand.{}.memory", errand.id),
+                &[("night", &night)],
+            ));
+        }
+    }
     if let Some(r) = journal.regular(&ghost.id) {
         ui.section(&lang.f(
             "book.regular",
@@ -750,6 +762,24 @@ pub fn keepsake_page(
                 };
             }
         }
+        if let Some(i) = data.ghost_index(ghost).filter(|_| journal.has_seen(ghost)) {
+            ui.menu_option(root, &lang.ghost(ghost), Action::GhostProfile(i), false);
+        }
+    } else if let Some(errand) = data.errands.iter().find(|e| e.item == d.id) {
+        // Found and mended on a lost-and-found errand.
+        let ghost = &errand.ghost;
+        ui.add_text(
+            notes,
+            &lang.f("book.keepsake_errand", &[("ghost", &lang.ghost(ghost))]),
+            true,
+            15.0,
+            TEXT,
+        );
+        ui.add_text(notes, &lang.t(place), false, 13.0, crate::ui::TEXT_DIM);
+        ui.text(&lang.f(
+            "quote",
+            &[("text", &lang.t(&format!("errand.{}.thanks", errand.id)))],
+        ));
         if let Some(i) = data.ghost_index(ghost).filter(|_| journal.has_seen(ghost)) {
             ui.menu_option(root, &lang.ghost(ghost), Action::GhostProfile(i), false);
         }

@@ -719,6 +719,7 @@
     "decor.oar.name": "The Old Ferry Pole",
     "decor.chalk_drawing.name": "Lotte's Chalk Drawing",
     "decor.dog_basket.name": "Pfote's Basket",
+    "decor.toy_sledge.name": "Lotte's Sledge",
     "decor.cog_wheel.name": "Old Tower Cog",
     "decor.cuckoo_clock.name": "Anselm's Cuckoo Clock",
     "rep_tip.title": "Reputation {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Served by your apprentice – {who}: {item} for {price}.",
     "morning.apprentice": "Your apprentice served {count} customers last night.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lotte's lost sledge",
+    "errand.lotte_sledge.start": "Lotte calls through the letterbox: “I lost my little sledge in the snow! Pfote can smell it – he keeps sniffing towards the harbour.”",
+    "errand.lotte_sledge.hint.1": "Pfote keeps sniffing towards the harbour. Look for tracks on the quay in the evening.",
+    "errand.lotte_sledge.clue.1": "Small paw prints and the thin lines of sledge runners lead along the quay – towards the village.",
+    "errand.lotte_sledge.hint.2": "The runner tracks lead to the village market. Look around the stalls by day.",
+    "errand.lotte_sledge.clue.2": "Behind the stalls, half buried in the snow: Lotte's little sledge. One runner is cracked.",
+    "errand.lotte_sledge.repair_hint": "One runner of the sledge is cracked. It can be mended at the workbench.",
+    "errand.lotte_sledge.return": "Give Lotte her sledge back",
+    "errand.lotte_sledge.thanks": "My sledge! It's like new! … Pfote likes to sleep on it. Can it stay with him, here in your shop?",
+    "errand.lotte_sledge.memory": "Night {night}: you mended her sledge, and she gave it to Pfote.",
+    "errand.clue_title": "Tracks in the snow",
+    "errand.clue_hint": "Click to follow them.",
+    "errand.repair": "Mend {item} ({cost})",
+    "errand.needs_workbench": "Mending it needs a workbench in the shop; the carpenter at the market sells one.",
+    "errand.can_wait": "No hurry – this can wait for another evening.",
+    "log.repaired_keepsake": "Mended at the workbench: {item}.",
+    "book.keepsake_errand": "From {ghost} – thanks for a lost-and-found errand",
 }

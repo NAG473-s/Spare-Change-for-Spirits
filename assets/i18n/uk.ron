@@ -719,6 +719,7 @@
     "decor.oar.name": "Стара жердина перевізника",
     "decor.chalk_drawing.name": "Крейдяний малюнок Лотти",
     "decor.dog_basket.name": "Кошик Пфоте",
+    "decor.toy_sledge.name": "Санчата Лотти",
     "decor.cog_wheel.name": "Стара баштова шестірня",
     "decor.cuckoo_clock.name": "Годинник із зозулею Ансельма",
     "rep_tip.title": "Репутація {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Підмайстер обслужив: {who} – {item} за {price}.",
     "morning.apprentice": "Підмайстер обслужив за ніч покупців: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Загублені санчата Лотти",
+    "errand.lotte_sledge.start": "Лотта гукає крізь щілину для листів: «Я загубила в снігу свої санчата! Пфоте їх чує – він увесь час принюхується в бік гавані».",
+    "errand.lotte_sledge.hint.1": "Пфоте увесь час принюхується в бік гавані. Увечері пошукайте сліди на причалі.",
+    "errand.lotte_sledge.clue.1": "Маленькі сліди лап і тонкі смужки від полозів санчат тягнуться вздовж причалу – у бік села.",
+    "errand.lotte_sledge.hint.2": "Сліди полозів ведуть до сільського ярмарку. Удень роззирніться біля яток.",
+    "errand.lotte_sledge.clue.2": "За ятками, наполовину в снігу: санчата Лотти. Один полоз тріснув.",
+    "errand.lotte_sledge.repair_hint": "У санчат тріснув полоз. Його можна полагодити на верстаті.",
+    "errand.lotte_sledge.return": "Повернути Лотті санчата",
+    "errand.lotte_sledge.thanks": "Мої санчата! Як нові! …Пфоте любить на них спати. Можна вони залишаться в нього, тут, у твоїй крамниці?",
+    "errand.lotte_sledge.memory": "Ніч {night}: ви полагодили її санчата, і вона віддала їх Пфоте.",
+    "errand.clue_title": "Сліди на снігу",
+    "errand.clue_hint": "Натисніть, щоб піти за ними.",
+    "errand.repair": "Полагодити: {item} ({cost})",
+    "errand.needs_workbench": "Для лагодження потрібен верстат у крамниці; його продає тесля на ярмарку.",
+    "errand.can_wait": "Поспішати нікуди – це почекає до іншого вечора.",
+    "log.repaired_keepsake": "Полагоджено на верстаті: {item}.",
+    "book.keepsake_errand": "Привид: {ghost} – подяка за знайдену пропажу",
 }

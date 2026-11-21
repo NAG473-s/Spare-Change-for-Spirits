@@ -186,6 +186,11 @@ Special customers:
   following dawn the view goes out to the quay, where Ida's restored beam sweeps the water, and
   Hedda's farewell letter waits; the accounts appear once the player continues, and the letter
   stays in the book's Letters chapter (`finale.rs`).
+- **Lost-and-found errands** (`errands.ron`, `errands.rs`) – after Lotte's story she has lost
+  her little sledge in the snow. Tracks on the quay (evening) and behind the market stalls (by
+  day) are clicked to follow them; the sledge, found with a cracked runner, is mended at the
+  workbench and given back, Lotte lets Pfote keep it as a keepsake, and her book page remembers
+  the night. No step is timed.
 - **Ghost book** – seeing a visitor for the first time adds their name to the index, even if they turn away at the door. Select the name to see a painted portrait, a short character note and the traits you can use at the counter. The page also keeps track of visits, wishes heard and wares supplied. The book is one overlay with coloured chapter tabs along the top – ghosts, keepsakes, Hedda's letters, order slips, the first-sale guide and, in the full game, the achievements – so new pages become chapters instead of menu entries; Close returns to wherever the book was opened. Each keepsake has its own page with its picture, the ghost and chapter it came from and the words said when it was given; in the evening, clicking a keepsake standing in the shop opens that page. A keepsake marked `logbook` in `story.ron` keeps a log of its story: Ida's logbook lists each repair of the lighthouse with the night it was done, and later repairs stay unwritten. In the shop and at the harbour, the expected guest list links familiar names to their pages. An unfamiliar visitor is listed anonymously.
   Next-night orders have a slip showing the customer, ware, quantity and collection night. Pin a slip to mark its crate on the ferry. The book keeps the outcome when an order is collected or expires.
 - **Regulars** – a ghost served well may come back now and then by name (Mrs Wispel, Captain
@@ -238,6 +243,7 @@ src/
   showcase.rs    the ware in the shop window
   sets.rs        furniture sets and tonight's ghost odds
   apprentice.rs  the helper ghost behind the counter
+  errands.rs     lost-and-found errands with clues to click
   finale.rs      the quiet dawn scene after a season's finale
   weather.rs     rain, storm, snow and fog of tonight's event
   gamepad.rs     controller: the sticks drive the mouse pointer, A/B click
@@ -250,6 +256,7 @@ src/
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
                  props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron, sets.ron,
+                 errands.ron,
                  achievements.ron
   i18n/          languages.ron and one text catalog per language (en.ron is the source)
   fonts/         Inter and Noto subsets (SIL Open Font License, see *-LICENSE.txt)

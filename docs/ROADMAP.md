@@ -26,7 +26,7 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 
 ## December 14–20 · A village through winter
 
-- [ ] Give Lotte and Pfote an optional lost-and-found errand. Two clues lead to a damaged keepsake, the workbench restores it, and Lotte remembers its return. The errand can wait for another evening.
+- [x] Give Lotte and Pfote an optional lost-and-found errand. Two clues lead to a damaged keepsake, the workbench restores it, and Lotte remembers its return. The errand can wait for another evening.
 - [ ] Let Anselm’s repairs change the sound of the market clock. When it strikes for the first time, show the hands moving and the first snow settling so the moment also reads with audio muted.
 - [ ] Use a winter night to teach preparation. The forecast, ferry capacity and demand for warmth should agree before the player spends a coin.
 

@@ -719,6 +719,7 @@
     "decor.oar.name": "Vechea prăjină a luntrașului",
     "decor.chalk_drawing.name": "Desenul cu cretă al lui Lotte",
     "decor.dog_basket.name": "Coșulețul lui Pfote",
+    "decor.toy_sledge.name": "Săniuța Lottei",
     "decor.cog_wheel.name": "Roată dințată veche din turn",
     "decor.cuckoo_clock.name": "Ceasul cu cuc al lui Anselm",
     "rep_tip.title": "Reputație {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Ucenicul tău a servit un client – {who}: {item} pentru {price}.",
     "morning.apprentice": "Clienți serviți azi-noapte de ucenicul tău: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Săniuța pierdută a Lottei",
+    "errand.lotte_sledge.start": "Lotte strigă prin fanta pentru scrisori: „Mi-am pierdut săniuța în zăpadă! Pfote îi simte mirosul – tot adulmecă spre port.”",
+    "errand.lotte_sledge.hint.1": "Pfote tot adulmecă spre port. Caută urme pe chei, seara.",
+    "errand.lotte_sledge.clue.1": "Urme mici de lăbuțe și dârele subțiri lăsate de tălpile unei sănii duc de-a lungul cheiului – spre sat.",
+    "errand.lotte_sledge.hint.2": "Urmele tălpilor de sanie duc la târgul din sat. Uită-te printre tarabe, ziua.",
+    "errand.lotte_sledge.clue.2": "În spatele tarabelor, pe jumătate îngropată în zăpadă: săniuța Lottei. Una dintre tălpi e crăpată.",
+    "errand.lotte_sledge.repair_hint": "Una dintre tălpile saniei e crăpată. Poate fi reparată la bancul de lucru.",
+    "errand.lotte_sledge.return": "Dă-i Lottei săniuța înapoi",
+    "errand.lotte_sledge.thanks": "Săniuța mea! E ca nouă!… Lui Pfote îi place să doarmă pe ea. Poate să rămână la el, aici, în prăvălia ta?",
+    "errand.lotte_sledge.memory": "Noaptea {night}: i-ai reparat săniuța, iar ea i-a dat-o lui Pfote.",
+    "errand.clue_title": "Urme în zăpadă",
+    "errand.clue_hint": "Apasă ca să le urmezi.",
+    "errand.repair": "Repară: {item} ({cost})",
+    "errand.needs_workbench": "Pentru reparație îți trebuie un banc de lucru în magazin; tâmplarul de la târg vinde unul.",
+    "errand.can_wait": "Nicio grabă – asta poate aștepta și o altă seară.",
+    "log.repaired_keepsake": "Reparație gata la bancul de lucru: {item}.",
+    "book.keepsake_errand": "De la {ghost} – mulțumire pentru un lucru pierdut și regăsit",
 }

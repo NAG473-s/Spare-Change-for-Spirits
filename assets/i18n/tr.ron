@@ -719,6 +719,7 @@
     "decor.oar.name": "Kayıkçının Eski Sırığı",
     "decor.chalk_drawing.name": "Lotte'nin Tebeşir Resmi",
     "decor.dog_basket.name": "Pfote'nin Sepeti",
+    "decor.toy_sledge.name": "Lotte'nin Kızağı",
     "decor.cog_wheel.name": "Eski Kule Dişlisi",
     "decor.cuckoo_clock.name": "Anselm'in Guguklu Saati",
     "rep_tip.title": "İtibar {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Çırağın ilgilendi – {who}: {price} karşılığında {item}.",
     "morning.apprentice": "Çırağının dün gece ilgilendiği müşteri sayısı: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lotte'nin kayıp kızağı",
+    "errand.lotte_sledge.start": "Lotte kapıdaki mektup deliğinden sesleniyor: “Küçük kızağımı karda kaybettim! Pfote kokusunu alıyor – hep limana doğru kokluyor.”",
+    "errand.lotte_sledge.hint.1": "Pfote hep limana doğru kokluyor. Akşam rıhtımda iz ara.",
+    "errand.lotte_sledge.clue.1": "Küçük pati izleri ve kızak ayaklarının ince çizgileri rıhtım boyunca uzanıyor – köye doğru.",
+    "errand.lotte_sledge.hint.2": "Kızak izleri köy pazarına çıkıyor. Gündüz tezgâhların oralara bir bak.",
+    "errand.lotte_sledge.clue.2": "Tezgâhların arkasında, karın içine yarı gömülü: Lotte'nin küçük kızağı. Ayaklarından biri çatlamış.",
+    "errand.lotte_sledge.repair_hint": "Kızağın ayaklarından biri çatlamış. Çalışma tezgâhında onarılabilir.",
+    "errand.lotte_sledge.return": "Kızağını Lotte'ye geri ver",
+    "errand.lotte_sledge.thanks": "Kızağım! Yepyeni gibi olmuş! … Pfote üstünde uyumayı çok seviyor. Onun yanında, burada, senin dükkânında kalabilir mi?",
+    "errand.lotte_sledge.memory": "{night}. gece: kızağını onardın, o da onu Pfote'ye verdi.",
+    "errand.clue_title": "Karda izler",
+    "errand.clue_hint": "İzleri takip etmek için tıkla.",
+    "errand.repair": "Onar: {item} ({cost})",
+    "errand.needs_workbench": "Onarmak için dükkânda bir çalışma tezgâhı gerek; pazardaki marangoz satıyor.",
+    "errand.can_wait": "Acelesi yok – bu başka bir akşamı bekleyebilir.",
+    "log.repaired_keepsake": "Çalışma tezgâhında onarıldı: {item}.",
+    "book.keepsake_errand": "Bırakan: {ghost} – kayıp bir eşyayı bulduğun için teşekkür",
 }

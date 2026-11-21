@@ -25,7 +25,14 @@ python3 tools/check_models.py
 
 ## Delivery status
 
-All current image orders are delivered. The helper behind the counter uses
+Open order:
+
+- The keepsake icon `toy_sledge` (96 × 96, kind `decor`, `assets/sprites/decor/toy_sledge.png`):
+  Lotte's little wooden toy sledge with curved runners and a red-painted seat, a short pull rope
+  (prompt as its model in [MODEL_PROMPTS.md](MODEL_PROMPTS.md)). Until it arrives its button
+  shows only text.
+
+All other image orders are delivered. The helper behind the counter uses
 `assets/sprites/ghosts/apprentice.png`, a transparent 176 × 264 portrait. Its replacement
 prompt is listed under *Helpers* below.
 

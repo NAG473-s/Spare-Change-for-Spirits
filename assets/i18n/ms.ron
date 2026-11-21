@@ -719,6 +719,7 @@
     "decor.oar.name": "Galah Lama Penambang",
     "decor.chalk_drawing.name": "Lukisan Kapur Lotte",
     "decor.dog_basket.name": "Bakul Pfote",
+    "decor.toy_sledge.name": "Kereta Luncur Lotte",
     "decor.cog_wheel.name": "Roda Gigi Menara Lama",
     "decor.cuckoo_clock.name": "Jam Kukuk Anselm",
     "rep_tip.title": "Reputasi {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Perantis Anda melayan {who}: {item} dengan harga {price}.",
     "morning.apprentice": "Perantis Anda melayan {count} pelanggan malam tadi.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Kereta luncur Lotte yang hilang",
+    "errand.lotte_sledge.start": "Lotte memanggil melalui celah surat di pintu: “Kereta luncur kecil saya hilang dalam salji! Pfote boleh menghidu baunya – dia asyik menghidu ke arah pelabuhan.”",
+    "errand.lotte_sledge.hint.1": "Pfote asyik menghidu ke arah pelabuhan. Cari kesan di jeti pada waktu senja.",
+    "errand.lotte_sledge.clue.1": "Kesan tapak kaki kecil dan garisan halus bilah kereta luncur memanjang di sepanjang jeti – menuju ke kampung.",
+    "errand.lotte_sledge.hint.2": "Kesan bilah luncur itu menuju ke pasar kampung. Tinjau sekitar gerai pada waktu siang.",
+    "errand.lotte_sledge.clue.2": "Di belakang gerai, separuh tertimbus dalam salji: kereta luncur kecil Lotte. Salah satu bilahnya retak.",
+    "errand.lotte_sledge.repair_hint": "Salah satu bilah kereta luncur itu retak. Ia boleh dibaiki di meja kerja.",
+    "errand.lotte_sledge.return": "Pulangkan kereta luncur Lotte",
+    "errand.lotte_sledge.thanks": "Kereta luncur saya! Macam baru! … Pfote suka tidur di atasnya. Boleh ia tinggal dengan dia, di sini, dalam kedai awak?",
+    "errand.lotte_sledge.memory": "Malam ke-{night}: anda membaiki kereta luncurnya, dan dia memberikannya kepada Pfote.",
+    "errand.clue_title": "Jejak dalam salji",
+    "errand.clue_hint": "Klik untuk mengikutinya.",
+    "errand.repair": "Baiki {item} ({cost})",
+    "errand.needs_workbench": "Untuk membaikinya, anda perlukan meja kerja di kedai; tukang kayu di pasar ada menjualnya.",
+    "errand.can_wait": "Tak perlu tergesa-gesa – ini boleh menunggu senja yang lain.",
+    "log.repaired_keepsake": "Dibaiki di meja kerja: {item}.",
+    "book.keepsake_errand": "Daripada {ghost} – terima kasih kerana menemukan barang yang hilang",
 }

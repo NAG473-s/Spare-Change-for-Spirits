@@ -719,6 +719,7 @@
     "decor.oar.name": "Cây sào đò cũ",
     "decor.chalk_drawing.name": "Tranh phấn của Lotte",
     "decor.dog_basket.name": "Giỏ của Pfote",
+    "decor.toy_sledge.name": "Xe trượt tuyết của Lotte",
     "decor.cog_wheel.name": "Bánh răng cũ của tháp đồng hồ",
     "decor.cuckoo_clock.name": "Đồng hồ cúc cu của Anselm",
     "rep_tip.title": "Danh tiếng {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Người học việc của bạn đã phục vụ {who}: {item} giá {price}.",
     "morning.apprentice": "Đêm qua người học việc của bạn đã phục vụ {count} vị khách.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Chiếc xe trượt tuyết bị lạc của Lotte",
+    "errand.lotte_sledge.start": "Lotte gọi qua khe thư ở cửa: “Em làm mất chiếc xe trượt tuyết nhỏ trong tuyết rồi! Pfote ngửi thấy mùi nó – bạn ấy cứ hít hít về phía bến thuyền.”",
+    "errand.lotte_sledge.hint.1": "Pfote cứ hít hít về phía bến thuyền. Buổi tối hãy tìm dấu vết trên bến tàu.",
+    "errand.lotte_sledge.clue.1": "Những dấu chân nhỏ xíu và các vệt mảnh của thanh trượt chạy dọc bến tàu – về phía làng.",
+    "errand.lotte_sledge.hint.2": "Vệt thanh trượt dẫn tới chợ làng. Ban ngày hãy tìm quanh các sạp hàng.",
+    "errand.lotte_sledge.clue.2": "Sau các sạp hàng, nửa vùi trong tuyết: chiếc xe trượt nhỏ của Lotte. Một thanh trượt bị nứt.",
+    "errand.lotte_sledge.repair_hint": "Một thanh trượt của xe bị nứt. Có thể sửa ở bàn thợ.",
+    "errand.lotte_sledge.return": "Trả xe trượt cho Lotte",
+    "errand.lotte_sledge.thanks": "Xe trượt của em! Như mới luôn! … Pfote thích ngủ trên đó lắm. Cho nó ở lại với bạn ấy, ngay đây trong tiệm, được không ạ?",
+    "errand.lotte_sledge.memory": "Đêm {night}: bạn đã sửa xe trượt cho cô bé, và cô bé tặng nó cho Pfote.",
+    "errand.clue_title": "Dấu vết trên tuyết",
+    "errand.clue_hint": "Nhấp để lần theo.",
+    "errand.repair": "Sửa {item} ({cost})",
+    "errand.needs_workbench": "Muốn sửa thì trong tiệm cần có bàn thợ; bác thợ mộc ở chợ có bán.",
+    "errand.can_wait": "Không vội đâu – việc này để tối khác cũng được.",
+    "log.repaired_keepsake": "Đã sửa ở bàn thợ: {item}.",
+    "book.keepsake_errand": "Từ {ghost} – lời cảm ơn vì đã tìm lại đồ thất lạc",
 }

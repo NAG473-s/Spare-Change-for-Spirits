@@ -719,6 +719,7 @@
     "decor.oar.name": "Старый шест перевозчика",
     "decor.chalk_drawing.name": "Меловой рисунок Лотты",
     "decor.dog_basket.name": "Корзинка Пфоте",
+    "decor.toy_sledge.name": "Санки Лотты",
     "decor.cog_wheel.name": "Старая шестерня с башни",
     "decor.cuckoo_clock.name": "Часы с кукушкой Ансельма",
     "rep_tip.title": "Репутация {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Подмастерье обслужил: {who} – {item} за {price}.",
     "morning.apprentice": "Подмастерье обслужил за ночь покупателей: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Потерянные санки Лотты",
+    "errand.lotte_sledge.start": "Лотта зовёт через щель для писем: «Я потеряла в снегу свои санки! Пфоте их чует – он всё время принюхивается в сторону гавани».",
+    "errand.lotte_sledge.hint.1": "Пфоте всё время принюхивается в сторону гавани. Вечером поищите следы на причале.",
+    "errand.lotte_sledge.clue.1": "Маленькие следы лап и тонкие полоски от полозьев санок тянутся вдоль причала – в сторону деревни.",
+    "errand.lotte_sledge.hint.2": "Следы полозьев ведут к деревенскому рынку. Днём осмотритесь у лотков.",
+    "errand.lotte_sledge.clue.2": "За лотками, наполовину в снегу: санки Лотты. Один полоз треснул.",
+    "errand.lotte_sledge.repair_hint": "У санок треснул полоз. Его можно починить на верстаке.",
+    "errand.lotte_sledge.return": "Вернуть Лотте санки",
+    "errand.lotte_sledge.thanks": "Мои санки! Как новые! …Пфоте любит на них спать. Можно они останутся у него, здесь, в твоей лавке?",
+    "errand.lotte_sledge.memory": "Ночь {night}: вы починили её санки, и она отдала их Пфоте.",
+    "errand.clue_title": "Следы на снегу",
+    "errand.clue_hint": "Нажмите, чтобы пойти по ним.",
+    "errand.repair": "Починить: {item} ({cost})",
+    "errand.needs_workbench": "Для починки нужен верстак в лавке; его продаёт плотник на рынке.",
+    "errand.can_wait": "Спешить некуда – это подождёт до другого вечера.",
+    "log.repaired_keepsake": "Починено на верстаке: {item}.",
+    "book.keepsake_errand": "Призрак: {ghost} – благодарность за найденную пропажу",
 }

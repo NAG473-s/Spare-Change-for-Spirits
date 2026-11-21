@@ -719,6 +719,7 @@
     "decor.oar.name": "ไม้ถ่อเก่าของคนแจวเรือ",
     "decor.chalk_drawing.name": "ภาพวาดชอล์กของลอตเต้",
     "decor.dog_basket.name": "ตะกร้าของพโฟเทอ",
+    "decor.toy_sledge.name": "เลื่อนหิมะของลอตเต้",
     "decor.cog_wheel.name": "เฟืองเก่าจากหอนาฬิกา",
     "decor.cuckoo_clock.name": "นาฬิกากุ๊กกูของแอนเซล์ม",
     "rep_tip.title": "ชื่อเสียง {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "ผู้ช่วยฝึกหัดของคุณบริการ{who}: {item} ราคา {price}",
     "morning.apprentice": "เมื่อคืนผู้ช่วยฝึกหัดของคุณบริการลูกค้าไป {count} ราย",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "เลื่อนหิมะที่หายไปของลอตเต้",
+    "errand.lotte_sledge.start": "ลอตเต้ตะโกนเรียกผ่านช่องใส่จดหมาย “หนูทำเลื่อนหิมะอันเล็กๆ หายในหิมะค่ะ! พโฟเทอได้กลิ่นมัน – เขาเอาแต่ดมฟุดฟิดไปทางท่าน้ำ”",
+    "errand.lotte_sledge.hint.1": "พโฟเทอเอาแต่ดมฟุดฟิดไปทางท่าน้ำ ลองหารอยบนท่าเรือตอนหัวค่ำดู",
+    "errand.lotte_sledge.clue.1": "รอยอุ้งเท้าเล็กๆ กับรอยขาเลื่อนเส้นบางๆ ทอดยาวไปตามท่าเรือ – มุ่งไปทางหมู่บ้าน",
+    "errand.lotte_sledge.hint.2": "รอยขาเลื่อนนำไปสู่ตลาดหมู่บ้าน ลองไปดูรอบๆ แผงร้านตอนกลางวัน",
+    "errand.lotte_sledge.clue.2": "หลังแผงร้าน จมหิมะอยู่ครึ่งหนึ่ง: เลื่อนหิมะอันเล็กของลอตเต้ ขาเลื่อนข้างหนึ่งร้าว",
+    "errand.lotte_sledge.repair_hint": "ขาเลื่อนข้างหนึ่งร้าว ซ่อมได้ที่โต๊ะช่าง",
+    "errand.lotte_sledge.return": "คืนเลื่อนหิมะให้ลอตเต้",
+    "errand.lotte_sledge.thanks": "เลื่อนของหนู! เหมือนใหม่เลย! … พโฟเทอชอบนอนบนมัน ให้มันอยู่กับเขาที่นี่ ในร้านของคุณได้ไหมคะ?",
+    "errand.lotte_sledge.memory": "คืนที่ {night}: คุณซ่อมเลื่อนหิมะให้เธอ แล้วเธอก็ยกให้พโฟเทอ",
+    "errand.clue_title": "รอยบนหิมะ",
+    "errand.clue_hint": "คลิกเพื่อตามรอยไป",
+    "errand.repair": "ซ่อม{item} ({cost})",
+    "errand.needs_workbench": "ต้องมีโต๊ะช่างในร้านถึงจะซ่อมได้ ช่างไม้ที่ตลาดมีขาย",
+    "errand.can_wait": "ไม่ต้องรีบ – เรื่องนี้รอไว้หัวค่ำวันอื่นก็ได้",
+    "log.repaired_keepsake": "ซ่อมที่โต๊ะช่างแล้ว: {item}",
+    "book.keepsake_errand": "จาก {ghost} – ขอบคุณที่ช่วยตามหาของหาย",
 }

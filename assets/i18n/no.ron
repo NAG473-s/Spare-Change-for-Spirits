@@ -719,6 +719,7 @@
     "decor.oar.name": "Den gamle fergestaken",
     "decor.chalk_drawing.name": "Lottes krittegning",
     "decor.dog_basket.name": "Pfotes kurv",
+    "decor.toy_sledge.name": "Lottes kjelke",
     "decor.cog_wheel.name": "Gammelt tårntannhjul",
     "decor.cuckoo_clock.name": "Anselms gjøkur",
     "rep_tip.title": "Omdømme {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "{who} ble betjent av lærlingen din: {item} for {price}.",
     "morning.apprentice": "Lærlingen din betjente {count} kunder i natt.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lottes forsvunne kjelke",
+    "errand.lotte_sledge.start": "Lotte roper gjennom brevsprekken: «Jeg har mistet den lille kjelken min i snøen! Pfote kan lukte den – han snuser hele tiden mot havna.»",
+    "errand.lotte_sledge.hint.1": "Pfote snuser hele tiden mot havna. Se etter spor på kaia om kvelden.",
+    "errand.lotte_sledge.clue.1": "Små poteavtrykk og de tynne stripene etter kjelkemeier går langs kaia – mot landsbyen.",
+    "errand.lotte_sledge.hint.2": "Meiesporene fører til landsbymarkedet. Se deg om ved bodene på dagtid.",
+    "errand.lotte_sledge.clue.2": "Bak bodene, halvt begravd i snøen: Lottes lille kjelke. Den ene meien har sprukket.",
+    "errand.lotte_sledge.repair_hint": "Den ene meien på kjelken har sprukket. Den kan repareres på arbeidsbenken.",
+    "errand.lotte_sledge.return": "Gi Lotte kjelken tilbake",
+    "errand.lotte_sledge.thanks": "Kjelken min! Den er jo som ny! … Pfote liker å sove på den. Kan den få bli hos ham, her i butikken din?",
+    "errand.lotte_sledge.memory": "Natt {night}: du reparerte kjelken hennes, og hun ga den til Pfote.",
+    "errand.clue_title": "Spor i snøen",
+    "errand.clue_hint": "Klikk for å følge dem.",
+    "errand.repair": "Reparer: {item} ({cost})",
+    "errand.needs_workbench": "Det krever en arbeidsbenk i butikken; snekkeren på markedet selger en.",
+    "errand.can_wait": "Ingen hast – dette kan vente til en annen kveld.",
+    "log.repaired_keepsake": "Reparert på arbeidsbenken: {item}.",
+    "book.keepsake_errand": "Fra {ghost} – takk for hjelpen med å finne noe som var borte",
 }

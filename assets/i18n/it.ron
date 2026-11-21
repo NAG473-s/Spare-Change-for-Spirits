@@ -719,6 +719,7 @@
     "decor.oar.name": "Vecchia pertica del traghettatore",
     "decor.chalk_drawing.name": "Disegno a gessetto di Lotte",
     "decor.dog_basket.name": "Cestino di Pfote",
+    "decor.toy_sledge.name": "Slittino di Lotte",
     "decor.cog_wheel.name": "Vecchio ingranaggio della torre",
     "decor.cuckoo_clock.name": "Orologio a cucù di Anselm",
     "rep_tip.title": "Reputazione {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Servito dal tuo apprendista – {who}: {item} per {price}.",
     "morning.apprentice": "Stanotte il tuo apprendista ha servito {count} clienti.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lo slittino perduto di Lotte",
+    "errand.lotte_sledge.start": "Lotte chiama attraverso la buca delle lettere: «Ho perso il mio slittino nella neve! Pfote ne sente l'odore – continua ad annusare verso il porto.»",
+    "errand.lotte_sledge.hint.1": "Pfote continua ad annusare verso il porto. Cerca delle tracce sulla banchina, di sera.",
+    "errand.lotte_sledge.clue.1": "Piccole impronte di zampe e le linee sottili dei pattini di uno slittino corrono lungo la banchina – verso il villaggio.",
+    "errand.lotte_sledge.hint.2": "Le tracce dei pattini portano al mercato del villaggio. Guarda tra le bancarelle di giorno.",
+    "errand.lotte_sledge.clue.2": "Dietro le bancarelle, mezzo sepolto nella neve: lo slittino di Lotte. Uno dei pattini è incrinato.",
+    "errand.lotte_sledge.repair_hint": "Uno dei pattini dello slittino è incrinato. Si può aggiustare al banco da lavoro.",
+    "errand.lotte_sledge.return": "Restituisci lo slittino a Lotte",
+    "errand.lotte_sledge.thanks": "Il mio slittino! È come nuovo! … A Pfote piace dormirci sopra. Può restare con lui, qui nella tua bottega?",
+    "errand.lotte_sledge.memory": "Notte {night}: hai aggiustato il suo slittino, e lei l'ha regalato a Pfote.",
+    "errand.clue_title": "Tracce nella neve",
+    "errand.clue_hint": "Clicca per seguirle.",
+    "errand.repair": "Aggiusta: {item} ({cost})",
+    "errand.needs_workbench": "Per aggiustarlo serve un banco da lavoro nella bottega; il falegname del mercato ne vende uno.",
+    "errand.can_wait": "Nessuna fretta – può aspettare un'altra sera.",
+    "log.repaired_keepsake": "Riparazione finita al banco da lavoro: {item}.",
+    "book.keepsake_errand": "Da {ghost} – un grazie per aver ritrovato qualcosa di perduto",
 }

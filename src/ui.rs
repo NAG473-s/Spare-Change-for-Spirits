@@ -149,6 +149,9 @@ pub enum Action {
     BookClose,
     /// Leave the finale scene for the accounts.
     FinaleContinue,
+    /// Mend an errand's lost keepsake at the workbench / give it back.
+    RepairErrand(usize),
+    ReturnErrand(usize),
     /// Turn to a chapter of the book (its coloured tab).
     BookChapter(crate::book::Chapter),
     GhostProfile(usize),
@@ -1138,6 +1141,7 @@ fn build_market_panel(
     }
     ui.heading(&lang.t("market.title"));
     ui.dim(&lang.t("market.intro"));
+    crate::errands::market_hint(&mut ui, &lang, &data, &progress);
     ui.section(&lang.t("market.vendors"));
     let calendar = progress.calendar(&data);
     let root = ui.root();
@@ -1418,6 +1422,7 @@ fn build_evening_panel(
     workbench_section(
         &mut ui, &lang, &data, &layout, &progress, &drawer, &upgrades,
     );
+    crate::errands::evening_section(&mut ui, &lang, &data, &progress, &layout, &drawer);
 
     ui.section(&lang.t("evening.atmosphere"));
     ui.text(&layout.atmosphere(&data, night).describe(&lang));

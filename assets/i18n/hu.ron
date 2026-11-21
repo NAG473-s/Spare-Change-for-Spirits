@@ -719,6 +719,7 @@
     "decor.oar.name": "A régi révészrúd",
     "decor.chalk_drawing.name": "Lotte krétarajza",
     "decor.dog_basket.name": "Pfote kosara",
+    "decor.toy_sledge.name": "Lotte szánkója",
     "decor.cog_wheel.name": "Régi toronyfogaskerék",
     "decor.cuckoo_clock.name": "Anselm kakukkos órája",
     "rep_tip.title": "Hírnév: {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Az inasod kiszolgált egy vendéget – {who}: {item}, ár: {price}.",
     "morning.apprentice": "Az inasod tegnap éjjel {count} vendéget szolgált ki.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lotte elveszett szánkója",
+    "errand.lotte_sledge.start": "Lotte bekiabál a levélbedobón: „Elvesztettem a kis szánkómat a hóban! Pfote érzi a szagát – folyton a kikötő felé szimatol.”",
+    "errand.lotte_sledge.hint.1": "Pfote folyton a kikötő felé szimatol. Este keress nyomokat a rakparton.",
+    "errand.lotte_sledge.clue.1": "Apró mancsnyomok és szánkótalpak vékony csíkjai vezetnek végig a rakparton – a falu felé.",
+    "errand.lotte_sledge.hint.2": "A talpnyomok a falusi piacra vezetnek. Napközben nézz körül a bódéknál.",
+    "errand.lotte_sledge.clue.2": "A bódék mögött, félig a hóba temetve: Lotte kis szánkója. Az egyik talpa megrepedt.",
+    "errand.lotte_sledge.repair_hint": "A szánkó egyik talpa megrepedt. A munkapadon meg lehet javítani.",
+    "errand.lotte_sledge.return": "Add vissza Lottének a szánkóját",
+    "errand.lotte_sledge.thanks": "A szánkóm! Olyan, mint az új! … Pfote szeret rajta aludni. Itt maradhat nála, a boltodban?",
+    "errand.lotte_sledge.memory": "{night}. éjszaka: megjavítottad a szánkóját, ő pedig Pfoténak adta.",
+    "errand.clue_title": "Nyomok a hóban",
+    "errand.clue_hint": "Kattints, hogy kövesd őket.",
+    "errand.repair": "Javítás: {item} ({cost})",
+    "errand.needs_workbench": "A javításhoz munkapad kell a boltba; a piacon az asztalos árul egyet.",
+    "errand.can_wait": "Nem sürgős – ráér egy másik estén is.",
+    "log.repaired_keepsake": "Megjavítva a munkapadon: {item}.",
+    "book.keepsake_errand": "Kitől: {ghost} – köszönet egy elveszett holmi megtalálásáért",
 }

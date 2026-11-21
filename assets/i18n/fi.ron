@@ -719,6 +719,7 @@
     "decor.oar.name": "Lautturin vanha sauvoin",
     "decor.chalk_drawing.name": "Lotten liitupiirros",
     "decor.dog_basket.name": "Pfoten kori",
+    "decor.toy_sledge.name": "Lotten kelkka",
     "decor.cog_wheel.name": "Tornin vanha hammasratas",
     "decor.cuckoo_clock.name": "Anselmin käkikello",
     "rep_tip.title": "Maine {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "{who} sai palvelua oppipojaltasi: {item} hintaan {price}.",
     "morning.apprentice": "Oppipoikasi palveli viime yönä asiakkaita: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lotten kadonnut kelkka",
+    "errand.lotte_sledge.start": "Lotte huhuilee postiluukusta: ”Hukkasin pikku kelkkani lumeen! Pfote haistaa sen – se nuuskii koko ajan sataman suuntaan.”",
+    "errand.lotte_sledge.hint.1": "Pfote nuuskii koko ajan sataman suuntaan. Etsi illalla jälkiä laiturilta.",
+    "errand.lotte_sledge.clue.1": "Pienet tassunjäljet ja kelkan jalasten ohuet urat kulkevat laituria pitkin – kylää kohti.",
+    "errand.lotte_sledge.hint.2": "Jalasten jäljet vievät kylän markkinoille. Katsele päivällä kojujen ympärillä.",
+    "errand.lotte_sledge.clue.2": "Kojujen takana, puoliksi lumen peitossa: Lotten pikku kelkka. Toinen jalas on haljennut.",
+    "errand.lotte_sledge.repair_hint": "Kelkan toinen jalas on haljennut. Sen voi korjata työpenkillä.",
+    "errand.lotte_sledge.return": "Anna kelkka takaisin Lottelle",
+    "errand.lotte_sledge.thanks": "Minun kelkkani! Se on kuin uusi! … Pfote nukkuu mielellään sen päällä. Saako kelkka jäädä Pfoten luo, tänne sinun puotiisi?",
+    "errand.lotte_sledge.memory": "Yö {night}: korjasit hänen kelkkansa, ja hän antoi sen Pfotelle.",
+    "errand.clue_title": "Jälkiä lumessa",
+    "errand.clue_hint": "Seuraa niitä klikkaamalla.",
+    "errand.repair": "Korjaa: {item} ({cost})",
+    "errand.needs_workbench": "Korjaamiseen tarvitaan puotiin työpenkki; markkinoiden puuseppä myy sellaisen.",
+    "errand.can_wait": "Ei kiirettä – tämä voi odottaa toiseen iltaan.",
+    "log.repaired_keepsake": "Korjattu työpenkillä: {item}.",
+    "book.keepsake_errand": "Keneltä: {ghost} – kiitokseksi kadonneen tavaran löytämisestä",
 }

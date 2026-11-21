@@ -562,6 +562,8 @@ pub struct GameData {
     pub incidents: Vec<crate::incidents::IncidentDef>,
     /// Furniture sets (`sets.ron`).
     pub sets: Vec<crate::sets::SetDef>,
+    /// Lost-and-found errands after a story (`errands.ron`).
+    pub errands: Vec<crate::errands::ErrandDef>,
     /// Achievements of the full game (`achievements.ron`).
     pub achievements: Vec<crate::achievements::AchievementDef>,
     /// Broken things in the junk and their repair (`workbench.ron`).
@@ -709,6 +711,7 @@ impl GameData {
             stories: load_ron("data/story.ron"),
             incidents: load_ron("data/incidents.ron"),
             sets: load_ron("data/sets.ron"),
+            errands: load_ron("data/errands.ron"),
             workbench: load_ron("data/workbench.ron"),
             achievements: if cfg!(feature = "demo") {
                 Vec::new()

@@ -719,6 +719,7 @@
     "decor.oar.name": "Vieille perche du passeur",
     "decor.chalk_drawing.name": "Dessin à la craie de Lotte",
     "decor.dog_basket.name": "Panier de Pfote",
+    "decor.toy_sledge.name": "Luge de Lotte",
     "decor.cog_wheel.name": "Vieux rouage de la tour",
     "decor.cuckoo_clock.name": "Coucou d'Anselm",
     "rep_tip.title": "Réputation {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Servi par ton apprenti – {who} : {item} pour {price}.",
     "morning.apprentice": "Ton apprenti a servi {count} clients cette nuit.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "La luge perdue de Lotte",
+    "errand.lotte_sledge.start": "Lotte appelle par la fente à lettres : « J'ai perdu ma petite luge dans la neige ! Pfote peut la sentir – il n'arrête pas de renifler vers le port. »",
+    "errand.lotte_sledge.hint.1": "Pfote n'arrête pas de renifler vers le port. Cherche des traces sur le quai, le soir.",
+    "errand.lotte_sledge.clue.1": "De petites empreintes de pattes et les fines lignes des patins d'une luge longent le quai – en direction du village.",
+    "errand.lotte_sledge.hint.2": "Les traces de patins mènent au marché du village. Jette un œil autour des étals pendant la journée.",
+    "errand.lotte_sledge.clue.2": "Derrière les étals, à moitié enfouie dans la neige : la petite luge de Lotte. L'un des patins est fendu.",
+    "errand.lotte_sledge.repair_hint": "L'un des patins de la luge est fendu. On peut le réparer à l'établi.",
+    "errand.lotte_sledge.return": "Rendre sa luge à Lotte",
+    "errand.lotte_sledge.thanks": "Ma luge ! Elle est comme neuve ! … Pfote aime bien dormir dessus. Elle peut rester avec lui, ici dans ta boutique ?",
+    "errand.lotte_sledge.memory": "Nuit {night} : tu as réparé sa luge, et elle l'a offerte à Pfote.",
+    "errand.clue_title": "Des traces dans la neige",
+    "errand.clue_hint": "Clique pour les suivre.",
+    "errand.repair": "Réparer : {item} ({cost})",
+    "errand.needs_workbench": "Pour cette réparation, il faut un établi dans la boutique ; le menuisier du marché en vend un.",
+    "errand.can_wait": "Rien ne presse – ça peut attendre un autre soir.",
+    "log.repaired_keepsake": "Réparation terminée à l'établi : {item}.",
+    "book.keepsake_errand": "Laissé par {ghost} – en remerciement d'une recherche d'objet perdu",
 }

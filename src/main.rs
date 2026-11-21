@@ -18,6 +18,7 @@ mod critters;
 mod data;
 mod day_cycle;
 mod economy;
+mod errands;
 mod ferry;
 mod finale;
 mod fx;
@@ -130,6 +131,7 @@ fn main() {
             apprentice::ApprenticePlugin,
             gamepad::GamepadPlugin,
             finale::FinalePlugin,
+            errands::ErrandsPlugin,
             story_film::StoryFilmPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]

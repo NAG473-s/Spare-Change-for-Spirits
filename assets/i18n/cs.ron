@@ -719,6 +719,7 @@
     "decor.oar.name": "Staré převoznické bidlo",
     "decor.chalk_drawing.name": "Lottin křídový obrázek",
     "decor.dog_basket.name": "Pfotův košík",
+    "decor.toy_sledge.name": "Lottiny sáňky",
     "decor.cog_wheel.name": "Staré ozubené kolo z věže",
     "decor.cuckoo_clock.name": "Anselmovy kukačkové hodiny",
     "rep_tip.title": "Pověst {reputation}",
@@ -953,4 +954,23 @@
     // The apprentice
     "log.apprentice_served": "Tvůj učeň obsloužil zákazníka – {who}: {item} za {price}.",
     "morning.apprentice": "Tvůj učeň v noci obsloužil zákazníky: {count}.",
+
+    // Lost-and-found errands (errands.ron)
+    "errand.lotte_sledge.title": "Lottiny ztracené sáňky",
+    "errand.lotte_sledge.start": "Lotte volá štěrbinou na dopisy: „Ztratila jsem ve sněhu svoje sáňky! Pfote je cítí – pořád čenichá směrem k přístavu.“",
+    "errand.lotte_sledge.hint.1": "Pfote pořád čenichá směrem k přístavu. Večer hledej stopy na nábřeží.",
+    "errand.lotte_sledge.clue.1": "Malé stopy tlapek a tenké rýhy od ližin vedou podél nábřeží – směrem k vesnici.",
+    "errand.lotte_sledge.hint.2": "Stopy ližin vedou na vesnický trh. Ve dne se porozhlédni kolem stánků.",
+    "errand.lotte_sledge.clue.2": "Za stánky, napůl zapadané sněhem: Lottiny sáňky. Jedna ližina je prasklá.",
+    "errand.lotte_sledge.repair_hint": "Jedna ližina sáněk je prasklá. Dá se spravit u pracovního stolu.",
+    "errand.lotte_sledge.return": "Vrátit Lotte sáňky",
+    "errand.lotte_sledge.thanks": "Moje sáňky! Jsou jako nové! … Pfote na nich rád spí. Můžou zůstat u něj, tady v tvém krámku?",
+    "errand.lotte_sledge.memory": "Noc {night}: díky tobě má zase celé sáňky a darovala je pejskovi Pfote.",
+    "errand.clue_title": "Stopy ve sněhu",
+    "errand.clue_hint": "Klikni a sleduj je.",
+    "errand.repair": "Spravit: {item} ({cost})",
+    "errand.needs_workbench": "Na opravu je potřeba pracovní stůl v obchodě; truhlář na trhu ho prodává.",
+    "errand.can_wait": "Nespěchá to – může to počkat na jiný večer.",
+    "log.repaired_keepsake": "Oprava hotova: {item}.",
+    "book.keepsake_errand": "Od: {ghost} – díky za nalezení ztracené věci",
 }
