@@ -879,6 +879,25 @@ pub fn free_cell_for(
     })
 }
 
+/// Can the panel's "first free square / first shelf" button do anything now?
+/// Only while some of the selected piece or ware is left and there is room
+/// for it.
+pub fn can_use_tool_anywhere(
+    data: &GameData,
+    layout: &ShopLayout,
+    upgrades: &Upgrades,
+    tool: &Tool,
+    storeroom: &Storeroom,
+    stock: &Stock,
+) -> bool {
+    let left = match tool {
+        Tool::Place(id) => storeroom.count(id) > 0,
+        Tool::Stock(product) => stock.count(product) > 0,
+        _ => false,
+    };
+    left && free_cell_for(data, layout, upgrades, tool).is_some()
+}
+
 fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
     for action in actions.read() {
         let new = match action {
@@ -1352,6 +1371,48 @@ mod tests {
         act(&mut world, Action::ClearCell(at));
         assert!(world.resource::<ShopLayout>().cells[at].decor.is_none());
         assert_eq!(world.resource::<Storeroom>().count(&shelf), 1);
+    }
+
+    /// The panel offers "first free square / first shelf" only while some of
+    /// the selected piece or ware is left (the last one placed leaves the
+    /// tool selected).
+    #[test]
+    fn the_anywhere_button_needs_something_left_to_place() {
+        let data = GameData::load();
+        let shelf = data
+            .decor
+            .iter()
+            .find(|d| d.is_shelf() && !d.keepsake)
+            .unwrap()
+            .id
+            .clone();
+        let mut layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        layout.cells.fill(CellContent::default());
+        let upgrades = Upgrades::default();
+        let mut room = Storeroom::default();
+        let mut stock = Stock::default();
+        let place = Tool::Place(shelf.clone());
+        let usable = |layout: &ShopLayout, tool: &Tool, room: &Storeroom, stock: &Stock| {
+            can_use_tool_anywhere(&data, layout, &upgrades, tool, room, stock)
+        };
+        assert!(
+            !usable(&layout, &place, &room, &stock),
+            "nothing in the storeroom"
+        );
+        room.give(&shelf);
+        assert!(usable(&layout, &place, &room, &stock));
+        let idx = free_cell_for(&data, &layout, &upgrades, &place).unwrap();
+        furnish_cell(&mut layout, &mut room, &data, &upgrades, idx, Some(&shelf)).unwrap();
+        assert!(
+            !usable(&layout, &place, &room, &stock),
+            "the last one is placed"
+        );
+
+        let ware = Tool::Stock("lavender".into());
+        assert!(!usable(&layout, &ware, &room, &stock), "none in stock");
+        stock.add("lavender", 1);
+        assert!(usable(&layout, &ware, &room, &stock));
+        assert!(!usable(&layout, &Tool::Remove, &room, &stock));
     }
 
     #[test]

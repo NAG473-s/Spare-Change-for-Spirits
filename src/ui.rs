@@ -1451,7 +1451,9 @@ fn build_evening_panel(
                         &lang.f("evening.shelve_anywhere", &[("item", &lang.product(id))]),
                         Action::UseToolAnywhere,
                         false,
-                        crate::shop::free_cell_for(&data, &layout, &upgrades, &tool).is_some(),
+                        crate::shop::can_use_tool_anywhere(
+                            &data, &layout, &upgrades, &tool, &storeroom, &stock,
+                        ),
                     );
                 }
             }
@@ -1574,7 +1576,9 @@ fn build_evening_panel(
             &lang.f("evening.place_anywhere", &[("item", &lang.decor(id))]),
             Action::UseToolAnywhere,
             false,
-            crate::shop::free_cell_for(&data, &layout, &upgrades, &tool).is_some(),
+            crate::shop::can_use_tool_anywhere(
+                &data, &layout, &upgrades, &tool, &storeroom, &stock,
+            ),
         );
     }
     ui.dim(&lang.t("evening.drag_hint"));
@@ -1616,7 +1620,9 @@ fn build_evening_panel(
             &lang.f("evening.shelve_anywhere", &[("item", &lang.product(id))]),
             Action::UseToolAnywhere,
             false,
-            crate::shop::free_cell_for(&data, &layout, &upgrades, &tool).is_some(),
+            crate::shop::can_use_tool_anywhere(
+                &data, &layout, &upgrades, &tool, &storeroom, &stock,
+            ),
         );
         if layout.displayed_products().contains(id) {
             ui.button_in(
