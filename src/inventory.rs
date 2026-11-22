@@ -125,4 +125,44 @@ mod tests {
         assert!(stock.remove_new("tea_tin", 2));
         assert_eq!(stock.units()["tea_tin"], vec![2]);
     }
+
+    #[test]
+    fn the_oldest_unit_is_sold_first() {
+        let mut stock = Stock::from_units(BTreeMap::from([("tea_tin".to_string(), vec![0, 2, 1])]));
+        assert!(stock.take_one("tea_tin"));
+        let mut left = stock.units()["tea_tin"].clone();
+        left.sort();
+        assert_eq!(left, vec![0, 1]);
+        assert!(!stock.take_one("music_box"), "nothing of it in stock");
+        assert!(stock.take_one("tea_tin") && stock.take_one("tea_tin"));
+        assert!(!stock.take_one("tea_tin"), "sold out");
+        assert_eq!(stock.count("tea_tin"), 0);
+    }
+
+    /// A unit fades at the dawn on which its age reaches `fade_after`;
+    /// the herb sachets' bonus adds nights, and unknown ids never fade.
+    #[test]
+    fn wares_fade_after_their_nights() {
+        let data = GameData::load();
+        let product = &data.products[0];
+        let id = product.id.as_str();
+        let nights = product.fade_after;
+        let mut stock = Stock::default();
+        stock.add(id, 2);
+        stock.add("not_a_product", 1);
+        for _ in 1..nights {
+            assert!(stock.age_and_fade(&data, 0).is_empty());
+        }
+        assert_eq!(stock.count(id), 2);
+        assert_eq!(stock.age_and_fade(&data, 0), vec![(id.to_string(), 2)]);
+        assert_eq!(stock.count(id), 0);
+        assert_eq!(stock.count("not_a_product"), 1);
+
+        let mut kept = Stock::default();
+        kept.add(id, 1);
+        for _ in 0..nights {
+            assert!(kept.age_and_fade(&data, 1).is_empty());
+        }
+        assert_eq!(kept.age_and_fade(&data, 1), vec![(id.to_string(), 1)]);
+    }
 }
