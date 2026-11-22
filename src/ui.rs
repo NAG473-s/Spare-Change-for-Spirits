@@ -1440,6 +1440,17 @@ fn build_evening_panel(
                         true,
                     );
                 }
+                // Without pointing at a shelf (keyboard and controller).
+                if let Tool::Stock(id) = &*tool {
+                    let root = ui.root();
+                    ui.button_in(
+                        root,
+                        &lang.f("evening.shelve_anywhere", &[("item", &lang.product(id))]),
+                        Action::UseToolAnywhere,
+                        false,
+                        crate::shop::free_cell_for(&data, &layout, &upgrades, &tool).is_some(),
+                    );
+                }
             }
             _ => {
                 ui.button_in(
