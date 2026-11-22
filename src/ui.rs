@@ -35,7 +35,7 @@ const LOG_MAX_SHARE: f32 = 16.4;
 const TOP_BAR_HEIGHT: f32 = 40.0;
 
 #[derive(Component)]
-struct TopBar;
+pub(crate) struct TopBar;
 
 #[derive(Component)]
 struct LogFrame;
@@ -635,7 +635,7 @@ struct MenuButtonLabel;
 struct LogText;
 
 #[derive(Component)]
-struct SidePanel;
+pub(crate) struct SidePanel;
 
 /// The two parts of the side panel.
 #[derive(Resource, Clone, Copy)]
@@ -766,14 +766,17 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
                     Hovered::default(),
                     StaticText { bold: true },
                     Text::new(""),
-                    text_font(&font.bold, 15.0),
-                    TextColor(TEXT),
+                    text_font(&font.bold, 16.0),
+                    TextColor(ACCENT),
                     Node {
                         flex_grow: 1.0,
                         flex_shrink: 1.0,
                         min_width: px(0),
+                        padding: UiRect::left(px(9)),
+                        border: UiRect::left(px(2)),
                         ..default()
                     },
+                    BorderColor::all(Color::srgb_u8(174, 134, 80)),
                 ),
                 coin_bar(&font, &icons),
             ],
@@ -1033,7 +1036,9 @@ fn update_hud(
         menu.0 = label;
     }
     if *phase.get() == Phase::Menu {
-        hud.0.clear();
+        if !hud.is_empty() {
+            hud.0.clear();
+        }
         return;
     }
     let time = if *phase.get() == Phase::Night {
@@ -1057,7 +1062,7 @@ fn update_hud(
     } else {
         "hud_open"
     };
-    hud.0 = lang.f(
+    let status = lang.f(
         key,
         &[
             ("night", &progress.night),
@@ -1067,6 +1072,9 @@ fn update_hud(
             ("reputation", &progress.reputation),
         ],
     );
+    if hud.0 != status {
+        hud.0 = status;
+    }
 }
 
 /// Count of one coin in the coin bar.
@@ -1133,6 +1141,12 @@ fn coin_bar(font: &UiFont, icons: &Icons) -> impl Bundle {
                 Text::new(""),
                 text_font(&font.bold, 15.0),
                 TextColor(ACCENT),
+                Node {
+                    padding: UiRect::left(px(8)),
+                    border: UiRect::left(px(1)),
+                    ..default()
+                },
+                BorderColor::all(PANEL_EDGE),
             ),
         ],
     )

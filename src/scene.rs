@@ -11,7 +11,8 @@ use bevy::prelude::*;
 use crate::data::asset_exists;
 use crate::day_cycle::{NightClock, Phase};
 use crate::harbor::{Location, ShopDoor};
-use crate::ui::{TEXT, UiFont};
+mod labels;
+pub(crate) use labels::{LabelKind, LabelMuted, world_label};
 
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
 /// Camera at the harbour and the market (relative to their origin).
@@ -68,7 +69,12 @@ impl Plugin for ScenePlugin {
                 set_camera_layers.run_if(state_changed::<Phase>),
                 time_of_day_light,
                 face_camera,
-                follow_labels,
+                (
+                    labels::paint_labels,
+                    labels::size_labels,
+                    labels::follow_labels,
+                )
+                    .chain(),
                 turn_clock_hands,
             ),
         );
@@ -634,101 +640,6 @@ pub fn billboard_material(
         cull_mode: None,
         ..default()
     })
-}
-
-/// A UI text that follows a 3D entity on screen (names, shelf labels).
-#[derive(Component)]
-pub struct WorldLabel {
-    pub target: Entity,
-    pub offset: Vec3,
-}
-
-/// A world label that is not shown for now (it keeps following its target).
-#[derive(Component)]
-pub struct LabelMuted;
-
-pub(crate) const LABEL_WIDTH: f32 = 120.0;
-
-pub fn world_label(
-    font: &UiFont,
-    text: String,
-    size: f32,
-    target: Entity,
-    offset: Vec3,
-) -> impl Bundle {
-    (
-        WorldLabel { target, offset },
-        Text::new(text),
-        crate::ui::text_font(&font.regular, size),
-        TextColor(TEXT),
-        TextShadow::default(),
-        TextLayout::justify(Justify::Center),
-        Node {
-            position_type: PositionType::Absolute,
-            width: px(LABEL_WIDTH),
-            ..default()
-        },
-        Pickable::IGNORE,
-        // Behind the side panel and the menus.
-        GlobalZIndex(-1),
-        // Hidden until `follow_labels` has put it in place – otherwise a new
-        // label shows for a frame in the top left corner.
-        Visibility::Hidden,
-    )
-}
-
-/// A label whose screen position has been set at least once.
-#[derive(Component)]
-struct LabelPlaced;
-
-fn follow_labels(
-    mut commands: Commands,
-    camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
-    targets: Query<&GlobalTransform>,
-    ui_scale: Res<UiScale>,
-    mut labels: Query<(
-        Entity,
-        &WorldLabel,
-        &mut Node,
-        &mut Visibility,
-        Has<LabelMuted>,
-        Has<LabelPlaced>,
-    )>,
-) {
-    let (camera, cam_transform) = *camera;
-    for (entity, label, mut node, mut visibility, muted, placed) in &mut labels {
-        let Ok(target) = targets.get(label.target) else {
-            commands.entity(entity).try_despawn();
-            continue;
-        };
-        // A target spawned this frame has no place in the world yet.
-        if *target == GlobalTransform::IDENTITY {
-            *visibility = Visibility::Hidden;
-            continue;
-        }
-        match camera.world_to_viewport(cam_transform, target.translation() + label.offset) {
-            Ok(pos) => {
-                // Window pixels to interface units.
-                let pos = pos / ui_scale.0;
-                node.left = px(pos.x - LABEL_WIDTH / 2.0);
-                node.top = px(pos.y);
-                // A new label shows from the next frame on, once the layout has
-                // its place – otherwise it flashes in the top left corner.
-                if !placed {
-                    // Phase changes can remove this label before commands are applied.
-                    commands.entity(entity).try_insert(LabelPlaced);
-                    *visibility = Visibility::Hidden;
-                    continue;
-                }
-                *visibility = if muted {
-                    Visibility::Hidden
-                } else {
-                    Visibility::Inherited
-                };
-            }
-            Err(_) => *visibility = Visibility::Hidden,
-        }
-    }
 }
 
 /// Where the wall clock hangs: on the back wall, right of the window.

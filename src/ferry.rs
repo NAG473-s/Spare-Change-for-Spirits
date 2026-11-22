@@ -20,7 +20,7 @@ use crate::harbor::{CART, CART_BED_HEIGHT, HARBOR, RippleMesh, float_hull, spawn
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::rng::Rng;
-use crate::scene::world_label;
+use crate::scene::{LabelKind, world_label};
 use crate::shop::{model_or_box, product_model};
 use crate::ui::{Action, BG_PANEL, GameLog, Icons, PanelBuilder, TEXT_DIM, UiFont, UiTheme};
 use crate::upgrades::Upgrades;
@@ -551,15 +551,17 @@ fn spawn_boat(
             .observe(on_crate_out);
         let new = p.unlock_night == night && night > 1;
         b.commands.spawn((
-            CrateLabel(item),
             world_label(
                 &font,
-                if new {
-                    lang.t("ferry.new")
-                } else {
-                    String::new()
-                },
-                12.0,
+                (
+                    CrateLabel(item),
+                    Text::new(if new {
+                        lang.t("ferry.new")
+                    } else {
+                        String::new()
+                    }),
+                ),
+                LabelKind::Stock,
                 item,
                 Vec3::Y * (CRATE_SIZE.y + 0.5),
             ),
@@ -622,8 +624,8 @@ fn name_ferryman(
         commands.spawn((
             world_label(
                 &font,
-                lang.ghost(&story.ghost),
-                11.0,
+                Text::new(lang.ghost(&story.ghost)),
+                LabelKind::Name,
                 man,
                 Vec3::Y * NAME_HEIGHT,
             ),
@@ -1130,13 +1132,16 @@ fn update_crate_labels(
         } else {
             String::new()
         };
-        text.0 = if progress.pinned_for(&item.id) {
+        let caption = if progress.pinned_for(&item.id) {
             format!("{} {label}", crate::orders::PIN_MARK)
                 .trim_end()
                 .to_owned()
         } else {
             label
         };
+        if text.0 != caption {
+            text.0 = caption;
+        }
     }
 }
 

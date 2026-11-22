@@ -12,7 +12,6 @@
 use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
-use bevy::text::LineBreak;
 
 use crate::accounts::Accounts;
 use crate::data::{Exchange, GameData, Ware, asset_exists, rgb};
@@ -23,13 +22,11 @@ use crate::harbor::{Location, repeating};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
-use crate::scene::{LABEL_WIDTH, WorldLabel, billboard_material, billboard_mesh};
+use crate::scene::{LabelKind, billboard_material, billboard_mesh, world_label};
 use crate::shop::{Storeroom, model_or_box, product_model};
 use crate::sign::return_post;
 use crate::tooltip::{HoverTip, TipKind};
-use crate::ui::{
-    Action, BG_PANEL, GameLog, Icons, PANEL_EDGE, PanelBuilder, TEXT, UiFont, UiTheme, text_font,
-};
+use crate::ui::{Action, GameLog, Icons, PanelBuilder, UiFont};
 use crate::upgrades::Upgrades;
 
 pub struct MarketPlugin;
@@ -416,7 +413,6 @@ fn spawn_vendor_plaques(
     data: Res<GameData>,
     lang: Res<Lang>,
     font: Res<UiFont>,
-    theme: Res<UiTheme>,
     progress: Res<Progress>,
 ) {
     for (stall, Stall(index)) in &stalls {
@@ -424,31 +420,16 @@ fn spawn_vendor_plaques(
             continue;
         }
         let key = format!("vendor.{}.name", data.vendors[*index].id);
-        let mut plaque = commands.spawn((
-            WorldLabel {
-                target: stall,
-                offset: PLAQUE_OFFSET,
-            },
-            Text::new(lang.t(&key)),
-            text_font(&font.display, 13.0),
-            TextColor(TEXT),
-            TextLayout::new(Justify::Center, LineBreak::WordOrCharacter),
-            Node {
-                position_type: PositionType::Absolute,
-                width: px(LABEL_WIDTH),
-                padding: UiRect::axes(px(5), px(3)),
-                border: UiRect::all(px(1)),
-                ..default()
-            },
-            BackgroundColor(BG_PANEL),
-            BorderColor::all(PANEL_EDGE),
-            GlobalZIndex(-1),
+        commands.spawn((
+            world_label(
+                &font,
+                Text::new(lang.t(&key)),
+                LabelKind::Sign,
+                stall,
+                PLAQUE_OFFSET,
+            ),
             DespawnOnExit(Phase::Day),
-            Pickable::IGNORE,
         ));
-        if let Some(frame) = theme.frame(0.09) {
-            plaque.insert(frame.with_visual_box(VisualBox::PaddingBox));
-        }
     }
 }
 

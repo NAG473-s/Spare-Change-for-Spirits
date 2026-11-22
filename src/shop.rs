@@ -23,7 +23,7 @@ use crate::harbor::{ShopDoor, on_shop_door_click};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::register::Register;
-use crate::scene::{Billboard, billboard_material, billboard_mesh, floor, world_label};
+use crate::scene::{Billboard, LabelKind, billboard_material, billboard_mesh, floor, world_label};
 use crate::tooltip::{HoverTip, TipKind};
 use crate::ui::{Action, GameLog, Icons, UiFont};
 use crate::upgrades::Upgrades;
@@ -555,15 +555,13 @@ fn spawn_shop(
         Transform::from_translation(floor(layout.counter_pos(), y))
             .with_rotation(Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2)),
     ));
-    commands.spawn((
-        CounterLabel,
-        world_label(
-            &font,
-            lang.t("shop.counter"),
-            12.0,
-            counter,
-            Vec3::new(0.0, 1.3 - y, 0.0),
-        ),
+    // The brass nameplate sits against the near end, below the till and the postcard.
+    commands.spawn(world_label(
+        &font,
+        (CounterLabel, Text::new(lang.t("shop.counter"))),
+        LabelKind::Sign,
+        counter,
+        Vec3::new(0.0, 0.39 - y, COUNTER_SIZE.x * 0.5),
     ));
 
     commands.insert_resource(layout);
@@ -582,15 +580,7 @@ fn translate_counter(
     mut label: Single<(&mut Text, &mut TextFont), With<CounterLabel>>,
 ) {
     label.0.0 = lang.t("shop.counter");
-    *label.1 = small_font(&font, 12.0);
-}
-
-pub fn small_font(font: &UiFont, size: f32) -> TextFont {
-    TextFont {
-        font: font.regular.clone(),
-        font_size: FontSize::Px(size),
-        ..default()
-    }
+    *label.1 = LabelKind::Sign.font(&font);
 }
 
 fn on_cell_click(
@@ -1196,8 +1186,8 @@ fn sync_cell_visuals(
                 CellLabel,
                 world_label(
                     &font,
-                    text,
-                    11.0,
+                    Text::new(text),
+                    LabelKind::Stock,
                     entity,
                     Vec3::new(0.0, size.y + 0.15, 0.0),
                 ),

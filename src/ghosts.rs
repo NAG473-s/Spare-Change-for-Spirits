@@ -20,7 +20,7 @@ use crate::tooltip::{HoverTip, TipKind};
 use crate::upgrades::Upgrades;
 use bevy::light::NotShadowCaster;
 
-use crate::scene::{Billboard, LabelMuted, billboard_material, floor, world_label};
+use crate::scene::{Billboard, LabelKind, LabelMuted, billboard_material, floor, world_label};
 use crate::shop::ShopLayout;
 use crate::ui::{GameLog, UiFont};
 
@@ -696,8 +696,8 @@ fn spawn_ghost(
     let label = commands
         .spawn(world_label(
             font,
-            name,
-            10.0,
+            Text::new(name),
+            LabelKind::Name,
             ghost,
             Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
         ))
