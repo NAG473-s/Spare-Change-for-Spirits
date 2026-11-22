@@ -50,7 +50,7 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 
 ## January 11–17 · Complete campaign build
 
-- [ ] Finish and integrate all required portraits, props, effects, sound cues and translations. Check the entire route from the first ferry to the credits against a clean install with no development files.
+- [x] Finish and integrate all required portraits, props, effects, sound cues and translations. Check the entire route from the first ferry to the credits against a clean install with no development files.
 - [x] Automate the campaign paths most likely to lose progress: missing a story ware, restarting a night with an open order, resuming a finale, and loading the free-play save. Preserve stock, coins, upgrades, book entries and the chosen keepsake.
 - [ ] Build both editions for Windows x86-64, Linux x86-64 and macOS Universal. Check the packaged assets, fonts and saves. Freeze campaign content at the end of the week.
 
