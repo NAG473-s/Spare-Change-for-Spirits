@@ -25,7 +25,10 @@ impl Plugin for WeatherPlugin {
         app.init_resource::<WeatherNow>()
             .add_systems(Startup, spawn_weather)
             .init_resource::<NextSilhouette>()
-            .add_systems(Update, (choose_weather, fall, drift_fog, rain_silhouette).chain());
+            .add_systems(
+                Update,
+                (choose_weather, fall, drift_fog, rain_silhouette).chain(),
+            );
     }
 }
 

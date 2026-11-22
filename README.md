@@ -231,6 +231,14 @@ Special customers:
   Next-night orders have a slip showing the customer, ware, quantity and collection night. Pin a slip to mark its crate on the ferry. The book keeps the outcome when an order is collected or expires.
 - **Regulars** – a ghost served well may come back now and then by name (Mrs Wispel, Captain
   Brine …), often for the ware it bought the first time, and tips more often as it returns. A regular can recall its last purchase or recognise a keepsake it has seen in the shop before. The ghost book records the remark and the wish from that visit (`regulars` in `config.ron`, `regulars.rs`).
+  On its eighth visit (`last_visit`) a regular has its last wish: served well, it does not
+  come back, and the next dawn its postcard arrives (`postcards.rs`). Postcards are kept in the
+  book's Letters chapter, can be turned over to read the back, and one stands by the till,
+  where a click turns it and hovering reads it.
+- **Pfote** (`pfote.rs`) – once Lotte's story is finished her ghost dog picks a rug lying in
+  the shop as his favourite spot (the fur rug first) and curls up there. Some nights Lotte
+  drops by, kneels on his rug and he jumps up wagging his tail, then she leaves; the log tells
+  it in words (`companion` in `config.ron`).
 - **Shop window** – in the evening one ware from stock goes in the window; ghosts who wish for
   it come more often while one is left (`showcase_attract`, `showcase.rs`).
 - **Furniture sets** – three matching pieces in the shop draw certain ghosts and add to the
@@ -287,6 +295,8 @@ src/
   keynav.rs      keyboard focus over the panel buttons
   contrast.rs    the high-contrast panels
   lanterns.rs    the quay lanterns restored after the campaign
+  postcards.rs   postcards from regulars after their last wish
+  pfote.rs       Pfote's favourite rug and Lotte's visits
   tower_clock.rs the tower clock's ticking and its first strike
   trailer.rs     helpers for trailers and screenshots (`--trailer`)
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation

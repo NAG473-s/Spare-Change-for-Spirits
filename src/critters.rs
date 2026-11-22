@@ -46,7 +46,7 @@ const LIGHTHOUSE_TOP: Vec3 = Vec3::new(-6.0, 3.9, -3.6);
 const LAMP: Vec3 = Vec3::new(0.6, 2.45, -1.25);
 /// Where a story's companion lives in the shop (shop metres): Pfote, the
 /// ghost dog, curled up at the front of the shop.
-const SHOP_DOG: Vec3 = Vec3::new(-4.3, 0.0, 2.75);
+pub const SHOP_DOG: Vec3 = Vec3::new(-4.3, 0.0, 2.75);
 const BATS: usize = 3;
 const MOTHS: usize = 7;
 
@@ -389,7 +389,7 @@ fn spawn_critters(
 
 /// A critter that came with a story (`companion` in story.ron).
 #[derive(Component)]
-struct Companion;
+pub struct Companion;
 
 /// Once a story with a companion is finished, the companion lives in the
 /// shop: Lotte's dog Pfote.
@@ -477,15 +477,46 @@ fn breathe(time: Res<Time>, mut bodies: Query<(&Breathing, &mut Transform)>) {
     }
 }
 
-fn swish_tails(time: Res<Time>, mut tails: Query<(&Tail, &mut Transform)>) {
+fn swish_tails(
+    time: Res<Time>,
+    greeting: Res<crate::pfote::Greeting>,
+    mut tails: Query<(&Tail, &mut Transform)>,
+) {
     let t = time.elapsed_secs();
     for (tail, mut transform) in &mut tails {
-        // Lazy swishes with a quicker flick every few seconds.
+        // Lazy swishes with a quicker flick every few seconds; wagging
+        // hard while it greets its owner.
         let flick = ((t * 0.5 + tail.phase).sin().max(0.0)).powi(6);
-        let angle = 0.35 * (t * 1.3 + tail.phase).sin() + 0.5 * flick * (t * 9.0).sin();
+        let angle = if greeting.0.is_some() {
+            0.7 * (t * 14.0).sin()
+        } else {
+            0.35 * (t * 1.3 + tail.phase).sin() + 0.5 * flick * (t * 9.0).sin()
+        };
         transform.rotation = Quat::from_rotation_z(angle);
     }
 }
+
+/// The companion jumps up to greet its owner (a few small hops; it stands
+/// still with *Reduced motion*).
+pub fn greet_hop(
+    greeting: Res<crate::pfote::Greeting>,
+    settings: Res<crate::save::Settings>,
+    mut dogs: Query<&mut Transform, With<Companion>>,
+) {
+    let hop = match greeting.0 {
+        Some(t) if !settings.reduced_motion && t < HOP_SECS => {
+            HOP_HEIGHT * (t * HOP_RATE * std::f32::consts::PI).sin().abs()
+        }
+        _ => 0.0,
+    };
+    for mut transform in &mut dogs {
+        transform.translation.y += hop;
+    }
+}
+
+const HOP_SECS: f32 = 1.6;
+const HOP_HEIGHT: f32 = 0.12;
+const HOP_RATE: f32 = 2.5;
 
 fn look_around(
     time: Res<Time>,

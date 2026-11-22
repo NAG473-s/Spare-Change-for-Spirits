@@ -202,6 +202,9 @@ pub enum Action {
     OpenLedgerChoice,
     ChooseLedgerKeepsake(usize),
     OpenCredits,
+    /// Turn a postcard over, or put it up by the till (`postcards.rs`).
+    TurnPostcard(usize),
+    DisplayPostcard(usize),
     /// Restore the next quay lantern (`lanterns.rs`).
     RestoreLantern,
     /// Use the selected tool without pointing at a square: the ware onto the

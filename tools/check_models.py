@@ -26,7 +26,7 @@ GESTURES = ("pay", "ascend", "impatient", "goodbye", "browse", "arrive", "approa
 MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
-SHOP_SIZES = {"counter": (4.5, 1.2, 0.81), "door": (1.1, 2.3, 0.2)}
+SHOP_SIZES = {"counter": (4.5, 1.2, 0.81), "door": (1.1, 2.3, 0.2), "postcard_stand": (0.2, 0.04, 0.07)}
 TRIANGLE_BUDGET = {
     "products": 1000,
     "decor": 3500,
@@ -424,6 +424,12 @@ def main():
         for item in expected[folder]:
             icon = ROOT / "assets" / "sprites" / folder / f"{item}.png"
             print(("  ok       " if icon.is_file() else "  no icon  ") + f"sprites/{folder}/{item}.png")
+    # Postcard pictures from regulars (optional: the portrait stands in).
+    ghosts_text = (ROOT / "assets/data/ghosts.ron").read_text(encoding="utf-8")
+    for ghost, weight in re.findall(r'\(id: "([^"]+)", color: \([^)]*\),[^\n]*\n\s*spawn_weight: ([0-9.]+)', ghosts_text):
+        if float(weight) > 0 and ghost != "shade":
+            card = ROOT / "assets" / "sprites" / "postcards" / f"{ghost}.png"
+            print(("  ok       " if card.is_file() else "  no card  ") + f"sprites/postcards/{ghost}.png")
     # Achievement icons for Steam (docs/STEAM.md), achieved and greyed.
     for a in ids("assets/data/achievements.ron", r'\(id: "([^"]+)"'):
         for suffix in ("", "_locked"):

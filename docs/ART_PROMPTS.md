@@ -25,7 +25,11 @@ python3 tools/check_models.py
 
 ## Delivery status
 
-All image orders are delivered. Lotte's keepsake icon is in
+Open order: the thirteen postcard pictures under *Postcards from regulars* below
+(`assets/sprites/postcards/<ghost>.png`). Until they arrive each postcard shows the regular's
+portrait on a cream card.
+
+Lotte's keepsake icon is in
 `assets/sprites/decor/toy_sledge.png` (96 × 96, transparent PNG).
 
 The helper behind the counter uses
@@ -307,6 +311,29 @@ Keep the two eyes, the curved tail and the button readable at 16 px. Use a dark 
 warm highlights, a transparent margin and no lettering. The three exports are in `art/icons/`.
 Linux uses a 512 px PNG, the Windows ICO contains 16–256 px images, and the macOS ICNS includes
 standard and Retina representations through 1024 px.
+
+## Postcards from regulars – canvas 1536 × 1024 (landscape, 3 : 2)
+
+After its last wish a regular sends a postcard (`src/postcards.rs`). The front is a painted
+picture postcard of a peaceful place on "the other side" with the ghost small in it, happy and
+at rest; the back is drawn by the game. Use the style block, a cream deckled border about
+4 % wide and no lettering. Deliver a 600 × 400 PNG to `assets/sprites/postcards/<id>.png`.
+
+| id | Picture |
+|---|---|
+| `shy` | The shy ghost sitting on a quiet jetty at dusk, writing a letter by lantern light, a lake full of stars. |
+| `vain` | The vain ghost admiring itself in a still mountain lake, cherry blossoms drifting around. |
+| `poltergeist` | The poltergeist joyfully juggling teacups in an empty, sunny orchard where nothing can break. |
+| `forgetful` | The forgetful ghost asleep in a hammock between two trees, a pile of opened keys and letters beside it. |
+| `child` | The child ghost flying a paper kite over a meadow of dandelions, its pinwheel in the other hand. |
+| `cat` | The ghost cat curled up on a warm windowsill in a seaside cottage, a fish-shaped cloud outside. |
+| `sailor` | The drowned sailor at the helm of a little sailboat on calm, sunlit water, a gull on the mast. |
+| `knight` | The knight resting under an oak with its helmet off, armour polished, a dragonfly on its gauntlet. |
+| `bride` | The bride dancing alone in a lantern-lit pavilion, her veil drifting like mist. |
+| `snow` | The snow ghost building a little snow lantern on a frozen lake under the northern lights. |
+| `lantern_child` | The lantern child releasing paper lanterns over a river at night, one lantern still in hand. |
+| `frog` | The frog ghost sitting on a lily pad in a warm summer rain, eyes closed with pleasure. |
+| `butterfly` | The butterfly soul resting on a sunflower in a wide flowering garden. |
 
 ## Icons – canvas 1024 × 1024
 

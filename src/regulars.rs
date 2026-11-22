@@ -139,7 +139,7 @@ pub fn returning(
         .journal
         .regulars
         .iter()
-        .position(|r| r.ghost == ghost)?;
+        .position(|r| r.ghost == ghost && r.farewell.is_none())?;
     let name = progress.journal.regulars[i].name;
     let collection_due = progress.orders.iter().any(|order| {
         order.night == progress.night
@@ -188,10 +188,12 @@ pub fn maybe_new(
 ) -> Option<usize> {
     let c = data.config.regulars;
     let regulars = &progress.journal.regulars;
-    // Only ordinary customers; one regular of each kind.
+    // Only ordinary customers; one regular of each kind at a time (one who
+    // has said goodbye leaves room for a new one).
+    let active = regulars.iter().filter(|r| r.farewell.is_none());
     if def.spawn_weight <= 0.0
-        || regulars.len() >= c.max
-        || regulars.iter().any(|r| r.ghost == def.id)
+        || active.clone().count() >= c.max
+        || active.clone().any(|r| r.ghost == def.id)
         || !rng.chance(c.become_chance)
     {
         return None;
@@ -206,6 +208,7 @@ pub fn maybe_new(
         last_purchase: Some(bought.into()),
         seen_keepsakes: Vec::new(),
         encounters: Vec::new(),
+        farewell: None,
     };
     let index = regulars.len();
     progress.journal.regulars.push(regular);
@@ -274,7 +277,7 @@ pub fn requests(data: &GameData, progress: &Progress, rng: &mut Rng) -> Vec<crat
         .journal
         .regulars
         .iter()
-        .filter(|r| !ordered(r) && data.product(&r.favourite).is_some())
+        .filter(|r| !ordered(r) && r.farewell.is_none() && data.product(&r.favourite).is_some())
         .collect();
     let mut placed = Vec::new();
     while already + placed.len() < wanted && !free.is_empty() {
@@ -329,6 +332,7 @@ mod tests {
                 last_purchase: None,
                 seen_keepsakes: Vec::new(),
                 encounters: Vec::new(),
+                farewell: None,
             });
         }
         let mut rng = Rng::new(3);

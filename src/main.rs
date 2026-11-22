@@ -37,7 +37,9 @@ mod loan;
 mod market;
 mod menu;
 mod orders;
+mod pfote;
 mod playtest;
+mod postcards;
 mod props;
 mod register;
 mod regulars;
@@ -144,7 +146,9 @@ fn main() {
             lanterns::LanternsPlugin,
             keynav::KeyNavPlugin,
             contrast::ContrastPlugin,
-        ));
+            postcards::PostcardsPlugin,
+        ))
+        .add_plugins((pfote::PfotePlugin,));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);
     app.run();

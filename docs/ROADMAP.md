@@ -63,7 +63,7 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 ## Extra ideas if the campaign is ready early
 
 - [x] Rain on the shop glass briefly reveals the silhouette of a ghost waiting outside.
-- A regular sends a postcard after its last wish. The postcard can be turned over and displayed by the till.
-- Pfote chooses a favourite rug and greets Lotte there when she visits.
+- [x] A regular sends a postcard after its last wish. The postcard can be turned over and displayed by the till.
+- [x] Pfote chooses a favourite rug and greets Lotte there when she visits.
 - A listening page in the ghost book replays the ferry bell, the winter waltz and the first spring chorus.
 - A quiet evening mode lets the player arrange shelves and photograph the shop between nights.

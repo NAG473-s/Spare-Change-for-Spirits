@@ -36,6 +36,7 @@ pub struct GhostPlugin;
 impl Plugin for GhostPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<Finale>()
+            .add_message::<Visitor>()
             .init_resource::<Queue>()
             .init_resource::<HoveredGhost>()
             .insert_resource(SpawnTimer(2.0))
@@ -63,6 +64,7 @@ impl Plugin for GhostPlugin {
                     spawn_ghosts,
                     spawn_story_ghost,
                     say_farewell,
+                    spawn_visitor,
                     spawn_thief,
                     spawn_ordering,
                     ghost_ai,
@@ -322,6 +324,7 @@ fn spawn_ghosts(
         chapter: None,
         plain: first_customer || unfamiliar || regular.is_some(),
         order: None,
+        spot: None,
         flees: unmet.is_some(),
         patience_factor: upgrades.patience_factor(&data),
         regular,
@@ -514,6 +517,8 @@ enum VisitKind {
     Customer,
     Thief,
     Farewell,
+    /// Drops by to see someone, stays a moment and leaves (`Visitor`).
+    Visit,
 }
 
 /// What a newly arriving ghost comes for.
@@ -526,6 +531,8 @@ struct Visit {
     chapter: Option<(usize, usize)>,
     plain: bool,
     order: Option<usize>,
+    /// Where it goes instead of a shelf.
+    spot: Option<Vec2>,
     flees: bool,
     /// The waiting bench: ghosts wait longer.
     patience_factor: f32,
@@ -565,10 +572,11 @@ fn spawn_ghost(
     let (state, target) = if visit.flees {
         (GhostState::Fleeing, layout.door_pos() + Vec2::new(1.0, 0.0))
     } else {
-        let target = match browse_cell {
+        let target = match (visit.spot, browse_cell) {
+            (Some(spot), _) => spot,
             // In front of the shelf, on the camera side.
-            Some(cell) => layout.cell_pos(cell) + Vec2::new(0.0, 0.7),
-            None => layout.cell_pos(rng.index(layout.cells.len())),
+            (None, Some(cell)) => layout.cell_pos(cell) + Vec2::new(0.0, 0.7),
+            (None, None) => layout.cell_pos(rng.index(layout.cells.len())),
         };
         (GhostState::Entering, target)
     };
@@ -626,6 +634,9 @@ fn spawn_ghost(
         }
         VisitKind::Farewell => {
             commands.entity(ghost).insert(Farewell);
+        }
+        VisitKind::Visit => {
+            commands.entity(ghost).insert(Visiting);
         }
         VisitKind::Customer => {}
     }
@@ -845,6 +856,7 @@ fn spawn_ordering(
         chapter: None,
         plain: true,
         order: Some(index),
+        spot: None,
         flees: false,
         patience_factor: upgrades.patience_factor(&data) * data.config.orders.patience_factor,
         regular,
@@ -933,6 +945,7 @@ fn spawn_thief(
         chapter: None,
         plain: false,
         order: None,
+        spot: None,
         flees: false,
         patience_factor: 1.0,
         regular: None,
@@ -983,6 +996,71 @@ fn steal_from_shelf(
 #[derive(Message, Clone)]
 pub struct Finale(pub String);
 
+/// A story ghost who drops by to see someone at `spot` (Lotte visiting
+/// Pfote on his rug, `pfote.rs`): it stays a moment and leaves.
+#[derive(Message, Clone)]
+pub struct Visitor {
+    pub ghost: String,
+    pub spot: Vec2,
+}
+
+/// A ghost on a visit: it does not shop.
+#[derive(Component)]
+pub struct Visiting;
+
+/// Seconds a visitor stays at its spot.
+const VISIT_SECS: f32 = 6.0;
+
+fn spawn_visitor(
+    mut visitors: MessageReader<Visitor>,
+    mut commands: Commands,
+    data: Res<GameData>,
+    layout: Res<ShopLayout>,
+    lang: Res<Lang>,
+    mut art: GhostArt,
+    mut rng: ResMut<Rng>,
+    mut progress: ResMut<Progress>,
+    mut cues: MessageWriter<Cue>,
+) {
+    for v in visitors.read() {
+        let Some(def_idx) = data.ghost_index(&v.ghost) else {
+            continue;
+        };
+        let visit = Visit {
+            kind: VisitKind::Visit,
+            first_customer: false,
+            def_idx,
+            wish: data.ghosts[def_idx]
+                .wishes
+                .first()
+                .cloned()
+                .unwrap_or_default(),
+            hint: String::new(),
+            chapter: None,
+            plain: false,
+            order: None,
+            spot: Some(v.spot),
+            flees: false,
+            patience_factor: 1.0,
+            regular: None,
+        };
+        spawn_ghost(
+            &mut commands,
+            &data,
+            &layout,
+            &art.font,
+            &lang,
+            &art.asset_server,
+            &mut art.meshes,
+            &mut art.materials,
+            &mut rng,
+            &mut progress.journal,
+            visit,
+        );
+        cues.write(Cue::GhostEnters);
+    }
+}
+
 /// The finale guest: she does not shop, she says goodbye.
 #[derive(Component)]
 struct Farewell;
@@ -1023,6 +1101,7 @@ fn come_home(
             chapter: None,
             plain: false,
             order: None,
+            spot: None,
             flees: false,
             patience_factor: 1.0,
             regular: None,
@@ -1094,6 +1173,7 @@ fn spawn_story_ghost(
             chapter: Some((i, chapter)),
             plain: progress.asks_plainly(i),
             order: None,
+            spot: None,
             flees: false,
             patience_factor: upgrades.patience_factor(&data),
             regular: None,
@@ -1130,6 +1210,7 @@ fn ghost_ai(
     mut ghosts: Query<(Entity, &mut Ghost)>,
     lang: Res<Lang>,
     settings: Res<crate::save::Settings>,
+    visiting: Query<(), With<Visiting>>,
 ) {
     let dt = time.delta_secs();
     for (entity, mut g) in &mut ghosts {
@@ -1144,6 +1225,17 @@ fn ghost_ai(
             queue.0.push(entity);
         }
         match g.state {
+            // A visitor stays a moment at its spot, then goes.
+            GhostState::Entering if g.arrived() && visiting.contains(entity) => {
+                g.state = GhostState::Browsing;
+                g.timer = VISIT_SECS;
+            }
+            GhostState::Browsing if visiting.contains(entity) => {
+                g.timer -= dt;
+                if g.timer <= 0.0 {
+                    g.state = GhostState::Leaving;
+                }
+            }
             GhostState::Entering if g.arrived() => {
                 g.state = GhostState::Browsing;
                 g.timer = rng.range(2.0, 4.5);

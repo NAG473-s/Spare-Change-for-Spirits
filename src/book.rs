@@ -54,6 +54,11 @@ pub struct Journal {
     pub ledger_keepsake: Option<String>,
     /// Quay lanterns restored after the campaign, in order (`lanterns.rs`).
     pub lanterns: Vec<crate::lanterns::LanternRecord>,
+    /// Postcards from regulars after their last wish, and the one by the till.
+    pub postcards: Vec<crate::postcards::Postcard>,
+    pub displayed_postcard: Option<usize>,
+    /// The rug Pfote has chosen as his favourite spot (decor id, `pfote.rs`).
+    pub companion_rug: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -85,6 +90,10 @@ pub struct Regular {
     pub seen_keepsakes: Vec<String>,
     #[serde(default)]
     pub encounters: Vec<crate::regulars::Encounter>,
+    /// The night of its last wish; it does not come back after it
+    /// (`postcards.rs`).
+    #[serde(default)]
+    pub farewell: Option<u32>,
 }
 
 impl Regular {
@@ -605,6 +614,7 @@ pub fn letters_page(
     data: &GameData,
     journal: &Journal,
     upgrades: &Upgrades,
+    assets: &AssetServer,
 ) {
     ui.heading(&lang.t("book.letters"));
     for n in letters_found(data, upgrades) {
@@ -624,6 +634,7 @@ pub fn letters_page(
         ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
     }
     crate::lanterns::book_section(ui, lang, data, journal);
+    crate::postcards::book_section(ui, lang, journal, assets);
 }
 
 /// Where a keepsake came from: (story index, chapter number from 1).

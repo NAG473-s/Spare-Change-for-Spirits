@@ -35,14 +35,19 @@
     // On rainy and stormy nights a waiting ghost's silhouette shows behind the wet shop window
     // now and then: every `every` seconds (from, to), for `secs`, at most `alpha` dark.
     rain_silhouette: (every: (25.0, 50.0), secs: 4.5, alpha: 0.8),
+    // Once Lotte's story is finished her dog Pfote picks the first rug of `rugs` lying in the
+    // shop as his favourite spot. On a night with a chance of `visit_chance` Lotte drops by at
+    // `visit_at` (fraction of the night) and he greets her there.
+    companion: (rugs: ["fur_rug", "rug"], visit_chance: 0.35, visit_at: (0.15, 0.6)),
     orders: (max_per_night: 3, price_bonus: 0.5, missed_penalty: 2, arrive_at: (0.08, 0.4),
              patience_factor: 1.5),
     // A ghost served well may become a regular (`become_chance`, at most `max`): it gets a name,
     // comes back now and then as one of its kind (`return_chance`), often for its favourite ware
     // (`favourite_chance`), and tips more often the more it visits (`tip_per_visit` up to
-    // `max_tip_bonus` on top of the reputation's tip chance).
+    // `max_tip_bonus` on top of the reputation's tip chance). On visit `last_visit` it has its
+    // last wish: served well, it sends a postcard the next dawn and does not come back.
     regulars: (become_chance: 0.25, return_chance: 0.45, favourite_chance: 0.6, max: 10,
-               tip_per_visit: 0.04, max_tip_bonus: 0.3),
+               tip_per_visit: 0.04, max_tip_bonus: 0.3, last_visit: 8),
     // The ware in the shop window draws ghosts who wish for it: their odds are multiplied by
     // 1 + showcase_attract while one is in stock.
     showcase_attract: 0.8,

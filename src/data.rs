@@ -455,6 +455,9 @@ pub struct Config {
     /// On rainy nights a waiting ghost shows behind the wet window now and then.
     #[serde(default)]
     pub rain_silhouette: RainSilhouette,
+    /// Pfote's favourite rug and Lotte's visits (`pfote.rs`).
+    #[serde(default)]
+    pub companion: crate::pfote::CompanionConfig,
     /// Mishaps during the night (`incidents.ron`).
     pub incidents: IncidentsConfig,
     /// Ghosts who come back as regulars (`regulars.rs`).
@@ -500,6 +503,14 @@ pub struct RegularsConfig {
     /// Each visit adds this to the chance of a tip, up to `max_tip_bonus`.
     pub tip_per_visit: f32,
     pub max_tip_bonus: f32,
+    /// On this visit a regular has its last wish; served well, it sends a
+    /// postcard and does not come back (`postcards.rs`).
+    #[serde(default = "default_last_visit")]
+    pub last_visit: u32,
+}
+
+fn default_last_visit() -> u32 {
+    8
 }
 
 /// Orders for the next night (config.ron).

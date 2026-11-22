@@ -1201,6 +1201,7 @@ mod tests {
                 last_purchase: Some("lavender".into()),
                 seen_keepsakes: Vec::new(),
                 encounters: Vec::new(),
+                farewell: None,
             });
             w.resource_mut::<Drawer>().0 = Purse {
                 buttons: 17,

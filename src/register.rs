@@ -664,6 +664,13 @@ pub(crate) fn make_change(
                         amount: sale.price,
                     });
                 } else {
+                    // A regular's last visit: its last wish is fulfilled.
+                    if let Some(i) = ghost.regular
+                        && crate::postcards::last_wish(&data, &mut progress, i)
+                    {
+                        let who = progress.journal.regulars[i].name(&lang);
+                        log.push(lang.f("log.last_wish", &[("who", &who)]));
+                    }
                     // Served well, it may come back as a regular.
                     if ghost.regular.is_none()
                         && let Some(regular) = crate::regulars::maybe_new(

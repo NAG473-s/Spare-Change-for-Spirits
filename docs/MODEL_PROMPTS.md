@@ -9,7 +9,9 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-All model orders are delivered.
+- The postcard stand (extra idea): `postcard_stand` in `assets/models/shop/` (see *Shop*).
+  It stands on the counter and holds the postcard a regular sent; the game draws the card and
+  turns it. Until it arrives a small wooden block stands in.
 
 ## Delivered models
 
@@ -229,6 +231,7 @@ Season 3 products:
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
 | `counter` | 4.5 × 1.2 × 0.81 | A long walnut counter with the customer side facing −Y. Set its surface at 0.742 m. Inlay the panelled front with a ghost and brass corners. Give the teal counting mat three stitched coin circles. At the right end fit an antique register with an ivory roller, two rows of keys and a drawer pull. Keep space for the loose bell, ledger and coin jars. |
+| `postcard_stand` | 0.2 × 0.04 × 0.07 | A small, low wooden card stand with a slot along its top, slightly worn, a brass corner on each end. Origin at the **centre of its base**, slot along X. The game puts the postcard into the slot and turns it. |
 | `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
 | `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
