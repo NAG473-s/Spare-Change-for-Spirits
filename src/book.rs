@@ -614,7 +614,6 @@ pub fn letters_page(
     data: &GameData,
     journal: &Journal,
     upgrades: &Upgrades,
-    assets: &AssetServer,
 ) {
     ui.heading(&lang.t("book.letters"));
     for n in letters_found(data, upgrades) {
@@ -634,7 +633,7 @@ pub fn letters_page(
         ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
     }
     crate::lanterns::book_section(ui, lang, data, journal);
-    crate::postcards::book_section(ui, lang, journal, assets);
+    crate::postcards::book_section(ui, lang, journal);
 }
 
 /// Where a keepsake came from: (story index, chapter number from 1).

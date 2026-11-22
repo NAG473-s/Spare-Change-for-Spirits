@@ -23,7 +23,7 @@ use crate::i18n::Lang;
 use crate::save::Settings;
 use crate::shop::ShopLayout;
 use crate::tooltip::{HoverTip, TipKind};
-use crate::ui::{Action, GameLog, PanelBuilder};
+use crate::ui::{Action, GameLog, PanelBuilder, UiFont};
 
 pub struct PostcardsPlugin;
 
@@ -38,7 +38,8 @@ impl Plugin for PostcardsPlugin {
             (act, show_card, turn_card, card_tooltip)
                 .chain()
                 .run_if(not(in_state(Phase::Menu))),
-        );
+        )
+        .add_systems(Update, refresh_book_cards.after(act));
     }
 }
 
@@ -158,24 +159,63 @@ fn act(mut actions: MessageReader<Action>, mut progress: ResMut<Progress>) {
     }
 }
 
-/// The book's postcards (Letters chapter).
-pub fn book_section(
-    ui: &mut PanelBuilder,
-    lang: &Lang,
-    journal: &crate::book::Journal,
-    assets: &AssetServer,
-) {
+#[derive(Component)]
+struct BookPostcard {
+    index: usize,
+    /// The back and the by-the-till check mark last drawn in this entry.
+    rendered: Option<(bool, bool)>,
+}
+
+/// Keep one entry per postcard so turning it leaves the scrolling page in place.
+pub fn book_section(ui: &mut PanelBuilder, lang: &Lang, journal: &crate::book::Journal) {
     if journal.postcards.is_empty() {
         return;
     }
     ui.rule();
     ui.section(&lang.t("postcard.title"));
-    for (i, card) in journal.postcards.iter().enumerate() {
-        ui.text(&card.from(lang));
+    for index in 0..journal.postcards.len() {
+        ui.node(
+            ui.root(),
+            (
+                BookPostcard {
+                    index,
+                    rendered: None,
+                },
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    flex_shrink: 0.0,
+                    row_gap: px(10),
+                    ..default()
+                },
+            ),
+        );
+    }
+}
+
+fn refresh_book_cards(
+    mut commands: Commands,
+    mut entries: Query<(Entity, &mut BookPostcard)>,
+    progress: Res<Progress>,
+    lang: Res<Lang>,
+    font: Res<UiFont>,
+    assets: Res<AssetServer>,
+) {
+    for (root, mut entry) in &mut entries {
+        let i = entry.index;
+        let Some(card) = progress.journal.postcards.get(i) else {
+            continue;
+        };
+        let shown = progress.journal.displayed_postcard == Some(i);
+        let state = Some((card.turned, shown));
+        if entry.rendered == state {
+            continue;
+        }
+        entry.rendered = state;
+        let mut ui = PanelBuilder::new(&mut commands, root, &font);
+        ui.text(&card.from(&lang));
         if card.turned {
-            ui.text(&card.text(lang));
+            ui.text(&card.text(&lang));
         } else if let Some(path) = card.picture() {
-            let root = ui.root();
             ui.image_sized(root, assets.load(path), BOOK_PICTURE);
         }
         let row = ui.row();
@@ -190,7 +230,6 @@ pub fn book_section(
             false,
             true,
         );
-        let shown = journal.displayed_postcard == Some(i);
         ui.button_in(
             row,
             &lang.t(if shown {
@@ -532,5 +571,70 @@ mod tests {
         for i in 1..=n {
             assert!(lang.t(&format!("postcard.text.{i}")).contains("{item}"));
         }
+    }
+
+    #[test]
+    fn flipping_and_displaying_postcards_updates_the_open_book_in_place() {
+        let lang = Lang::load("en");
+        let mut progress = Progress::new(0);
+        for (name, ghost) in [(1, "shy"), (2, "cat")] {
+            progress.journal.postcards.push(Postcard {
+                name,
+                ghost: ghost.into(),
+                item: "tea_tin".into(),
+                ..default()
+            });
+        }
+        let message = progress.journal.postcards[0].text(&lang);
+        progress.journal.displayed_postcard = Some(0);
+        let mut app = App::new();
+        let page = app
+            .world_mut()
+            .spawn(ScrollPosition(Vec2::new(0., 120.)))
+            .id();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()))
+            .init_asset::<Font>()
+            .init_asset::<Image>()
+            .insert_resource(lang)
+            .init_resource::<UiFont>()
+            .insert_resource(progress)
+            .add_message::<Action>()
+            .add_systems(
+                Startup,
+                move |mut commands: Commands,
+                      font: Res<UiFont>,
+                      lang: Res<Lang>,
+                      progress: Res<Progress>| {
+                    book_section(
+                        &mut PanelBuilder::new(&mut commands, page, &font),
+                        &lang,
+                        &progress.journal,
+                    );
+                },
+            )
+            .add_systems(Update, (act, refresh_book_cards).chain());
+        let marked_card = |world: &mut World| {
+            world
+                .query::<(&crate::ui::ActionButton, &Children)>()
+                .iter(world)
+                .find_map(|(button, children)| match button.0 {
+                    Action::DisplayPostcard(i)
+                        if world.get::<Text>(children[0])?.0.starts_with('✓') =>
+                    {
+                        Some(i)
+                    }
+                    _ => None,
+                })
+        };
+        app.update();
+        assert_eq!(marked_card(app.world_mut()), Some(0));
+        app.world_mut().write_message(Action::TurnPostcard(0));
+        app.world_mut().write_message(Action::DisplayPostcard(1));
+        app.update();
+        let world = app.world_mut();
+        assert_eq!(marked_card(world), Some(1));
+        assert!(world.query::<&Text>().iter(world).any(|t| t.0 == message));
+        assert_eq!(world.query::<&ImageNode>().iter(world).count(), 1);
+        assert_eq!(world.get::<ScrollPosition>(page).unwrap().y, 120.);
     }
 }
