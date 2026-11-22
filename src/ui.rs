@@ -120,6 +120,7 @@ impl Plugin for UiPlugin {
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
                     fit_right_column,
+                    show_scroll_arrows,
                     reputation_tooltip,
                     refresh_change.after(build_night_panel).run_if(
                         in_state(Phase::Night).and_then(
@@ -647,6 +648,9 @@ const SCROLL_LINE: f32 = 24.0;
 /// How far a click on the "more below" arrow scrolls the side panel.
 const MORE_SCROLL: f32 = 140.0;
 
+/// More than this much hidden (logical pixels) shows a "more below" arrow.
+const MORE_THRESHOLD: f32 = 4.0;
+
 /// The arrow under the side panel's body that says more is hidden below.
 #[derive(Component)]
 struct MoreBelow;
@@ -662,7 +666,7 @@ fn show_more_below(
     };
     let hidden = (computed.content_size().y - computed.size().y) * computed.inverse_scale_factor()
         - scroll.y;
-    let display = if hidden > 4.0 {
+    let display = if hidden > MORE_THRESHOLD {
         Display::Flex
     } else {
         Display::None
@@ -2094,13 +2098,18 @@ fn counted_line(lang: &Lang, sale: &crate::register::Sale) -> String {
 }
 
 /// While change is counted: the counted line and what is left of each coin.
+/// The row of the change tray (hidden while it is empty).
+#[derive(Component)]
+struct TrayRow;
+
 fn refresh_change(
     register: Res<Register>,
     drawer: Res<Drawer>,
     lang: Res<Lang>,
     mut commands: Commands,
+    mut trays: Query<&mut Node, With<TrayRow>>,
     mut lines: Query<&mut Text, With<CountedLine>>,
-    mut buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered, &mut Visibility)>,
+    mut buttons: Query<(Entity, &ChangeCoin, &Children, &Hovered, &mut Node), Without<TrayRow>>,
     mut texts: Query<&mut Text, Without<CountedLine>>,
     mut colors: Query<&mut TextColor>,
     mut images: Query<&mut ImageNode>,
@@ -2108,22 +2117,32 @@ fn refresh_change(
     let Some(sale) = &register.sale else {
         return;
     };
+    let display = if sale.given.total() == 0 {
+        Display::None
+    } else {
+        Display::Flex
+    };
+    for mut node in &mut trays {
+        if node.display != display {
+            node.display = display;
+        }
+    }
     for mut line in &mut lines {
         let want = counted_line(&lang, sale);
         if line.0 != want {
             line.0 = want;
         }
     }
-    for (entity, coin, children, hovered, mut visibility) in &mut buttons {
+    for (entity, coin, children, hovered, mut node) in &mut buttons {
         let (label, enabled) = coin.label(&lang, &drawer, sale);
         if matches!(coin, ChangeCoin::Tray(_)) {
             let wanted = if enabled {
-                Visibility::Inherited
+                Display::Flex
             } else {
-                Visibility::Hidden
+                Display::None
             };
-            if *visibility != wanted {
-                *visibility = wanted;
+            if node.display != wanted {
+                node.display = wanted;
             }
         }
         let tone = ButtonTone::option(enabled, false);
@@ -2276,11 +2295,20 @@ fn build_night_panel(
         let counted = ui.text(&counted_line(&lang, sale));
         ui.commands.entity(counted).insert(CountedLine);
         ui.dim(&lang.t("register.undo_hint"));
-        // Coins from the drawer first, the tray below: the tray's buttons
-        // keep their place while hidden, so nothing moves under the pointer
-        // when the first coin is laid out.
+        // Coins from the drawer first, the tray below, so the drawer's
+        // buttons never move under the pointer as coins are laid out. Only
+        // the coins on the tray take room; an empty tray takes none.
+        let tray_empty = sale.given.total() == 0;
         for tray in [false, true] {
             let row = ui.row();
+            if tray {
+                ui.commands.entity(row).insert(TrayRow);
+                if tray_empty {
+                    ui.commands.entity(row).entry::<Node>().and_modify(|mut n| {
+                        n.display = Display::None;
+                    });
+                }
+            }
             for coin in Coin::ASCENDING {
                 let (control, action) = if tray {
                     (ChangeCoin::Tray(coin), Action::RemoveChange(coin))
@@ -2293,7 +2321,9 @@ fn build_night_panel(
                 let mut entity = ui.commands.entity(button);
                 entity.insert(control);
                 if tray && !enabled {
-                    entity.insert(Visibility::Hidden);
+                    entity
+                        .entry::<Node>()
+                        .and_modify(|mut n| n.display = Display::None);
                 }
                 ui.coin_pointer_target(button, coin);
             }
@@ -2658,6 +2688,18 @@ pub(crate) fn overlay(
     (layer, panel)
 }
 
+/// `overlay` with a fixed footer for the Back button: (layer, panel, footer).
+pub(crate) fn overlay_with_footer(
+    commands: &mut Commands,
+    theme: &UiTheme,
+    dim: f32,
+    width: f32,
+) -> (Entity, Entity, Entity) {
+    let (layer, frame, panel) = overlay_parts(commands, theme, dim, width);
+    let footer = menu_footer(commands, frame, panel, OVERLAY_PADDING);
+    (layer, panel, footer)
+}
+
 /// `overlay`, also giving its frame: (layer, frame, panel).
 fn overlay_parts(
     commands: &mut Commands,
@@ -2768,14 +2810,124 @@ pub(crate) fn scroll_y(commands: &mut Commands, panel: Entity) {
                 // the painted wooden frame, which scrolled text must not cover.
                 node.overflow_clip_margin = OverflowClipMargin::content_box();
             }
+            // Below it, the same "more below" arrow as under the side panel.
+            let panel = entity.id();
+            let Some(parent) = entity.get::<ChildOf>().map(ChildOf::parent) else {
+                return;
+            };
+            let font = entity.world().resource::<UiFont>().bold.clone();
+            entity.world_scope(|world| {
+                world
+                    .spawn((
+                        ScrollArrow(panel),
+                        Node {
+                            justify_content: JustifyContent::Center,
+                            padding: UiRect::vertical(px(1)),
+                            flex_shrink: 0.0,
+                            display: Display::None,
+                            ..default()
+                        },
+                        ChildOf(parent),
+                        children![(
+                            Text::new("↓"),
+                            text_font(&font, 15.0),
+                            TextColor(TEXT_DIM),
+                            Pickable::IGNORE,
+                        )],
+                    ))
+                    .observe(scroll_on);
+            });
         });
 }
+
+/// The arrow under a scrolling menu or page (`scroll_y`) while more of it is
+/// hidden below; a click scrolls on.
+#[derive(Component)]
+struct ScrollArrow(Entity);
+
+fn show_scroll_arrows(
+    mut commands: Commands,
+    panels: Query<(&ComputedNode, &ScrollPosition)>,
+    mut arrows: Query<(Entity, &ScrollArrow, &mut Node)>,
+) {
+    for (arrow, ScrollArrow(panel), mut node) in &mut arrows {
+        let Ok((computed, scroll)) = panels.get(*panel) else {
+            // Its panel is gone (a menu was rebuilt).
+            commands.entity(arrow).despawn();
+            continue;
+        };
+        let hidden = (computed.content_size().y - computed.size().y)
+            * computed.inverse_scale_factor()
+            - scroll.y;
+        let display = if hidden > MORE_THRESHOLD {
+            Display::Flex
+        } else {
+            Display::None
+        };
+        if node.display != display {
+            node.display = display;
+        }
+    }
+}
+
+fn scroll_on(
+    click: On<PointerClick>,
+    arrows: Query<&ScrollArrow>,
+    mut panels: Query<(&mut ScrollPosition, &ComputedNode)>,
+) {
+    let Ok(ScrollArrow(panel)) = arrows.get(click.event_target()) else {
+        return;
+    };
+    if let Ok((mut scroll, computed)) = panels.get_mut(*panel) {
+        let max = (computed.content_size().y - computed.size().y) * computed.inverse_scale_factor();
+        scroll.y = (scroll.y + MORE_SCROLL).min(max.max(0.0));
+    }
+}
+
+/// A menu's fixed footer below its scrolling panel, for the Back button, so
+/// it stays in view however long the menu is. Returns the footer.
+pub(crate) fn menu_footer(
+    commands: &mut Commands,
+    frame: Entity,
+    panel: Entity,
+    padding: f32,
+) -> Entity {
+    commands
+        .entity(panel)
+        .queue(move |mut entity: EntityWorldMut| {
+            if let Some(mut node) = entity.get_mut::<Node>() {
+                node.padding.bottom = px(FOOTER_GAP);
+            }
+        });
+    commands
+        .spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                flex_shrink: 0.0,
+                row_gap: px(8),
+                padding: UiRect {
+                    left: px(padding),
+                    right: px(padding),
+                    top: px(0),
+                    bottom: px(padding),
+                },
+                ..default()
+            },
+            ChildOf(frame),
+        ))
+        .id()
+}
+
+/// Space between a menu's scrolling content and its footer.
+const FOOTER_GAP: f32 = 6.0;
 
 pub(crate) struct PanelBuilder<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
     root: Entity,
     /// Where `primary` buttons go (the side panel's fixed footer, or `root`).
     footer: Entity,
+    /// Where `back` goes (a menu's fixed footer, or `root`).
+    back_to: Entity,
     font: &'a UiFont,
 }
 
@@ -2787,8 +2939,33 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             commands,
             root,
             footer: root,
+            back_to: root,
             font,
         }
+    }
+
+    /// Like `new`, with a fixed footer (`menu_footer`) for `back`.
+    pub(crate) fn new_with_footer(
+        commands: &'a mut Commands<'w, 's>,
+        root: Entity,
+        footer: Entity,
+        font: &'a UiFont,
+    ) -> Self {
+        commands.entity(root).despawn_related::<Children>();
+        commands.entity(footer).despawn_related::<Children>();
+        Self {
+            commands,
+            root,
+            footer: root,
+            back_to: footer,
+            font,
+        }
+    }
+
+    /// The Back (or Close) button of a menu: in its fixed footer, if it has one.
+    pub(crate) fn back(&mut self, label: &str, action: Action) {
+        let to = self.back_to;
+        self.menu_option(to, label, action, false);
     }
 
     /// Clears the side panel: content goes into the scrolling body,
@@ -2800,6 +2977,7 @@ impl<'a, 'w, 's> PanelBuilder<'a, 'w, 's> {
             commands,
             root: parts.body,
             footer: parts.footer,
+            back_to: parts.body,
             font,
         }
     }
@@ -3353,9 +3531,8 @@ mod tests {
             .find(|(_, action)| action.0 == Action::RemoveChange(Coin::Candle))
             .unwrap()
             .0;
-        // Hidden but still taking its place, so the buttons above never move.
-        assert_eq!(world.get::<Visibility>(tray), Some(&Visibility::Hidden));
-        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::Flex);
+        // An empty tray takes no room; it lies below the drawer's buttons.
+        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::None);
         world
             .resource_mut::<Register>()
             .sale
@@ -3365,7 +3542,7 @@ mod tests {
             .candles = 1;
         app.update();
         let world = app.world_mut();
-        assert_eq!(world.get::<Visibility>(tray), Some(&Visibility::Inherited));
+        assert_eq!(world.get::<Node>(tray).unwrap().display, Display::Flex);
         assert!(world.get::<InteractionDisabled>(tray).is_none());
         assert!(has_text(world, "Your change tray · 5"));
         assert!(

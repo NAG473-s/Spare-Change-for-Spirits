@@ -16,9 +16,7 @@ use crate::save::{
 };
 use crate::shop::ShopLayout;
 use crate::title::{LOGO, Opening, TitleLogo};
-use crate::ui::{
-    Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, TEXT, UiFont, UiTheme, overlay,
-};
+use crate::ui::{Action, BG_PANEL, GameLog, PANEL_EDGE, PanelBuilder, TEXT, UiFont, UiTheme};
 
 pub struct MenuPlugin;
 
@@ -209,7 +207,7 @@ fn title_layout(
     asset_server: &AssetServer,
     theme: &UiTheme,
     width: f32,
-) -> (Entity, Entity, bool) {
+) -> (Entity, Entity, Entity, bool) {
     let layer = commands
         .spawn((
             Node {
@@ -280,9 +278,10 @@ fn title_layout(
             ChildOf(column),
         ))
         .id();
-    let panel = theme.panel_body(commands, frame, 0.37, 25.0, 8.0);
+    let panel = theme.panel_body(commands, frame, 0.37, TITLE_PADDING, 8.0);
     crate::ui::scroll_y(commands, panel);
-    (layer, panel, has_logo)
+    let footer = crate::ui::menu_footer(commands, frame, panel, TITLE_PADDING);
+    (layer, panel, footer, has_logo)
 }
 
 /// One page of the book, below its tabs.
@@ -342,6 +341,9 @@ const BOOK_HEIGHT: f32 = 520.0;
 /// Far more than all buttons' growth together, so the filler takes the room.
 const BOOK_FILLER: f32 = 10_000.0;
 
+/// Padding of the title menu inside its painted frame.
+const TITLE_PADDING: f32 = 25.0;
+
 /// Width of the logo above the main menu, its shape (width / height of
 /// `sprites/title/logo.png`) and the largest share of the screen height it
 /// may take.
@@ -387,11 +389,12 @@ fn build_main_menu(
     }
     let wide = language_menu.0 || matches!(*save_menu, SaveMenu::Load | SaveMenu::NewGame);
     let width = if wide { 560.0 } else { 386.0 };
-    let (layer, panel, has_logo) = title_layout(&mut commands, &asset_server, &theme, width);
+    let (layer, panel, footer, has_logo) =
+        title_layout(&mut commands, &asset_server, &theme, width);
     commands
         .entity(layer)
         .insert((MenuRoot, DespawnOnExit(Phase::Menu)));
-    let mut ui = PanelBuilder::new(&mut commands, panel, &font);
+    let mut ui = PanelBuilder::new_with_footer(&mut commands, panel, footer, &font);
     let root = ui.root();
 
     if language_menu.0 {
@@ -412,7 +415,7 @@ fn build_main_menu(
                 selected,
             );
         }
-        ui.menu_option(root, &lang.t("menu.back"), Action::CloseLanguages, false);
+        ui.back(&lang.t("menu.back"), Action::CloseLanguages);
         return;
     }
 
@@ -434,7 +437,7 @@ fn build_main_menu(
                 &lang.t("menu.overwrite_confirm"),
                 Action::ConfirmNewGame(profile),
             );
-            ui.menu_option(root, &lang.t("menu.back"), Action::OpenNewGame, false);
+            ui.back(&lang.t("menu.back"), Action::OpenNewGame);
             return;
         }
         // All profiles together: unlocked in any of them.
@@ -637,7 +640,7 @@ fn load_page(ui: &mut PanelBuilder, lang: &Lang, demo_nights: u32) {
             ui.dim(&lang.t("save.none"));
         }
     }
-    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
+    ui.back(&lang.t("menu.back"), Action::CloseSaveMenu);
 }
 
 /// Main menu: the profile a new game is played in.
@@ -657,7 +660,7 @@ fn new_game_page(ui: &mut PanelBuilder, lang: &Lang, demo_nights: u32) {
         };
         ui.menu_option(root, &label, Action::NewGameIn(p), false);
     }
-    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
+    ui.back(&lang.t("menu.back"), Action::CloseSaveMenu);
 }
 
 /// Pause menu: the manual slots of the running profile; a click saves.
@@ -687,7 +690,7 @@ fn save_page(
     if restarts_at_evening {
         ui.dim(&lang.t("pause.save_hint_night"));
     }
-    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSaveMenu, false);
+    ui.back(&lang.t("menu.back"), Action::CloseSaveMenu);
 }
 
 fn toggle_tips(
@@ -832,7 +835,7 @@ fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
     ui.dim(&lang.t("settings.display_hint"));
     ui.dim(&lang.t("settings.keyboard_hint"));
     ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
-    ui.menu_option(root, &lang.t("menu.back"), Action::CloseSettings, false);
+    ui.back(&lang.t("menu.back"), Action::CloseSettings);
 }
 
 /// The interface grows with the window (designed for 720 pixels high) and
@@ -1116,9 +1119,9 @@ fn sync_pause(
         );
         return;
     }
-    let (layer, panel) = overlay(&mut commands, &theme, 0.6, 420.0);
+    let (layer, panel, footer) = crate::ui::overlay_with_footer(&mut commands, &theme, 0.6, 420.0);
     commands.entity(layer).insert(PauseRoot);
-    let mut ui = PanelBuilder::new(&mut commands, panel, &font);
+    let mut ui = PanelBuilder::new_with_footer(&mut commands, panel, footer, &font);
     if settings_menu.0 {
         settings_page(&mut ui, &settings, &lang);
         return;
