@@ -89,7 +89,8 @@ impl Plugin for UiPlugin {
                             resource_changed::<Storeroom>
                                 .or_else(resource_changed::<UiFont>)
                                 .or_else(resource_changed::<crate::market::MarketDay>)
-                                .or_else(resource_changed::<Drawer>),
+                                .or_else(resource_changed::<Drawer>)
+                                .or_else(resource_changed::<Progress>),
                         ),
                     ),
                     build_evening_panel.run_if(
@@ -116,6 +117,7 @@ impl Plugin for UiPlugin {
                                 .or_else(resource_changed::<UiFont>)
                                 .or_else(resource_changed::<crate::save::Settings>)
                                 .or_else(resource_changed::<Progress>)
+                                .or_else(resource_changed::<crate::incidents::Mishaps>)
                                 .or_else(ghost_state_changed),
                         ),
                     ),
@@ -160,6 +162,20 @@ pub enum Action {
     OpenCredits,
     /// Restore the next quay lantern (`lanterns.rs`).
     RestoreLantern,
+    /// Use the selected tool without pointing at a square: the ware onto the
+    /// first shelf with room, the furniture onto the first free square.
+    UseToolAnywhere,
+    /// Take the piece on this square back to the storeroom (Remove tool).
+    ClearCell(usize),
+    /// Take this ware off every shelf.
+    Unshelve(String),
+    /// Follow the tracks of this errand's next clue (`errands.rs`).
+    FollowClue(usize),
+    /// Fix tonight's mishap with this marker number (`incidents.rs`).
+    FixMishap(u32),
+    /// Buy a crate of this product from the ferryman, or give one back.
+    BuyCrate(String),
+    ReturnCrate(String),
     CloseCredits,
     /// Turn to a chapter of the book (its coloured tab).
     BookChapter(crate::book::Chapter),
@@ -230,6 +246,8 @@ pub enum Action {
     Adjust(Knob, bool),
     ToggleFullscreen,
     TogglePatientGhosts,
+    ToggleHighContrast,
+    ToggleReducedMotion,
     ToggleChangeHint,
     OpenLanguages,
     CloseLanguages,
@@ -275,7 +293,9 @@ impl UiTheme {
         gap: f32,
     ) -> Entity {
         if let Some(image) = self.frame(corner_scale) {
-            commands.entity(frame).insert(image);
+            commands
+                .entity(frame)
+                .insert((image, crate::contrast::PanelFrame));
         }
         commands
             .spawn((
@@ -321,7 +341,18 @@ impl ButtonTone {
     }
 
     pub(crate) fn paint(self, hovered: bool) -> (BackgroundGradient, BorderColor) {
+        let high_contrast = crate::contrast::on();
         let (top, bottom, trim) = match (self, hovered) {
+            // High contrast: near-black surfaces with light edges.
+            (Self::Walnut, false) if high_contrast => ((26, 20, 24), (16, 12, 15), (232, 222, 204)),
+            (Self::Walnut, true) if high_contrast => ((58, 44, 46), (36, 27, 31), (255, 255, 255)),
+            (Self::Selected, false) if high_contrast => {
+                ((22, 86, 74), (14, 58, 50), (255, 255, 255))
+            }
+            (Self::Selected, true) if high_contrast => {
+                ((30, 108, 92), (20, 74, 64), (255, 255, 255))
+            }
+            (Self::Disabled, _) if high_contrast => ((22, 18, 22), (18, 14, 18), (120, 110, 104)),
             (Self::Walnut, false) => ((60, 43, 46), (40, 28, 35), (103, 72, 57)),
             (Self::Walnut, true) => ((92, 62, 52), (57, 39, 42), (177, 127, 77)),
             (Self::Selected, false) => ((53, 84, 79), (33, 54, 53), (166, 129, 79)),
@@ -1151,6 +1182,14 @@ fn build_market_panel(
     ui.heading(&lang.t("market.title"));
     ui.dim(&lang.t("market.intro"));
     crate::errands::market_hint(&mut ui, &lang, &data, &progress);
+    crate::errands::clue_buttons(
+        &mut ui,
+        &lang,
+        &data,
+        &progress,
+        Phase::Day,
+        Location::Market,
+    );
     ui.section(&lang.t("market.vendors"));
     let calendar = progress.calendar(&data);
     let root = ui.root();
@@ -1270,7 +1309,49 @@ fn build_evening_panel(
             ));
         }
         evening_visits(&mut ui, &lang, &data, &progress, &odds);
+        crate::errands::clue_buttons(
+            &mut ui,
+            &lang,
+            &data,
+            &progress,
+            Phase::Evening,
+            Location::Harbor,
+        );
         crate::lanterns::harbor_section(&mut ui, &lang, &data, &progress, &drawer);
+        // The crates as buttons too (keyboard and controller players).
+        ui.section(&lang.t("harbor.crates"));
+        let row = ui.row();
+        for p in data.products.iter().filter(|p| p.unlock_night <= night) {
+            let label = lang.f(
+                "harbor.crate_button",
+                &[
+                    ("item", &lang.product(&p.id)),
+                    ("count", &p.crate_size),
+                    ("cost", &p.crate_cost),
+                ],
+            );
+            let can = crates.0 < max_crates && drawer.total() >= p.crate_cost;
+            ui.icon_button_in(
+                row,
+                icons.product(&p.id),
+                &label,
+                Action::BuyCrate(p.id.clone()),
+                false,
+                can,
+            );
+        }
+        if !bought.0.is_empty() {
+            let row = ui.row();
+            for id in bought.0.keys() {
+                ui.button_in(
+                    row,
+                    &lang.f("harbor.return_crate", &[("item", &lang.product(id))]),
+                    Action::ReturnCrate(id.clone()),
+                    false,
+                    true,
+                );
+            }
+        }
         ui.spacer();
         ui.primary(&lang.t("harbor.back"), Action::BackToShop);
         return;
@@ -1404,6 +1485,31 @@ fn build_evening_panel(
     if owned.is_empty() {
         ui.dim(&lang.t("evening.no_furniture"));
     }
+    // The Remove tool without pointing: a button for each piece in the shop.
+    if *tool == Tool::Remove {
+        let row = ui.row();
+        for (idx, cell) in layout.cells.iter().enumerate() {
+            if let Some(d) = &cell.decor {
+                ui.button_in(
+                    row,
+                    &lang.f("evening.take_away", &[("item", &lang.decor(d))]),
+                    Action::ClearCell(idx),
+                    false,
+                    true,
+                );
+            }
+        }
+    }
+    if let Tool::Place(id) = &*tool {
+        let root = ui.root();
+        ui.button_in(
+            root,
+            &lang.f("evening.place_anywhere", &[("item", &lang.decor(id))]),
+            Action::UseToolAnywhere,
+            false,
+            crate::shop::free_cell_for(&data, &layout, &upgrades, &tool).is_some(),
+        );
+    }
     ui.dim(&lang.t("evening.drag_hint"));
     // Part of the floor is still blocked by old junk.
     if upgrades.area(&data) != (data.config.grid_cols, data.config.grid_rows) {
@@ -1435,6 +1541,25 @@ fn build_evening_panel(
     }
     if !any {
         ui.dim(&lang.t("evening.storeroom_empty"));
+    }
+    if let Tool::Stock(id) = &*tool {
+        let root = ui.root();
+        ui.button_in(
+            root,
+            &lang.f("evening.shelve_anywhere", &[("item", &lang.product(id))]),
+            Action::UseToolAnywhere,
+            false,
+            crate::shop::free_cell_for(&data, &layout, &upgrades, &tool).is_some(),
+        );
+        if layout.displayed_products().contains(id) {
+            ui.button_in(
+                root,
+                &lang.f("evening.unshelve", &[("item", &lang.product(id))]),
+                Action::Unshelve(id.clone()),
+                false,
+                true,
+            );
+        }
     }
 
     showcase_section(&mut ui, &lang, &data, &stock, &progress, &icons);
@@ -1822,6 +1947,7 @@ struct NightPanelShows {
     sale: Option<(Entity, Vec<crate::register::PaidCoin>, bool)>,
     recount: bool,
     question: bool,
+    mishaps: Vec<usize>,
 }
 
 /// The line that shows the change counted so far.
@@ -1958,7 +2084,7 @@ fn build_night_panel(
     parts: Res<SidePanelParts>,
     font: Res<UiFont>,
     lang: Res<Lang>,
-    data: Res<GameData>,
+    (data, mishaps): (Res<GameData>, Res<crate::incidents::Mishaps>),
     stock: Res<Stock>,
     register: Res<Register>,
     queue: Res<Queue>,
@@ -1992,6 +2118,7 @@ fn build_night_panel(
         }),
         recount: register.sale.as_ref().is_some_and(|s| s.recount),
         question: register.question.is_some(),
+        mishaps: mishaps.active.clone(),
     };
     let forced = (shown
         .as_ref()
@@ -2016,6 +2143,20 @@ fn build_night_panel(
                 "guide_wish"
             },
         );
+    }
+    // Mishaps can be fixed here as well as by clicking their spot.
+    if !mishaps.active.is_empty() {
+        let row = ui.row();
+        for &i in &mishaps.active {
+            let name = lang.t(&format!("incident.{}.name", data.incidents[i].id));
+            ui.button_in(
+                row,
+                &lang.f("night.fix_mishap", &[("name", &name)]),
+                Action::FixMishap(i as u32),
+                false,
+                true,
+            );
+        }
     }
 
     if let Some(sale) = &register.sale {
@@ -3061,6 +3202,7 @@ mod tests {
         .init_resource::<Icons>()
         .init_resource::<Stock>()
         .init_resource::<Queue>()
+        .init_resource::<crate::incidents::Mishaps>()
         .insert_resource(Drawer(Purse {
             candles: 1,
             ..default()

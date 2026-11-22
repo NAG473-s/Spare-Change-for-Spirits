@@ -14,6 +14,7 @@ mod achievements;
 mod apprentice;
 mod audio;
 mod book;
+mod contrast;
 mod critters;
 mod data;
 mod day_cycle;
@@ -30,6 +31,7 @@ mod harbor;
 mod i18n;
 mod incidents;
 mod inventory;
+mod keynav;
 mod lanterns;
 mod loan;
 mod market;
@@ -140,6 +142,8 @@ fn main() {
             story_film::StoryFilmPlugin,
             regulars::RegularsPlugin,
             lanterns::LanternsPlugin,
+            keynav::KeyNavPlugin,
+            contrast::ContrastPlugin,
         ));
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     app.add_systems(Update, set_window_icon);

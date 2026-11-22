@@ -318,10 +318,13 @@ fn bob_logo(time: Res<Time>, mut logos: Query<&mut UiTransform, With<TitleLogo>>
 fn fade_in(
     mut commands: Commands,
     time: Res<Time<Real>>,
+    settings: Option<Res<crate::save::Settings>>,
     mut fades: Query<(Entity, &mut FadeIn, &mut BackgroundColor)>,
 ) {
+    // Reduced motion: a plain cut instead of a fade.
+    let cut = settings.is_some_and(|s| s.reduced_motion);
     for (entity, mut fade, mut color) in &mut fades {
-        fade.0 += time.delta_secs();
+        fade.0 += if cut { fade.1 } else { time.delta_secs() };
         let a = 1.0 - (fade.0 / fade.1).min(1.0);
         color.0 = Color::srgba(0.0, 0.0, 0.0, a * a);
         if a <= 0.0 {

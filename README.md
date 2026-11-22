@@ -59,7 +59,14 @@ The game starts on the title screen: its own painted background with flickering 
 drifting dust, the logo and the main menu. **Esc** pauses (resume, save and quit to menu, settings,
 quit; the *Menu* button in the top bar does the same). Settings (main menu and pause menu): tips,
 sound, music, effects and narration volume, interface size (on top of the automatic scaling with the window
-height), fullscreen, and the assists *Patient ghosts* and *Show change due*. 
+height), fullscreen, the assists *Patient ghosts* and *Show change due*, and *High contrast*
+(solid dark panels, brighter text, light button edges, `src/contrast.rs`) and *Reduced motion*
+(cuts instead of fades, a still clock and butterfly).
+
+**Keyboard** (`src/keynav.rs`): Tab or the arrow keys move a frame over the buttons of the
+topmost panel or menu, Enter or Space presses it, Esc pauses. Every shop action has a panel
+button: the crates on the ferry, putting the selected ware on a shelf or furniture on a free
+square, taking pieces away, fixing mishaps and following clues.
 
 **Controller** (Steam Deck, Xbox, PlayStation …, `src/gamepad.rs`): the left stick moves the
 pointer, **A** clicks, **B** right-clicks, the right stick scrolls panels, the d-pad nudges the
@@ -277,6 +284,9 @@ src/
   finale.rs      the quiet dawn scene after a season's finale
   weather.rs     rain, storm, snow and fog of tonight's event
   gamepad.rs     controller: the sticks drive the mouse pointer, A/B click
+  keynav.rs      keyboard focus over the panel buttons
+  contrast.rs    the high-contrast panels
+  lanterns.rs    the quay lanterns restored after the campaign
   tower_clock.rs the tower clock's ticking and its first strike
   trailer.rs     helpers for trailers and screenshots (`--trailer`)
   playtest.rs    playtest logs next to the saves, to compare real games with the simulation

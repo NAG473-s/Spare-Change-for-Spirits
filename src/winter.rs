@@ -203,11 +203,16 @@ fn turn_clock_hands(
     data: Res<GameData>,
     progress: Res<Progress>,
     strike: Res<crate::tower_clock::ClockStrike>,
+    settings: Res<crate::save::Settings>,
     mut hands: Query<(&Hand, &mut Transform)>,
     mut running: Local<f32>,
 ) {
     let level = clock_level(&data, &progress);
-    let minutes = if let Some(t) = strike.0.filter(|t| *t < crate::tower_clock::SWEEP_SECS) {
+    // Reduced motion: the hands stand at twelve without sweeping round.
+    let sweeping = strike
+        .0
+        .filter(|t| *t < crate::tower_clock::SWEEP_SECS && !settings.reduced_motion);
+    let minutes = if let Some(t) = sweeping {
         // The first strike: the minute hand sweeps a whole round up to
         // twelve, so the moment shows even with the sound off.
         let k = t / crate::tower_clock::SWEEP_SECS;
@@ -550,16 +555,22 @@ fn spawn_butterfly(
     }
 }
 
+/// How far the wings stand open while the butterfly rests (reduced motion).
+const CALM_WINGS: f32 = 0.5;
+
 /// From window box to window box, bobbing, with beating wings.
 fn fly_butterfly(
     time: Res<Time>,
     data: Res<GameData>,
     progress: Res<Progress>,
+    settings: Res<crate::save::Settings>,
     mut butterfly: Query<(&mut Transform, &mut Visibility), (With<Butterfly>, Without<Wing>)>,
     mut wings: Query<(&Wing, &mut Transform), Without<Butterfly>>,
 ) {
     let show = blossom_level(&data, &progress) >= 1.0;
-    let t = time.elapsed_secs();
+    // Reduced motion: it rests on the first window box, wings half open.
+    let calm = settings.reduced_motion;
+    let t = if calm { 0.0 } else { time.elapsed_secs() };
     for (mut transform, mut visibility) in &mut butterfly {
         let wanted = if show {
             Visibility::Inherited
@@ -588,7 +599,11 @@ fn fly_butterfly(
         }
     }
     for (wing, mut transform) in &mut wings {
-        let beat = 0.9 * (t * WING_BEATS * std::f32::consts::TAU).sin().abs();
+        let beat = if calm {
+            CALM_WINGS
+        } else {
+            0.9 * (t * WING_BEATS * std::f32::consts::TAU).sin().abs()
+        };
         transform.rotation = Quat::from_rotation_z(wing.0 * beat);
     }
 }

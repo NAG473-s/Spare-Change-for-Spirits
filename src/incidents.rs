@@ -19,7 +19,7 @@ use crate::i18n::Lang;
 use crate::rng::Rng;
 use crate::shop::ShopLayout;
 use crate::tooltip::{HoverTip, TipKind};
-use crate::ui::GameLog;
+use crate::ui::{Action, GameLog};
 
 pub struct IncidentsPlugin;
 
@@ -30,7 +30,8 @@ impl Plugin for IncidentsPlugin {
             .add_systems(OnExit(Phase::Night), clear_mishaps)
             .add_systems(
                 Update,
-                (start_mishaps, sway_markers, marker_tooltip).run_if(in_state(Phase::Night)),
+                (start_mishaps, fix_mishaps, sway_markers, marker_tooltip)
+                    .run_if(in_state(Phase::Night)),
             );
     }
 }
@@ -70,8 +71,11 @@ pub enum Motion {
 /// Tonight's mishaps: those still to come (time as a fraction of the night,
 /// index in `incidents`), and the effect of those not yet fixed.
 #[derive(Resource, Default)]
-struct Mishaps {
+pub struct Mishaps {
     planned: Vec<(f32, usize)>,
+    /// Mishaps happening now, not fixed yet (index in `incidents`); the
+    /// night panel offers a button for each.
+    pub active: Vec<usize>,
 }
 
 /// The clickable spot of a mishap that has not been fixed.
@@ -92,6 +96,7 @@ fn plan_mishaps(
 ) {
     layout.mishaps = Atmosphere::default();
     mishaps.planned.clear();
+    mishaps.active.clear();
     let c = data.config.incidents;
     if progress.calendar(&data) < c.from_night || data.incidents.is_empty() {
         return;
@@ -139,6 +144,7 @@ fn start_mishaps(
     for i in due {
         let def = &data.incidents[i];
         layout.mishaps.add(&def.effect);
+        mishaps.active.push(i);
         log.push(lang.t(&format!("incident.{}.start", def.id)));
         let base = Vec3::from(def.pos);
         let size = Vec3::from(def.size);
@@ -197,34 +203,57 @@ fn start_mishaps(
 /// How much larger than the spot the clickable box is.
 const HITBOX_GROWTH: f32 = 1.6;
 
-/// Clicking the spot fixes the mishap.
+/// Clicking the spot fixes the mishap (as does its button in the night panel).
 fn on_marker_click(
     click: On<PointerClick>,
     markers: Query<&Marker>,
+    mut actions: MessageWriter<Action>,
+) {
+    if click.button != PointerButton::Primary {
+        return;
+    }
+    if let Ok(marker) = markers.get(click.event_target()) {
+        actions.write(Action::FixMishap(marker.incident as u32));
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn fix_mishaps(
+    mut actions: MessageReader<Action>,
+    markers: Query<(Entity, &Marker)>,
     data: Res<GameData>,
     lang: Res<Lang>,
     mut commands: Commands,
+    mut mishaps: ResMut<Mishaps>,
     mut layout: ResMut<ShopLayout>,
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
     mut tip: ResMut<HoverTip>,
     mut report: ResMut<crate::day_cycle::NightReport>,
 ) {
-    if click.button != PointerButton::Primary {
-        return;
+    for action in actions.read() {
+        let Action::FixMishap(i) = action else {
+            continue;
+        };
+        let i = *i as usize;
+        let Some(at) = mishaps.active.iter().position(|a| *a == i) else {
+            continue;
+        };
+        mishaps.active.remove(at);
+        let def = &data.incidents[i];
+        let mut undo = def.effect;
+        undo.scale(-1);
+        layout.mishaps.add(&undo);
+        log.push(lang.t(&format!("incident.{}.fixed", def.id)));
+        report.mishaps_fixed += 1;
+        cues.write(Cue::Click);
+        HoverTip::hide(&mut tip);
+        for (entity, marker) in &markers {
+            if marker.incident == i {
+                commands.entity(entity).despawn();
+            }
+        }
     }
-    let Ok(marker) = markers.get(click.event_target()) else {
-        return;
-    };
-    let def = &data.incidents[marker.incident];
-    let mut undo = def.effect;
-    undo.scale(-1);
-    layout.mishaps.add(&undo);
-    log.push(lang.t(&format!("incident.{}.fixed", def.id)));
-    report.mishaps_fixed += 1;
-    cues.write(Cue::Click);
-    HoverTip::hide(&mut tip);
-    commands.entity(click.event_target()).despawn();
 }
 
 /// The spot that is hovered, for the tooltip.
@@ -295,4 +324,56 @@ fn sway_markers(
 fn clear_mishaps(mut layout: ResMut<ShopLayout>, mut mishaps: ResMut<Mishaps>) {
     layout.mishaps = Atmosphere::default();
     mishaps.planned.clear();
+    mishaps.active.clear();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::ecs::system::RunSystemOnce;
+
+    /// The night panel's button fixes a mishap just like clicking its spot.
+    #[test]
+    fn a_mishap_is_fixed_from_the_panel() {
+        let data = GameData::load();
+        let effect = data.incidents[0].effect;
+        let mut layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        layout.mishaps.add(&effect);
+        let mut world = World::new();
+        world.insert_resource(data);
+        world.insert_resource(layout);
+        world.insert_resource(Mishaps {
+            planned: Vec::new(),
+            active: vec![0],
+        });
+        world.insert_resource(Lang::load("en"));
+        world.init_resource::<GameLog>();
+        world.init_resource::<HoverTip>();
+        world.init_resource::<crate::day_cycle::NightReport>();
+        world.init_resource::<Messages<Action>>();
+        world.init_resource::<Messages<Cue>>();
+        let marker = world
+            .spawn(Marker {
+                incident: 0,
+                base: Vec3::ZERO,
+                phase: 0.0,
+            })
+            .id();
+        world
+            .resource_mut::<Messages<Action>>()
+            .write(Action::FixMishap(0));
+        world.run_system_once(fix_mishaps).unwrap();
+        assert!(world.resource::<Mishaps>().active.is_empty());
+        assert_eq!(
+            world.resource::<ShopLayout>().mishaps,
+            Atmosphere::default()
+        );
+        assert_eq!(
+            world
+                .resource::<crate::day_cycle::NightReport>()
+                .mishaps_fixed,
+            1
+        );
+        assert!(world.get_entity(marker).is_err(), "its spot is gone");
+    }
 }

@@ -33,6 +33,7 @@ impl Plugin for ErrandsPlugin {
                 Update,
                 (
                     show_clues,
+                    follow_clues,
                     pulse_clues,
                     clue_tooltip,
                     act.run_if(in_state(Phase::Evening)),
@@ -268,29 +269,67 @@ fn pulse_clues(
     }
 }
 
-/// Clicking the tracks finds the clue.
-fn on_clue_click(
-    click: On<PointerClick>,
-    clues: Query<&Clue>,
+/// Clicking the tracks finds the clue (as does the panel's button).
+fn on_clue_click(click: On<PointerClick>, clues: Query<&Clue>, mut actions: MessageWriter<Action>) {
+    if click.button != PointerButton::Primary {
+        return;
+    }
+    if let Ok(clue) = clues.get(click.event_target()) {
+        actions.write(Action::FollowClue(clue.errand));
+    }
+}
+
+fn follow_clues(
+    mut actions: MessageReader<Action>,
     data: Res<GameData>,
     lang: Res<Lang>,
+    phase: Res<State<Phase>>,
+    location: Res<Location>,
     mut progress: ResMut<Progress>,
     mut log: ResMut<GameLog>,
     mut tip: ResMut<HoverTip>,
 ) {
-    if click.button != PointerButton::Primary {
-        return;
+    for action in actions.read() {
+        let Action::FollowClue(errand) = action else {
+            continue;
+        };
+        // Only the clue that lies here and now.
+        if !wanted_clues(&data, &progress, *phase.get(), *location)
+            .iter()
+            .any(|(i, _)| i == errand)
+        {
+            continue;
+        }
+        let def = &data.errands[*errand];
+        let Some(state) = progress.journal.errands.get_mut(&def.id) else {
+            continue;
+        };
+        state.clues += 1;
+        log.push(lang.t(&format!("errand.{}.clue.{}", def.id, state.clues)));
+        HoverTip::hide(&mut tip);
     }
-    let Ok(clue) = clues.get(click.event_target()) else {
-        return;
-    };
-    let def = &data.errands[clue.errand];
-    let Some(state) = progress.journal.errands.get_mut(&def.id) else {
-        return;
-    };
-    state.clues += 1;
-    log.push(lang.t(&format!("errand.{}.clue.{}", def.id, state.clues)));
-    HoverTip::hide(&mut tip);
+}
+
+/// A button for each clue that can be found here and now (keyboard and
+/// controller players; the tracks can also be clicked in the scene).
+pub fn clue_buttons(
+    ui: &mut crate::ui::PanelBuilder,
+    lang: &Lang,
+    data: &GameData,
+    progress: &Progress,
+    phase: Phase,
+    location: Location,
+) {
+    for (i, _) in wanted_clues(data, progress, phase, location) {
+        let root = ui.root();
+        ui.button_in(
+            root,
+            &lang.t("errand.follow_tracks"),
+            Action::FollowClue(i),
+            false,
+            true,
+        );
+    }
 }
 
 fn on_clue_over(over: On<PointerOver>, mut commands: Commands) {

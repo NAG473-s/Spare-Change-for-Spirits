@@ -694,6 +694,8 @@ fn toggle_tips(
             Action::ToggleFullscreen => settings.fullscreen = !settings.fullscreen,
             Action::TogglePatientGhosts => settings.patient_ghosts = !settings.patient_ghosts,
             Action::ToggleChangeHint => settings.change_hint = !settings.change_hint,
+            Action::ToggleHighContrast => settings.high_contrast = !settings.high_contrast,
+            Action::ToggleReducedMotion => settings.reduced_motion = !settings.reduced_motion,
             Action::Adjust(knob, up) => settings.adjust(*knob, *up),
             Action::OpenSettings => {
                 menu.0 = true;
@@ -793,6 +795,34 @@ fn settings_page(ui: &mut PanelBuilder, settings: &Settings, lang: &Lang) {
     );
     ui.menu_option(assists, &lang.t(hint_key), Action::ToggleChangeHint, hint);
     ui.dim(&lang.t("settings.assists_hint"));
+    // Seeing and moving: solid panels, and calmer scenes.
+    ui.section(&lang.t("settings.display"));
+    let display = ui.row();
+    let (contrast, calm) = (settings.high_contrast, settings.reduced_motion);
+    let contrast_key = if contrast {
+        "settings.contrast_on"
+    } else {
+        "settings.contrast_off"
+    };
+    let motion_key = if calm {
+        "settings.motion_on"
+    } else {
+        "settings.motion_off"
+    };
+    ui.menu_option(
+        display,
+        &lang.t(contrast_key),
+        Action::ToggleHighContrast,
+        contrast,
+    );
+    ui.menu_option(
+        display,
+        &lang.t(motion_key),
+        Action::ToggleReducedMotion,
+        calm,
+    );
+    ui.dim(&lang.t("settings.display_hint"));
+    ui.dim(&lang.t("settings.keyboard_hint"));
     ui.menu_option(root, &lang.t("credits.open"), Action::OpenCredits, false);
     ui.menu_option(root, &lang.t("menu.back"), Action::CloseSettings, false);
 }

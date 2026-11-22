@@ -22,7 +22,7 @@ use crate::inventory::{CratesOrdered, Stock};
 use crate::rng::Rng;
 use crate::scene::world_label;
 use crate::shop::{model_or_box, product_model};
-use crate::ui::{BG_PANEL, GameLog, Icons, PanelBuilder, TEXT_DIM, UiFont, UiTheme};
+use crate::ui::{Action, BG_PANEL, GameLog, Icons, PanelBuilder, TEXT_DIM, UiFont, UiTheme};
 use crate::upgrades::Upgrades;
 
 pub struct FerryPlugin;
@@ -43,7 +43,12 @@ impl Plugin for FerryPlugin {
                     (sync_cart, fly_crates)
                         .chain()
                         .run_if(in_state(Phase::Evening)),
-                    (animate_crates, update_crate_labels, update_tooltip)
+                    (
+                        trade_crates,
+                        animate_crates,
+                        update_crate_labels,
+                        update_tooltip,
+                    )
                         .run_if(in_state(Phase::Evening)),
                 ),
             );
@@ -827,9 +832,35 @@ fn on_crate_out(out: On<PointerOut>, mut hovered: ResMut<HoveredCrate>) {
     }
 }
 
+/// A click on a crate on the boat: buy one (left) or give one back (right).
+/// The same actions come from the harbour panel's crate buttons.
 fn on_crate_click(
     click: On<PointerClick>,
     phase: Res<State<Phase>>,
+    crates_q: Query<&Crate>,
+    mut actions: MessageWriter<Action>,
+) {
+    if *phase.get() != Phase::Evening {
+        return;
+    }
+    let Ok(item) = crates_q.get(click.event_target()) else {
+        return;
+    };
+    match click.button {
+        PointerButton::Primary => {
+            actions.write(Action::BuyCrate(item.id.clone()));
+        }
+        PointerButton::Secondary => {
+            actions.write(Action::ReturnCrate(item.id.clone()));
+        }
+        PointerButton::Middle => {}
+    }
+}
+
+/// Buys a crate from the ferryman, or gives one back while it is still full.
+#[allow(clippy::too_many_arguments)]
+fn trade_crates(
+    mut actions: MessageReader<Action>,
     mut crates_q: Query<&mut Crate>,
     mut men: Query<&mut Ferryman>,
     data: Res<GameData>,
@@ -843,63 +874,68 @@ fn on_crate_click(
     mut log: ResMut<GameLog>,
     mut cues: MessageWriter<Cue>,
 ) {
-    if *phase.get() != Phase::Evening {
-        return;
-    }
-    let Ok(mut item) = crates_q.get_mut(click.event_target()) else {
-        return;
-    };
-    let id = item.id.clone();
-    let Some(p) = data.product(&id) else { return };
-    match click.button {
-        PointerButton::Primary => match blocked(
-            &data,
-            &crates,
-            &drawer,
-            upgrades.crates_tonight(&data, progress.calendar(&data)),
-            &id,
-        ) {
-            Some("ferry.tip_full") => log.push(lang.t("log.boat_full")),
-            Some(_) => log.push(lang.f(
-                "log.crate_too_expensive",
-                &[("item", &lang.product(&id)), ("cost", &p.crate_cost)],
-            )),
-            None if drawer.pay(p.crate_cost) => {
-                accounts.ferryman += p.crate_cost;
-                crates.0 += 1;
-                *bought.0.entry(id.clone()).or_default() += 1;
-                stock.add(&id, p.crate_size);
-                item.bump = 0.5;
-                for mut man in &mut men {
-                    man.nod = 0.8;
+    for action in actions.read() {
+        let (id, buy) = match action {
+            Action::BuyCrate(id) => (id.clone(), true),
+            Action::ReturnCrate(id) => (id.clone(), false),
+            _ => continue,
+        };
+        let Some(p) = data.product(&id) else { continue };
+        let mut bump = || {
+            for mut item in &mut crates_q {
+                if item.id == id {
+                    item.bump = 0.5;
                 }
-                cues.write(Cue::Paid);
-                log.push(lang.f(
-                    "log.ferry_brings",
-                    &[("count", &p.crate_size), ("item", &lang.product(&id))],
-                ));
             }
-            None => {}
-        },
-        PointerButton::Secondary => {
-            let Some(n) = bought.0.get_mut(&id) else {
-                return;
-            };
-            // Only while the crate is still full (nothing of it sold or faded).
-            if !stock.remove_new(&id, p.crate_size) {
-                return;
+        };
+        if buy {
+            match blocked(
+                &data,
+                &crates,
+                &drawer,
+                upgrades.crates_tonight(&data, progress.calendar(&data)),
+                &id,
+            ) {
+                Some("ferry.tip_full") => log.push(lang.t("log.boat_full")),
+                Some(_) => log.push(lang.f(
+                    "log.crate_too_expensive",
+                    &[("item", &lang.product(&id)), ("cost", &p.crate_cost)],
+                )),
+                None if drawer.pay(p.crate_cost) => {
+                    accounts.ferryman += p.crate_cost;
+                    crates.0 += 1;
+                    *bought.0.entry(id.clone()).or_default() += 1;
+                    stock.add(&id, p.crate_size);
+                    bump();
+                    for mut man in &mut men {
+                        man.nod = 0.8;
+                    }
+                    cues.write(Cue::Paid);
+                    log.push(lang.f(
+                        "log.ferry_brings",
+                        &[("count", &p.crate_size), ("item", &lang.product(&id))],
+                    ));
+                }
+                None => {}
             }
-            *n -= 1;
-            if *n == 0 {
-                bought.0.remove(&id);
-            }
-            crates.0 = crates.0.saturating_sub(1);
-            accounts.ferryman = accounts.ferryman.saturating_sub(p.crate_cost);
-            drawer.merge(&Purse::greedy(p.crate_cost));
-            item.bump = 0.5;
-            log.push(lang.f("log.ferry_takes_back", &[("item", &lang.product(&id))]));
+            continue;
         }
-        PointerButton::Middle => {}
+        let Some(n) = bought.0.get_mut(&id) else {
+            continue;
+        };
+        // Only while the crate is still full (nothing of it sold or faded).
+        if !stock.remove_new(&id, p.crate_size) {
+            continue;
+        }
+        *n -= 1;
+        if *n == 0 {
+            bought.0.remove(&id);
+        }
+        crates.0 = crates.0.saturating_sub(1);
+        accounts.ferryman = accounts.ferryman.saturating_sub(p.crate_cost);
+        drawer.merge(&Purse::greedy(p.crate_cost));
+        bump();
+        log.push(lang.f("log.ferry_takes_back", &[("item", &lang.product(&id))]));
     }
 }
 

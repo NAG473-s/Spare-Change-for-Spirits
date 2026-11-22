@@ -154,6 +154,10 @@ pub struct Settings {
     pub patient_ghosts: bool,
     /// Assist: the register shows how much change is due.
     pub change_hint: bool,
+    /// Solid, darker panels with brighter text and button edges (`contrast.rs`).
+    pub high_contrast: bool,
+    /// No screen fades, no sweeping clock hands, a butterfly that sits still.
+    pub reduced_motion: bool,
 }
 
 /// Steps and limits of the adjustable settings.
@@ -207,6 +211,8 @@ impl Default for Settings {
             fullscreen: false,
             patient_ghosts: false,
             change_hint: false,
+            high_contrast: false,
+            reduced_motion: false,
         }
     }
 }
@@ -1143,6 +1149,8 @@ mod tests {
             fullscreen: true,
             patient_ghosts: true,
             change_hint: true,
+            high_contrast: true,
+            reduced_motion: true,
         };
         settings.store();
         assert_eq!(Settings::load(), settings);

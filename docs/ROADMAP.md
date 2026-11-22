@@ -45,7 +45,7 @@ The market, ferry, shelves, register and morning accounts already form a playabl
 ## January 4–10 · Balance, readability and controls
 
 - [x] Extend the balancing simulation to cover next-night orders and repairs. Compare the cash drawer, fulfilled wishes, waiting times and loan repayments across all three seasons. Tune the first five nights and the busiest late-game queue separately. [Balancing targets](BALANCING.md)
-- [ ] Make each essential shop action reachable by mouse, controller and keyboard, including selecting crates, serving a ghost and saving. Add a high-contrast panel option and a reduced-motion setting for the new scenes.
+- [x] Make each essential shop action reachable by mouse, controller and keyboard, including selecting crates, serving a ghost and saving. Add a high-contrast panel option and a reduced-motion setting for the new scenes.
 - [ ] Fit long wishes, order slips and ledger entries at 200% interface size on a 1280 × 800 screen. Check the new text in all 31 catalogs, including shaping, line wrapping and right-to-left text. [Accessibility features](ACCESSIBILITY.md)
 
 ## January 11–17 · Complete campaign build

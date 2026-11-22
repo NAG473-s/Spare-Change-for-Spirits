@@ -51,7 +51,9 @@ impl Plugin for ShopPlugin {
             .add_systems(
                 Update,
                 (
-                    select_tool.run_if(in_state(Phase::Evening)),
+                    (select_tool, use_tool_anywhere)
+                        .chain()
+                        .run_if(in_state(Phase::Evening)),
                     follow_drag,
                     clear_sold_out.run_if(resource_changed::<Stock>),
                     sync_cell_visuals.run_if(
@@ -797,6 +799,86 @@ fn shelf_tooltip(
     *shown = true;
 }
 
+/// The panel's alternative to clicking a square (keyboard and controller
+/// players, `Action::UseToolAnywhere`): the selected ware goes onto the
+/// first shelf with room for it, the selected furniture onto the first free
+/// square.
+#[allow(clippy::too_many_arguments)]
+fn use_tool_anywhere(
+    mut actions: MessageReader<Action>,
+    tool: Res<Tool>,
+    data: Res<GameData>,
+    stock: Res<Stock>,
+    upgrades: Res<Upgrades>,
+    lang: Res<Lang>,
+    mut layout: ResMut<ShopLayout>,
+    mut storeroom: ResMut<Storeroom>,
+    mut log: ResMut<GameLog>,
+) {
+    for action in actions.read() {
+        match action {
+            // Take a piece away (back to the storeroom, its wares with it).
+            Action::ClearCell(idx) if *idx < layout.cells.len() => {
+                clear_cell(&mut layout, *idx, &mut storeroom);
+                continue;
+            }
+            // Take a ware off every shelf.
+            Action::Unshelve(product) => {
+                for cell in &mut layout.cells {
+                    cell.products.retain(|p| p != product);
+                }
+                continue;
+            }
+            Action::UseToolAnywhere => {}
+            _ => continue,
+        }
+        match free_cell_for(&data, &layout, &upgrades, &tool) {
+            Some(idx) => match &*tool {
+                Tool::Place(id) => {
+                    if let Err(key) =
+                        furnish_cell(&mut layout, &mut storeroom, &data, &upgrades, idx, Some(id))
+                    {
+                        log.push(lang.f(key, &[("item", &lang.decor(id))]));
+                    }
+                }
+                Tool::Stock(product) if stock.count(product) > 0 => {
+                    layout.cells[idx].products.push(product.clone());
+                }
+                _ => {}
+            },
+            None => match &*tool {
+                Tool::Place(_) => log.push(lang.t("log.no_free_square")),
+                Tool::Stock(_) => log.push(lang.t("log.shelf_full")),
+                _ => {}
+            },
+        }
+    }
+}
+
+/// Where `use_tool_anywhere` would put the selected piece or ware.
+pub fn free_cell_for(
+    data: &GameData,
+    layout: &ShopLayout,
+    upgrades: &Upgrades,
+    tool: &Tool,
+) -> Option<usize> {
+    (0..layout.cells.len()).find(|&idx| {
+        let cell = &layout.cells[idx];
+        match tool {
+            Tool::Place(_) => cell.decor.is_none() && upgrades.usable(data, layout, idx),
+            Tool::Stock(product) => cell
+                .decor
+                .as_deref()
+                .and_then(|d| data.decor(d))
+                .filter(|d| d.is_shelf())
+                .is_some_and(|d| {
+                    !cell.products.contains(product) && cell.products.len() < d.slots.len()
+                }),
+            _ => false,
+        }
+    })
+}
+
 fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
     for action in actions.read() {
         let new = match action {
@@ -1205,6 +1287,72 @@ pub(crate) fn product_model(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Keyboard and controller players furnish and stock through the panel:
+    /// the first free square, the first shelf with room, taking away.
+    #[test]
+    fn the_panel_places_stocks_and_clears_without_pointing_at_a_square() {
+        use bevy::ecs::system::RunSystemOnce;
+        let data = GameData::load();
+        let shelf = data
+            .decor
+            .iter()
+            .find(|d| d.is_shelf() && !d.keepsake)
+            .unwrap()
+            .id
+            .clone();
+        let mut layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        layout.cells.fill(CellContent::default());
+        let mut room = Storeroom::default();
+        room.give(&shelf);
+        let mut stock = Stock::default();
+        stock.add("lavender", 3);
+        let mut world = World::new();
+        world.insert_resource(data);
+        world.insert_resource(layout);
+        world.insert_resource(room);
+        world.insert_resource(stock);
+        world.insert_resource(Tool::Place(shelf.clone()));
+        world.insert_resource(Lang::load("en"));
+        world.init_resource::<Upgrades>();
+        world.init_resource::<GameLog>();
+        world.init_resource::<Messages<Action>>();
+        let act = |world: &mut World, action: Action| {
+            world.resource_mut::<Messages<Action>>().write(action);
+            world.run_system_once(use_tool_anywhere).unwrap();
+            world.resource_mut::<Messages<Action>>().update();
+        };
+        act(&mut world, Action::UseToolAnywhere);
+        let at = world
+            .resource::<ShopLayout>()
+            .cells
+            .iter()
+            .position(|c| c.decor.as_deref() == Some(shelf.as_str()))
+            .expect("the shelf stands on a free square");
+        assert_eq!(world.resource::<Storeroom>().count(&shelf), 0);
+        *world.resource_mut::<Tool>() = Tool::Stock("lavender".into());
+        act(&mut world, Action::UseToolAnywhere);
+        assert_eq!(
+            world.resource::<ShopLayout>().cells[at].products,
+            ["lavender"]
+        );
+        // Once on that shelf, there is no other shelf with room for it.
+        act(&mut world, Action::UseToolAnywhere);
+        assert_eq!(
+            world.resource::<ShopLayout>().displayed_products(),
+            ["lavender"]
+        );
+        act(&mut world, Action::Unshelve("lavender".into()));
+        assert!(
+            world
+                .resource::<ShopLayout>()
+                .displayed_products()
+                .is_empty()
+        );
+        act(&mut world, Action::ClearCell(at));
+        assert!(world.resource::<ShopLayout>().cells[at].decor.is_none());
+        assert_eq!(world.resource::<Storeroom>().count(&shelf), 1);
+    }
 
     #[test]
     fn a_hovered_replacement_previews_unlocks_set_bonuses_and_lost_needs_without_placing() {
