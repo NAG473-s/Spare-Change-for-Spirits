@@ -2,7 +2,9 @@
 //! visible from the evening until dawn: rain and snow running down the shop
 //! window and falling over the harbour, slanting rain in a storm (the candles
 //! flicker harder, see `fx.rs`), and fog drifting over the shop floor and the
-//! harbour water. Everything is drawn and moved here; there are no models.
+//! harbour water. On rainy nights the dark shape of a ghost waiting outside
+//! shows behind the wet window now and then (`rain_silhouette`). Everything
+//! is drawn and moved here; there are no models.
 
 use std::f32::consts::TAU;
 
@@ -22,7 +24,8 @@ impl Plugin for WeatherPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WeatherNow>()
             .add_systems(Startup, spawn_weather)
-            .add_systems(Update, (choose_weather, fall, drift_fog).chain());
+            .init_resource::<NextSilhouette>()
+            .add_systems(Update, (choose_weather, fall, drift_fog, rain_silhouette).chain());
     }
 }
 
@@ -335,9 +338,104 @@ fn drift_fog(
     }
 }
 
+/// Where the silhouette stands: just behind the running drops, on the glass.
+const SILHOUETTE_AT: Vec3 = Vec3::new(-3.2, 2.05, ROOM_BACK_Z + 0.2);
+const SILHOUETTE_SIZE: Vec2 = Vec2::new(0.75, 1.1);
+/// The silhouette's colour: night-blue, nearly black.
+const SILHOUETTE_TINT: Color = Color::srgb(0.04, 0.05, 0.09);
+
+/// A ghost's shape behind the rainy window, while it lasts (seconds shown).
+#[derive(Component)]
+struct Silhouette(f32);
+
+/// Seconds until the next silhouette may show.
+#[derive(Resource, Default)]
+struct NextSilhouette(f32);
+
+/// On a rainy or stormy night, now and then a ghost waiting outside shows
+/// as a dark shape behind the wet glass, then fades again. Only atmosphere:
+/// it tells nothing the player needs.
+#[allow(clippy::too_many_arguments)]
+fn rain_silhouette(
+    mut commands: Commands,
+    time: Res<Time>,
+    now: Res<WeatherNow>,
+    phase: Res<State<Phase>>,
+    location: Res<Location>,
+    data: Res<GameData>,
+    progress: Res<Progress>,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut rng: ResMut<Rng>,
+    mut next: ResMut<NextSilhouette>,
+    mut shown: Query<(Entity, &mut Silhouette, &MeshMaterial3d<StandardMaterial>)>,
+) {
+    let c = data.config.rain_silhouette;
+    let dt = time.delta_secs();
+    let rainy = (now.is(Weather::Rain) || now.is(Weather::Storm))
+        && *phase.get() == Phase::Night
+        && *location == Location::Shop;
+    for (entity, mut s, material) in &mut shown {
+        s.0 += dt;
+        if s.0 >= c.secs || !rainy {
+            commands.entity(entity).despawn();
+            continue;
+        }
+        if let Some(mut m) = materials.get_mut(&material.0) {
+            let k = (s.0 / c.secs * std::f32::consts::PI).sin();
+            m.base_color = SILHOUETTE_TINT.with_alpha(c.alpha * k);
+        }
+    }
+    if !rainy {
+        next.0 = rng.range(c.every.0, c.every.1);
+        return;
+    }
+    next.0 -= dt;
+    if next.0 > 0.0 || !shown.is_empty() {
+        return;
+    }
+    next.0 = rng.range(c.every.0, c.every.1);
+    // One of the ghosts that may come tonight, whose picture exists.
+    let night = progress.calendar(&data);
+    let ghosts: Vec<&str> = data
+        .ghosts
+        .iter()
+        .filter(|g| g.spawn_weight > 0.0 && g.unlock_night <= night)
+        .map(|g| g.id.as_str())
+        .filter(|id| crate::data::asset_exists(&format!("sprites/ghosts/{id}.png")))
+        .collect();
+    if ghosts.is_empty() {
+        return;
+    }
+    let id = ghosts[rng.index(ghosts.len())];
+    commands.spawn((
+        Silhouette(0.0),
+        Mesh3d(meshes.add(Rectangle::new(SILHOUETTE_SIZE.x, SILHOUETTE_SIZE.y))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: SILHOUETTE_TINT.with_alpha(0.0),
+            base_color_texture: Some(asset_server.load(format!("sprites/ghosts/{id}.png"))),
+            alpha_mode: AlphaMode::Blend,
+            unlit: true,
+            ..default()
+        })),
+        // A little off centre, as if standing outside by the glass.
+        Transform::from_translation(SILHOUETTE_AT + Vec3::X * rng.range(-0.25, 0.25)),
+        NotShadowCaster,
+        Pickable::IGNORE,
+    ));
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_rain_silhouette_is_rare_short_and_never_opaque() {
+        let c = GameData::load().config.rain_silhouette;
+        assert!(c.every.0 > c.secs && c.every.0 <= c.every.1, "{c:?}");
+        assert!(c.alpha > 0.0 && c.alpha < 1.0);
+    }
 
     #[test]
     fn weather_comes_with_its_events() {

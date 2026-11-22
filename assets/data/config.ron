@@ -32,6 +32,9 @@
     // A ghost whose wish is not in stock can order it for the next night (at most `max_per_night`
     // orders): it comes back early and pays `price_bonus` more; still missing costs
     // `missed_penalty` reputation. It came on purpose, so it waits `patience_factor` times as long.
+    // On rainy and stormy nights a waiting ghost's silhouette shows behind the wet shop window
+    // now and then: every `every` seconds (from, to), for `secs`, at most `alpha` dark.
+    rain_silhouette: (every: (25.0, 50.0), secs: 4.5, alpha: 0.8),
     orders: (max_per_night: 3, price_bonus: 0.5, missed_penalty: 2, arrive_at: (0.08, 0.4),
              patience_factor: 1.5),
     // A ghost served well may become a regular (`become_chance`, at most `max`): it gets a name,

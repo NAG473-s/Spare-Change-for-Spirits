@@ -406,7 +406,9 @@ narration and effects have independent volume controls. Audio production credits
 Weather (`weather` in `events.ron`, `src/weather.rs`): tonight's event shows outside from the
 evening until dawn – rain running down the shop window and falling over the harbour, slanting
 rain or a snowstorm with harder-flickering candles, quiet snowfall, or fog drifting through the
-shop at knee height and over the harbour water.
+shop at knee height and over the harbour water. On rainy and stormy nights the dark
+shape of a ghost waiting outside shows behind the wet window now and then and fades again
+(`rain_silhouette` in `config.ron`); it is only atmosphere.
 
 Visual atmosphere: candles, lamps and other light-giving decor are flickering point lights
 (`src/fx.rs`), ambient and moon light follow the time of day (`src/scene.rs`), dust drifts through

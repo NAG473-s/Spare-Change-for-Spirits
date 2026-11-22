@@ -452,6 +452,9 @@ pub struct Config {
     pub special_discount: f32,
     /// Wares a ghost orders for the next night.
     pub orders: OrdersConfig,
+    /// On rainy nights a waiting ghost shows behind the wet window now and then.
+    #[serde(default)]
+    pub rain_silhouette: RainSilhouette,
     /// Mishaps during the night (`incidents.ron`).
     pub incidents: IncidentsConfig,
     /// Ghosts who come back as regulars (`regulars.rs`).
@@ -512,6 +515,27 @@ pub struct OrdersConfig {
     pub arrive_at: (f32, f32),
     /// A ghost back for its order waits this much longer at the counter.
     pub patience_factor: f32,
+}
+
+/// The silhouette behind the rainy shop window (config.ron, `weather.rs`).
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct RainSilhouette {
+    /// Seconds between two silhouettes (from, to).
+    pub every: (f32, f32),
+    /// How long one shows, fading in and out.
+    pub secs: f32,
+    /// How dark it gets at its strongest (0–1).
+    pub alpha: f32,
+}
+
+impl Default for RainSilhouette {
+    fn default() -> Self {
+        Self {
+            every: (25.0, 50.0),
+            secs: 4.5,
+            alpha: 0.8,
+        }
+    }
 }
 
 /// When the shade comes to steal (config.ron).
