@@ -1220,6 +1220,7 @@ mod tests {
                 .unwrap()
         }
 
+        #[cfg(not(feature = "demo"))]
         fn dawn(w: &mut World) -> SaveGame {
             w.run_system_once(|state: GameState, data: Res<GameData>| dawn_snapshot(&state, &data))
                 .unwrap()
@@ -1246,6 +1247,7 @@ mod tests {
             (w, phase)
         }
 
+        #[cfg(not(feature = "demo"))]
         fn assert_kept(before: &World, after: &World) {
             assert_eq!(
                 after.resource::<Drawer>().0,
@@ -1284,6 +1286,7 @@ mod tests {
         }
 
         /// Every story told except the campaign's last chapter.
+        #[cfg(not(feature = "demo"))]
         fn before_the_last_crossing(data: &GameData, w: &mut World) -> usize {
             let last = crate::ending::campaign_finale(data).expect("a campaign finale");
             let mut p = w.resource_mut::<Progress>();
