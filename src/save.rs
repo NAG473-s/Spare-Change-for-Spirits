@@ -1156,4 +1156,341 @@ mod tests {
         assert_eq!(Settings::load(), settings);
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    // The campaign paths most likely to lose progress. Each plays the path with
+    // the game's own functions, saves to disk, loads into a fresh world and
+    // checks that stock, coins, upgrades, book entries and the chosen keepsake
+    // came through.
+    mod campaign_paths {
+        use super::*;
+        use bevy::ecs::system::RunSystemOnce;
+
+        fn world(data: &GameData) -> World {
+            let mut w = World::new();
+            w.insert_resource(Progress::new(data.config.start_reputation));
+            w.insert_resource(Drawer(data.config.start_coins));
+            w.insert_resource(Stock::default());
+            w.insert_resource(ShopLayout::new(
+                data.config.grid_cols,
+                data.config.grid_rows,
+            ));
+            w.init_resource::<Storeroom>();
+            w.init_resource::<CratesOrdered>();
+            w.init_resource::<BoughtTonight>();
+            w.init_resource::<Accounts>();
+            w.init_resource::<MarketDay>();
+            w.init_resource::<Loan>();
+            w.init_resource::<Upgrades>();
+            w.insert_resource(GameData::load());
+            w.insert_resource(crate::i18n::Lang::load("en"));
+            w.init_resource::<crate::ui::GameLog>();
+            w
+        }
+
+        /// A shop in the middle of the game: coins, wares, an improvement,
+        /// furniture, a ghost in the book and a regular.
+        fn furnish(w: &mut World) {
+            let mut p = w.resource_mut::<Progress>();
+            p.journal.met("shy", "lavender");
+            p.journal.served("shy", "lavender", None);
+            p.journal.regulars.push(crate::book::Regular {
+                ghost: "shy".into(),
+                name: 1,
+                visits: 3,
+                favourite: "lavender".into(),
+                last_purchase: Some("lavender".into()),
+                seen_keepsakes: Vec::new(),
+                encounters: Vec::new(),
+            });
+            w.resource_mut::<Drawer>().0 = Purse {
+                buttons: 17,
+                candles: 4,
+                spoons: 2,
+            };
+            w.resource_mut::<Stock>().add("tea_tin", 3);
+            w.resource_mut::<Upgrades>()
+                .0
+                .insert("waiting_bench".into());
+            w.resource_mut::<Storeroom>().give("rug");
+        }
+
+        fn snapshot(w: &mut World, night: u32, finished: bool, market_open: bool) -> SaveGame {
+            w.run_system_once(move |state: GameState| state.snapshot(night, finished, market_open))
+                .unwrap()
+        }
+
+        fn dawn(w: &mut World) -> SaveGame {
+            w.run_system_once(|state: GameState, data: Res<GameData>| dawn_snapshot(&state, &data))
+                .unwrap()
+        }
+
+        /// Written to disk and read back, as the game does.
+        fn through_disk(save: &SaveGame, name: &str) -> SaveGame {
+            let dir = temp_dir(name);
+            let file = slot_path(&dir, 1, Slot::Auto);
+            write_ron(&file, save);
+            let back = read_save_at(&file).expect("the save reads back");
+            std::fs::remove_dir_all(dir).unwrap();
+            back
+        }
+
+        /// Loads a save into a fresh world at the night it resumes at.
+        fn load(data: &GameData, save: SaveGame) -> (World, Phase) {
+            let (phase, night) = save.resume_at(data.config.demo_nights).expect("playable");
+            let mut w = world(data);
+            w.run_system_once(move |mut state: GameState, data: Res<GameData>| {
+                state.apply(&save, night, &data)
+            })
+            .unwrap();
+            (w, phase)
+        }
+
+        fn assert_kept(before: &World, after: &World) {
+            assert_eq!(
+                after.resource::<Drawer>().0,
+                before.resource::<Drawer>().0,
+                "coins"
+            );
+            assert_eq!(
+                after.resource::<Stock>().units(),
+                before.resource::<Stock>().units(),
+                "stock"
+            );
+            assert_eq!(
+                after.resource::<Upgrades>().0,
+                before.resource::<Upgrades>().0
+            );
+            assert_eq!(
+                after.resource::<Storeroom>().0,
+                before.resource::<Storeroom>().0
+            );
+            assert_eq!(
+                after.resource::<ShopLayout>().cells,
+                before.resource::<ShopLayout>().cells
+            );
+            let (a, b) = (
+                &after.resource::<Progress>().journal,
+                &before.resource::<Progress>().journal,
+            );
+            // Nothing in the book is lost (loading may add the wishes that
+            // finished chapters prove were fulfilled).
+            for (ghost, entry) in &b.book {
+                assert_eq!(a.book.get(ghost), Some(entry), "book entry for {ghost}");
+            }
+            assert_eq!(a.regulars, b.regulars, "regulars");
+            assert_eq!(a.ledger_keepsake, b.ledger_keepsake, "chosen keepsake");
+            assert_eq!(a.lanterns, b.lanterns, "quay lanterns");
+        }
+
+        /// Every story told except the campaign's last chapter.
+        fn before_the_last_crossing(data: &GameData, w: &mut World) -> usize {
+            let last = crate::ending::campaign_finale(data).expect("a campaign finale");
+            let mut p = w.resource_mut::<Progress>();
+            for (i, story) in data.stories.iter().enumerate() {
+                let chapters = story.chapters.len() - usize::from(i == last);
+                for _ in 0..chapters {
+                    p.finish_chapter(i);
+                }
+            }
+            p.season = data.season_of(data.stories[last].start_night);
+            p.season_start = (p.season - 1) * data.config.season_length + 1;
+            p.night = data.config.last_night;
+            last
+        }
+
+        #[test]
+        #[cfg(not(feature = "demo"))]
+        fn a_missed_story_ware_comes_back_as_a_parcel_after_loading() {
+            let data = GameData::load();
+            let mut w = world(&data);
+            furnish(&mut w);
+            let edwin = data
+                .stories
+                .iter()
+                .position(|s| s.ghost == "edwin")
+                .unwrap();
+            w.resource_mut::<Progress>().night = data.stories[edwin].start_night;
+            // The ware is not in stock: the ferryman leaves a parcel.
+            w.run_system_once(crate::day_cycle::deliver_parcels)
+                .unwrap();
+            assert!(w.resource::<Progress>().parcels.contains(&edwin));
+            // Edwin comes, but gives up before he is served.
+            let mut report = crate::day_cycle::NightReport::default();
+            report.story_arrived.push(edwin);
+            w.insert_resource(report);
+            w.run_system_once(crate::day_cycle::count_story_tries)
+                .unwrap();
+            assert_eq!(w.resource::<Progress>().tries(edwin), 1);
+
+            let save = through_disk(&dawn(&mut w), "missed-ware");
+            let (mut loaded, phase) = load(&data, save);
+            assert_eq!(phase, Phase::Day, "the next day at the market");
+            assert_kept(&w, &loaded);
+            let p = loaded.resource::<Progress>();
+            assert_eq!((p.chapter(edwin), p.tries(edwin)), (0, 1));
+            assert!(p.parcels.contains(&edwin) && p.story_due(&data, edwin));
+            // The next night the parcel is still waiting, and serving it
+            // finishes the chapter.
+            loaded
+                .run_system_once(crate::day_cycle::deliver_parcels)
+                .unwrap();
+            let mut p = loaded.resource_mut::<Progress>();
+            assert_eq!(p.parcels.iter().filter(|&&i| i == edwin).count(), 1);
+            p.finish_chapter(edwin);
+            assert_eq!((p.chapter(edwin), p.tries(edwin)), (1, 0));
+            assert!(p.parcels.is_empty());
+        }
+
+        #[test]
+        fn a_restarted_night_with_an_open_order_keeps_its_ware_and_coins() {
+            use crate::orders::{Order, OrderState};
+            let data = GameData::load();
+            let mut w = world(&data);
+            furnish(&mut w);
+            {
+                let mut p = w.resource_mut::<Progress>();
+                p.night = 4;
+                let mut order = Order::new("shy", "lavender", 4, Some(1));
+                order.pinned = true;
+                p.orders.push(order);
+            }
+            w.resource_mut::<Stock>().add("lavender", 1);
+            // The night begins (`autosave_night`).
+            let start = snapshot(&mut w, 4, false, false);
+            let before = {
+                let mut copy = world(&data);
+                let save = start.clone();
+                copy.run_system_once(move |mut state: GameState, data: Res<GameData>| {
+                    state.apply(&save, 4, &data)
+                })
+                .unwrap();
+                copy
+            };
+            // During the night the order is collected and paid, a new ghost
+            // is met and another order is taken for tomorrow; then the
+            // window is closed.
+            {
+                let mut p = w.resource_mut::<Progress>();
+                p.set_order_state(Some(0), OrderState::Collected);
+                p.journal.met("frog", "rain_jar");
+                p.orders.push(Order::new("frog", "rain_jar", 5, None));
+            }
+            w.resource_mut::<Stock>().take_one("lavender");
+            w.resource_mut::<Drawer>().0.buttons += 9;
+            let progress = w.resource::<Progress>().clone();
+            let quit = night_snapshot(&start, &progress, &crate::register::Register::default());
+
+            let (loaded, phase) = load(&data, through_disk(&quit, "open-order"));
+            assert_eq!(phase, Phase::Evening, "the night restarts at its evening");
+            // The night is played again: its order, ware and coins as they were.
+            assert_eq!(loaded.resource::<Stock>().count("lavender"), 1);
+            assert_eq!(loaded.resource::<Drawer>().0, before.resource::<Drawer>().0);
+            let p = loaded.resource::<Progress>();
+            assert_eq!(p.orders.len(), 1, "tomorrow's order was not placed yet");
+            assert_eq!(p.orders[0].state, OrderState::Open);
+            assert!(p.orders[0].pinned, "the pin stays");
+            // What was learnt about the frog is kept.
+            assert!(p.journal.has_seen("frog"));
+            assert_eq!(
+                p.journal.regulars,
+                before.resource::<Progress>().journal.regulars
+            );
+            assert_eq!(
+                loaded.resource::<Upgrades>().0,
+                before.resource::<Upgrades>().0
+            );
+            assert_eq!(
+                loaded.resource::<Storeroom>().0,
+                before.resource::<Storeroom>().0
+            );
+        }
+
+        #[test]
+        #[cfg(not(feature = "demo"))]
+        fn the_finale_resumes_at_its_epilogue_with_the_ending_and_the_keepsake() {
+            let data = GameData::load();
+            let mut w = world(&data);
+            furnish(&mut w);
+            let last = before_the_last_crossing(&data, &mut w);
+            // The ferryman's fare is paid: the campaign is complete
+            // (`ending::begin`) and the dawn is saved before the credits.
+            {
+                let mut p = w.resource_mut::<Progress>();
+                p.finish_chapter(last);
+                p.journal.campaign_complete = true;
+            }
+            let save = through_disk(&dawn(&mut w), "finale");
+            assert!(save.finished);
+            let (loaded, phase) = load(&data, save);
+            // Closed during the closing sequence: back at the epilogue, where
+            // the keepsake can still be chosen.
+            assert_eq!(phase, Phase::DemoEnd);
+            assert_kept(&w, &loaded);
+            let p = loaded.resource::<Progress>();
+            assert!(p.journal.campaign_complete && p.journal.ledger_keepsake.is_none());
+            assert!(p.season_over(&data), "the season does not play again");
+
+            // The keepsake is chosen (`ending::act` saves at once).
+            w.resource_mut::<Progress>().journal.ledger_keepsake = Some("logbook".into());
+            let save = through_disk(&dawn(&mut w), "keepsake");
+            let (loaded, phase) = load(&data, save);
+            assert_eq!(phase, Phase::DemoEnd);
+            assert_kept(&w, &loaded);
+            assert!(!loaded.resource::<Progress>().story_due(&data, last));
+        }
+
+        #[test]
+        #[cfg(not(feature = "demo"))]
+        fn the_free_play_save_continues_the_shop_after_the_credits() {
+            let data = GameData::load();
+            let mut w = world(&data);
+            furnish(&mut w);
+            let last = before_the_last_crossing(&data, &mut w);
+            {
+                let mut p = w.resource_mut::<Progress>();
+                p.finish_chapter(last);
+                p.journal.campaign_complete = true;
+                p.journal.ledger_keepsake = Some("logbook".into());
+                // Keep the shop open (`keep_playing`), then the save of the
+                // first free-play market (`autosave_next_season`).
+                p.next_season();
+                let night = p.night;
+                p.journal.lanterns.push(crate::lanterns::LanternRecord {
+                    night,
+                    visitors: vec!["shy".into()],
+                });
+            }
+            let night = w.resource::<Progress>().night;
+            let save = through_disk(&snapshot(&mut w, night, false, true), "free-play");
+            let (mut loaded, phase) = load(&data, save);
+            assert_eq!(phase, Phase::Day, "at the market of the first free night");
+            assert_kept(&w, &loaded);
+            let p = loaded.resource::<Progress>();
+            assert_eq!(p.calendar(&data), data.config.last_night + 1);
+            assert_eq!(
+                data.event(p.calendar(&data)).and_then(|e| e.week_day),
+                Some(1),
+                "the free-play week begins"
+            );
+            assert!((0..data.stories.len()).all(|i| !p.story_due(&data, i)));
+            assert!(!p.season_over(&data));
+            assert!(p.journal.campaign_complete);
+            // A week on, saved at dawn and loaded again: the calendar and the
+            // lanterns carry on, and the regulars' notes are not doubled.
+            {
+                let mut p = loaded.resource_mut::<Progress>();
+                p.night += 6;
+            }
+            let save = through_disk(&dawn(&mut loaded), "free-play-week");
+            let (again, _) = load(&data, save);
+            let p = again.resource::<Progress>();
+            assert_eq!(p.calendar(&data), data.config.last_night + 8);
+            assert_eq!(p.journal.lanterns.len(), 1);
+            let mut rng = crate::rng::Rng::new(1);
+            let notes = crate::regulars::requests(&data, p, &mut rng);
+            let mut with_notes = p.clone();
+            with_notes.orders.extend(notes);
+            assert!(crate::regulars::requests(&data, &with_notes, &mut rng).is_empty());
+        }
+    }
 }
