@@ -151,12 +151,12 @@ class DemoAssets:
         special = self.finale_guests | self.chapters.keys()
         if int(fields(config["thief"])["from_night"]) <= last:
             special.add("shade")  # ghosts::THIEF_GHOST
-        regulars = {json.loads(g["id"]) for g in ghost_rows if unlocked(g) and float(g["spawn_weight"]) > 0}
-        guests = [g for g in ghost_rows if json.loads(g["id"]) in special | regulars]
-        self.shoppers = regulars | self.chapters.keys()
-        self.redeemable = regulars | self.films | self.finale_guests
+        self.regulars = {json.loads(g["id"]) for g in ghost_rows if unlocked(g) and float(g["spawn_weight"]) > 0}
+        guests = [g for g in ghost_rows if json.loads(g["id"]) in special | self.regulars]
+        self.shoppers = self.regulars | self.chapters.keys()
+        self.redeemable = self.regulars | self.films | self.finale_guests
         self.can_flee = {json.loads(g["id"]) for g in guests
-                         if json.loads(g["id"]) in regulars and items(g.get("needs", "[]"))}
+                         if json.loads(g["id"]) in self.regulars and items(g.get("needs", "[]"))}
         for guest in guests:
             guest["wishes"] = sequence(w for w in items(guest["wishes"]) if json.loads(w) in self.products)
         self.guests = select("ghosts", guests, "ghost")
@@ -247,6 +247,8 @@ class DemoAssets:
             return parts[2] in self.films
         if parts[0] == "sounds":
             return not stem.startswith(("night_ambience_", "evening_music_"))
+        if parts[:2] == ("sprites", "postcards"):
+            return stem in self.regulars
         if parts[:2] == ("sprites", "ghosts"):
             ghost = next((g for g in self.portrait_ids if stem == g or stem.startswith(g + "_")), None)
             if ghost not in self.guests:

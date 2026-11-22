@@ -11,6 +11,7 @@ The shop is a 3D diorama: furniture, products, the counter, the door and the wal
 - **Surface textures and light** – the shop floor, market cobblestones and the soft halo around harbour lamps.
 - **The opening and title screen** – a painted harbour, a punt with an articulated ferryman, the menu background and the game logo.
 - **Story endings** – three original paintings per ghost for the six narrated films.
+- **Postcards** – a painted scene from the other side for each kind of regular.
 - **The desktop icon** – the same ghost and brass button in the Linux, macOS and Windows launchers.
 - **Steam store art** – done, see [`art/steam/`](../art/steam/README.md).
 
@@ -25,9 +26,9 @@ python3 tools/check_models.py
 
 ## Delivery status
 
-Open order: the thirteen postcard pictures under *Postcards from regulars* below
-(`assets/sprites/postcards/<ghost>.png`). Until they arrive each postcard shows the regular's
-portrait on a cream card.
+All thirteen postcards from regulars are in [`assets/sprites/postcards/`](../assets/sprites/postcards/).
+Each 600 × 400 PNG appears in the book and on the counter. The demo ships the nine pictures
+its regulars can send.
 
 Lotte's keepsake icon is in
 `assets/sprites/decor/toy_sledge.png` (96 × 96, transparent PNG).
@@ -81,7 +82,8 @@ floor, market street map and quay paving. The opening score and all 31 readings 
 The game generates the water surface and its ripple normals at runtime.
 
 To check models, icons and gesture sheets on a fresh checkout, pull `main` and run `python3 tools/check_models.py`.
-It reports `missing` for absent assets, `no icon` for absent icons and `no sheet` for absent gesture sheets.
+It reports `missing` for absent assets, `no icon` for absent icons, `no sheet` for absent
+gesture sheets and `no card` for missing postcard pictures.
 The environment textures and their paths are listed under [Water and light](#water-and-light--canvas-1024--1024).
 
 ## Workflow

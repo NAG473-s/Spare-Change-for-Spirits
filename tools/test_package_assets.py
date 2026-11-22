@@ -28,7 +28,10 @@ class PackageAssetsTests(unittest.TestCase):
             copy_assets(ASSETS, demo, "demo")
             self.assertEqual(source_hashes, hashes(full))
             self.assertEqual(source_hashes, hashes(ASSETS))
+            self.assertEqual({p.stem for p in (demo / "sprites/postcards").glob("*.png")},
+                             {"shy", "vain", "poltergeist", "forgetful", "child", "cat", "sailor", "knight", "bride"})
             for rel in ("videos/endings/edwin.avi", "sprites/ghosts/edwin_pay.png", "sprites/ghosts/shade.png",
+                        "models/shop/postcard_stand.glb", "sprites/postcards/bride.png",
                         "sprites/ghosts/apprentice.png", "sprites/ghosts/bride_browse.png", "models/critters/cat_tail.glb",
                         "models/products/ship_in_bottle.glb", "models/decor/pocket_lantern.glb", "models/props/storm_lantern.glb",
                         "models/harbor/lighthouse.glb", "models/market/clock_tower.glb", "models/market/clock_hand_hour.glb",

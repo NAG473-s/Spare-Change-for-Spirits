@@ -220,6 +220,8 @@ const CARD_PAPER: Color = Color::srgb(0.93, 0.88, 0.76);
 /// How tall the card stands above the counter top, and how long a turn takes.
 const CARD_LIFT: f32 = 0.15;
 const TURN_SECS: f32 = 0.45;
+/// Lift the lower corners clear of the wooden lips while the card turns.
+const TURN_LIFT: f32 = 0.07;
 
 /// The card by the till (its index in the journal).
 #[derive(Component)]
@@ -283,10 +285,11 @@ fn show_card(
             ChildOf(root),
         ));
     }
-    // The card leans back on its stand and turns about its upright middle.
+    // Keep the bottom edge of the tilted card centred in the stand's groove.
+    let middle_z = 0.5 * CARD_SIZE.y * CARD_LEAN.sin();
     let lean = commands
         .spawn((
-            Transform::from_xyz(0.0, CARD_LIFT, 0.0)
+            Transform::from_xyz(0.0, CARD_LIFT, middle_z)
                 .with_rotation(Quat::from_rotation_x(CARD_LEAN)),
             Visibility::default(),
             ChildOf(root),
@@ -422,6 +425,7 @@ fn turn_card(
             face.angle += (goal - face.angle).clamp(-step, step);
         }
         transform.rotation = Quat::from_rotation_y(face.angle);
+        transform.translation.y = TURN_LIFT * face.angle.sin().max(0.0).sqrt();
     }
 }
 

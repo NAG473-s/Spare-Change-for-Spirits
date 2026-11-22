@@ -335,14 +335,14 @@ def check(path, target, budget):
     return line, problems
 
 
-def portrait_problem(path):
+def png_size_problem(path, expected):
     with path.open("rb") as file:
         header = file.read(33)
     if len(header) != 33 or not header.startswith(b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR"):
         return "invalid PNG header"
     width, height = struct.unpack_from(">II", header, 16)
-    if (width, height) != (176, 264):
-        return f"{width} × {height} px, expected 176 × 264 px"
+    if (width, height) != expected:
+        return f"{width} × {height} px, expected {expected[0]} × {expected[1]} px"
     return None
 
 
@@ -396,7 +396,7 @@ def main():
             print(f"  missing  sprites/ghosts/{ghost}.png")
             failures += 1
             continue
-        problem = portrait_problem(sprite)
+        problem = png_size_problem(sprite, (176, 264))
         if problem:
             print(f"  CHECK    sprites/ghosts/{ghost}.png: {problem}")
             failures += 1
@@ -429,7 +429,13 @@ def main():
     for ghost, weight in re.findall(r'\(id: "([^"]+)", color: \([^)]*\),[^\n]*\n\s*spawn_weight: ([0-9.]+)', ghosts_text):
         if float(weight) > 0 and ghost != "shade":
             card = ROOT / "assets" / "sprites" / "postcards" / f"{ghost}.png"
-            print(("  ok       " if card.is_file() else "  no card  ") + f"sprites/postcards/{ghost}.png")
+            if not card.is_file():
+                print(f"  no card  sprites/postcards/{ghost}.png")
+            elif problem := png_size_problem(card, (600, 400)):
+                print(f"  CHECK    sprites/postcards/{ghost}.png: {problem}")
+                failures += 1
+            else:
+                print(f"  ok       sprites/postcards/{ghost}.png")
     # Achievement icons for Steam (docs/STEAM.md), achieved and greyed.
     for a in ids("assets/data/achievements.ron", r'\(id: "([^"]+)"'):
         for suffix in ("", "_locked"):

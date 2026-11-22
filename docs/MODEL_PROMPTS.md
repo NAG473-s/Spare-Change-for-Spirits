@@ -9,12 +9,13 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
-- The postcard stand (extra idea): `postcard_stand` in `assets/models/shop/` (see *Shop*).
-  It stands on the counter and holds the postcard a regular sent; the game draws the card and
-  turns it. Until it arrives a small wooden block stands in.
+All models currently requested in this list have been delivered.
 
 ## Delivered models
 
+- The [postcard stand](../assets/models/shop/postcard_stand.glb) on the counter has worn walnut
+  rails and brass corners. Its groove runs from end to end. The game seats the postcard in the
+  groove and lifts it out to turn it over.
 - All five quay lanterns use `assets/models/harbor/quay_lantern.glb`. A ladder bar sits
   below the square glass housing, centred 1.95 m above the foot. The game lights each lantern
   when the player restores it.
