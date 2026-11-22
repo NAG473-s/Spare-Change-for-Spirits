@@ -1,5 +1,6 @@
 // Languages, in menu order. code = file name in this folder.
 // font: extra font for scripts Inter does not cover (subset by tools/subset_fonts.py).
+// rtl: written right to left (paragraphs align right, signed numbers stay readable).
 [
     (code: "en", name: "English"),
     (code: "de", name: "Deutsch"),
@@ -23,7 +24,7 @@
     (code: "ru", name: "Русский"),
     (code: "el", name: "Ελληνικά"),
     (code: "tr", name: "Türkçe"),
-    (code: "ar", name: "العربية", font: Some("NotoSansArabic-subset.ttf")),
+    (code: "ar", name: "العربية", font: Some("NotoSansArabic-subset.ttf"), rtl: true),
     (code: "th", name: "ไทย", font: Some("NotoSansThai-subset.ttf")),
     (code: "vi", name: "Tiếng Việt"),
     (code: "id", name: "Bahasa Indonesia"),

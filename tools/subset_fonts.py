@@ -7,7 +7,7 @@ ships a few hundred KB instead of tens of MB. Run it after changing any
 translation:
 
     python3 tools/subset_fonts.py           # write assets/fonts/*-subset.*
-    python3 tools/subset_fonts.py --check   # fail if a font lacks a character
+    python3 tools/subset_fonts.py --check   # fail if a font (or Inter) lacks a character
 
 Needs fontTools (pip install -r tools/requirements.txt) and the Noto fonts
 (Debian/Ubuntu: apt-get install fonts-noto-cjk fonts-noto-core), or pass
@@ -120,8 +120,15 @@ def main():
     langs = languages()
     names = "".join(name for _, name, _ in langs)
     problems = []
+    inter = TTFont(FONTS / "Inter-Regular.otf").getBestCmap()
     for code, native, font in langs:
         if not font:
+            # Latin, Cyrillic and Greek: Inter has to draw every character.
+            if args.check:
+                chars = (catalog_chars(code) | set(native)) - {"\n"}
+                missing = sorted(c for c in chars if ord(c) not in inter and not c.isspace())
+                if missing:
+                    problems.append(f"Inter lacks {''.join(missing)!r} for {code}")
             continue
         if not (I18N / f"{code}.ron").is_file():
             problems.append(f"{code}.ron is missing")

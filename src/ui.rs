@@ -29,6 +29,43 @@ use crate::upgrades::Upgrades;
 pub(crate) const PANEL_WIDTH: f32 = 380.0;
 /// Height of the message log below the side panel.
 pub(crate) const LOG_HEIGHT: f32 = 118.0;
+/// The log's largest share of the screen height (118 of 720 at 100 %).
+const LOG_MAX_SHARE: f32 = 16.4;
+/// Height of the top bar on one line.
+const TOP_BAR_HEIGHT: f32 = 40.0;
+
+#[derive(Component)]
+struct TopBar;
+
+#[derive(Component)]
+struct LogFrame;
+
+/// Plain left-aligned text follows the language's direction instead, so a
+/// paragraph in Arabic lines up on the right (`Justify::Start`).
+fn align_to_direction(mut texts: Query<&mut TextLayout, Added<TextLayout>>) {
+    for mut layout in &mut texts {
+        if layout.justify == Justify::Left {
+            layout.justify = Justify::Start;
+        }
+    }
+}
+
+/// The side panel fills the right column between the top bar and the log,
+/// whatever height they have.
+fn fit_right_column(
+    bar: Single<&ComputedNode, With<TopBar>>,
+    log: Single<&ComputedNode, With<LogFrame>>,
+    mut panel: Single<&mut Node, With<SidePanel>>,
+) {
+    let height = |n: &ComputedNode| n.size().y * n.inverse_scale_factor();
+    let (top, bottom) = (px(height(&bar)), px(height(&log)));
+    if panel.top != top {
+        panel.top = top;
+    }
+    if panel.bottom != bottom {
+        panel.bottom = bottom;
+    }
+}
 pub(crate) const BG_PANEL: Color = Color::srgb(0.11, 0.08, 0.12);
 pub(crate) const PANEL_EDGE: Color = Color::srgb(0.39, 0.27, 0.19);
 pub(crate) const TEXT: Color = Color::srgb(0.95, 0.89, 0.79);
@@ -48,6 +85,10 @@ impl Plugin for UiPlugin {
             .init_resource::<Icons>()
             .init_resource::<UiTheme>()
             .add_systems(Startup, spawn_ui)
+            .add_systems(
+                PostUpdate,
+                align_to_direction.before(bevy::ui::UiSystems::Content),
+            )
             // Before Update, so every rebuild this frame already uses the new font.
             .add_systems(PreUpdate, apply_language.run_if(resource_changed::<Lang>))
             .add_observer(on_activate)
@@ -78,6 +119,7 @@ impl Plugin for UiPlugin {
                     build_demo_end_panel
                         .run_if(in_state(Phase::DemoEnd).and_then(resource_changed::<UiFont>)),
                     button_hover,
+                    fit_right_column,
                     reputation_tooltip,
                     refresh_change.after(build_night_panel).run_if(
                         in_state(Phase::Night).and_then(
@@ -692,15 +734,18 @@ fn scroll_panel_to_top(
 }
 
 fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme: Res<UiTheme>) {
-    // Top bar
+    // Top bar: one line, or two at a large interface size on a narrow
+    // screen (the right column follows its height, `fit_right_column`).
     commands
         .spawn((
+            TopBar,
             Node {
                 position_type: PositionType::Absolute,
                 left: px(0),
                 right: px(0),
                 top: px(0),
-                height: px(40),
+                min_height: px(TOP_BAR_HEIGHT),
+                column_gap: px(10),
                 padding: UiRect::horizontal(px(16)),
                 border: UiRect::bottom(px(1)),
                 align_items: AlignItems::Center,
@@ -718,6 +763,8 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
                     TextColor(TEXT),
                     Node {
                         flex_grow: 1.0,
+                        flex_shrink: 1.0,
+                        min_width: px(0),
                         ..default()
                     },
                 ),
@@ -783,7 +830,7 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
             Node {
                 position_type: PositionType::Absolute,
                 right: px(0),
-                top: px(40),
+                top: px(TOP_BAR_HEIGHT),
                 bottom: px(LOG_HEIGHT),
                 width: px(PANEL_WIDTH),
                 flex_direction: FlexDirection::Column,
@@ -821,12 +868,16 @@ fn spawn_ui(mut commands: Commands, font: Res<UiFont>, icons: Res<Icons>, theme:
     // off at the top when they do not fit.
     let log_frame = commands
         .spawn((
+            LogFrame,
             Node {
                 position_type: PositionType::Absolute,
                 right: px(0),
                 bottom: px(0),
                 width: px(PANEL_WIDTH),
-                height: px(LOG_HEIGHT),
+                // A low screen at a large interface size keeps more of the
+                // panel: the log takes at most this share of the height.
+                height: vh(LOG_MAX_SHARE),
+                max_height: px(LOG_HEIGHT),
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::End,
                 padding: UiRect::axes(px(14), px(8)),
@@ -1055,6 +1106,8 @@ fn coin_bar(font: &UiFont, icons: &Icons) -> impl Bundle {
         CoinBar,
         Node {
             align_items: AlignItems::Center,
+            // The status text gives way first when the bar is narrow.
+            flex_shrink: 0.0,
             column_gap: px(14),
             padding: UiRect::axes(px(12), px(3)),
             border: UiRect::all(px(1)),
@@ -2581,6 +2634,17 @@ pub(crate) fn overlay(
     dim: f32,
     width: f32,
 ) -> (Entity, Entity) {
+    let (layer, _, panel) = overlay_parts(commands, theme, dim, width);
+    (layer, panel)
+}
+
+/// `overlay`, also giving its frame: (layer, frame, panel).
+fn overlay_parts(
+    commands: &mut Commands,
+    theme: &UiTheme,
+    dim: f32,
+    width: f32,
+) -> (Entity, Entity, Entity) {
     let layer = commands
         .spawn((
             Node {
@@ -2611,10 +2675,13 @@ pub(crate) fn overlay(
             ChildOf(layer),
         ))
         .id();
-    let panel = theme.panel_body(commands, frame, 0.36, 24.0, 10.0);
+    let panel = theme.panel_body(commands, frame, 0.36, OVERLAY_PADDING, 10.0);
     scroll_y(commands, panel);
-    (layer, panel)
+    (layer, frame, panel)
 }
+
+/// Padding of an overlay's panel inside its frame (`overlay_parts`).
+const OVERLAY_PADDING: f32 = 24.0;
 
 /// Lets a panel body scroll when it is taller than the window (a large
 /// interface size on a small screen), so every button stays reachable.
@@ -2626,14 +2693,21 @@ pub(crate) fn book_overlay(
     width: f32,
     height: f32,
 ) -> (Entity, Entity, Entity) {
-    let (layer, body) = overlay(commands, theme, 0.6, width);
+    let (layer, frame, body) = overlay_parts(commands, theme, 0.6, width);
+    // The book keeps one height for every chapter, unless the screen is
+    // lower (a large interface size): then it fits and its page scrolls.
+    commands
+        .entity(frame)
+        .queue(move |mut entity: EntityWorldMut| {
+            if let Some(mut node) = entity.get_mut::<Node>() {
+                node.height = px(height + 2.0 * OVERLAY_PADDING);
+            }
+        });
     commands
         .entity(body)
         .queue(move |mut entity: EntityWorldMut| {
             if let Some(mut node) = entity.get_mut::<Node>() {
                 node.overflow = Overflow::visible();
-                node.min_height = px(height);
-                node.max_height = px(height);
             }
         });
     let header = commands

@@ -333,7 +333,11 @@ offline. It checks the user’s selection before the installed depot language.
   `python3 tools/i18n_sync.py --add <folder>` (keeps every catalog in en.ron's order;
   `--missing` lists gaps).
 - Chinese, Japanese, Korean, Thai and Arabic use Noto fonts reduced to the characters actually
-  used. After changing any translation run `python3 tools/subset_fonts.py` (check with `--check`).
+  used. After changing any translation run `python3 tools/subset_fonts.py`; `--check` also
+  makes sure Inter draws every character of the Latin, Cyrillic and Greek catalogs.
+- Arabic is marked `rtl` in `languages.ron`: plain text aligns to the start of its direction
+  (`Justify::Start`), so its paragraphs line up on the right, and a signed number filled into a
+  sentence ("-4") is set apart left to right so its sign stays in front.
 
 ## Content and balancing
 

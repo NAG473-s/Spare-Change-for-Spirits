@@ -252,9 +252,13 @@ fn title_layout(
         commands.spawn((
             TitleLogo,
             ImageNode::new(asset_server.load(LOGO)),
+            // At a large interface size on a low screen the logo shrinks
+            // (keeping its shape), so the menu below keeps its room.
             Node {
-                width: px(LOGO_WIDTH),
+                height: vh(LOGO_MAX_SHARE),
+                max_height: px(LOGO_WIDTH / LOGO_ASPECT),
                 max_width: percent(100),
+                aspect_ratio: Some(LOGO_ASPECT),
                 ..default()
             },
             UiTransform::IDENTITY,
@@ -338,8 +342,12 @@ const BOOK_HEIGHT: f32 = 520.0;
 /// Far more than all buttons' growth together, so the filler takes the room.
 const BOOK_FILLER: f32 = 10_000.0;
 
-/// Width of the logo above the main menu.
+/// Width of the logo above the main menu, its shape (width / height of
+/// `sprites/title/logo.png`) and the largest share of the screen height it
+/// may take.
 const LOGO_WIDTH: f32 = 400.0;
+const LOGO_ASPECT: f32 = 1038.0 / 594.0;
+const LOGO_MAX_SHARE: f32 = 32.0;
 
 fn sound_label(settings: &Settings, lang: &Lang) -> String {
     lang.t(if settings.sound {

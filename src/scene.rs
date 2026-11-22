@@ -669,6 +669,8 @@ pub fn world_label(
             ..default()
         },
         Pickable::IGNORE,
+        // Behind the side panel and the menus.
+        GlobalZIndex(-1),
         // Hidden until `follow_labels` has put it in place – otherwise a new
         // label shows for a frame in the top left corner.
         Visibility::Hidden,

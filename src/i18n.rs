@@ -25,6 +25,9 @@ pub struct LanguageDef {
     /// Extra font (in assets/fonts) for scripts the main font lacks.
     #[serde(default)]
     pub font: Option<String>,
+    /// Written right to left (Arabic).
+    #[serde(default)]
+    pub rtl: bool,
 }
 
 pub type Catalog = BTreeMap<String, String>;
@@ -156,7 +159,26 @@ impl Lang {
 
     /// Like [`Lang::t`] with `{placeholder}`s filled in.
     pub fn f(&self, key: &str, args: &[(&str, &dyn std::fmt::Display)]) -> String {
-        fill(&self.t(key), args)
+        if !self.rtl() {
+            return fill(&self.t(key), args);
+        }
+        // Right-to-left text: a signed number (“-4”, “+12”) is set apart
+        // left to right, or the sign would end up after the digits.
+        let values: Vec<String> = args
+            .iter()
+            .map(|(_, v)| isolate_signed(&v.to_string()))
+            .collect();
+        let args: Vec<(&str, &dyn std::fmt::Display)> = args
+            .iter()
+            .zip(&values)
+            .map(|((name, _), v)| (*name, v as &dyn std::fmt::Display))
+            .collect();
+        fill(&self.t(key), &args)
+    }
+
+    /// Is the language written right to left?
+    pub fn rtl(&self) -> bool {
+        self.def().is_some_and(|d| d.rtl)
     }
 
     /// How many numbered keys `<prefix>1`, `<prefix>2`, … the source has.
@@ -186,6 +208,19 @@ impl Lang {
 
     pub fn decor(&self, id: &str) -> String {
         self.t(&format!("decor.{id}.name"))
+    }
+}
+
+/// A signed number wrapped in a left-to-right isolate (U+2066 … U+2069);
+/// anything else unchanged.
+fn isolate_signed(value: &str) -> String {
+    let mut chars = value.chars();
+    let signed = matches!(chars.next(), Some('-' | '+' | '−'))
+        && chars.next().is_some_and(|c| c.is_ascii_digit());
+    if signed {
+        format!("\u{2066}{value}\u{2069}")
+    } else {
+        value.to_string()
     }
 }
 
@@ -240,6 +275,26 @@ pub fn map_locale(raw: &str, languages: &[LanguageDef]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn signed_numbers_stay_readable_in_right_to_left_text() {
+        assert_eq!(isolate_signed("-4"), "\u{2066}-4\u{2069}");
+        assert_eq!(isolate_signed("+12"), "\u{2066}+12\u{2069}");
+        assert_eq!(isolate_signed("12"), "12");
+        assert_eq!(isolate_signed("-"), "-");
+        let ar = Lang::load("ar");
+        assert!(ar.rtl());
+        assert!(
+            ar.f("end.reputation", &[("reputation", &-4)])
+                .contains("\u{2066}-4\u{2069}")
+        );
+        let en = Lang::load("en");
+        assert!(!en.rtl());
+        assert!(
+            !en.f("end.reputation", &[("reputation", &-4)])
+                .contains('\u{2066}')
+        );
+    }
 
     #[test]
     fn steam_overrides_the_desktop_only_for_a_supported_language() {

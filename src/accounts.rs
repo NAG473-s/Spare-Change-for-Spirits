@@ -218,6 +218,9 @@ fn paper(left: bool) -> BackgroundGradient {
     ])
 }
 
+/// The ledger keeps the side panel beside it only with this much room.
+const LEDGER_MIN_WIDTH: f32 = 600.0;
+
 fn build_ledger(
     mut commands: Commands,
     font: Res<UiFont>,
@@ -233,10 +236,19 @@ fn build_ledger(
     upgrades: Res<Upgrades>,
     asset_server: Res<AssetServer>,
     existing: Query<Entity, With<Ledger>>,
+    (window, ui_scale): (
+        Single<&Window, With<bevy::window::PrimaryWindow>>,
+        Res<UiScale>,
+    ),
 ) {
     for e in &existing {
         commands.entity(e).despawn();
     }
+    // A large interface size on a narrow screen leaves too little room
+    // beside the side panel: the ledger then covers the whole width and its
+    // two pages stand one above the other.
+    let free = window.width() / ui_scale.0 - crate::ui::PANEL_WIDTH;
+    let narrow = free < LEDGER_MIN_WIDTH;
     let (layer, panel) = overlay(&mut commands, &theme, 0.55, 860.0);
     commands
         .entity(layer)
@@ -244,7 +256,11 @@ fn build_ledger(
         // Centred over the shop, leaving the side panel (tips, tomorrow)
         // and the log beside it readable.
         .entry::<Node>()
-        .and_modify(|mut node| node.right = px(crate::ui::PANEL_WIDTH));
+        .and_modify(move |mut node| {
+            if !narrow {
+                node.right = px(crate::ui::PANEL_WIDTH);
+            }
+        });
     let mut ui = PanelBuilder::new(&mut commands, panel, &font);
     let root = ui.root();
     ui.heading(&lang.f("accounts.title", &[("night", &progress.night)]));
@@ -253,8 +269,14 @@ fn build_ledger(
         root,
         Node {
             column_gap: px(5),
+            row_gap: px(5),
+            flex_direction: if narrow {
+                FlexDirection::Column
+            } else {
+                FlexDirection::Row
+            },
             min_height: px(0),
-            flex_shrink: 1.0,
+            flex_shrink: if narrow { 0.0 } else { 1.0 },
             padding: UiRect::all(px(3)),
             border_radius: BorderRadius::all(px(7)),
             ..default()
@@ -267,14 +289,18 @@ fn build_ledger(
         columns,
         (
             Node {
-                width: percent(45),
+                width: percent(if narrow { 100.0 } else { 45.0 }),
                 min_height: px(0),
                 flex_shrink: 0.0,
                 flex_direction: FlexDirection::Column,
                 row_gap: px(4),
                 padding: UiRect::all(px(14)),
                 border_radius: BorderRadius::all(px(4)),
-                overflow: Overflow::scroll_y(),
+                overflow: if narrow {
+                    Overflow::visible()
+                } else {
+                    Overflow::scroll_y()
+                },
                 overflow_clip_margin: OverflowClipMargin::content_box(),
                 ..default()
             },
@@ -469,14 +495,18 @@ fn build_ledger(
         (
             Node {
                 flex_grow: 1.0,
-                flex_shrink: 1.0,
+                flex_shrink: if narrow { 0.0 } else { 1.0 },
                 min_height: px(0),
                 min_width: px(0),
                 flex_direction: FlexDirection::Column,
                 row_gap: px(5),
                 padding: UiRect::all(px(14)),
                 border_radius: BorderRadius::all(px(4)),
-                overflow: Overflow::scroll_y(),
+                overflow: if narrow {
+                    Overflow::visible()
+                } else {
+                    Overflow::scroll_y()
+                },
                 overflow_clip_margin: OverflowClipMargin::content_box(),
                 ..default()
             },
