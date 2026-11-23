@@ -1422,4 +1422,34 @@ mod tests {
         assert_eq!(signed(-3), "−3");
         assert_eq!(signed(0), "0");
     }
+
+    /// The crate tooltip's numbers: tonight's price is the list price times
+    /// the night's price factor, rounded; a crate's profit is that price for
+    /// every unit minus what the crate costs.
+    #[test]
+    fn crate_profit_uses_tonights_price() {
+        let data = GameData::load();
+        let quiet = 1000;
+        let rich = data
+            .events
+            .iter()
+            .find(|e| e.price_factor > 1.0)
+            .expect("a night with higher prices")
+            .night;
+        for p in &data.products {
+            assert_eq!(sale_price(&data, &p.id, quiet), p.price);
+            let tonight = sale_price(&data, &p.id, rich);
+            let expected = (p.price as f32 * data.price_factor(rich)).round() as u32;
+            assert_eq!(tonight, expected, "{}", p.id);
+            assert!(tonight >= p.price, "{}", p.id);
+            assert_eq!(
+                crate_profit(&data, &p.id, rich),
+                (tonight * p.crate_size) as i64 - p.crate_cost as i64,
+                "{}",
+                p.id
+            );
+        }
+        assert_eq!(sale_price(&data, "not_a_product", quiet), 0);
+        assert_eq!(crate_profit(&data, "not_a_product", quiet), 0);
+    }
 }
