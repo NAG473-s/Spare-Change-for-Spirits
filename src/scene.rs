@@ -12,7 +12,7 @@ use crate::data::asset_exists;
 use crate::day_cycle::{NightClock, Phase};
 use crate::harbor::{Location, ShopDoor};
 mod labels;
-pub(crate) use labels::{LabelKind, LabelMuted, world_label};
+pub(crate) use labels::{LabelEnabled, LabelKind, world_label};
 
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
 /// Camera at the harbour and the market (relative to their origin).
@@ -50,6 +50,9 @@ const WAINSCOT_HEIGHT: f32 = 0.9;
 
 pub struct ScenePlugin;
 
+#[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct PlaceWorldLabels;
+
 impl Plugin for ScenePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GlobalAmbientLight {
@@ -72,7 +75,7 @@ impl Plugin for ScenePlugin {
                 (
                     labels::paint_labels,
                     labels::size_labels,
-                    labels::follow_labels,
+                    labels::follow_labels.in_set(PlaceWorldLabels),
                 )
                     .chain(),
                 turn_clock_hands,

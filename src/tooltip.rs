@@ -25,6 +25,8 @@ pub struct HoverTip {
     pub icon: Option<Handle<Image>>,
     pub title: String,
     pub lines: Vec<TipLine>,
+    /// Leave the space above the hovered guest free for its nameplate.
+    pub below_pointer: bool,
 }
 
 #[derive(Clone, PartialEq)]
@@ -123,7 +125,12 @@ fn show_tooltip(
         cursor.x - width - 18.0
     };
     node.left = px(x.clamp(8.0, (win.x - width - 8.0).max(8.0)));
-    node.top = px((cursor.y - height * 0.65).clamp(8.0, (win.y - height - 8.0).max(8.0)));
+    let y = if tip.below_pointer {
+        cursor.y + 8.0
+    } else {
+        cursor.y - height * 0.65
+    };
+    node.top = px(y.clamp(8.0, (win.y - height - 8.0).max(8.0)));
 
     if !tip.is_changed() {
         return;

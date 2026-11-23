@@ -743,7 +743,7 @@ fn shelf_tooltip(
     let mut t = HoverTip {
         icon: icons.product(&p.id),
         title: lang.product(&p.id),
-        lines: Vec::new(),
+        ..default()
     };
     t.line(
         TipKind::Text,

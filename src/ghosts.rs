@@ -7,6 +7,8 @@
 mod motion;
 
 use bevy::ecs::system::SystemParam;
+use bevy::math::FloatOrd;
+use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 
 use crate::data::{GameData, GhostDef, asset_exists, rgb};
@@ -20,7 +22,9 @@ use crate::tooltip::{HoverTip, TipKind};
 use crate::upgrades::Upgrades;
 use bevy::light::NotShadowCaster;
 
-use crate::scene::{Billboard, LabelKind, LabelMuted, billboard_material, floor, world_label};
+use crate::scene::{
+    Billboard, LabelEnabled, LabelKind, PlaceWorldLabels, billboard_material, floor, world_label,
+};
 use crate::shop::ShopLayout;
 use crate::ui::{GameLog, UiFont};
 
@@ -69,8 +73,9 @@ impl Plugin for GhostPlugin {
                     spawn_ordering,
                     ghost_ai,
                     ghost_murmurs,
+                    find_hovered_ghost,
                     ghost_tooltip,
-                    mute_browsing_names,
+                    select_queue_nameplate.before(PlaceWorldLabels),
                     steal_from_shelf,
                     show_carried_wares,
                     move_ghosts,
@@ -388,18 +393,32 @@ fn ghost_murmurs(
     cues.write(Cue::GhostVoice(kind, data.ghosts[ghost.def].voice));
 }
 
-/// The ghost under the mouse pointer.
-#[derive(Resource, Default)]
+/// The ghost identified by both its tooltip and its queue nameplate.
+#[derive(Resource, Default, PartialEq)]
 struct HoveredGhost(Option<Entity>);
 
-fn on_ghost_over(over: On<PointerOver>, mut hovered: ResMut<HoveredGhost>) {
-    hovered.0 = Some(over.event_target());
-}
+#[derive(Component)]
+struct GhostHitbox;
 
-fn on_ghost_out(out: On<PointerOut>, mut hovered: ResMut<HoveredGhost>) {
-    if hovered.0 == Some(out.event_target()) {
-        hovered.0 = None;
-    }
+/// The hitboxes let clicks through, so several ghosts can be under the same pointer.
+/// Use the nearest current hit, including when the pointer leaves only one of them.
+fn find_hovered_ghost(
+    hits: Res<HoverMap>,
+    hitboxes: Query<&ChildOf, With<GhostHitbox>>,
+    mut hovered: ResMut<HoveredGhost>,
+) {
+    let nearest = hits
+        .iter()
+        .flat_map(|(pointer, hits)| {
+            hits.iter()
+                .map(move |(entity, hit)| (pointer, entity, hit.depth))
+        })
+        .filter_map(|(pointer, entity, depth)| {
+            let ghost = hitboxes.get(*entity).ok()?.parent();
+            Some((!pointer.is_mouse(), FloatOrd(depth), ghost))
+        })
+        .min();
+    hovered.set_if_neq(HoveredGhost(nearest.map(|(_, _, ghost)| ghost)));
 }
 
 /// How a ghost's patience reads in its tooltip.
@@ -446,7 +465,8 @@ fn ghost_tooltip(
             ),
             None => lang.ghost(&def.id),
         },
-        lines: Vec::new(),
+        below_pointer: queue.0.contains(&entity),
+        ..default()
     };
     let patience = (g.patience / g.max_patience.max(0.01)).clamp(0.0, 1.0);
     let (kind, mood) = match g.state {
@@ -670,6 +690,7 @@ fn spawn_ghost(
     // An invisible box over the body for the tooltip. It does not block the
     // pointer, so the shelf items behind a ghost stay clickable.
     commands.spawn((
+        GhostHitbox,
         Mesh3d(meshes.add(Cuboid::new(GHOST_SIZE.x * 0.7, GHOST_SIZE.y * 0.9, 0.05))),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color: Color::NONE,
@@ -685,28 +706,21 @@ fn spawn_ghost(
         },
         ChildOf(ghost),
     ));
-    commands
-        .entity(ghost)
-        .observe(on_ghost_over)
-        .observe(on_ghost_out);
     let name = match &visit.regular {
         Some(r) => r.name.clone(),
         None => lang.ghost(&def.id),
     };
-    let label = commands
-        .spawn(world_label(
+    commands.spawn((
+        GhostNameplate(ghost),
+        LabelEnabled(false),
+        world_label(
             font,
             Text::new(name),
             LabelKind::Name,
             ghost,
             Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
-        ))
-        .id();
-    // Quiet from the start while it comes in and looks round.
-    if matches!(state, GhostState::Entering | GhostState::Browsing) {
-        commands.entity(label).insert(LabelMuted);
-    }
-    commands.entity(ghost).insert(GhostLabel(label));
+        ),
+    ));
 }
 
 /// A ghost that already shows the ware it carries.
@@ -754,26 +768,23 @@ fn show_carried_wares(
     }
 }
 
-/// The name label of a ghost.
+/// Identifies the guest this plate belongs to, even if several share a name.
 #[derive(Component)]
-struct GhostLabel(Entity);
+struct GhostNameplate(Entity);
 
-/// Names show on the way to the counter and in the line; while a ghost
-/// browses it stands right in front of a shelf, and its name would cover
-/// the shelf's own label (hovering it still shows the name).
-fn mute_browsing_names(
-    mut commands: Commands,
-    ghosts: Query<(&Ghost, &GhostLabel), Changed<Ghost>>,
-    muted: Query<(), With<LabelMuted>>,
+/// The front guest owns the queue's one visible nameplate until the pointer
+/// rests on another guest in line. Browsing and departing visitors have tooltips.
+fn select_queue_nameplate(
+    queue: Res<Queue>,
+    hovered: Res<HoveredGhost>,
+    mut labels: Query<(&GhostNameplate, &mut LabelEnabled)>,
 ) {
-    for (ghost, GhostLabel(label)) in &ghosts {
-        let quiet = matches!(ghost.state, GhostState::Entering | GhostState::Browsing);
-        let is_muted = muted.get(*label).is_ok();
-        if quiet && !is_muted {
-            commands.entity(*label).try_insert(LabelMuted);
-        } else if !quiet && is_muted {
-            commands.entity(*label).try_remove::<LabelMuted>();
-        }
+    let selected = hovered
+        .0
+        .filter(|guest| queue.0.contains(guest))
+        .or_else(|| queue.front());
+    for (plate, mut enabled) in &mut labels {
+        enabled.set_if_neq(LabelEnabled(Some(plate.0) == selected));
     }
 }
 
@@ -1584,6 +1595,63 @@ fn fade_ghosts(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn three_identical_guests_share_one_queue_nameplate_as_hover_and_service_change() {
+        use bevy::picking::{backend::HitData, pointer::PointerId};
+
+        let mut app = App::new();
+        app.init_resource::<Queue>()
+            .init_resource::<HoverMap>()
+            .init_resource::<HoveredGhost>()
+            .add_systems(Update, (find_hovered_ghost, select_queue_nameplate).chain());
+        let world = app.world_mut();
+        let camera = world.spawn_empty().id();
+        let guests = [(); 3].map(|()| world.spawn_empty().id());
+        let hitboxes = guests.map(|guest| world.spawn((GhostHitbox, ChildOf(guest))).id());
+        let plates = guests.map(|guest| {
+            world
+                .spawn((
+                    GhostNameplate(guest),
+                    LabelEnabled(false),
+                    Text::new("Shy Ghost"),
+                ))
+                .id()
+        });
+        let point_at = |app: &mut App, hits: &[(usize, f32)]| {
+            let mut pointers = app.world_mut().resource_mut::<HoverMap>();
+            let under_pointer = pointers.entry(PointerId::Mouse).or_default();
+            under_pointer.clear();
+            for &(guest, depth) in hits {
+                under_pointer.insert(hitboxes[guest], HitData::new(camera, depth, None, None));
+            }
+        };
+        let expect = |app: &mut App, selected: Option<Entity>| {
+            app.update();
+            assert_eq!(
+                plates.map(|e| app.world().get::<LabelEnabled>(e).unwrap().0),
+                guests.map(|e| Some(e) == selected),
+            );
+        };
+
+        expect(&mut app, None);
+        app.insert_resource(Queue(guests.to_vec()));
+        expect(&mut app, Some(guests[0]));
+        point_at(&mut app, &[(1, 5.), (2, 3.)]);
+        expect(&mut app, Some(guests[2]));
+        point_at(&mut app, &[(1, 5.)]);
+        expect(&mut app, Some(guests[1]));
+        point_at(&mut app, &[]);
+        expect(&mut app, Some(guests[0]));
+        app.world_mut().resource_mut::<Queue>().remove(guests[0]);
+        expect(&mut app, Some(guests[1]));
+        point_at(&mut app, &[(2, 3.)]);
+        expect(&mut app, Some(guests[2]));
+        app.world_mut().resource_mut::<Queue>().remove(guests[2]);
+        expect(&mut app, Some(guests[1]));
+        app.world_mut().resource_mut::<Queue>().remove(guests[1]);
+        expect(&mut app, None);
+    }
 
     fn ordering_fixture() -> (App, Progress) {
         let data = GameData::load();

@@ -61,9 +61,9 @@ pub(super) struct WorldLabel {
     kind: LabelKind,
 }
 
-/// A guest coming in or browsing keeps its nameplate hidden.
-#[derive(Component)]
-pub(crate) struct LabelMuted;
+/// Optional visibility control for a label whose subject can lose focus.
+#[derive(Component, PartialEq)]
+pub(crate) struct LabelEnabled(pub bool);
 
 /// The caption may also carry a marker when its wording changes during play.
 pub(crate) fn world_label(
@@ -229,7 +229,7 @@ pub(super) fn follow_labels(
         &ComputedNode,
         &mut UiTransform,
         &mut Visibility,
-        Has<LabelMuted>,
+        Option<&LabelEnabled>,
     )>,
 ) {
     let (camera, camera_at) = *camera;
@@ -246,14 +246,14 @@ pub(super) fn follow_labels(
         }
     }
     let mut visible = Vec::new();
-    for (entity, label, children, computed, _, mut visibility, muted) in &mut labels {
+    for (entity, label, children, computed, _, mut visibility, enabled) in &mut labels {
         let Ok((target, visible_in_world)) = targets.get(label.target) else {
             commands.entity(entity).try_despawn();
             continue;
         };
         let size = computed.size() * computed.inverse_scale_factor();
         if *phase.get() == Phase::Menu
-            || muted
+            || enabled.is_some_and(|flag| !flag.0)
             || size.min_element() <= 0.0
             || visible_in_world.is_some_and(|v| !v.get())
             || !captions.get(children[0]).is_ok_and(|t| !t.is_empty())
