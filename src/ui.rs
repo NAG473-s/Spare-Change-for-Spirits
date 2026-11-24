@@ -2624,7 +2624,10 @@ fn build_demo_end_panel(
         ui.dim(&lang.t("end.thanks"));
     } else {
         ui.text(&lang.t(&format!("season.{}.epilogue", progress.season)));
-        ui.dim(&lang.t("end.thanks_full"));
+        // "More nights in the next updates" only after the last season with a story.
+        if !data.story_after_season(progress.season) {
+            ui.dim(&lang.t("end.thanks_full"));
+        }
         // The campaign is complete: the ledger's last page (if the game was
         // closed before it was chosen) and the credits, to see again.
         if progress.journal.campaign_complete {

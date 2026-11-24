@@ -1020,6 +1020,14 @@ impl GameData {
         (calendar.max(1) - 1) / self.config.season_length + 1
     }
 
+    /// Does a later season than `season` still tell a story? Only after the
+    /// last one does the season's end promise more nights in later updates.
+    pub fn story_after_season(&self, season: u32) -> bool {
+        self.stories
+            .iter()
+            .any(|s| self.season_of(s.start_night) > season)
+    }
+
     /// Tonight's event. Past the last written night the free-play week
     /// repeats: its first day is the first night after the last season.
     pub fn event(&self, night: u32) -> Option<&NightEvent> {
@@ -1356,6 +1364,26 @@ mod tests {
                     .any(|s| s.chapters.iter().any(|c| c.wish == p.id));
             assert!(wished, "nobody ever asks for '{}'", p.id);
         }
+    }
+
+    /// Season 1 and 2 are followed by another season with a story; the
+    /// season of the campaign's finale is the last.
+    #[test]
+    fn only_the_last_story_season_has_no_story_after_it() {
+        let data = GameData::load();
+        let last = data
+            .stories
+            .iter()
+            .map(|s| data.season_of(s.start_night))
+            .max()
+            .unwrap();
+        assert!(last > 1);
+        for season in 1..last {
+            assert!(data.story_after_season(season), "season {season}");
+        }
+        assert!(!data.story_after_season(last));
+        let finale = crate::ending::campaign_finale(&data).unwrap();
+        assert_eq!(data.season_of(data.stories[finale].start_night), last);
     }
 
     /// Largest number of decor items the satisfiability search below combines.
