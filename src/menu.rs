@@ -57,10 +57,17 @@ impl Plugin for MenuPlugin {
                             .or_else(resource_changed::<UiFont>),
                     ),
                     update_tips,
-                ),
+                )
+                    .in_set(MenuSystems),
             );
     }
 }
+
+/// The systems that build and rebuild the menus and the book. Whatever
+/// fills part of a menu page in place (e.g. the postcards in the book) runs
+/// after them, so it never touches a page they have just replaced.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MenuSystems;
 
 /// The language list is open in the main menu.
 #[derive(Resource, Default)]

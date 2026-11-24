@@ -38,9 +38,21 @@ impl Plugin for PostcardsPlugin {
             (act, show_card, turn_card, card_tooltip)
                 .chain()
                 .run_if(not(in_state(Phase::Menu))),
-        )
-        .add_systems(Update, refresh_book_cards.after(act));
+        );
+        add_book_refresh(app);
     }
+}
+
+/// Redraws the book's postcards after the menus are built: a book page they
+/// replace this frame is gone before its cards would be redrawn (otherwise
+/// redrawing a despawned card panics).
+fn add_book_refresh(app: &mut App) {
+    app.add_systems(
+        Update,
+        refresh_book_cards
+            .after(act)
+            .after(crate::menu::MenuSystems),
+    );
 }
 
 /// A postcard in the journal.
@@ -636,5 +648,57 @@ mod tests {
         assert!(world.query::<&Text>().iter(world).any(|t| t.0 == message));
         assert_eq!(world.query::<&ImageNode>().iter(world).count(), 1);
         assert_eq!(world.get::<ScrollPosition>(page).unwrap().y, 120.);
+    }
+
+    /// Opening the Letters page rebuilds the book while the cards of the
+    /// page before are still waiting to be drawn; they must not be redrawn
+    /// after the page has replaced them (the game used to panic here).
+    #[test]
+    fn rebuilding_the_book_page_while_cards_wait_does_not_panic() {
+        let mut progress = Progress::new(0);
+        progress.journal.postcards.push(Postcard {
+            name: 1,
+            ghost: "shy".into(),
+            item: "tea_tin".into(),
+            ..default()
+        });
+        let mut app = App::new();
+        let page = app.world_mut().spawn(Node::default()).id();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()))
+            .init_asset::<Font>()
+            .init_asset::<Image>()
+            .insert_resource(Lang::load("en"))
+            .init_resource::<UiFont>()
+            .insert_resource(progress)
+            .add_message::<Action>()
+            // The menu builds the Letters page on every frame, as it does
+            // when the page is opened and rebuilt right after.
+            .add_systems(
+                Update,
+                (move |mut commands: Commands,
+                       font: Res<UiFont>,
+                       lang: Res<Lang>,
+                       progress: Res<Progress>| {
+                    book_section(
+                        &mut PanelBuilder::new(&mut commands, page, &font),
+                        &lang,
+                        &progress.journal,
+                    );
+                })
+                .in_set(crate::menu::MenuSystems),
+            )
+            .add_systems(Update, act);
+        add_book_refresh(&mut app);
+        for _ in 0..5 {
+            app.update();
+        }
+        let world = app.world_mut();
+        let cards = world.query::<&BookPostcard>().iter(world).count();
+        assert_eq!(cards, 1, "one card on the page");
+        let drawn = world
+            .query::<&BookPostcard>()
+            .iter(world)
+            .all(|card| card.rendered.is_some());
+        assert!(drawn, "the card on the current page is drawn");
     }
 }
