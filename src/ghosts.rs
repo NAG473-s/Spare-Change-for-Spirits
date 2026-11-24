@@ -189,6 +189,15 @@ impl Ghost {
 }
 
 impl Ghost {
+    /// How the log names this ghost at the start of a sentence: a regular
+    /// by its name ("Mrs Wispel"), any other ghost by its kind ("The Shy Ghost").
+    pub fn the(&self, data: &GameData, progress: &Progress, lang: &Lang) -> String {
+        match self.regular.and_then(|i| progress.journal.regulars.get(i)) {
+            Some(regular) => regular.name(lang),
+            None => lang.ghost_the(&data.ghosts[self.def].id),
+        }
+    }
+
     /// What the ghost whispers, in the current language.
     pub fn whisper(&self, lang: &Lang) -> String {
         let text = match &self.memory {
@@ -1298,7 +1307,7 @@ fn ghost_ai(
                     log.push(lang.f(
                         "log.knock",
                         &[
-                            ("who", &lang.ghost_the(&data.ghosts[g.def].id)),
+                            ("who", &g.the(&data, &progress, &lang)),
                             ("item", &lang.product(&product)),
                         ],
                     ));
@@ -1325,7 +1334,7 @@ fn ghost_ai(
                         log.push(lang.f(
                             "log.takes_from_shelf",
                             &[
-                                ("who", &lang.ghost_the(&data.ghosts[g.def].id)),
+                                ("who", &g.the(&data, &progress, &lang)),
                                 ("item", &lang.product(&g.wish)),
                             ],
                         ));
@@ -1352,7 +1361,7 @@ fn ghost_ai(
                     g.patience -= dt;
                 }
                 if g.patience <= 0.0 {
-                    let who = lang.ghost_the(&data.ghosts[g.def].id);
+                    let who = g.the(&data, &progress, &lang);
                     progress.set_order_state(g.order, crate::orders::OrderState::Expired);
                     log.push(lang.f("log.waited_too_long", &[("who", &who)]));
                     g.state = GhostState::Leaving;

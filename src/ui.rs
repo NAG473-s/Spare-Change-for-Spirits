@@ -2392,7 +2392,7 @@ fn build_night_panel(
     if let Some(question) = &register.question {
         let who = ghosts
             .get(question.ghost)
-            .map(|g| lang.ghost_the(&data.ghosts[g.def].id))
+            .map(|g| g.the(&data, &progress, &lang))
             .unwrap_or_default();
         ui.section(&lang.f("night.pay_again_title", &[("who", &who)]));
         ui.text(&lang.f("night.pay_again_text", &[("amount", &question.amount)]));

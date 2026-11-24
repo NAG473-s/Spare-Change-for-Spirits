@@ -304,7 +304,10 @@ fn serve_front_ghost(
                         log.push(lang.t("guide_retry"));
                         continue;
                     }
-                    log.push(lang.f("log.wrong_item", &[("who", &lang.ghost_the(&def.id))]));
+                    log.push(lang.f(
+                        "log.wrong_item",
+                        &[("who", &ghost.the(&data, &progress, &lang))],
+                    ));
                     progress.set_order_state(ghost.order, OrderState::Expired);
                     report.wrong_item += 1;
                     ghost.state = GhostState::Leaving;
@@ -366,7 +369,7 @@ fn serve_front_ghost(
                 log.push(lang.f(
                     "log.paid",
                     &[
-                        ("who", &lang.ghost_the(&def.id)),
+                        ("who", &ghost.the(&data, &progress, &lang)),
                         ("coins", &purse.describe(&lang)),
                     ],
                 ));
@@ -394,12 +397,15 @@ fn serve_front_ghost(
                     log.push(lang.f(
                         "log.order_missed",
                         &[
-                            ("who", &lang.ghost_the(&def.id)),
+                            ("who", &ghost.the(&data, &progress, &lang)),
                             ("item", &lang.product(&ghost.wish)),
                         ],
                     ));
                 } else {
-                    log.push(lang.f("log.declined", &[("who", &lang.ghost_the(&def.id))]));
+                    log.push(lang.f(
+                        "log.declined",
+                        &[("who", &ghost.the(&data, &progress, &lang))],
+                    ));
                 }
                 ghost.state = GhostState::Leaving;
                 queue.remove(front);
@@ -495,7 +501,7 @@ pub(crate) fn make_change(
                 cues.write(Cue::CoinHandled(paid.coin));
                 let name = ghosts
                     .get(sale.ghost)
-                    .map(|g| lang.ghost_the(&data.ghosts[g.def].id))
+                    .map(|g| g.the(&data, &progress, &lang))
                     .unwrap_or_default();
                 if paid.fake {
                     // The ghost swaps it for a genuine one of the same kind,
@@ -551,7 +557,7 @@ pub(crate) fn make_change(
                 log.push(lang.f(
                     "log.smaller_coins",
                     &[
-                        ("who", &lang.ghost_the(&def.id)),
+                        ("who", &ghost.the(&data, &progress, &lang)),
                         ("coins", &purse.describe(&lang)),
                     ],
                 ));
@@ -587,7 +593,7 @@ pub(crate) fn make_change(
                     continue;
                 };
                 let def = &data.ghosts[ghost.def];
-                let name = lang.ghost_the(&def.id);
+                let name = ghost.the(&data, &progress, &lang);
                 let correct = given == due;
                 let guided = ghost.first_customer && progress.guiding_first_sale();
                 if guided {
@@ -736,7 +742,7 @@ fn answer_double_pay(
             continue;
         };
         let def = &data.ghosts[ghost.def];
-        let name = lang.ghost_the(&def.id);
+        let name = ghost.the(&data, &progress, &lang);
         if keep {
             drawer.merge(&Purse::greedy(question.amount));
             report.second_payments_kept += question.amount;
@@ -760,6 +766,25 @@ fn answer_double_pay(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The log calls a regular by its name, any other ghost by its kind.
+    #[test]
+    fn a_regular_is_named_in_the_log() {
+        let data = GameData::load();
+        let lang = Lang::load("en");
+        let shy = data.ghost_index("shy").unwrap();
+        let mut progress = Progress::new(0);
+        progress
+            .journal
+            .regulars
+            .push(ron::from_str(r#"(ghost:"shy",name:1,visits:1,favourite:"tea_tin")"#).unwrap());
+        let mut ghost = Ghost::waiting(shy, "tea_tin");
+        assert_eq!(ghost.the(&data, &progress, &lang), lang.ghost_the("shy"));
+        ghost.regular = Some(0);
+        let name = progress.journal.regulars[0].name(&lang);
+        assert_eq!(ghost.the(&data, &progress, &lang), name);
+        assert_ne!(name, lang.ghost_the("shy"));
+    }
 
     /// Only a plain customer whose wish is out of stock may order it for
     /// tomorrow, and only while tomorrow's orders are not used up.
