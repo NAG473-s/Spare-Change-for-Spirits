@@ -127,7 +127,8 @@ pub fn greet(
 }
 
 /// Is this arriving ghost of `ghost`'s kind one of the regulars? If so it
-/// counts the visit and gives the regular's index.
+/// counts the visit and gives the regular's index. A regular comes at most
+/// once a night (collecting an order counts as its visit).
 pub fn returning(
     data: &GameData,
     progress: &mut Progress,
@@ -149,7 +150,12 @@ pub fn returning(
                 crate::orders::OrderState::Open | crate::orders::OrderState::AtRegister
             )
     });
+    let came_tonight = progress.journal.regulars[i]
+        .encounters
+        .last()
+        .is_some_and(|e| e.night == progress.night);
     if collection_due
+        || came_tonight
         || present.any(|regular| regular == i)
         || !rng.chance(data.config.regulars.return_chance)
     {
@@ -454,6 +460,45 @@ mod tests {
         assert_eq!(
             returning(&data, &mut progress, "shy", std::iter::empty(), &mut rng),
             Some(0)
+        );
+    }
+
+    #[test]
+    fn a_regular_comes_back_at_most_once_a_night() {
+        let mut data = GameData::load();
+        data.config.regulars.return_chance = 1.0;
+        let lang = Lang::load("en");
+        let layout = ShopLayout::new(data.config.grid_cols, data.config.grid_rows);
+        let mut log = GameLog::default();
+        let mut progress = Progress::new(0);
+        progress.night = 4;
+        progress
+            .journal
+            .regulars
+            .push(ron::from_str(r#"(ghost:"shy",name:1,visits:1,favourite:"lavender")"#).unwrap());
+        let mut rng = Rng::new(3);
+        let i = returning(&data, &mut progress, "shy", std::iter::empty(), &mut rng)
+            .expect("the first visit tonight");
+        greet(
+            i,
+            &mut progress,
+            "lavender",
+            &data,
+            &layout,
+            &lang,
+            &mut log,
+        );
+        assert_eq!(
+            returning(&data, &mut progress, "shy", std::iter::empty(), &mut rng),
+            None,
+            "not twice in one night"
+        );
+        assert_eq!(progress.journal.regulars[0].visits, 2);
+        progress.night += 1;
+        assert_eq!(
+            returning(&data, &mut progress, "shy", std::iter::empty(), &mut rng),
+            Some(0),
+            "back the next night"
         );
     }
 }
