@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Przewoźnik zostawił paczkę dla gościa, który przyjdzie tej nocy. Wręcz mu ją przy ladzie.",
     "discovery.set_aside": "Dla gościa, który przyjdzie tej nocy, odłożono jedną sztukę. Towar: {item}.",
     "discovery.set_draws": "Przyciąga więcej gości",
-    "discovery.weather_trade": "Ceny sprzedaży: {price}% zwykłej ceny · Zmiana ładowności promu: {crates}",
+    "discovery.weather_prices": "Ceny sprzedaży: {price}% zwykłej ceny",
+    "discovery.weather_crates": "Zmiana ładowności promu: {crates}",
     "discovery.more_in_book": "Więcej w księdze duchów",
     "discovery.unknown_guest": "Nieznany gość",
     // Regulars: ghosts who come back by name

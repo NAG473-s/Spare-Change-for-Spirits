@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "擺渡人給今晚的客人留了一個包裹。請在櫃檯交給對方。",
     "discovery.set_aside": "已為今晚的客人預留了一份{item}。",
     "discovery.set_draws": "吸引更多來客",
-    "discovery.weather_trade": "售價：平時的 {price}% · 渡船載貨量變化：{crates}",
+    "discovery.weather_prices": "售價：平時的 {price}%",
+    "discovery.weather_crates": "渡船載貨量變化：{crates}",
     "discovery.more_in_book": "在幽靈圖鑑中查看更多",
     "discovery.unknown_guest": "一位陌生來客",
     // Regulars: ghosts who come back by name

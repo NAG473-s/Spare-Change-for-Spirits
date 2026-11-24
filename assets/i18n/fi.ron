@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Lautturi jätti paketin tämän yön vierasta varten. Anna se vieraalle tiskillä.",
     "discovery.set_aside": "Tämän yön vieraalle on varattu yksi kappale – tuote: {item}.",
     "discovery.set_draws": "Houkuttelee lisää vieraita",
-    "discovery.weather_trade": "Myyntihinnat: {price} % tavallisesta · Lautan lastitilan muutos: {crates}",
+    "discovery.weather_prices": "Myyntihinnat: {price} % tavallisesta",
+    "discovery.weather_crates": "Lautan lastitilan muutos: {crates}",
     "discovery.more_in_book": "Lisää haamukirjassa",
     "discovery.unknown_guest": "Tuntematon vieras",
     // Regulars: ghosts who come back by name

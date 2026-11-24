@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "The ferryman has left a parcel for tonight’s visitor. Hand it over at the counter.",
     "discovery.set_aside": "One {item} is set aside for tonight's visitor.",
     "discovery.set_draws": "Draws more visitors",
-    "discovery.weather_trade": "Sale prices: {price}% of normal · Change in ferry capacity: {crates}",
+    "discovery.weather_prices": "Sale prices: {price}% of normal",
+    "discovery.weather_crates": "Change in ferry capacity: {crates}",
     "discovery.more_in_book": "More in the ghost book",
     "discovery.unknown_guest": "An unfamiliar guest",
     // Regulars: ghosts who come back by name

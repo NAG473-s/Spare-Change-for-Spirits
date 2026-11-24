@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "渡し守が今夜のお客さんに包みを預けていきました。カウンターで渡しましょう。",
     "discovery.set_aside": "今夜のお客さんのために{item}をひとつ取り置いてあります。",
     "discovery.set_draws": "訪れるお客さんが増える",
-    "discovery.weather_trade": "売値：通常の{price}%・渡し船の積載量の変化：{crates}",
+    "discovery.weather_prices": "売値：通常の{price}%",
+    "discovery.weather_crates": "渡し船の積載量の変化：{crates}",
     "discovery.more_in_book": "幽霊帳で詳しく見る",
     "discovery.unknown_guest": "まだ会ったことのないお客",
     // Regulars: ghosts who come back by name

@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Le passeur a laissé un colis pour la visite de cette nuit. Remets-le au comptoir.",
     "discovery.set_aside": "Un article est mis de côté pour la visite de cette nuit : {item}.",
     "discovery.set_draws": "Attire davantage de visiteurs",
-    "discovery.weather_trade": "Prix de vente : {price} % du tarif habituel · Variation de la capacité du bac : {crates}",
+    "discovery.weather_prices": "Prix de vente : {price} % du tarif habituel",
+    "discovery.weather_crates": "Variation de la capacité du bac : {crates}",
     "discovery.more_in_book": "En savoir plus dans le livre des fantômes",
     "discovery.unknown_guest": "Un visiteur inconnu",
     // Regulars: ghosts who come back by name

@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Fergemannen har lagt igjen en pakke til nattens gjest. Gi den til gjesten ved disken.",
     "discovery.set_aside": "Et eksemplar av {item} er lagt til side for nattens gjest.",
     "discovery.set_draws": "Trekker til seg flere gjester",
-    "discovery.weather_trade": "Salgspriser: {price} % av det vanlige · Endring i ferjas kapasitet: {crates}",
+    "discovery.weather_prices": "Salgspriser: {price} % av det vanlige",
+    "discovery.weather_crates": "Endring i ferjas kapasitet: {crates}",
     "discovery.more_in_book": "Les mer i spøkelsesboka",
     "discovery.unknown_guest": "En ukjent gjest",
     // Regulars: ghosts who come back by name

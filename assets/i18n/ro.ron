@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Luntrașul a lăsat un pachet pentru oaspetele din noaptea aceasta. Dă-i-l la tejghea.",
     "discovery.set_aside": "Un exemplar din {item} este pus deoparte pentru oaspetele din noaptea aceasta.",
     "discovery.set_draws": "Atrage mai mulți vizitatori",
-    "discovery.weather_trade": "Prețuri de vânzare: {price}% din prețul obișnuit · Modificarea capacității bacului: {crates}",
+    "discovery.weather_prices": "Prețuri de vânzare: {price}% din prețul obișnuit",
+    "discovery.weather_crates": "Modificarea capacității bacului: {crates}",
     "discovery.more_in_book": "Mai multe în cartea fantomelor",
     "discovery.unknown_guest": "Un oaspete necunoscut",
     // Regulars: ghosts who come back by name

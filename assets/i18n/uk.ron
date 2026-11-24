@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Перевізник залишив посилку для нічного гостя. Передайте її біля прилавка.",
     "discovery.set_aside": "Для нічного гостя відкладено один примірник: {item}.",
     "discovery.set_draws": "Приваблює більше відвідувачів",
-    "discovery.weather_trade": "Ціни продажу: {price}% від звичайних · Зміна місткості порома: {crates}",
+    "discovery.weather_prices": "Ціни продажу: {price}% від звичайних",
+    "discovery.weather_crates": "Зміна місткості порома: {crates}",
     "discovery.more_in_book": "Докладніше у книзі привидів",
     "discovery.unknown_guest": "Незнайомий гість",
     // Regulars: ghosts who come back by name

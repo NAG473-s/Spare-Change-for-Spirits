@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Перевозчик оставил посылку для ночного гостя. Передайте её у прилавка.",
     "discovery.set_aside": "Для ночного гостя отложен один экземпляр: {item}.",
     "discovery.set_draws": "Привлекает больше посетителей",
-    "discovery.weather_trade": "Цены продажи: {price}% от обычных · Изменение вместимости парома: {crates}",
+    "discovery.weather_prices": "Цены продажи: {price}% от обычных",
+    "discovery.weather_crates": "Изменение вместимости парома: {crates}",
     "discovery.more_in_book": "Подробнее в книге призраков",
     "discovery.unknown_guest": "Незнакомый гость",
     // Regulars: ghosts who come back by name

@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Penambang meninggalkan bungkusan untuk tetamu malam ini. Serahkan bungkusan itu di kaunter.",
     "discovery.set_aside": "Satu {item} diketepikan untuk tetamu malam ini.",
     "discovery.set_draws": "Menarik lebih ramai pengunjung",
-    "discovery.weather_trade": "Harga jualan: {price}% daripada biasa · Perubahan kapasiti feri: {crates}",
+    "discovery.weather_prices": "Harga jualan: {price}% daripada biasa",
+    "discovery.weather_crates": "Perubahan kapasiti feri: {crates}",
     "discovery.more_in_book": "Baca lagi dalam buku hantu",
     "discovery.unknown_guest": "Tetamu yang belum dikenali",
     // Regulars: ghosts who come back by name

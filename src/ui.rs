@@ -1872,13 +1872,17 @@ fn event_detail(
         if !change.is_empty() {
             ui.dim(&change);
         }
-        if event.price_factor != 1.0 || event.crate_bonus != 0 {
+        // Only what actually changes tonight.
+        if event.price_factor != 1.0 {
             ui.dim(&lang.f(
-                "discovery.weather_trade",
-                &[
-                    ("price", &(event.price_factor * 100.0).round()),
-                    ("crates", &crate::ferry::signed(event.crate_bonus.into())),
-                ],
+                "discovery.weather_prices",
+                &[("price", &(event.price_factor * 100.0).round())],
+            ));
+        }
+        if event.crate_bonus != 0 {
+            ui.dim(&lang.f(
+                "discovery.weather_crates",
+                &[("crates", &crate::ferry::signed(event.crate_bonus.into()))],
             ));
         }
     }

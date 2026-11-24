@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Il traghettatore ha lasciato un pacco per chi verrà stanotte. Consegnalo al bancone.",
     "discovery.set_aside": "C'è un articolo messo da parte per chi verrà stanotte: {item}.",
     "discovery.set_draws": "Attira più visitatori",
-    "discovery.weather_trade": "Prezzi di vendita: {price}% del normale · Variazione della capacità del traghetto: {crates}",
+    "discovery.weather_prices": "Prezzi di vendita: {price}% del normale",
+    "discovery.weather_crates": "Variazione della capacità del traghetto: {crates}",
     "discovery.more_in_book": "Altri dettagli nel libro dei fantasmi",
     "discovery.unknown_guest": "Un ospite sconosciuto",
     // Regulars: ghosts who come back by name

@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "O barqueiro deixou uma encomenda para a visita desta noite. Entrega-a ao balcão.",
     "discovery.set_aside": "Há uma unidade de {item} reservada para a visita desta noite.",
     "discovery.set_draws": "Atrai mais visitantes",
-    "discovery.weather_trade": "Preços de venda: {price}% do habitual · Variação da capacidade da barca: {crates}",
+    "discovery.weather_prices": "Preços de venda: {price}% do habitual",
+    "discovery.weather_crates": "Variação da capacidade da barca: {crates}",
     "discovery.more_in_book": "Mais no livro dos fantasmas",
     "discovery.unknown_guest": "Uma visita desconhecida",
     // Regulars: ghosts who come back by name

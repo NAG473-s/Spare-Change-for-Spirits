@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "De veerman heeft een pakje achtergelaten voor het bezoek van vannacht. Geef het aan de toonbank af.",
     "discovery.set_aside": "Voor het bezoek van vannacht ligt één {item} apart.",
     "discovery.set_draws": "Trekt meer bezoekers",
-    "discovery.weather_trade": "Verkoopprijzen: {price}% van normaal · Verandering in laadruimte op de veerboot: {crates}",
+    "discovery.weather_prices": "Verkoopprijzen: {price}% van normaal",
+    "discovery.weather_crates": "Verandering in laadruimte op de veerboot: {crates}",
     "discovery.more_in_book": "Meer in het geestenboek",
     "discovery.unknown_guest": "Een onbekende gast",
     // Regulars: ghosts who come back by name

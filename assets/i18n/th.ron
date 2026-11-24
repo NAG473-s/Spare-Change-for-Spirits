@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "คนแจวเรือฝากห่อของไว้ให้แขกที่จะมาคืนนี้ ส่งให้แขกที่เคาน์เตอร์",
     "discovery.set_aside": "กัน{item}ไว้หนึ่งชิ้นสำหรับแขกที่จะมาคืนนี้",
     "discovery.set_draws": "ดึงดูดแขกให้มาเพิ่ม",
-    "discovery.weather_trade": "ราคาขาย: {price}% ของราคาปกติ · ความจุเรือข้ามฟากที่เปลี่ยนไป: {crates}",
+    "discovery.weather_prices": "ราคาขาย: {price}% ของราคาปกติ",
+    "discovery.weather_crates": "ความจุเรือข้ามฟากที่เปลี่ยนไป: {crates}",
     "discovery.more_in_book": "อ่านเพิ่มเติมในสมุดบันทึกผี",
     "discovery.unknown_guest": "แขกที่ยังไม่เคยพบ",
     // Regulars: ghosts who come back by name

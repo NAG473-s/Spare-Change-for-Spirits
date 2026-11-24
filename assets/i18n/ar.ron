@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "ترك الملّاح طردًا لزائر الليلة. سلّمه إياه عند المنضدة.",
     "discovery.set_aside": "حُجزت قطعة واحدة لزائر الليلة: {item}.",
     "discovery.set_draws": "يجذب مزيدًا من الزوّار",
-    "discovery.weather_trade": "أسعار البيع: {price}٪ من السعر المعتاد · التغيّر في حمولة العبّارة: {crates}",
+    "discovery.weather_prices": "أسعار البيع: {price}٪ من السعر المعتاد",
+    "discovery.weather_crates": "التغيّر في حمولة العبّارة: {crates}",
     "discovery.more_in_book": "المزيد في كتاب الأشباح",
     "discovery.unknown_guest": "ضيف غير مألوف",
     // Regulars: ghosts who come back by name

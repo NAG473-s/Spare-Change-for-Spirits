@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "A révész itt hagyott egy csomagot a ma éjjeli vendégnek. Add át neki a pultnál.",
     "discovery.set_aside": "A ma éjjeli vendégnek félre van téve egy darab: {item}.",
     "discovery.set_draws": "Több látogatót vonz",
-    "discovery.weather_trade": "Eladási árak: a szokásos ár {price}%-a · A komp rakterének változása: {crates}",
+    "discovery.weather_prices": "Eladási árak: a szokásos ár {price}%-a",
+    "discovery.weather_crates": "A komp rakterének változása: {crates}",
     "discovery.more_in_book": "Bővebben a szellemkönyvben",
     "discovery.unknown_guest": "Egy ismeretlen vendég",
     // Regulars: ghosts who come back by name

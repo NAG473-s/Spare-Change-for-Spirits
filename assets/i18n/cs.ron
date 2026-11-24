@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Převozník tu nechal balíček pro dnešní návštěvu. Předej ho u pultu.",
     "discovery.set_aside": "Pro dnešní návštěvu je odložený jeden kus. Zboží: {item}.",
     "discovery.set_draws": "Přiláká víc návštěvníků",
-    "discovery.weather_trade": "Prodejní ceny: {price} % obvyklé ceny · Změna kapacity přívozu: {crates}",
+    "discovery.weather_prices": "Prodejní ceny: {price} % obvyklé ceny",
+    "discovery.weather_crates": "Změna kapacity přívozu: {crates}",
     "discovery.more_in_book": "Více v knize duchů",
     "discovery.unknown_guest": "Neznámý host",
     // Regulars: ghosts who come back by name

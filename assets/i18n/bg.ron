@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Лодкарят е оставил пакет за госта, който ще дойде тази нощ. Подай му го на тезгяха.",
     "discovery.set_aside": "За госта, който ще дойде тази нощ, е заделен един брой: {item}.",
     "discovery.set_draws": "Привлича повече посетители",
-    "discovery.weather_trade": "Продажни цени: {price}% от обичайните · Промяна в товарния капацитет на ферибота: {crates}",
+    "discovery.weather_prices": "Продажни цени: {price}% от обичайните",
+    "discovery.weather_crates": "Промяна в товарния капацитет на ферибота: {crates}",
     "discovery.more_in_book": "Още в книгата на призраците",
     "discovery.unknown_guest": "Непознат гост",
     // Regulars: ghosts who come back by name

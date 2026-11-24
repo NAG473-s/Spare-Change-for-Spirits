@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Der Fährmann hat ein Paket für den heutigen Nachtgast hinterlegt. Überreiche es an der Theke.",
     "discovery.set_aside": "Für den heutigen Nachtgast ist ein Stück zurückgelegt: {item}.",
     "discovery.set_draws": "Lockt mehr Gäste an",
-    "discovery.weather_trade": "Verkaufspreise: {price} % des üblichen Preises · Änderung der Fährkapazität: {crates}",
+    "discovery.weather_prices": "Verkaufspreise: {price} % des üblichen Preises",
+    "discovery.weather_crates": "Änderung der Fährkapazität: {crates}",
     "discovery.more_in_book": "Mehr im Geisterbuch",
     "discovery.unknown_guest": "Ein unbekannter Gast",
     // Regulars: ghosts who come back by name

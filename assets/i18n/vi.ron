@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Người lái đò đã để lại một gói đồ cho vị khách đêm nay. Hãy trao tận tay khách tại quầy.",
     "discovery.set_aside": "Đã để dành một {item} cho vị khách đêm nay.",
     "discovery.set_draws": "Thu hút thêm khách",
-    "discovery.weather_trade": "Giá bán: {price}% giá thường · Sức chở của phà thay đổi: {crates}",
+    "discovery.weather_prices": "Giá bán: {price}% giá thường",
+    "discovery.weather_crates": "Sức chở của phà thay đổi: {crates}",
     "discovery.more_in_book": "Xem thêm trong sổ hồn ma",
     "discovery.unknown_guest": "Một vị khách lạ",
     // Regulars: ghosts who come back by name

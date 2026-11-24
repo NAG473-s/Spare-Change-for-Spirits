@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "뱃사공이 오늘 밤 찾아올 손님에게 줄 꾸러미를 두고 갔어요. 계산대에서 건네주세요.",
     "discovery.set_aside": "오늘 밤 찾아올 손님 몫으로 {item} 하나를 따로 남겨 두었어요.",
     "discovery.set_draws": "손님을 더 많이 끌어들여요",
-    "discovery.weather_trade": "판매가: 평소의 {price}% · 나룻배 적재량 변화: {crates}",
+    "discovery.weather_prices": "판매가: 평소의 {price}%",
+    "discovery.weather_crates": "나룻배 적재량 변화: {crates}",
     "discovery.more_in_book": "유령 도감에서 자세히 보기",
     "discovery.unknown_guest": "낯선 손님",
     // Regulars: ghosts who come back by name

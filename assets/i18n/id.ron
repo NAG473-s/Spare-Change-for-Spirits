@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Tukang perahu menitipkan bungkusan untuk tamu malam ini. Serahkan bungkusan itu di meja kasir.",
     "discovery.set_aside": "Satu {item} disisihkan untuk tamu malam ini.",
     "discovery.set_draws": "Menarik lebih banyak pengunjung",
-    "discovery.weather_trade": "Harga jual: {price}% dari biasanya · Perubahan kapasitas feri: {crates}",
+    "discovery.weather_prices": "Harga jual: {price}% dari biasanya",
+    "discovery.weather_crates": "Perubahan kapasitas feri: {crates}",
     "discovery.more_in_book": "Selengkapnya di buku hantu",
     "discovery.unknown_guest": "Tamu yang belum dikenal",
     // Regulars: ghosts who come back by name

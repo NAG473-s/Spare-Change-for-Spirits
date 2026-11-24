@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Färjkarlen har lämnat ett paket till nattens gäst. Lämna över det vid disken.",
     "discovery.set_aside": "Ett exemplar av {item} är undanlagt åt nattens gäst.",
     "discovery.set_draws": "Lockar fler besökare",
-    "discovery.weather_trade": "Försäljningspriser: {price} % av det vanliga · Ändring av färjans lastutrymme: {crates}",
+    "discovery.weather_prices": "Försäljningspriser: {price} % av det vanliga",
+    "discovery.weather_crates": "Ändring av färjans lastutrymme: {crates}",
     "discovery.more_in_book": "Läs mer i spökboken",
     "discovery.unknown_guest": "En okänd gäst",
     // Regulars: ghosts who come back by name

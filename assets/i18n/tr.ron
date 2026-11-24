@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Kayıkçı bu gece gelecek ziyaretçiye bir paket bıraktı. Paketi tezgâhta ona ver.",
     "discovery.set_aside": "Bu geceki ziyaretçi için bir adet ayrıldı: {item}.",
     "discovery.set_draws": "Daha çok ziyaretçi çeker",
-    "discovery.weather_trade": "Satış fiyatları: normalin %{price} kadarı · Feribot kapasitesindeki değişim: {crates}",
+    "discovery.weather_prices": "Satış fiyatları: normalin %{price} kadarı",
+    "discovery.weather_crates": "Feribot kapasitesindeki değişim: {crates}",
     "discovery.more_in_book": "Hayalet kitabında daha fazlası",
     "discovery.unknown_guest": "Tanımadığın bir konuk",
     // Regulars: ghosts who come back by name

@@ -962,7 +962,8 @@
     "discovery.parcel_waits": "Ο βαρκάρης άφησε ένα δέμα για τον αποψινό επισκέπτη. Παράδωσέ του το στον πάγκο.",
     "discovery.set_aside": "Για τον αποψινό επισκέπτη φυλάχτηκε ένα κομμάτι: {item}.",
     "discovery.set_draws": "Προσελκύει περισσότερους επισκέπτες",
-    "discovery.weather_trade": "Τιμές πώλησης: {price}% της συνήθους τιμής · Μεταβολή χωρητικότητας του πορθμείου: {crates}",
+    "discovery.weather_prices": "Τιμές πώλησης: {price}% της συνήθους τιμής",
+    "discovery.weather_crates": "Μεταβολή χωρητικότητας του πορθμείου: {crates}",
     "discovery.more_in_book": "Περισσότερα στο βιβλίο φαντασμάτων",
     "discovery.unknown_guest": "Ένας άγνωστος επισκέπτης",
     // Regulars: ghosts who come back by name
