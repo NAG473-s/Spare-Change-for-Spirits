@@ -421,7 +421,7 @@
     "accounts.borrowed": "Lånt af færgemanden",
     "accounts.ferryman": "Færgemand",
     "accounts.furniture": "Møbler",
-    "accounts.market": "Sjældne genstande og vekselgebyrer",
+    "accounts.market": "Varer fra markedet og vekselgebyrer",
     "accounts.upgrades": "Forbedringer af butikken",
     "accounts.takings": "Indtægter i nat",
     "accounts.sales": "Salg ({count})",

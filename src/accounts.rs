@@ -76,8 +76,8 @@ pub struct Accounts {
     pub ferryman: u32,
     /// Paid for furniture at the market (minus what was sold back).
     pub furniture: u32,
-    /// Other market spending: the Reaper's pieces, the hourglass, the
-    /// raven's change fees.
+    /// Other market spending: single wares (the Reaper's pieces, the winter
+    /// and spring traders' goods), the hourglass, the raven's change fees.
     pub market: u32,
     /// Shop improvements bought at the market.
     pub upgrades: u32,

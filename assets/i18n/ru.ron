@@ -421,7 +421,7 @@
     "accounts.borrowed": "Взято в долг у перевозчика",
     "accounts.ferryman": "Перевозчик",
     "accounts.furniture": "Обстановка",
-    "accounts.market": "Редкие вещи и плата за размен",
+    "accounts.market": "Товары с рынка и плата за размен",
     "accounts.upgrades": "Улучшения лавки",
     "accounts.takings": "Выручка за ночь",
     "accounts.sales": "Продажи ({count})",
