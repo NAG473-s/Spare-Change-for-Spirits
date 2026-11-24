@@ -422,6 +422,7 @@
     "accounts.ferryman": "Przewoźnik",
     "accounts.furniture": "Wyposażenie",
     "accounts.market": "Towary z targu i opłaty za wymianę",
+    "accounts.fare": "Moneta za przeprawę",
     "accounts.upgrades": "Ulepszenia sklepu",
     "accounts.takings": "Utarg tej nocy",
     "accounts.sales": "Sprzedaż ({count})",

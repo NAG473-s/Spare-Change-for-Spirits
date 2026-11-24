@@ -422,6 +422,7 @@
     "accounts.ferryman": "摆渡人",
     "accounts.furniture": "家具",
     "accounts.market": "集市商品与兑换手续费",
+    "accounts.fare": "渡河的一枚硬币",
     "accounts.upgrades": "店铺改良",
     "accounts.takings": "今夜收入",
     "accounts.sales": "销售（{count}）",

@@ -422,6 +422,7 @@
     "accounts.ferryman": "Перевізник",
     "accounts.furniture": "Облаштування",
     "accounts.market": "Товари з ринку та комісія за обмін",
+    "accounts.fare": "Монета за переправу",
     "accounts.upgrades": "Покращення крамниці",
     "accounts.takings": "Виторг за ніч",
     "accounts.sales": "Продажі ({count})",

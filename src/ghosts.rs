@@ -1737,6 +1737,7 @@ mod tests {
         progress.journal = Default::default();
         app.insert_resource(progress)
             .init_resource::<NightReport>()
+            .init_resource::<crate::accounts::Accounts>()
             .init_resource::<Stock>()
             .init_resource::<Queue>()
             .init_resource::<crate::save::Settings>()
@@ -1867,7 +1868,9 @@ mod tests {
     fn an_order_waiting_for_the_same_customer_expires_when_the_first_visit_ends_at_dawn() {
         use crate::orders::OrderState;
         let (mut app, progress) = ordering_fixture();
-        app.insert_resource(progress).init_resource::<NightReport>();
+        app.insert_resource(progress)
+            .init_resource::<NightReport>()
+            .init_resource::<crate::accounts::Accounts>();
         app.update();
         app.update();
         let world = app.world_mut();
@@ -1931,6 +1934,7 @@ mod tests {
                 .init_resource::<Drawer>()
                 .init_resource::<GameLog>()
                 .init_resource::<NightReport>()
+                .init_resource::<crate::accounts::Accounts>()
                 .init_resource::<Queue>()
                 .init_resource::<Settings>()
                 .insert_resource(State::new(Phase::Night))
@@ -2060,7 +2064,8 @@ mod tests {
             .init_resource::<Stock>()
             .init_resource::<Storeroom>()
             .init_resource::<GameLog>()
-            .init_resource::<NightReport>();
+            .init_resource::<NightReport>()
+            .init_resource::<crate::accounts::Accounts>();
         let world = app.world_mut();
         let ware = "lavender";
         world.resource_mut::<Stock>().add(ware, 1);

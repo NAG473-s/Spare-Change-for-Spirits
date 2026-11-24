@@ -422,6 +422,7 @@
     "accounts.ferryman": "Ferryman",
     "accounts.furniture": "Furniture",
     "accounts.market": "Market wares and change fees",
+    "accounts.fare": "A coin for a crossing",
     "accounts.upgrades": "Shop improvements",
     "accounts.takings": "Takings tonight",
     "accounts.sales": "Sales ({count})",

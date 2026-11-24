@@ -422,6 +422,7 @@
     "accounts.ferryman": "Traghettatore",
     "accounts.furniture": "Arredamento",
     "accounts.market": "Merci del mercato e commissioni di cambio",
+    "accounts.fare": "Una moneta per una traversata",
     "accounts.upgrades": "Migliorie alla bottega",
     "accounts.takings": "Incassi di stanotte",
     "accounts.sales": "Vendite ({count})",

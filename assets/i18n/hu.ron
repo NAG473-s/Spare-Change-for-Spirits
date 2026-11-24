@@ -422,6 +422,7 @@
     "accounts.ferryman": "Révész",
     "accounts.furniture": "Berendezés",
     "accounts.market": "Piaci áruk és pénzváltási díjak",
+    "accounts.fare": "Egy érme az átkelésért",
     "accounts.upgrades": "Boltfejlesztések",
     "accounts.takings": "Mai bevétel",
     "accounts.sales": "Eladások ({count})",

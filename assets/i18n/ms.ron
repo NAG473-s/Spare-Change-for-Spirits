@@ -422,6 +422,7 @@
     "accounts.ferryman": "Penambang",
     "accounts.furniture": "Perabot",
     "accounts.market": "Barang pasar dan upah tukaran",
+    "accounts.fare": "Syiling untuk penyeberangan",
     "accounts.upgrades": "Penambahbaikan kedai",
     "accounts.takings": "Pendapatan malam ini",
     "accounts.sales": "Jualan ({count})",

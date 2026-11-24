@@ -422,6 +422,7 @@
     "accounts.ferryman": "Перевозчик",
     "accounts.furniture": "Обстановка",
     "accounts.market": "Товары с рынка и плата за размен",
+    "accounts.fare": "Монета за переправу",
     "accounts.upgrades": "Улучшения лавки",
     "accounts.takings": "Выручка за ночь",
     "accounts.sales": "Продажи ({count})",

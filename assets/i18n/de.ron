@@ -422,6 +422,7 @@
     "accounts.ferryman": "Fährmann",
     "accounts.furniture": "Einrichtung",
     "accounts.market": "Marktwaren und Wechselgebühren",
+    "accounts.fare": "Münze für eine Überfahrt",
     "accounts.upgrades": "Ladenverbesserungen",
     "accounts.takings": "Einnahmen heute Nacht",
     "accounts.sales": "Verkäufe ({count})",

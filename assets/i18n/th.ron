@@ -422,6 +422,7 @@
     "accounts.ferryman": "คนแจวเรือ",
     "accounts.furniture": "เฟอร์นิเจอร์",
     "accounts.market": "สินค้าจากตลาดและค่าธรรมเนียมแลกเหรียญ",
+    "accounts.fare": "เหรียญค่าข้ามฟาก",
     "accounts.upgrades": "การปรับปรุงร้าน",
     "accounts.takings": "รายรับคืนนี้",
     "accounts.sales": "ยอดขาย ({count})",

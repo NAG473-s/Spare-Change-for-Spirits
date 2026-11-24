@@ -83,6 +83,9 @@ pub struct Accounts {
     pub upgrades: u32,
     /// Spent repairing broken wares in the evening.
     pub repairs: u32,
+    /// Coins given at the counter for a ghost's crossing (the ferryman's
+    /// fare): paid out of the drawer at night, but not part of the takings.
+    pub fares: u32,
     /// In the drawer when the shop opened.
     pub night_start: u32,
     /// What the night brought in: the drawer at dawn (before counterfeits
@@ -115,8 +118,9 @@ impl Accounts {
     pub fn close(&mut self, closing: u32, dust: u32) {
         self.closing = closing;
         self.dust = dust;
-        self.takings = i64::from(closing) + i64::from(dust) + i64::from(self.repaid)
-            - i64::from(self.night_start);
+        self.takings =
+            i64::from(closing) + i64::from(dust) + i64::from(self.repaid) + i64::from(self.fares)
+                - i64::from(self.night_start);
     }
 }
 
@@ -383,6 +387,16 @@ fn build_ledger(
             &lang.decor(crate::workbench::WORKBENCH),
             signed(spent),
             money(spent),
+            false,
+        );
+    }
+    if a.fares > 0 {
+        let given = -i64::from(a.fares);
+        line(
+            &mut ui,
+            &lang.t("accounts.fare"),
+            signed(given),
+            money(given),
             false,
         );
     }
@@ -868,6 +882,24 @@ mod tests {
             a.closing as i64
         );
         assert_eq!(a.profit(), -5);
+    }
+
+    /// A coin given for a crossing has its own line and does not lower the
+    /// takings: 50 at opening, 8 taken in sales, a candle stub (5) given.
+    #[test]
+    fn a_fare_is_booked_apart_from_the_takings() {
+        let mut a = Accounts {
+            opening: 50,
+            night_start: 50,
+            fares: 5,
+            ..default()
+        };
+        a.close(53, 0);
+        assert_eq!(a.takings, 8);
+        assert_eq!(
+            a.opening as i64 - a.fares as i64 + a.takings,
+            a.closing as i64
+        );
     }
 
     #[test]

@@ -422,6 +422,7 @@
     "accounts.ferryman": "Лодкарят",
     "accounts.furniture": "Обзавеждане",
     "accounts.market": "Стоки от пазара и такси за размяна",
+    "accounts.fare": "Монета за прекосяване",
     "accounts.upgrades": "Подобрения на магазина",
     "accounts.takings": "Оборот тази нощ",
     "accounts.sales": "Продажби ({count})",

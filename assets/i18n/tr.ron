@@ -422,6 +422,7 @@
     "accounts.ferryman": "Kayıkçı",
     "accounts.furniture": "Mobilya",
     "accounts.market": "Pazar malları ve bozdurma ücretleri",
+    "accounts.fare": "Bir geçiş için sikke",
     "accounts.upgrades": "Dükkân geliştirmeleri",
     "accounts.takings": "Bu geceki hasılat",
     "accounts.sales": "Satışlar ({count})",

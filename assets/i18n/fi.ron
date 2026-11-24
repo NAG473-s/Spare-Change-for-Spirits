@@ -422,6 +422,7 @@
     "accounts.ferryman": "Lautturi",
     "accounts.furniture": "Kalusteet",
     "accounts.market": "Torin tavarat ja vaihtopalkkiot",
+    "accounts.fare": "Kolikko ylitykseen",
     "accounts.upgrades": "Puodin parannukset",
     "accounts.takings": "Yön tulot",
     "accounts.sales": "Myynti ({count})",

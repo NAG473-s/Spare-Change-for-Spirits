@@ -257,7 +257,7 @@ fn serve_front_ghost(
     mut stock: ResMut<Stock>,
     mut register: ResMut<Register>,
     mut queue: ResMut<Queue>,
-    mut drawer: ResMut<Drawer>,
+    (mut drawer, mut accounts): (ResMut<Drawer>, ResMut<crate::accounts::Accounts>),
     mut progress: ResMut<Progress>,
     mut report: ResMut<NightReport>,
     mut rng: ResMut<Rng>,
@@ -418,11 +418,12 @@ fn serve_front_ghost(
                 let mut one = Purse::default();
                 one.add(coin, 1);
                 drawer.remove(&one);
+                accounts.fares += coin.value();
                 cues.write(Cue::ChangeGiven);
                 log.push(lang.f(
                     "log.fare_given",
                     &[
-                        ("who", &lang.ghost_the(&def.id)),
+                        ("who", &ghost.the(&data, &progress, &lang)),
                         ("coin", &coin.name(&lang)),
                     ],
                 ));

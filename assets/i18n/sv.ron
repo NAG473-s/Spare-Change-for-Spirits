@@ -422,6 +422,7 @@
     "accounts.ferryman": "Färjkarl",
     "accounts.furniture": "Möbler",
     "accounts.market": "Varor från marknaden och växelavgifter",
+    "accounts.fare": "Ett mynt för en överfart",
     "accounts.upgrades": "Butiksförbättringar",
     "accounts.takings": "Intäkter i natt",
     "accounts.sales": "Försäljning ({count})",

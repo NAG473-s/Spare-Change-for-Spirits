@@ -422,6 +422,7 @@
     "accounts.ferryman": "Převozník",
     "accounts.furniture": "Vybavení",
     "accounts.market": "Zboží z trhu a poplatky za směnu",
+    "accounts.fare": "Mince za převoz",
     "accounts.upgrades": "Vylepšení obchodu",
     "accounts.takings": "Dnešní tržba",
     "accounts.sales": "Prodeje ({count})",

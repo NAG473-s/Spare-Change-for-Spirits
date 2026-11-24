@@ -422,6 +422,7 @@
     "accounts.ferryman": "Βαρκάρης",
     "accounts.furniture": "Έπιπλα",
     "accounts.market": "Εμπορεύματα της αγοράς και προμήθειες ανταλλαγής",
+    "accounts.fare": "Νόμισμα για ένα πέρασμα",
     "accounts.upgrades": "Βελτιώσεις του μαγαζιού",
     "accounts.takings": "Εισπράξεις απόψε",
     "accounts.sales": "Πωλήσεις ({count})",

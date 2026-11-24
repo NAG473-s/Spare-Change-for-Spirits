@@ -422,6 +422,7 @@
     "accounts.ferryman": "뱃사공",
     "accounts.furniture": "가구",
     "accounts.market": "시장 물품과 환전 수수료",
+    "accounts.fare": "건너가는 삯으로 준 동전",
     "accounts.upgrades": "가게 개선",
     "accounts.takings": "오늘 밤 수입",
     "accounts.sales": "판매 ({count})",

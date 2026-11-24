@@ -422,6 +422,7 @@
     "accounts.ferryman": "Veerman",
     "accounts.furniture": "Meubels",
     "accounts.market": "Marktwaren en wisselkosten",
+    "accounts.fare": "Een munt voor een overtocht",
     "accounts.upgrades": "Winkelverbeteringen",
     "accounts.takings": "Opbrengst vannacht",
     "accounts.sales": "Verkopen ({count})",

@@ -422,6 +422,7 @@
     "accounts.ferryman": "الملّاح",
     "accounts.furniture": "الأثاث",
     "accounts.market": "بضائع السوق ورسوم الصرف",
+    "accounts.fare": "عملة لعبور النهر",
     "accounts.upgrades": "تحسينات المتجر",
     "accounts.takings": "إيرادات الليلة",
     "accounts.sales": "المبيعات ({count})",

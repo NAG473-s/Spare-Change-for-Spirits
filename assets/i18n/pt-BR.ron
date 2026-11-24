@@ -422,6 +422,7 @@
     "accounts.ferryman": "Barqueiro",
     "accounts.furniture": "Mobília",
     "accounts.market": "Mercadorias da feira e taxas de troca",
+    "accounts.fare": "Uma moeda para uma travessia",
     "accounts.upgrades": "Melhorias da loja",
     "accounts.takings": "Receita da noite",
     "accounts.sales": "Vendas ({count})",
