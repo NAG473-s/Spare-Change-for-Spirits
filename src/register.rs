@@ -761,6 +761,57 @@ fn answer_double_pay(
 mod tests {
     use super::*;
 
+    /// Only a plain customer whose wish is out of stock may order it for
+    /// tomorrow, and only while tomorrow's orders are not used up.
+    #[test]
+    fn only_a_plain_customer_without_the_ware_can_order() {
+        let ware = "lavender";
+        let mut progress = Progress::new(0);
+        progress.night = 3;
+        let mut stock = Stock::default();
+        let ghost = Ghost::waiting(0, ware);
+        assert!(can_order(&ghost, &stock, &progress, 1));
+        assert!(
+            !can_order(&ghost, &stock, &progress, 0),
+            "no orders allowed"
+        );
+
+        stock.add(ware, 1);
+        assert!(
+            !can_order(&ghost, &stock, &progress, 1),
+            "the ware is in stock"
+        );
+        stock = Stock::default();
+
+        let mut story = Ghost::waiting(0, ware);
+        story.chapter = Some((0, 0));
+        assert!(
+            !can_order(&story, &stock, &progress, 1),
+            "story ghosts never order"
+        );
+        let mut back = Ghost::waiting(0, ware);
+        back.order = Some(0);
+        assert!(
+            !can_order(&back, &stock, &progress, 1),
+            "already came for an order"
+        );
+
+        let order = |night| Order {
+            ghost: "shy".into(),
+            product: "tea_tin".into(),
+            night,
+            regular_name: None,
+            state: OrderState::Open,
+            pinned: false,
+        };
+        // An order for tonight does not use up tomorrow's.
+        progress.orders.push(order(3));
+        assert!(can_order(&ghost, &stock, &progress, 1));
+        progress.orders.push(order(4));
+        assert!(!can_order(&ghost, &stock, &progress, 1), "tomorrow is full");
+        assert!(can_order(&ghost, &stock, &progress, 2));
+    }
+
     fn lang() -> Lang {
         Lang::load("en")
     }

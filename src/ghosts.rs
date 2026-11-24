@@ -156,6 +156,38 @@ pub struct Ghost {
     bob_offset: f32,
 }
 
+#[cfg(test)]
+impl Ghost {
+    /// A plain customer of `GameData::ghosts[def]` waiting at the counter,
+    /// for tests of the register and the orders.
+    pub(crate) fn waiting(def: usize, wish: &str) -> Self {
+        Self {
+            first_customer: false,
+            def,
+            wish: wish.into(),
+            hint: String::new(),
+            state: GhostState::Waiting,
+            pos: Vec2::ZERO,
+            target: Vec2::ZERO,
+            timer: 0.0,
+            patience: 10.0,
+            max_patience: 10.0,
+            lift: 0.0,
+            vel: Vec2::ZERO,
+            facing: 1.0,
+            age: 0.0,
+            chapter: None,
+            plain: false,
+            order: None,
+            browse_cell: None,
+            carrying: None,
+            regular: None,
+            memory: None,
+            bob_offset: 0.0,
+        }
+    }
+}
+
 impl Ghost {
     /// What the ghost whispers, in the current language.
     pub fn whisper(&self, lang: &Lang) -> String {
