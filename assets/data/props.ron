@@ -13,6 +13,8 @@
         color: (0.92, 0.86, 0.7), shape: Cylinder, light: Some((0.28, 21000.0))),
     (id: "ledger_book", scene: Shop, pos: (6.30, 0.742, 0.55), turn: -15.0, size: (0.4, 0.06, 0.3),
         color: (0.35, 0.16, 0.12)),
+    (id: "change_tray", scene: Shop, pos: (6.33, 0.742, -0.27), turn: 90.0, size: (0.64, 0.052, 0.256),
+        color: (0.26, 0.40, 0.37)),
     (id: "button_jar", scene: Shop, pos: (6.53, 0.742, -0.73), size: (0.16, 0.22, 0.16),
         color: (0.75, 0.85, 0.9), shape: Cylinder),
     (id: "brass_scale", scene: Shop, pos: (6.30, 0.742, -1.19), size: (0.4, 0.32, 0.22),

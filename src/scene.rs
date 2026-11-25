@@ -10,7 +10,8 @@ use bevy::prelude::*;
 
 use crate::data::asset_exists;
 use crate::day_cycle::{NightClock, Phase};
-use crate::harbor::{Location, ShopDoor};
+use crate::harbor::Location;
+use crate::shop::entrance::{DoorSwing, PIVOT as DOOR_PIVOT};
 mod labels;
 pub(crate) use labels::{LabelEnabled, LabelKind, world_label};
 
@@ -70,7 +71,7 @@ impl Plugin for ScenePlugin {
             Update,
             (
                 set_camera_layers.run_if(state_changed::<Phase>),
-                time_of_day_light,
+                time_of_day_light.after(crate::shop::entrance::animate),
                 face_camera,
                 (
                     labels::paint_labels,
@@ -437,12 +438,11 @@ const PORTHOLE_HEIGHT: f32 = 1.62;
 
 fn spawn_door_light(
     mut commands: Commands,
-    door: Single<&Transform, With<ShopDoor>>,
+    hinge: Single<Entity, With<DoorSwing>>,
     assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let sill = door.translation.with_y(0.0);
     let reflection = asset_exists(PORTHOLE_LIGHT).then(|| {
         let glass = materials.add(StandardMaterial {
             base_color: Color::NONE,
@@ -451,12 +451,12 @@ fn spawn_door_light(
             unlit: true,
             ..default()
         });
-        let patch = sill + door.rotation * Vec3::new(-0.32, 0.003, 1.42);
+        let patch = Vec3::new(-0.32, 0.003, 1.42) - DOOR_PIVOT;
         commands.spawn((
             Mesh3d(meshes.add(Plane3d::default().mesh().size(1.02, 1.96))),
             MeshMaterial3d(glass.clone()),
-            Transform::from_translation(patch)
-                .with_rotation(door.rotation * Quat::from_rotation_y(-0.22)),
+            Transform::from_translation(patch).with_rotation(Quat::from_rotation_y(-0.22)),
+            ChildOf(*hinge),
             NotShadowCaster,
             Pickable::IGNORE,
         ));
@@ -470,7 +470,8 @@ fn spawn_door_light(
             range: 3.7,
             ..default()
         },
-        Transform::from_translation(sill + door.rotation * Vec3::new(0.0, PORTHOLE_HEIGHT, 0.44)),
+        Transform::from_translation(Vec3::new(0.0, PORTHOLE_HEIGHT, 0.44) - DOOR_PIVOT),
+        ChildOf(*hinge),
     ));
 }
 
@@ -554,6 +555,7 @@ fn time_of_day_light(
     daylight: Single<(&mut DirectionalLight, &mut Transform), With<Daylight>>,
     mut window: Single<&mut SpotLight, With<WindowLight>>,
     door: Single<(&DoorGlass, &mut PointLight)>,
+    hinge: Single<&DoorSwing>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let target = lighting_for(*phase.get(), *location);
@@ -570,10 +572,13 @@ fn time_of_day_light(
     window.intensity = window.intensity.lerp(target.window.0, k);
     window.color = window.color.mix(&target.window.1, k);
     let (glass, mut light) = door.into_inner();
-    light.intensity = window.intensity * 0.32;
+    // As the leaf turns, the bullseye's cross fades into the broader light from the quay.
+    let opening = hinge.aperture();
+    const OPEN_QUAY_LIGHT: f32 = 9_400.0;
+    light.intensity = window.intensity * 0.32 + OPEN_QUAY_LIGHT * opening;
     light.color = window.color;
     if let Some(paint) = &glass.0 {
-        let opacity = (window.intensity / 110_000.0).clamp(0.0, 1.0) * 0.29;
+        let opacity = (window.intensity / 110_000.0).clamp(0.0, 1.0) * 0.29 * (1.0 - opening);
         let tint = light.color.with_alpha(opacity);
         if materials.get(paint).is_some_and(|m| m.base_color != tint)
             && let Some(mut m) = materials.get_mut(paint)
@@ -587,7 +592,7 @@ fn time_of_day_light(
 #[derive(Component)]
 pub struct Billboard;
 
-fn face_camera(
+pub(crate) fn face_camera(
     camera: Single<&Transform, (With<MainCamera>, Without<Billboard>)>,
     parents: Query<&GlobalTransform>,
     mut billboards: Query<(&mut Transform, Option<&ChildOf>), With<Billboard>>,

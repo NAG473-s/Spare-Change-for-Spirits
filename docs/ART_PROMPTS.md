@@ -450,6 +450,10 @@ and deliver as for sprites, e.g. `Add <coin> coin icon [skip ci]`.
 | `candle` | A short stub of a cream wax candle with a few drips and a small warm flame. |
 | `spoon` | A small tarnished silver teaspoon with an ornate handle, lying diagonally. |
 
+## Register tray (delivered)
+
+`assets/sprites/ui/change_tray.png` is a 432 × 162 transparent view of the three-pocket walnut and felt change tray. Show the complete rim and leave the pockets empty. The interface lays the existing button, candle and spoon illustrations into those pockets as the player counts.
+
 ## Interface frame – 512 × 512 (done)
 
 `assets/sprites/ui/ledger_frame.png`: a square painted walnut frame with worn brass leaf corners,

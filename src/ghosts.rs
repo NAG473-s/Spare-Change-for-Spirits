@@ -79,8 +79,8 @@ impl Plugin for GhostPlugin {
                     ghost_tooltip,
                     select_queue_nameplate.before(PlaceWorldLabels),
                     steal_from_shelf,
-                    show_carried_wares,
                     (move_ghosts, ground_glows).chain(),
+                    show_carried_wares.after(crate::scene::face_camera),
                     fade_ghosts,
                     animate_ghosts,
                     motion::animate,
@@ -150,8 +150,8 @@ pub struct Ghost {
     pub order: Option<usize>,
     /// Shelf cell the ghost browses, if any.
     browse_cell: Option<usize>,
-    /// The ware it took from the shelf and brings to the counter (its wish
-    /// was on display); `None` if it has to whisper its wish instead.
+    /// The ware picked up at a shelf or collected after payment.
+    /// A guest arriving empty-handed whispers its wish.
     pub carrying: Option<String>,
     /// A regular customer: its index in `Progress::journal.regulars`.
     pub regular: Option<usize>,
@@ -788,47 +788,137 @@ fn spawn_ghost(
     ghost
 }
 
-/// A ghost that already shows the ware it carries.
+/// The visual belongs to the guest, including while it rests on the counter.
+/// This keeps a single copy through a sale, even when another guest steps up.
 #[derive(Component)]
 struct ShowsCarried(Entity);
 
-/// Where a carried ware floats beside the ghost, and its size.
+#[derive(Component)]
+struct WareMotion {
+    on_counter: bool,
+    from: Vec3,
+    elapsed: f32,
+}
+
 const CARRY_SPOT: Vec3 = Vec3::new(0.42, 0.6, 0.15);
 const CARRY_SCALE: f32 = 0.85;
+const COUNTER_WARE_OFFSET: Vec3 = Vec3::new(-0.18, crate::shop::COUNTER_TOP + 0.018, 0.05);
+const STOCK_SIDE: Vec3 = Vec3::new(0.18, 0.14, -0.20);
+const HANDOVER_TIME: f32 = 0.44;
+const HANDOVER_ARC: f32 = 0.13;
 
-/// A ghost that took its wish from a shelf holds it beside itself.
+impl WareMotion {
+    fn position(
+        &mut self,
+        guest: &Transform,
+        local: Vec3,
+        counter: Option<Vec3>,
+        dt: f32,
+        still: bool,
+    ) -> Vec3 {
+        // The guest turns to face the camera. Interpolate in shop space so
+        // that its rotation and hovering cannot move a ware off the counter.
+        let pose = guest.compute_affine();
+        if self.on_counter != counter.is_some() {
+            self.on_counter = counter.is_some();
+            self.from = pose.transform_point3(local);
+            self.elapsed = 0.0;
+        }
+        self.elapsed = if still {
+            HANDOVER_TIME
+        } else {
+            (self.elapsed + dt).min(HANDOVER_TIME)
+        };
+        if self.elapsed >= HANDOVER_TIME {
+            return counter.map_or(CARRY_SPOT, |spot| pose.inverse().transform_point3(spot));
+        }
+        let target = counter.unwrap_or_else(|| pose.transform_point3(CARRY_SPOT));
+        let t = self.elapsed / HANDOVER_TIME;
+        let travel = t * t * (3.0 - 2.0 * t);
+        let world = self.from.lerp(target, travel)
+            + Vec3::Y * (HANDOVER_ARC * 4.0 * travel * (1.0 - travel));
+        pose.inverse().transform_point3(world)
+    }
+}
+
+/// The purchased ware passes between the guest and the counting mat.
+/// Motion follows accepted sales, independent of how the player operates the register.
 fn show_carried_wares(
     mut commands: Commands,
-    ghosts: Query<(Entity, &Ghost, Option<&ShowsCarried>)>,
-    asset_server: Res<AssetServer>,
+    time: Res<Time>,
+    settings: Res<Settings>,
+    register: Res<crate::register::Register>,
+    layout: Res<ShopLayout>,
+    ghosts: Query<(Entity, &Ghost, &Transform, Option<&ShowsCarried>)>,
+    mut wares: Query<(&mut WareMotion, &mut Transform), Without<Ghost>>,
+    assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (entity, ghost, shown) in &ghosts {
-        let ware = match (&ghost.carrying, shown) {
-            (Some(ware), None) => ware,
-            (None, Some(ShowsCarried(visual))) => {
-                commands.entity(*visual).despawn();
+    let counter = floor(layout.counter_pos(), 0.0) + COUNTER_WARE_OFFSET;
+    for (entity, ghost, guest, shown) in &ghosts {
+        let sale = register.sale.as_ref().filter(|sale| sale.ghost == entity);
+        let on_counter = sale.is_some();
+        let id = sale
+            .map(|sale| sale.product.as_str())
+            .or(ghost.carrying.as_deref());
+        let Some(id) = id else {
+            if let Some(visual) = shown {
+                commands.entity(visual.0).despawn();
                 commands.entity(entity).remove::<ShowsCarried>();
-                continue;
             }
-            _ => continue,
+            continue;
         };
-        let visual = crate::shop::product_model(
+        let counter_spot = on_counter.then_some(counter);
+        if let Some(visual) = shown {
+            if let Ok((mut motion, mut pose)) = wares.get_mut(visual.0) {
+                pose.translation = motion.position(
+                    guest,
+                    pose.translation,
+                    counter_spot,
+                    time.delta_secs(),
+                    settings.reduced_motion,
+                );
+            }
+            continue;
+        }
+        let from = if on_counter && ghost.carrying.is_none() {
+            counter + STOCK_SIDE
+        } else {
+            guest.transform_point(CARRY_SPOT)
+        };
+        let mut motion = WareMotion {
+            on_counter,
+            from,
+            elapsed: 0.0,
+        };
+        let position = motion.position(
+            guest,
+            CARRY_SPOT,
+            counter_spot,
+            0.0,
+            settings.reduced_motion,
+        );
+        let visual = commands
+            .spawn((
+                motion,
+                Transform::from_translation(position).with_scale(Vec3::splat(CARRY_SCALE)),
+                Visibility::default(),
+                Pickable::IGNORE,
+                ChildOf(entity),
+            ))
+            .id();
+        let model = crate::shop::product_model(
             &mut commands,
-            &asset_server,
+            &assets,
             &mut meshes,
             &mut materials,
-            ware,
-            CARRY_SPOT,
+            id,
+            Vec3::ZERO,
         );
-        commands.entity(visual).insert(ChildOf(entity));
         commands
-            .entity(visual)
-            .entry::<Transform>()
-            .and_modify(|mut t| {
-                t.scale *= CARRY_SCALE;
-            });
+            .entity(model)
+            .insert((ChildOf(visual), Pickable::IGNORE));
         commands.entity(entity).insert(ShowsCarried(visual));
     }
 }
@@ -2089,6 +2179,41 @@ mod tests {
         assert_eq!(
             world.resource::<Progress>().journal.first_sale,
             FirstSale::Complete
+        );
+    }
+
+    #[test]
+    fn the_ware_tracks_its_guest_after_crossing_the_counter() {
+        let counter = Vec3::new(6.1, 0.76, 0.25);
+        let mut guest =
+            Transform::from_xyz(5.4, 0.25, 1.0).with_rotation(Quat::from_rotation_y(0.65));
+        let hand = guest.transform_point(CARRY_SPOT);
+        let mut motion = WareMotion {
+            on_counter: false,
+            from: hand,
+            elapsed: HANDOVER_TIME,
+        };
+        let local = motion.position(
+            &guest,
+            CARRY_SPOT,
+            Some(counter),
+            HANDOVER_TIME * 0.5,
+            false,
+        );
+        let mid = guest.transform_point(local);
+        assert!(mid.y > hand.y && mid.z < hand.z && mid.z > counter.z);
+        guest.rotate_y(0.30);
+        guest.translation.y += 0.04;
+        let settled = motion.position(&guest, local, Some(counter), HANDOVER_TIME, false);
+        assert!(guest.transform_point(settled).distance(counter) < 1e-5);
+        assert_eq!(
+            motion.position(&guest, settled, None, 0.01, true),
+            CARRY_SPOT
+        );
+        guest.translation += Vec3::X;
+        assert_eq!(
+            motion.position(&guest, CARRY_SPOT, None, 0.01, false),
+            CARRY_SPOT
         );
     }
 

@@ -31,6 +31,8 @@ class PackageAssetsTests(unittest.TestCase):
             self.assertEqual({p.stem for p in (demo / "sprites/postcards").glob("*.png")},
                              {"shy", "vain", "poltergeist", "forgetful", "child", "cat", "sailor", "knight", "bride"})
             for rel in ("sprites/memories/edwin_rain.png", "fonts/ShopSigns.ttf", "videos/endings/edwin.avi", "sprites/ghosts/edwin_pay.png", "sprites/ghosts/shade.png",
+                        "models/shop/door.glb", "models/shop/door_leaf.glb", "models/shop/door_bell.glb",
+                        "models/props/change_tray.glb", "sprites/ui/change_tray.png",
                         "models/shop/postcard_stand.glb", "sprites/postcards/bride.png",
                         "sprites/ghosts/apprentice.png", "sprites/ghosts/bride_browse.png", "models/critters/cat_tail.glb",
                         "models/products/ship_in_bottle.glb", "models/decor/pocket_lantern.glb", "models/props/storm_lantern.glb",

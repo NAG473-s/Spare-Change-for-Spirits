@@ -3,6 +3,8 @@
 //! Buttons carry an `ActionButton` component. A global observer turns clicks
 //! into `Action` messages that the individual plugins read.
 
+mod register_art;
+
 use std::collections::{HashMap, VecDeque};
 
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
@@ -85,6 +87,15 @@ impl Plugin for UiPlugin {
             .init_resource::<Icons>()
             .init_resource::<UiTheme>()
             .add_systems(Startup, spawn_ui)
+            .add_systems(
+                Update,
+                register_art::animate
+                    .after(build_night_panel)
+                    .after(crate::register::make_change)
+                    .run_if(in_state(Phase::Night))
+                    .run_if(crate::menu::shop_unpaused)
+                    .run_if(crate::story_film::outside_film),
+            )
             .add_systems(
                 PostUpdate,
                 align_to_direction.before(bevy::ui::UiSystems::Content),
@@ -416,6 +427,7 @@ impl ButtonTone {
 /// and `sprites/decor/<id>.png`, where they exist.
 #[derive(Resource)]
 pub struct Icons {
+    tray: Option<Handle<Image>>,
     products: HashMap<String, Handle<Image>>,
     decor: HashMap<String, Handle<Image>>,
     /// Painted currency if installed, otherwise a recognisable silhouette.
@@ -465,6 +477,7 @@ impl FromWorld for Icons {
             })
             .collect();
         Self {
+            tray: asset_exists(register_art::TRAY_ART).then(|| assets.load(register_art::TRAY_ART)),
             products: load("products", product_ids),
             decor: load("decor", decor_ids),
             coins,
@@ -2331,8 +2344,7 @@ fn build_night_panel(
                 ],
             ));
         }
-        ui.text(&lang.f("night.item", &[("item", &lang.product(&sale.product))]));
-        ui.text(&lang.f("night.price", &[("price", &sale.price)]));
+        register_art::receipt(&mut ui, &icons, sale, &lang);
         let paid = sale.paid();
         ui.text(&lang.f(
             "night.paid",
@@ -2358,8 +2370,7 @@ fn build_night_panel(
         if settings.change_hint {
             ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
         }
-        let counted = ui.text(&counted_line(&lang, sale));
-        ui.commands.entity(counted).insert(CountedLine);
+        register_art::change_tray(&mut ui, &icons, sale, &lang);
         ui.dim(&lang.t("register.undo_hint"));
         // Coins from the drawer first, the tray below, so the drawer's
         // buttons never move under the pointer as coins are laid out. Only
@@ -3518,7 +3529,7 @@ mod tests {
         assert_eq!(count_list(&lang, &ids, |s| s.to_string()), "3× a, 1× b");
     }
 
-    fn register_panel() -> App {
+    pub(super) fn register_panel() -> App {
         use crate::economy::Purse;
         use crate::register::{PaidCoin, Sale};
         use crate::save::Settings;
@@ -3577,7 +3588,10 @@ mod tests {
             }),
             question: None,
         })
-        .add_systems(Update, (build_night_panel, refresh_change).chain());
+        .add_systems(
+            Update,
+            (build_night_panel, refresh_change, register_art::animate).chain(),
+        );
         app.update();
         app
     }
@@ -3721,5 +3735,27 @@ mod tests {
             click(world, offered_target, PointerButton::Primary),
             [Action::CheckCoin(0)]
         );
+        // Both mouse buttons can return a coin directly from its painted pocket.
+        world
+            .resource_mut::<Register>()
+            .sale
+            .as_mut()
+            .unwrap()
+            .given
+            .candles = 1;
+        app.update();
+        let world = app.world_mut();
+        let pockets: Vec<_> = world
+            .query_filtered::<Entity, With<register_art::Pocket>>()
+            .iter(world)
+            .collect();
+        assert_eq!(pockets.len(), 3);
+        for button in [PointerButton::Primary, PointerButton::Secondary] {
+            let actions: Vec<_> = pockets
+                .iter()
+                .flat_map(|p| click(world, *p, button))
+                .collect();
+            assert_eq!(actions, [Action::RemoveChange(Coin::Candle)]);
+        }
     }
 }

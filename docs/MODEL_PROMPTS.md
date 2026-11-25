@@ -235,7 +235,9 @@ Season 3 products:
 |---|---|---|
 | `counter` | 4.5 × 1.2 × 0.81 | A long walnut counter with the customer side facing −Y. Set its surface at 0.742 m. Inlay the panelled front with a ghost and brass corners. Give the teal counting mat three stitched coin circles. At the right end fit an antique register with an ivory roller, two rows of keys and a drawer pull. Keep space for the loose bell, ledger and coin jars. |
 | `postcard_stand` | 0.2 × 0.04 × 0.07 | A small, low wooden card stand with a slot along its top, slightly worn, a brass corner on each end. Origin at the **centre of its base**, slot along X. The game puts the postcard into the slot and turns it. |
-| `door` | 1.1 × 2.3 × 0.2 | An old wooden shop door in its frame with a small round window, a brass handle and a little brass bell hanging above it; faint blue light in the window (emissive). The game places it in the left wall. |
+| `door` | 1.1 × 2.3 × 0.2 | Keep the carved walnut jamb, lintel and brass bell bracket fixed. Inside the jamb, show a narrow layered view of the moonlit river, with a moored sailboat, a lantern and lit warehouse windows. The original pane, panels and fittings belong to the moving leaf. |
+| `door_leaf` | 0.90 × 2.024 × 0.15 | Original plank leaf with bevelled rails, rain-streaked round glass, hinge straps and brass handle. Put the hinge on the far jamb, with the origin at its foot and the leaf extending along −X in glTF. It swings into the shop and clears the view of the quay. |
+| `door_bell` | 0.11 × 0.105 × 0.11 | Keep the old cast brass shop bell, clapper and suspension stem together. Its origin is at the top of the stem, with the bell below. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
 | `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
 | `way_board` | 0.8 × 0.24 × 0.05 | A weathered wooden direction board with one pointed end and two old nails, **no lettering** (the game writes "To the harbour" and "To the market" on it). The game mounts two of these flush with the left wall immediately beside the doorframe and paints the anchor or market awning beside the localised wording. Keep the broad front face flat at +0.039 m in glTF Z. Origin at the **centre of the back** of the board, front towards −Y. |
@@ -359,6 +361,7 @@ surface; items on the wall hang with their back against it (back at +Y in Blende
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
 | `counter_candle` | 0.14 × 0.26 × 0.14 | A thick cream candle in a brass holder with a finger loop, wax drips, the flame glowing (emissive) at about 0.26 m. |
+| `change_tray` | 0.64 × 0.052 × 0.256 | A low chamfered walnut tray with a teal felt liner divided into three pockets. Add a stitched inner seam, brass corner patches and dark pins. Origin at the bottom centre, long edge along X. The register illustration uses a view of this same model. |
 | `ledger_book` | 0.4 × 0.06 × 0.3 | An open old ledger book with yellowed pages and a red ribbon bookmark, a quill pen in a tiny inkwell beside it. |
 | `button_jar` | 0.16 × 0.22 × 0.16 | A glass jar full of colourful old buttons, cork lid. |
 | `brass_scale` | 0.4 × 0.32 × 0.22 | An old brass balance scale with two small pans. |

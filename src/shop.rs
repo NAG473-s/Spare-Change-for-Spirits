@@ -4,6 +4,8 @@
 //!
 //! In the evening the player picks a tool in the side panel and clicks a cell.
 
+pub(crate) mod entrance;
+
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
@@ -19,7 +21,6 @@ use crate::day_cycle::{Phase, Progress};
 use crate::ferry::sale_price;
 use crate::fx::Flicker;
 use crate::ghosts::{Ghost, GhostState, Queue};
-use crate::harbor::{ShopDoor, on_shop_door_click};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::register::Register;
@@ -32,9 +33,11 @@ use crate::upgrades::Upgrades;
 pub const CELL: f32 = 1.0;
 /// Centre of the floor grid (x, z).
 const GRID_CENTER: Vec2 = Vec2::new(0.0, 0.2);
+// Keep the sill just in front of the wainscoting so the quay is visible through the door.
+const SILL_X: f32 = crate::scene::ROOM_MIN_X + 0.18;
 // Countertop height, below the till. The loose props rest on this surface.
-const COUNTER_SIZE: Vec3 = Vec3::new(4.5, 0.742, 0.8);
-const DOOR_SIZE: Vec3 = Vec3::new(1.1, 2.3, 0.2);
+pub(crate) const COUNTER_TOP: f32 = 0.742;
+const COUNTER_SIZE: Vec3 = Vec3::new(4.5, COUNTER_TOP, 0.8);
 
 pub struct ShopPlugin;
 
@@ -45,6 +48,12 @@ impl Plugin for ShopPlugin {
             .init_resource::<HoveredShelfItem>()
             .init_resource::<Dragging>()
             .add_systems(Startup, spawn_shop)
+            .add_systems(
+                Update,
+                entrance::animate
+                    .run_if(crate::menu::shop_unpaused)
+                    .run_if(crate::story_film::outside_film),
+            )
             .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| {
                 *t = Tool::None
             })
@@ -123,12 +132,9 @@ impl ShopLayout {
         first + Vec2::new(col * CELL, -row * CELL)
     }
 
-    /// Where ghosts appear: in front of the door in the left wall.
+    /// The actual threshold in the left wall, shared by the door and arriving guests.
     pub fn door_pos(&self) -> Vec2 {
-        Vec2::new(
-            GRID_CENTER.x - self.cols as f32 * CELL / 2.0 - 1.0,
-            GRID_CENTER.y,
-        )
+        Vec2::new(SILL_X, GRID_CENTER.y)
     }
 
     /// Centre of the counter along the right side.
@@ -510,31 +516,13 @@ fn spawn_shop(
             .observe(on_drag_end);
     }
 
-    // The door stands in the left wall, its front facing into the shop (+x).
-    let door = model_or_box(
+    entrance::spawn(
         &mut commands,
         &asset_server,
         &mut meshes,
         &mut materials,
-        "models/shop/door.glb",
-        DOOR_SIZE,
-        Color::srgb(0.3, 0.2, 0.13),
+        &layout,
     );
-    commands
-        .entity(door)
-        .insert(ShopDoor)
-        .observe(on_shop_door_click);
-    let door_spot = Vec2::new(crate::scene::ROOM_MIN_X + 0.1, layout.door_pos().y);
-    commands.entity(door).insert(
-        Transform::from_translation(floor(door_spot, 0.0))
-            .with_rotation(Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)),
-    );
-    if !asset_exists("models/shop/door.glb") {
-        commands.entity(door).insert(
-            Transform::from_translation(floor(door_spot, DOOR_SIZE.y / 2.0))
-                .with_rotation(Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)),
-        );
-    }
 
     // The counter runs along the right side, customer side facing left (-x).
     let counter = model_or_box(

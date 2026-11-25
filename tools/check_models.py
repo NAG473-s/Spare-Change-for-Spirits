@@ -136,6 +136,8 @@ HARBOR_SIZES = {
 BOTTOM_CENTRE = ("centre", "minimum", "centre")
 ORIGIN_AXES = {
     "room": (None, None, None),
+    "door_leaf": ("maximum", "minimum", None),
+    "door_bell": ("centre", "maximum", "centre"),
     "wall_clock": ("centre", "centre", "minimum"),
     "way_board": ("centre", "centre", "minimum"),
     "shop_sign": ("centre", None, "centre"),
@@ -369,6 +371,8 @@ def main():
         "shop": dict(
             SHOP_SIZES,
             room=None,
+            door_leaf=(0.90, 2.024, 0.15),
+            door_bell=(0.11, 0.105, 0.11),
             crate=(0.5, 0.3, 0.42),
             ferryman=(0.7, 1.45, 0.6),
             ferry_boat=(7.4, 0.66, 1.85),
@@ -436,7 +440,8 @@ def main():
         present = path.is_file()
         print(("  ok       " if present else "  missing  ") + f"sprites/{name}")
         failures += not present
-    for name, size in (("ghosts/sailor_salute.png", (704, 264)), ("memories/edwin_rain.png", (512, 768))):
+    for name, size in (("ghosts/sailor_salute.png", (704, 264)), ("memories/edwin_rain.png", (512, 768)),
+                       ("ui/change_tray.png", (432, 162))):
         path = ROOT / "assets" / "sprites" / name
         problem = png_size_problem(path, size) if path.is_file() else "missing"
         print(f"  CHECK    sprites/{name}: {problem}" if problem else f"  ok       sprites/{name}")

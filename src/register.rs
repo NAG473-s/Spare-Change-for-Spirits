@@ -596,6 +596,7 @@ pub(crate) fn make_change(
                 };
                 let def = &data.ghosts[ghost.def];
                 let name = ghost.the(&data, &progress, &lang);
+                ghost.carrying = Some(sale.product.clone());
                 let correct = given == due;
                 let guided = ghost.first_customer && progress.guiding_first_sale();
                 if guided {
