@@ -56,6 +56,7 @@ impl Plugin for DayCyclePlugin {
                 (
                     (tick_clock, close_at_dawn)
                         .chain()
+                        .run_if(crate::menu::shop_unpaused)
                         .run_if(in_state(Phase::Night))
                         .run_if(crate::story_film::outside_film),
                     next_evening.run_if(in_state(Phase::Morning)),

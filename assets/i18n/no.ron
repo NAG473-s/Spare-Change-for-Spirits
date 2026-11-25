@@ -387,6 +387,9 @@
     "item.hourglass.text": "Natten i natt varer en fjerdedel lenger. Ett per dag.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Det regner bare inne i speilet. Edwin står under den gamle paraplyen sin.",
+    "memory.ida_sailor": "Sjømannen tar av seg lua. «Jeg så lyset ditt.» Ida nikker.",
+    "shelf.dawn_count": "Falmer ved daggry · {count}",
     "shelf.tip_fades": "Netter til den eldste falmer: {nights}",
     "shelf.tip_evening": "Høyreklikk for å ta varen ned fra hylla. Den blir på lageret.",
     "shelf.tip_night": "Klikk: gi den til spøkelset ved disken",

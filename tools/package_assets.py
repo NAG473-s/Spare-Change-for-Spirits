@@ -213,6 +213,8 @@ class DemoAssets:
         namespace = parts[0]
         if namespace in self.catalog_ids:
             return parts[1] in self.catalog_ids[namespace]
+        if key == "memory.ida_sailor":
+            return "ida" in self.guests
         if namespace == "errand":
             return parts[1] in self.errands if len(parts) > 2 else bool(self.errands)
         if namespace == "story" and len(parts) > 2:
@@ -256,6 +258,8 @@ class DemoAssets:
             # The thief never joins the queue. Only random arrivals with unmet
             # needs can flee; story visits and the thief always enter the shop.
             action = stem.removeprefix(ghost + "_")
+            if action == "salute":
+                return "ida" in self.guests and ghost == "sailor"
             if action in {"approach", "impatient", "pay"}:
                 return ghost in self.shoppers
             if action == "ascend":

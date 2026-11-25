@@ -52,12 +52,14 @@ pub(super) enum Act {
     Goodbye,
     Flee,
     Ascend,
+    Salute,
+    Nod,
 }
 
 impl Act {
     /// The activities that can have their own drawn sheet; the idle loop is
     /// `<id>_sheet.png`.
-    pub(super) const DRAWN: [Act; 8] = [
+    pub(super) const DRAWN: [Act; 9] = [
         Act::Arrive,
         Act::Browse,
         Act::Approach,
@@ -66,6 +68,7 @@ impl Act {
         Act::Goodbye,
         Act::Flee,
         Act::Ascend,
+        Act::Salute,
     ];
 
     /// File name part of the drawn sheet: `<id>_<file>.png`.
@@ -80,6 +83,8 @@ impl Act {
             Act::Goodbye => "goodbye",
             Act::Flee => "flee",
             Act::Ascend => "ascend",
+            Act::Salute => "salute",
+            Act::Nod => "nod",
         }
     }
 
@@ -101,6 +106,21 @@ impl Act {
         let cycle = |speed: f32| (speed * t + phase).sin();
         let beat = |speed: f32| 0.5 - 0.5 * (speed * t).cos();
         match self {
+            Self::Nod => {
+                let nod = ((t - 1.15) * 2.8).clamp(0.0, std::f32::consts::PI).sin();
+                Pose::new(0.015 * nod, -0.085 * nod, -0.13 * nod, 0.0, 0.0, 0.0)
+            }
+            Self::Salute => {
+                let hand = (t * 2.0).min(1.0);
+                Pose::new(
+                    0.0,
+                    -0.025 * hand,
+                    0.04 * hand,
+                    -0.09 * hand,
+                    0.14 * hand,
+                    0.0,
+                )
+            }
             // Peek over the threshold and tuck one hand against the chest.
             Self::Arrive => Pose::new(
                 0.09 * cycle(2.6),
@@ -308,19 +328,24 @@ impl Rig {
 pub(super) fn animate(
     time: Res<Time>,
     settings: Res<Settings>,
-    ghosts: Query<&Ghost>,
+    ghosts: Query<(&Ghost, Option<&super::memories::Gesture>)>,
     mut bodies: Query<(&ChildOf, &Mesh3d, &mut Rig)>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     let dt = time.delta_secs();
     for (child, mesh, mut rig) in &mut bodies {
-        let Ok(ghost) = ghosts.get(child.parent()) else {
+        let Ok((ghost, gesture)) = ghosts.get(child.parent()) else {
             continue;
         };
-        let act = Act::for_state(
-            ghost.state,
-            ghost.patience / ghost.max_patience.max(0.01),
-            settings.patient_ghosts,
+        let act = gesture.map_or_else(
+            || {
+                Act::for_state(
+                    ghost.state,
+                    ghost.patience / ghost.max_patience.max(0.01),
+                    settings.patient_ghosts,
+                )
+            },
+            |gesture| gesture.act,
         );
         if act != rig.act {
             rig.previous = rig.current;
@@ -329,17 +354,26 @@ pub(super) fn animate(
             rig.next_frame = 0.0;
         }
         rig.elapsed += dt;
-        if rig.elapsed < rig.next_frame {
+        if rig.elapsed < rig.next_frame && !settings.is_changed() {
             continue;
         }
         rig.next_frame = rig.elapsed + FRAME;
         let k = (rig.elapsed / BLEND).clamp(0.0, 1.0);
-        let pose = if rig.drawn.contains(&act) {
+        let pose = if settings.reduced_motion && act == Act::Nod {
+            act.pose(1.7, 0.0)
+        } else if rig.drawn.contains(&act) || settings.reduced_motion {
             Pose::default()
         } else {
-            act.pose(rig.elapsed * rig.tempo, ghost.bob_offset)
+            act.pose(
+                gesture.map_or(rig.elapsed * rig.tempo, |g| g.elapsed),
+                ghost.bob_offset,
+            )
         };
-        let next = rig.previous.blend(pose, k * k * (3.0 - 2.0 * k));
+        let next = if settings.reduced_motion {
+            pose
+        } else {
+            rig.previous.blend(pose, k * k * (3.0 - 2.0 * k))
+        };
         // A drawn gesture uses the resting mesh once the previous pose has eased out.
         if next == rig.current {
             continue;

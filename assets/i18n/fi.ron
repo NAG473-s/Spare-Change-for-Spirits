@@ -387,6 +387,9 @@
     "item.hourglass.text": "Tämä yö kestää neljänneksen pidempään. Yksi päivässä.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Sataa vain peilin sisällä. Edwin seisoo vanhan sateenvarjonsa alla.",
+    "memory.ida_sailor": "Merimies riisuu piponsa. ”Minä näin sinun valosi.” Ida nyökkää.",
+    "shelf.dawn_count": "Haalistuu aamunkoitteessa · {count}",
     "shelf.tip_fades": "Öitä vanhimman haalistumiseen: {nights}",
     "shelf.tip_evening": "Poista tavara hyllyltä napsauttamalla sitä hiiren oikealla painikkeella. Se pysyy varastossa.",
     "shelf.tip_night": "Klikkaus: ojenna tiskillä odottavalle haamulle",

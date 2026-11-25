@@ -30,7 +30,7 @@ class PackageAssetsTests(unittest.TestCase):
             self.assertEqual(source_hashes, hashes(ASSETS))
             self.assertEqual({p.stem for p in (demo / "sprites/postcards").glob("*.png")},
                              {"shy", "vain", "poltergeist", "forgetful", "child", "cat", "sailor", "knight", "bride"})
-            for rel in ("videos/endings/edwin.avi", "sprites/ghosts/edwin_pay.png", "sprites/ghosts/shade.png",
+            for rel in ("sprites/memories/edwin_rain.png", "fonts/ShopSigns.ttf", "videos/endings/edwin.avi", "sprites/ghosts/edwin_pay.png", "sprites/ghosts/shade.png",
                         "models/shop/postcard_stand.glb", "sprites/postcards/bride.png",
                         "sprites/ghosts/apprentice.png", "sprites/ghosts/bride_browse.png", "models/critters/cat_tail.glb",
                         "models/products/ship_in_bottle.glb", "models/decor/pocket_lantern.glb", "models/props/storm_lantern.glb",
@@ -49,12 +49,13 @@ class PackageAssetsTests(unittest.TestCase):
                 with self.subTest(asset=rel):
                     self.assertFalse((demo / rel).exists())
 
+            self.assertFalse((demo / "sprites/ghosts/sailor_salute.png").exists())
             english = read_catalog(demo / "i18n/en.ron")
             self.assertEqual(items((demo / "data/errands.ron").read_text(encoding="utf-8")), [])
-            for key in ("book.note.shade", "story.edwin.5.thanks", "story.edwin.ending", "letter.4", "story.plainly",
+            for key in ("memory.edwin_rain", "shelf.dawn_count", "book.note.shade", "story.edwin.5.thanks", "story.edwin.ending", "letter.4", "story.plainly",
                         "event.all_souls.name", "end.carry_over", "set.edwins_porch.name", "register.undo_hint"):
                 self.assertIn(key, english)
-            for key in ("book.note.ida", "story.ida.1.intro", "finale.hedda.arrives", "season.1.epilogue",
+            for key in ("memory.ida_sailor", "book.note.ida", "story.ida.1.intro", "finale.hedda.arrives", "season.1.epilogue",
                         "event.new_moon.name", "set.seafarers_corner.name", "achievement.edwin.name",
                         "errand.lotte_sledge.hint.1", "errand.clue_title"):
                 self.assertNotIn(key, english)

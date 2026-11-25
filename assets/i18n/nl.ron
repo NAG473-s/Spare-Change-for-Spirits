@@ -387,6 +387,9 @@
     "item.hourglass.text": "Vannacht duurt een kwart langer. Eén per dag.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Het regent alleen in de spiegel. Edwin staat onder zijn oude paraplu.",
+    "memory.ida_sailor": "De zeeman zet zijn muts af. ‘Ik heb je licht gezien.’ Ida knikt.",
+    "shelf.dawn_count": "Vervagen bij dageraad · {count}",
     "shelf.tip_fades": "Nachten tot het oudste vervaagt: {nights}",
     "shelf.tip_evening": "Klik met rechts om dit artikel van de plank te halen. Het blijft op voorraad.",
     "shelf.tip_night": "Klik: aan de geest bij de toonbank geven",

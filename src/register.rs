@@ -35,6 +35,7 @@ impl Plugin for RegisterPlugin {
                 )
                     .chain()
                     .run_if(in_state(Phase::Night))
+                    .run_if(crate::menu::shop_unpaused)
                     .run_if(crate::story_film::outside_film),
             );
     }

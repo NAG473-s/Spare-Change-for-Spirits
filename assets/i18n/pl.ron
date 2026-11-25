@@ -387,6 +387,9 @@
     "item.hourglass.text": "Ta noc potrwa o jedną czwartą dłużej. Jedna na dzień.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Deszcz pada tylko w lustrze. Edwin stoi pod swoim starym parasolem.",
+    "memory.ida_sailor": "Marynarz zdejmuje czapkę. „Widziałem twoje światło”. Ida kiwa głową.",
+    "shelf.dawn_count": "Znikną o świcie · {count}",
     "shelf.tip_fades": "Noce do wyblaknięcia najstarszego: {nights}",
     "shelf.tip_evening": "Kliknij prawym przyciskiem, aby zdjąć ten towar z półki. Pozostanie w zapasach.",
     "shelf.tip_night": "Kliknięcie: podaj duchowi przy ladzie",

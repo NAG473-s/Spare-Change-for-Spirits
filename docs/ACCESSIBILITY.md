@@ -32,6 +32,10 @@ update this file in the same change.
 | Subtitle Options | The opening and all six story endings show their spoken text in the active language on a dark backing. Captions follow the interface size. The game does not offer a separate subtitle toggle or style menu. |
 | Touch Only, Chat Text-to-speech, Chat Speech-to-text | Not a touch game; no chat. |
 
+## At the counter and in the queue
+
+A guest’s name opens their discovered book entry by mouse, keyboard or controller while the shop clock and their patience pause. Returning keeps the counted change. Shelf tickets pair the hourglass with the number of units due to fade, and the product tooltip gives the same information in words. Both guest memories have permanent written descriptions. Reduced motion holds the sailor’s cap and Ida’s nod in a single pose, stops the decorative bob and animated rain, and reveals the mirror painting immediately.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

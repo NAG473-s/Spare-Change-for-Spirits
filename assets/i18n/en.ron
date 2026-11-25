@@ -387,6 +387,9 @@
     "item.hourglass.text": "Tonight lasts a quarter longer. One a day.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Rain falls only inside the mirror. Edwin stands beneath his old umbrella.",
+    "memory.ida_sailor": "The sailor takes off his cap. “I saw your light.” Ida nods.",
+    "shelf.dawn_count": "Fading at dawn · {count}",
     "shelf.tip_fades": "Nights until the oldest fades: {nights}",
     "shelf.tip_evening": "Right-click to take this ware off the shelf. It stays in stock.",
     "shelf.tip_night": "Click: hand it to the ghost at the counter",

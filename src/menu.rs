@@ -139,6 +139,10 @@ impl SaveMenu {
 #[derive(Resource, Default)]
 pub struct Paused(pub bool);
 
+pub(crate) fn shop_unpaused(paused: Option<Res<Paused>>) -> bool {
+    paused.is_none_or(|paused| !paused.0)
+}
+
 /// Where the book was opened. Closing it returns there: to the running shop
 /// or harbour view when it was opened from play, to Pause otherwise. `entry`
 /// is the page it was opened at; Back on that page closes the book too.

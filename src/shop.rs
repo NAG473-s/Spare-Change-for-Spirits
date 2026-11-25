@@ -59,7 +59,8 @@ impl Plugin for ShopPlugin {
                     sync_cell_visuals.run_if(
                         resource_changed::<ShopLayout>
                             .or_else(resource_changed::<Stock>)
-                            .or_else(resource_changed::<UiFont>),
+                            .or_else(resource_changed::<UiFont>)
+                            .or_else(resource_changed::<Upgrades>),
                     ),
                     translate_counter.run_if(resource_changed::<UiFont>),
                     (shelf_tooltip, furnishing_tooltip).chain(),
@@ -758,14 +759,20 @@ fn shelf_tooltip(
     );
     // The oldest unit is the next to fade.
     if let Some(oldest) = stock.units().get(&p.id).and_then(|ages| ages.iter().max()) {
-        let lasts = p.fade_after + upgrades.fade_bonus(&data);
+        let bonus = upgrades.fade_bonus(&data);
+        let lasts = p.fade_after.saturating_add(bonus);
         let left = lasts.saturating_sub(*oldest);
         let kind = if left <= 1 {
             TipKind::Bad
         } else {
             TipKind::Text
         };
-        t.line(kind, lang.f("shelf.tip_fades", &[("nights", &left)]));
+        let due = stock.fading_next_dawn(&p.id, &data, bonus);
+        if due > 0 {
+            t.line(kind, lang.f("shelf.dawn_count", &[("count", &due)]));
+        } else {
+            t.line(kind, lang.f("shelf.tip_fades", &[("nights", &left)]));
+        }
     }
     let hint = match phase.get() {
         Phase::Evening => lang.t("shelf.tip_evening"),
@@ -1066,7 +1073,9 @@ fn sync_cell_visuals(
     mut materials: ResMut<Assets<StandardMaterial>>,
     cells: Query<(Entity, &GridCell)>,
     labels: Query<Entity, With<CellLabel>>,
+    upgrades: Res<Upgrades>,
 ) {
+    let bonus = upgrades.fade_bonus(&data);
     for label in &labels {
         commands.entity(label).despawn();
     }
@@ -1169,12 +1178,23 @@ fn sync_cell_visuals(
                 .products
                 .iter()
                 .map(|p| {
-                    if asset_exists(&format!("models/products/{p}.glb")) {
+                    let total = if asset_exists(&format!("models/products/{p}.glb")) {
                         format!("×{}", stock.count(p))
                     } else {
                         lang.f(
                             "evening.stock_button",
                             &[("item", &lang.product(p)), ("count", &stock.count(p))],
+                        )
+                    };
+                    let due = stock.fading_next_dawn(p, &data, bonus);
+                    if due == 0 {
+                        total
+                    } else if font.signs.is_some() {
+                        format!("{total} ⌛{due}")
+                    } else {
+                        format!(
+                            "{total} ({})",
+                            lang.f("shelf.dawn_count", &[("count", &due)])
                         )
                     }
                 })

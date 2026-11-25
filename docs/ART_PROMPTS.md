@@ -26,6 +26,12 @@ python3 tools/check_models.py
 
 ## Delivery status
 
+### Shop memories and shelf lettering (delivered)
+
+- **Edwin in the rain** — `assets/sprites/memories/edwin_rain.png`, 512 × 768. Paint the elderly, moustached Edwin from the guest portrait under a mended russet umbrella. Use golden lamplight against a slate-blue rainy street. Keep his face and both hands inside the central oval crop. The whole painting also appears in his book. The moving rain and the reflection's fade are rendered in the shop.
+- **The sailor's salute** — `assets/sprites/ghosts/sailor_salute.png`, four transparent 176 × 264 frames in a horizontal strip. Match the rope, striped jumper and sea-green beard of the sailor portrait. Keep the tail anchored as he touches his knitted cap, lifts it clear and lowers it to his chest. Ida answers with one nod on her existing portrait.
+- **Shelf and counter signs** — `assets/fonts/ShopSigns.ttf`. A narrow hourglass with distinct sand and an open book with two outlined pages. Both outline glyphs take the current lettering colour. The small pool of light under each guest uses the existing soft radial texture `assets/sprites/fx/glow.png`.
+
 All thirteen postcards from regulars are in [`assets/sprites/postcards/`](../assets/sprites/postcards/).
 Each 600 × 400 PNG appears in the book and on the counter. The demo ships the nine pictures
 its regulars can send.

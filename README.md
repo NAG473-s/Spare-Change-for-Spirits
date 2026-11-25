@@ -155,6 +155,10 @@ Runs for the same ref queue behind the current run.
 | **Night** | Ghosts come in, browse and queue at the counter. The ghost at the front whispers a hint – you hand over a product from the shelves (click it on the shelf or in the panel; hovering a product on a shelf shows its price, stock and when it fades). Guess right → it pays and you count out the change. |
 | **Morning** | The accounts: a ledger of the cash drawer (dusk, ferryman, furniture, takings, counterfeits, profit or loss) and how the night went – visitors, sales, change, reputation, ghosts that passed into the light, faded items and what fades next. |
 
+Select a guest’s name at the counter to look them up. The shop waits while the book is open, including any change already on the tray. A shelf ticket with an hourglass shows how many units of that ware will fade at the coming dawn. The item tooltip spells out the count.
+
+An old umbrella can appear in a shop mirror on Edwin’s return. Once Ida has repaired the lighthouse, a sailor can recognise her in the queue. Both moments stay in the corresponding guest’s book entry.
+
 If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost, it flees at the
 door. Served correctly **and** given exact change → the ghost passes into the light and your
 reputation rises. Better reputation = more customers.

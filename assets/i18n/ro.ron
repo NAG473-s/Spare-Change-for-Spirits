@@ -387,6 +387,9 @@
     "item.hourglass.text": "Noaptea asta durează cu un sfert mai mult. Una pe zi.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Plouă doar în oglindă. Edwin stă sub vechea lui umbrelă.",
+    "memory.ida_sailor": "Marinarul își scoate căciula. „Ți-am văzut lumina.” Ida încuviințează din cap.",
+    "shelf.dawn_count": "Se estompează în zori · {count}",
     "shelf.tip_fades": "Nopți până se decolorează cel mai vechi: {nights}",
     "shelf.tip_evening": "Dă clic dreapta pentru a lua marfa de pe raft. Rămâne în stoc.",
     "shelf.tip_night": "Clic: dă-l fantomei de la tejghea",

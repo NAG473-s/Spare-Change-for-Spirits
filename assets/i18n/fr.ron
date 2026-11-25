@@ -387,6 +387,9 @@
     "item.hourglass.text": "Cette nuit dure un quart de plus. Un seul par jour.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Il ne pleut que dans le miroir. Edwin se tient sous son vieux parapluie.",
+    "memory.ida_sailor": "Le marin ôte son bonnet. « J’ai vu ta lumière. » Ida hoche la tête.",
+    "shelf.dawn_count": "Disparaissent à l’aube · {count}",
     "shelf.tip_fades": "Nuits avant que le plus ancien ne fane : {nights}",
     "shelf.tip_evening": "Un clic droit retire cet article de l’étagère. Il reste en stock.",
     "shelf.tip_night": "Clic : le donner au fantôme au comptoir",

@@ -387,6 +387,9 @@
     "item.hourglass.text": "오늘 밤이 4분의 1만큼 길어져요. 하루에 하나.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "비는 거울 속에서만 내린다. 에드윈은 낡은 우산 아래 서 있다.",
+    "memory.ida_sailor": "선원이 모자를 벗는다. “당신이 밝힌 불빛을 봤어요.” 아이다가 고개를 끄덕인다.",
+    "shelf.dawn_count": "새벽에 사라질 수량 · {count}",
     "shelf.tip_fades": "가장 오래된 물건이 빛바래기까지 (밤): {nights}",
     "shelf.tip_evening": "마우스 오른쪽 버튼으로 클릭하면 이 물건을 선반에서 내립니다. 재고에는 그대로 남습니다.",
     "shelf.tip_night": "클릭: 카운터의 유령에게 건네기",

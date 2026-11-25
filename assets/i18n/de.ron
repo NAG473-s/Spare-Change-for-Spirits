@@ -387,6 +387,9 @@
     "item.hourglass.text": "Heute Nacht dauert ein Viertel länger. Eine pro Tag.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Nur im Spiegel regnet es. Edwin steht unter seinem alten Schirm.",
+    "memory.ida_sailor": "Der Seemann nimmt die Mütze ab. „Dein Licht hab ich noch gesehen.“ Ida nickt.",
+    "shelf.dawn_count": "Verblassen bei Tagesanbruch · {count}",
     "shelf.tip_fades": "Nächte bis zum Verblassen der ältesten Ware: {nights}",
     "shelf.tip_evening": "Mit Rechtsklick nimmst du diese Ware vom Regal. Sie bleibt im Lager.",
     "shelf.tip_night": "Klick: dem Geist an der Theke überreichen",

@@ -525,6 +525,7 @@ pub struct UiFont {
     pub display: FontSource,
     inter: Handle<Font>,
     inter_bold: Handle<Font>,
+    pub(crate) signs: Option<Handle<Font>>,
     serif_bold: Handle<Font>,
     /// (language code, script font)
     extras: Vec<(String, Handle<Font>)>,
@@ -549,6 +550,7 @@ impl FromWorld for UiFont {
             inter: assets.load("fonts/Inter-Regular.otf"),
             inter_bold: assets.load("fonts/Inter-SemiBold.otf"),
             serif_bold: assets.load("fonts/NotoSerif-Bold.ttf"),
+            signs: asset_exists("fonts/ShopSigns.ttf").then(|| assets.load("fonts/ShopSigns.ttf")),
             extras,
         };
         font.set_language(&code);
@@ -564,7 +566,8 @@ impl UiFont {
             bases
                 .iter()
                 .cloned()
-                .chain(own.chain(others).map(|(_, h)| h.clone())),
+                .chain(own.chain(others).map(|(_, h)| h.clone()))
+                .chain(self.signs.iter().cloned()),
         )
     }
 
@@ -2036,6 +2039,7 @@ struct NightPanelShows {
     guiding: bool,
     front: Option<(Entity, GhostState)>,
     line: usize,
+    meeting: bool,
     /// Keep the actual coins and whether the drawer can make change: a
     /// replacement payment can have the same number of coins as the first.
     /// Counting change alone leaves these controls in place.
@@ -2188,6 +2192,26 @@ fn refresh_change(
     }
 }
 
+fn guest_book_link(
+    ui: &mut PanelBuilder,
+    data: &GameData,
+    progress: &Progress,
+    index: usize,
+    name: &str,
+) {
+    if progress.journal.has_seen(&data.ghosts[index].id) {
+        let row = ui.row();
+        let label = if ui.font.signs.is_some() {
+            format!("📖  {name}")
+        } else {
+            name.to_owned()
+        };
+        ui.button_in(row, &label, Action::GhostProfile(index), false, true);
+    } else {
+        ui.section(name);
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_night_panel(
     mut commands: Commands,
@@ -2202,7 +2226,13 @@ fn build_night_panel(
     drawer: Res<Drawer>,
     icons: Res<Icons>,
     settings: Res<crate::save::Settings>,
-    ghosts: Query<&Ghost>,
+    (ghosts, visitors): (
+        Query<&Ghost>,
+        Query<
+            (&Ghost, Has<crate::ghosts::memories::Gesture>),
+            With<crate::ghosts::memories::AtQueueEnd>,
+        >,
+    ),
     phase: Res<State<Phase>>,
     progress: Res<Progress>,
     mut shown: Local<Option<NightPanelShows>>,
@@ -2215,10 +2245,21 @@ fn build_night_panel(
         .front()
         .and_then(|e| ghosts.get(e).ok().map(|g| (e, g.state)));
     let waiting = front.is_some_and(|(_, state)| state == GhostState::Waiting);
+    let mut line = queue.0.len();
+    let mut meeting = false;
+    if !waiting && !register.is_busy() {
+        for (guest, gesturing) in &visitors {
+            if guest.state == GhostState::Browsing {
+                line += 1;
+                meeting |= gesturing;
+            }
+        }
+    }
     let shows = NightPanelShows {
         guiding: progress.guiding_first_sale(),
         front,
-        line: if waiting { 0 } else { queue.0.len() },
+        line: if waiting { 0 } else { line },
+        meeting,
         sale: register.sale.as_ref().map(|sale| {
             (
                 sale.ghost,
@@ -2271,6 +2312,13 @@ fn build_night_panel(
 
     if let Some(sale) = &register.sale {
         ui.section(&lang.t("night.register"));
+        if let Ok(ghost) = ghosts.get(sale.ghost) {
+            let name = ghost
+                .regular
+                .and_then(|i| progress.journal.regulars.get(i))
+                .map_or_else(|| lang.ghost(&data.ghosts[ghost.def].id), |r| r.name(&lang));
+            guest_book_link(&mut ui, &data, &progress, ghost.def, &name);
+        }
         if let Ok(ghost) = ghosts.get(sale.ghost)
             && let Some(memory) = &ghost.memory
             && let Some(regular) = ghost.regular.and_then(|i| progress.journal.regulars.get(i))
@@ -2417,13 +2465,16 @@ fn build_night_panel(
     match front {
         Some(ghost) if ghost.state == GhostState::Waiting => {
             let def = &data.ghosts[ghost.def];
-            if let Some(regular) = ghost.regular.and_then(|i| progress.journal.regulars.get(i)) {
-                ui.section(&lang.f("night.story_says", &[("name", &regular.name(&lang))]));
+            let speaker = if let Some(regular) =
+                ghost.regular.and_then(|i| progress.journal.regulars.get(i))
+            {
+                lang.f("night.story_says", &[("name", &regular.name(&lang))])
             } else if ghost.chapter.is_some() {
-                ui.section(&lang.f("night.story_says", &[("name", &lang.ghost(&def.id))]));
+                lang.f("night.story_says", &[("name", &lang.ghost(&def.id))])
             } else {
-                ui.section(&lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))]));
-            }
+                lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))])
+            };
+            guest_book_link(&mut ui, &data, &progress, ghost.def, &speaker);
             ui.text(&lang.f("quote", &[("text", &ghost.whisper(&lang))]));
             // The ferryman's parcel holds exactly what a story ghost needs:
             // said in words and offered as the main button, so it is not
@@ -2538,8 +2589,12 @@ fn build_night_panel(
             }
         }
         _ => {
-            ui.dim(&lang.t("night.quiet"));
-            ui.dim(&lang.f("night.in_line", &[("count", &queue.0.len())]));
+            if meeting {
+                ui.text(&lang.t("memory.ida_sailor"));
+            } else {
+                ui.dim(&lang.t("night.quiet"));
+            }
+            ui.dim(&lang.f("night.in_line", &[("count", &line)]));
         }
     }
 }

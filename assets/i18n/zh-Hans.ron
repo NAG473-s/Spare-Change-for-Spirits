@@ -387,6 +387,9 @@
     "item.hourglass.text": "今夜延长四分之一。每天限一个。",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "只有镜中在下雨。艾德温站在他的旧雨伞下。",
+    "memory.ida_sailor": "水手摘下针织帽。“我看见你点的灯了。”艾达点了点头。",
+    "shelf.dawn_count": "黎明时将消散的数量 · {count}",
     "shelf.tip_fades": "距最旧商品褪色（夜）：{nights}",
     "shelf.tip_evening": "右键点击可将这件货物撤下货架。它仍留在库存中。",
     "shelf.tip_night": "点击：交给柜台前的幽灵",

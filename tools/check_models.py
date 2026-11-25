@@ -22,7 +22,7 @@ from i18n_sync import read_catalog
 ROOT = Path(__import__('os').environ.get('SCFS_ROOT', Path(__file__).resolve().parent.parent))
 # Activities a ghost can have a drawn sheet for (src/ghosts/motion.rs, Act::file), in the order
 # they are worth ordering: the ones seen most often first.
-GESTURES = ("pay", "ascend", "impatient", "goodbye", "browse", "arrive", "approach", "flee")
+GESTURES = ("pay", "ascend", "impatient", "goodbye", "browse", "arrive", "approach", "flee", "salute")
 MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
@@ -406,6 +406,8 @@ def main():
     print()
     for ghost in customers:
         for gesture in ("sheet", *GESTURES):
+            if gesture == "salute" and ghost != "sailor":
+                continue
             sheet = ROOT / "assets" / "sprites" / "ghosts" / f"{ghost}_{gesture}.png"
             print(("  ok       " if sheet.is_file() else "  no sheet ") + f"sprites/ghosts/{ghost}_{gesture}.png")
     for name in (
@@ -418,6 +420,11 @@ def main():
         present = path.is_file()
         print(("  ok       " if present else "  missing  ") + f"sprites/{name}")
         failures += not present
+    for name, size in (("ghosts/sailor_salute.png", (704, 264)), ("memories/edwin_rain.png", (512, 768))):
+        path = ROOT / "assets" / "sprites" / name
+        problem = png_size_problem(path, size) if path.is_file() else "missing"
+        print(f"  CHECK    sprites/{name}: {problem}" if problem else f"  ok       sprites/{name}")
+        failures += bool(problem)
     # Button icons (optional: a button without one shows only its text).
     print()
     for folder in ("products", "decor"):

@@ -387,6 +387,9 @@
     "item.hourglass.text": "今夜が4分の1長くなる。1日1つまで。",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "雨が降っているのは鏡の中だけだ。エドウィンが古い傘の下にたたずんでいる。",
+    "memory.ida_sailor": "船乗りが帽子を脱ぐ。「あんたの灯りが見えたよ」アイダはうなずく。",
+    "shelf.dawn_count": "夜明けに消える数 · {count}",
     "shelf.tip_fades": "いちばん古い品が色あせるまで（夜）：{nights}",
     "shelf.tip_evening": "右クリックでこの商品を棚から下ろします。在庫には残ります。",
     "shelf.tip_night": "クリック：カウンターの幽霊に渡す",

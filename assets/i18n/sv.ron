@@ -387,6 +387,9 @@
     "item.hourglass.text": "I natt varar en fjärdedel längre. Ett per dag.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Det regnar bara inne i spegeln. Edwin står under sitt gamla paraply.",
+    "memory.ida_sailor": "Sjömannen tar av sig mössan. ”Jag såg ditt ljus.” Ida nickar.",
+    "shelf.dawn_count": "Bleknar i gryningen · {count}",
     "shelf.tip_fades": "Nätter tills den äldsta bleknar: {nights}",
     "shelf.tip_evening": "Högerklicka för att ta ner varan från hyllan. Den finns kvar i lagret.",
     "shelf.tip_night": "Klick: ge den till spöket vid disken",

@@ -768,14 +768,8 @@ fn money(n: i64) -> Color {
 pub fn fading_next_dawn(stock: &Stock, data: &GameData, bonus: u32) -> Vec<String> {
     stock
         .units()
-        .iter()
-        .flat_map(|(id, ages)| {
-            let limit = data
-                .product(id)
-                .map_or(u32::MAX, |p| p.fade_after.saturating_add(bonus));
-            let n = ages.iter().filter(|age| **age + 1 >= limit).count();
-            std::iter::repeat_n(id.clone(), n)
-        })
+        .keys()
+        .flat_map(|id| std::iter::repeat_n(id.clone(), stock.fading_next_dawn(id, data, bonus)))
         .collect()
 }
 

@@ -387,6 +387,9 @@
     "item.hourglass.text": "Esta noche dura un cuarto más. Uno al día.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Solo llueve dentro del espejo. Edwin se resguarda bajo su viejo paraguas.",
+    "memory.ida_sailor": "El marinero se quita el gorro. «Alcancé a ver tu luz». Ida asiente.",
+    "shelf.dawn_count": "Se desvanecen al amanecer · {count}",
     "shelf.tip_fades": "Noches hasta que se desvanezca el más antiguo: {nights}",
     "shelf.tip_evening": "Haz clic derecho para retirar este producto del estante. Sigue en el almacén.",
     "shelf.tip_night": "Clic: entregárselo al fantasma del mostrador",

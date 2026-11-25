@@ -86,17 +86,31 @@ impl Stock {
         true
     }
 
+    /// Counts only the units that the coming dawn would remove.
+    pub fn fading_next_dawn(&self, id: &str, data: &GameData, bonus: u32) -> usize {
+        let Some(product) = data.product(id) else {
+            return 0;
+        };
+        let limit = product.fade_after.saturating_add(bonus);
+        self.units.get(id).map_or(0, |ages| {
+            ages.iter()
+                .filter(|age| age.saturating_add(1) >= limit)
+                .count()
+        })
+    }
+
     /// Ages everything by one night and removes faded items.
     /// Returns how much of what has faded.
     /// `bonus`: nights the wares last longer (herb sachets in the storeroom).
     pub fn age_and_fade(&mut self, data: &GameData, bonus: u32) -> Vec<(String, u32)> {
         let mut faded = Vec::new();
         for (id, units) in &mut self.units {
-            let limit = data
-                .product(id)
-                .map_or(u32::MAX, |p| p.fade_after.saturating_add(bonus));
+            let Some(product) = data.product(id) else {
+                continue;
+            };
+            let limit = product.fade_after.saturating_add(bonus);
             for age in units.iter_mut() {
-                *age += 1;
+                *age = age.saturating_add(1);
             }
             let before = units.len();
             units.retain(|age| *age < limit);
@@ -137,6 +151,28 @@ mod tests {
         assert!(stock.take_one("tea_tin") && stock.take_one("tea_tin"));
         assert!(!stock.take_one("tea_tin"), "sold out");
         assert_eq!(stock.count("tea_tin"), 0);
+    }
+
+    #[test]
+    fn dawn_count_matches_the_units_lost_after_a_sale_or_shelf_life_upgrade() {
+        let data = GameData::load();
+        let id = "tea_tin";
+        let last_night = data.product(id).unwrap().fade_after - 1;
+        let mut stock = Stock::from_units(BTreeMap::from([
+            (id.into(), vec![0, last_night, 0, last_night, 0]),
+            ("unknown".into(), vec![u32::MAX]),
+        ]));
+        assert_eq!(
+            (stock.count(id), stock.fading_next_dawn(id, &data, 0)),
+            (5, 2)
+        );
+        assert_eq!(stock.fading_next_dawn(id, &data, 1), 0);
+        assert!(stock.take_one(id));
+        assert_eq!(stock.fading_next_dawn(id, &data, 0), 1);
+        assert_eq!(crate::accounts::fading_next_dawn(&stock, &data, 0), [id]);
+        assert_eq!(stock.age_and_fade(&data, 0), [(id.to_string(), 1)]);
+        assert_eq!(stock.fading_next_dawn(id, &data, 0), 0);
+        assert_eq!(stock.count("unknown"), 1);
     }
 
     /// A unit fades at the dawn on which its age reaches `fade_after`;

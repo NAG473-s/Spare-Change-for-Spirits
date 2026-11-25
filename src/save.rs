@@ -921,7 +921,10 @@ mod tests {
         live.journal.met("shy", "letter_paper");
         live.journal.served("shy", "letter_paper", None);
         let register = crate::register::Register::default();
+        live.journal.edwin_mirror_seen = true;
+        live.journal.ida_sailor_met = true;
         let saved = night_snapshot(&start, &live, &register);
+        assert!(saved.journal.edwin_mirror_seen && saved.journal.ida_sailor_met);
         let saved: SaveGame = ron::from_str(&ron::to_string(&saved).unwrap()).unwrap();
         assert!(saved.orders[0].pinned);
         assert_eq!(saved.stock, start.stock);

@@ -21,7 +21,7 @@ activity instead, assets/sprites/ghosts/<id>_<NAME>.png (see GESTURES).
 import argparse
 
 # Activities a ghost can have a drawn sheet for (src/ghosts/motion.rs, Act::file).
-GESTURES = ("arrive", "browse", "approach", "impatient", "pay", "goodbye", "flee", "ascend")
+GESTURES = ("arrive", "browse", "approach", "impatient", "pay", "goodbye", "flee", "ascend", "salute")
 import sys
 from pathlib import Path
 

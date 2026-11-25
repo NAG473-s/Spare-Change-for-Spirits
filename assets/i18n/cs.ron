@@ -387,6 +387,9 @@
     "item.hourglass.text": "Dnešní noc potrvá o čtvrtinu déle. Jen jedny za den.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Prší jen uvnitř zrcadla. Edwin stojí pod svým starým deštníkem.",
+    "memory.ida_sailor": "Námořník smekne čepici. „Viděl jsem tvoje světlo.“ Ida přikývne.",
+    "shelf.dawn_count": "Do svítání vybledne · {count}",
     "shelf.tip_fades": "Nocí do vyblednutí nejstaršího kusu: {nights}",
     "shelf.tip_evening": "Kliknutím pravým tlačítkem sundáš toto zboží z police. Zůstane ve skladu.",
     "shelf.tip_night": "Kliknutí: podat duchovi u pultu",

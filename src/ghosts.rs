@@ -4,6 +4,7 @@
 //! Entering → Browsing → ToCounter → Waiting → AtRegister → Leaving / Ascending
 //! (if the atmosphere does not suit them: Entering → Fleeing)
 
+pub(crate) mod memories;
 mod motion;
 
 use bevy::ecs::system::SystemParam;
@@ -39,6 +40,7 @@ pub struct GhostPlugin;
 
 impl Plugin for GhostPlugin {
     fn build(&self, app: &mut App) {
+        memories::install(app);
         app.add_message::<Finale>()
             .add_message::<Visitor>()
             .init_resource::<Queue>()
@@ -78,7 +80,7 @@ impl Plugin for GhostPlugin {
                     select_queue_nameplate.before(PlaceWorldLabels),
                     steal_from_shelf,
                     show_carried_wares,
-                    move_ghosts,
+                    (move_ghosts, ground_glows).chain(),
                     fade_ghosts,
                     animate_ghosts,
                     motion::animate,
@@ -87,6 +89,7 @@ impl Plugin for GhostPlugin {
                 )
                     .chain()
                     .run_if(in_state(Phase::Night))
+                    .run_if(crate::menu::shop_unpaused)
                     .run_if(crate::story_film::outside_film),
             )
             // Deliver the finale guest in its chapter's frame, before any
@@ -96,6 +99,7 @@ impl Plugin for GhostPlugin {
                 come_home
                     .after(crate::register::make_change)
                     .run_if(in_state(Phase::Night))
+                    .run_if(crate::menu::shop_unpaused)
                     .run_if(crate::story_film::outside_film),
             );
     }
@@ -612,7 +616,7 @@ fn spawn_ghost(
     rng: &mut Rng,
     journal: &mut crate::book::Journal,
     visit: Visit,
-) {
+) -> Entity {
     let def: &GhostDef = &data.ghosts[visit.def_idx];
     // Only a returning order customer has already asked for the chosen product.
     // Other customers reveal their wish at the shelf or the counter.
@@ -728,6 +732,25 @@ fn spawn_ghost(
         shown: None,
     });
     commands.entity(ghost).add_child(body);
+    // A soft pool of borrowed light grounds the painted guest in the 3D room.
+    let glow = "sprites/fx/glow.png";
+    let textured = asset_exists(glow);
+    commands.spawn((
+        FloorGlow,
+        Mesh3d(meshes.add(Ellipse::new(0.57, 0.37))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: rgb(def.color).with_alpha(if textured { 0.25 } else { 0.055 }),
+            base_color_texture: textured.then(|| asset_server.load(glow)),
+            alpha_mode: AlphaMode::Blend,
+            unlit: true,
+            ..default()
+        })),
+        Transform::from_xyz(0.0, 0.019 - HOVER, 0.0)
+            .with_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+        NotShadowCaster,
+        Pickable::IGNORE,
+        ChildOf(ghost),
+    ));
     // An invisible box over the body for the tooltip. It does not block the
     // pointer, so the shelf items behind a ghost stay clickable.
     commands.spawn((
@@ -762,6 +785,7 @@ fn spawn_ghost(
             Vec3::new(0.0, GHOST_SIZE.y + 0.15, 0.0),
         ),
     ));
+    ghost
 }
 
 /// A ghost that already shows the ware it carries.
@@ -1442,7 +1466,11 @@ fn png_size(bytes: &[u8]) -> Option<(u32, u32)> {
     Some((w, h))
 }
 
-fn move_ghosts(time: Res<Time>, mut ghosts: Query<(&mut Ghost, &mut Transform)>) {
+fn move_ghosts(
+    time: Res<Time>,
+    settings: Res<Settings>,
+    mut ghosts: Query<(&mut Ghost, &mut Transform)>,
+) {
     let dt = time.delta_secs();
     let t = time.elapsed_secs();
     for (mut g, mut transform) in &mut ghosts {
@@ -1454,8 +1482,28 @@ fn move_ghosts(time: Res<Time>, mut ghosts: Query<(&mut Ghost, &mut Transform)>)
             Vec2::ZERO
         };
         g.age += dt;
-        let bob = (t * 2.2 + g.bob_offset).sin() * 0.06;
+        let bob = if settings.reduced_motion {
+            0.0
+        } else {
+            (t * 2.2 + g.bob_offset).sin() * 0.045
+        };
         transform.translation = floor(g.pos, HOVER + g.lift + bob);
+    }
+}
+
+#[derive(Component)]
+struct FloorGlow;
+
+/// The reflection stays on the floor and recedes as the guest passes into the light.
+fn ground_glows(
+    ghosts: Query<(&Ghost, &Transform)>,
+    mut glows: Query<(&ChildOf, &mut Transform), (With<FloorGlow>, Without<Ghost>)>,
+) {
+    for (parent, mut glow) in &mut glows {
+        if let Ok((g, at)) = ghosts.get(parent.parent()) {
+            glow.translation.y = 0.019 - at.translation.y;
+            glow.scale = Vec3::splat((1.0 - g.lift / 1.65).clamp(0.0, 1.0));
+        }
     }
 }
 
@@ -1483,6 +1531,12 @@ fn animate_ghosts(
             // Finish the turn even if the ghost has already reached the queue.
             g.facing.signum()
         };
+        if settings.reduced_motion {
+            g.facing = wanted;
+            body.scale = Vec3::new(wanted, 1.0, 1.0);
+            body.rotation = Quat::IDENTITY;
+            continue;
+        }
         let turn = (wanted - g.facing).clamp(-dt * 6.0, dt * 6.0);
         g.facing += turn;
 
@@ -1498,13 +1552,16 @@ fn animate_ghosts(
         // Pop in when appearing (ease-out from 60 % size).
         let appear = (g.age / 0.4).clamp(0.0, 1.0);
         let pop = 0.6 + 0.4 * (1.0 - (1.0 - appear).powi(3));
-        let (stretch, spin) = if g.state == GhostState::Ascending {
-            (1.0 + g.timer * 0.35, g.timer * 5.0)
+        // Let the portrait settle after a stop; keep its silhouette readable as it rises.
+        let rise = if g.state == GhostState::Ascending {
+            (g.timer / 1.8).clamp(0.0, 1.0)
         } else {
-            (1.0, 0.0)
+            0.0
         };
-        let flip = g.facing.signum() * g.facing.abs().max(0.15);
-        body.rotation = Quat::from_rotation_y(spin) * Quat::from_rotation_z(roll);
+        let stretch = 1.0 + 0.22 * rise;
+        let flip = g.facing.signum() * (0.62 + 0.38 * g.facing.abs());
+        let target = Quat::from_rotation_z(roll + 0.14 * rise);
+        body.rotation = body.rotation.slerp(target, 1.0 - (-9.0 * dt).exp());
         body.scale = Vec3::new(
             pop * (1.0 - breathe * 0.75) / stretch.sqrt() * flip,
             pop * (1.0 + breathe) * stretch,
@@ -1574,14 +1631,30 @@ fn show_gestures(
 
 fn play_sheets(
     time: Res<Time>,
-    mut sheets: Query<(&mut SheetAnim, &MeshMaterial3d<StandardMaterial>, &ChildOf)>,
-    ghosts: Query<&Ghost>,
+    settings: Res<Settings>,
+    mut sheets: Query<(
+        &mut SheetAnim,
+        &MeshMaterial3d<StandardMaterial>,
+        &ChildOf,
+        &Look,
+    )>,
+    ghosts: Query<(&Ghost, Option<&memories::Gesture>)>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let t = time.elapsed_secs();
-    for (mut anim, handle, child_of) in &mut sheets {
-        let offset = ghosts.get(child_of.parent()).map_or(0.0, |g| g.bob_offset);
-        let frame = ((t + offset) * anim.fps) as u32 % anim.frames;
+    for (mut anim, handle, child_of, look) in &mut sheets {
+        let Ok((ghost, gesture)) = ghosts.get(child_of.parent()) else {
+            continue;
+        };
+        let frame = if look.shown == Some(motion::Act::Salute)
+            && let Some(gesture) = gesture
+        {
+            gesture.salute_frame(anim.frames, settings.reduced_motion)
+        } else if settings.reduced_motion {
+            0
+        } else {
+            ((t + ghost.bob_offset) * anim.fps) as u32 % anim.frames
+        };
         if frame == anim.shown {
             continue;
         }
@@ -2268,6 +2341,41 @@ mod tests {
         assert_eq!(receipt.product, ware);
         assert_eq!((receipt.price, receipt.paid, receipt.given), amounts);
         assert_eq!(app.world().resource::<Stock>().count(ware), 1);
+    }
+
+    #[test]
+    fn a_paused_register_keeps_its_guest_counted_change_and_inspected_coin() {
+        use crate::economy::{Coin, Drawer};
+        use crate::menu::Paused;
+        use crate::register::Register;
+        use crate::ui::Action;
+        let (mut app, guest) = lavender_sale();
+        app.world_mut()
+            .write_message(Action::AddChange(Coin::Button));
+        app.world_mut().write_message(Action::CheckCoin(0));
+        app.update();
+        let drawer = app.world().resource::<Drawer>().0.clone();
+        let counted = app
+            .world()
+            .resource::<Register>()
+            .sale
+            .as_ref()
+            .unwrap()
+            .given
+            .clone();
+        assert_eq!(counted.buttons, 1);
+        app.insert_resource(Paused(true));
+        app.world_mut().write_message(Action::ResetChange);
+        for _ in 0..4 {
+            app.update();
+        }
+        app.world_mut().resource_mut::<Paused>().0 = false;
+        app.update();
+        let sale = app.world().resource::<Register>().sale.as_ref().unwrap();
+        assert_eq!(sale.ghost, guest);
+        assert!(sale.coins[0].checked);
+        assert_eq!(sale.given, counted);
+        assert_eq!(app.world().resource::<Drawer>().0, drawer);
     }
 
     #[test]

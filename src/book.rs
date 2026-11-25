@@ -30,6 +30,8 @@ pub struct Journal {
     pub first_sale_checkpoint: Option<crate::guide::FirstSaleCheckpoint>,
     /// One entry per kind of ghost met (ghost id).
     pub book: BTreeMap<String, BookEntry>,
+    pub edwin_mirror_seen: bool,
+    pub ida_sailor_met: bool,
     /// Ghosts that come back by name.
     pub regulars: Vec<Regular>,
     /// The ware shown in the shop window (product id).
@@ -117,7 +119,10 @@ impl Journal {
 
     /// Nightly sales and visits replay from the checkpoint, knowledge does not.
     pub fn remember_discoveries(&mut self, live: &Journal) -> bool {
-        let mut changed = false;
+        let mut changed = (live.edwin_mirror_seen && !self.edwin_mirror_seen)
+            || (live.ida_sailor_met && !self.ida_sailor_met);
+        self.edwin_mirror_seen |= live.edwin_mirror_seen;
+        self.ida_sailor_met |= live.ida_sailor_met;
         for (kind, observed) in &live.book {
             let saved = if let Some(saved) = self.book.get_mut(kind) {
                 saved
@@ -480,9 +485,34 @@ pub fn ghost_profile(
             ),
         );
     }
+    let memory = match ghost.id.as_str() {
+        "edwin" if journal.edwin_mirror_seen => {
+            let painting = crate::ghosts::memories::RAIN_PAINTING;
+            if asset_exists(painting) {
+                ui.node(
+                    header,
+                    (
+                        ImageNode::new(assets.load(painting)),
+                        Node {
+                            width: px(150),
+                            max_width: percent(100),
+                            aspect_ratio: Some(2.0 / 3.0),
+                            ..default()
+                        },
+                        Pickable::IGNORE,
+                    ),
+                );
+            }
+            Some("memory.edwin_rain")
+        }
+        "ida" if journal.ida_sailor_met => Some("memory.ida_sailor"),
+        _ => None,
+    };
     let notes = ui.node(
         header,
         Node {
+            flex_direction: FlexDirection::Column,
+            row_gap: px(12),
             flex_basis: px(140),
             flex_grow: 1.0,
             min_width: px(0),
@@ -496,6 +526,9 @@ pub fn ghost_profile(
         16.0,
         TEXT,
     );
+    if let Some(key) = memory {
+        ui.add_text(notes, &lang.t(key), false, 15.0, TEXT);
+    }
     let Some(entry) = journal.book.get(&ghost.id) else {
         return;
     };

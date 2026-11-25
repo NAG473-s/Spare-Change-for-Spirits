@@ -387,6 +387,9 @@
     "item.hourglass.text": "A mai éjszaka negyedével tovább tart. Naponta egy.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Csak a tükörben esik az eső. Edwin a régi esernyője alatt áll.",
+    "memory.ida_sailor": "A tengerész leveszi a sapkáját. „Láttam a fényedet.” Ida bólint.",
+    "shelf.dawn_count": "Hajnalban elhalványul · {count}",
     "shelf.tip_fades": "Éjszakák a legrégebbi megfakulásáig: {nights}",
     "shelf.tip_evening": "Jobb kattintással leveheted az árut a polcról. A készletben marad.",
     "shelf.tip_night": "Kattintás: odaadás a pultnál álló szellemnek",

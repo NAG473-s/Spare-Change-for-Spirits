@@ -387,6 +387,9 @@
     "item.hourglass.text": "Stanotte dura un quarto in più. Una al giorno.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Piove solo dentro lo specchio. Edwin è in piedi sotto il suo vecchio ombrello.",
+    "memory.ida_sailor": "Il marinaio si toglie il berretto. «Ho visto la tua luce». Ida annuisce.",
+    "shelf.dawn_count": "Svaniscono all’alba · {count}",
     "shelf.tip_fades": "Notti prima che il più vecchio sbiadisca: {nights}",
     "shelf.tip_evening": "Fai clic destro per togliere questa merce dallo scaffale. Rimane in magazzino.",
     "shelf.tip_night": "Clic: consegnalo al fantasma al bancone",

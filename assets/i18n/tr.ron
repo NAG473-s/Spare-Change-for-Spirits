@@ -387,6 +387,9 @@
     "item.hourglass.text": "Bu gece dörtte bir daha uzun sürer. Günde bir tane.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Yağmur yalnızca aynanın içinde yağıyor. Edwin eski şemsiyesinin altında duruyor.",
+    "memory.ida_sailor": "Denizci beresini çıkarır. “Işığını gördüm.” Ida başını sallar.",
+    "shelf.dawn_count": "Şafakta solacak miktar · {count}",
     "shelf.tip_fades": "En eskisinin solmasına kalan gece: {nights}",
     "shelf.tip_evening": "Bu ürünü raftan almak için sağ tıkla. Ürün stokta kalır.",
     "shelf.tip_night": "Tıkla: tezgâhtaki hayalete ver",

@@ -387,6 +387,9 @@
     "item.hourglass.text": "Đêm nay dài thêm một phần tư. Mỗi ngày một chiếc.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Mưa chỉ rơi bên trong gương. Edwin đứng dưới chiếc ô cũ của mình.",
+    "memory.ida_sailor": "Người thủy thủ bỏ mũ. “Tôi đã thấy ánh đèn của cô.” Ida gật đầu.",
+    "shelf.dawn_count": "Mờ đi lúc bình minh · {count}",
     "shelf.tip_fades": "Số đêm trước khi món cũ nhất phai mờ: {nights}",
     "shelf.tip_evening": "Nhấp chuột phải để lấy món hàng này xuống khỏi kệ. Món hàng vẫn còn trong kho.",
     "shelf.tip_night": "Nhấp: đưa cho hồn ma ở quầy",

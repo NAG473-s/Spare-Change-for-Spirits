@@ -119,7 +119,8 @@ def main():
 
     langs = languages()
     names = "".join(name for _, name, _ in langs)
-    problems = []
+    # The world tickets and guest buttons use these two monochrome outline signs.
+    problems = check("ShopSigns.ttf", "⌛📖") if args.check else []
     inter = TTFont(FONTS / "Inter-Regular.otf").getBestCmap()
     for code, native, font in langs:
         if not font:

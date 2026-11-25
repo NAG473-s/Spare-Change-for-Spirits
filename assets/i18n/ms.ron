@@ -387,6 +387,9 @@
     "item.hourglass.text": "Malam ini dipanjangkan sebanyak suku. Satu sehari.",
 
     // Products on the shelves (hover one)
+    "memory.edwin_rain": "Hujan hanya turun di dalam cermin. Edwin berdiri di bawah payung lamanya.",
+    "memory.ida_sailor": "Kelasi itu menanggalkan topinya. “Aku nampak cahayamu.” Ida mengangguk.",
+    "shelf.dawn_count": "Pudar ketika fajar · {count}",
     "shelf.tip_fades": "Malam sehingga yang tertua pudar: {nights}",
     "shelf.tip_evening": "Klik kanan untuk mengeluarkan barang ini dari rak. Barang masih ada dalam stok.",
     "shelf.tip_night": "Klik: serahkan kepada hantu di kaunter",
