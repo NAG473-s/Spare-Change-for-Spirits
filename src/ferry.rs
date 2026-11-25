@@ -20,6 +20,7 @@ use crate::harbor::{CART, CART_BED_HEIGHT, HARBOR, RippleMesh, float_hull, spawn
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
 use crate::rng::Rng;
+use crate::save::Settings;
 use crate::scene::{LabelKind, world_label};
 use crate::shop::{model_or_box, product_model};
 use crate::ui::{Action, BG_PANEL, GameLog, Icons, PanelBuilder, TEXT_DIM, UiFont, UiTheme};
@@ -110,13 +111,13 @@ struct SwingingLantern;
 #[derive(Component)]
 struct Crate {
     id: String,
-    /// Height of the container's rim, where the product sits.
-    top: f32,
+    spec: &'static ContainerSpec,
     /// Hinge of the lid (rotates about x).
     lid: Entity,
     /// The product shown in the crate.
     item: Entity,
     lid_angle: f32,
+    lid_velocity: f32,
     lift: f32,
     /// Counts down after a sale or a return: the lid snaps shut and bounces.
     bump: f32,
@@ -134,6 +135,7 @@ struct FlyingCrate {
 struct CartCrate {
     product: String,
     slot: usize,
+    base_height: f32,
 }
 
 /// The "×2" / "new" label above a crate.
@@ -148,7 +150,7 @@ const MOORING: Vec3 = Vec3::new(HARBOR.x + 0.3, 0.0, 0.25);
 const BOAT_SIZE: Vec3 = Vec3::new(7.4, 0.45, 1.7);
 const DECK_Y: f32 = 0.05;
 const CRATE_SIZE: Vec3 = Vec3::new(0.5, 0.3, 0.42);
-const LID_THICKNESS: f32 = 0.05;
+const CART_SCALE: f32 = 0.85;
 
 /// Look of a container the ferryman ships products in (`data::CONTAINERS`):
 /// its size, whether it is round, and the placeholder colours.
@@ -156,6 +158,9 @@ struct ContainerSpec {
     id: &'static str,
     size: Vec3,
     round: bool,
+    lid_height: f32,
+    opening_rate: f32,
+    wide_angle: f32,
     body: Color,
     lid: Color,
     /// Bands or hoops on the placeholder (brass or iron).
@@ -167,6 +172,9 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         id: "crate",
         size: CRATE_SIZE,
         round: false,
+        lid_height: 0.05,
+        opening_rate: 12.0,
+        wide_angle: 1.88,
         body: Color::srgb(0.5, 0.36, 0.22),
         lid: Color::srgb(0.44, 0.31, 0.19),
         trim: None,
@@ -175,6 +183,9 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         id: "chest",
         size: Vec3::new(0.5, 0.28, 0.36),
         round: false,
+        lid_height: 0.06,
+        opening_rate: 7.8,
+        wide_angle: 1.64,
         body: Color::srgb(0.38, 0.17, 0.13),
         lid: Color::srgb(0.32, 0.14, 0.11),
         trim: Some(Color::srgb(0.75, 0.6, 0.3)),
@@ -183,6 +194,9 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         id: "basket",
         size: Vec3::new(0.44, 0.24, 0.44),
         round: true,
+        lid_height: 0.05,
+        opening_rate: 17.0,
+        wide_angle: 2.06,
         body: Color::srgb(0.72, 0.56, 0.32),
         lid: Color::srgb(0.66, 0.5, 0.28),
         trim: None,
@@ -191,6 +205,9 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         id: "keg",
         size: Vec3::new(0.38, 0.34, 0.38),
         round: true,
+        lid_height: 0.04,
+        opening_rate: 10.0,
+        wide_angle: 1.78,
         body: Color::srgb(0.45, 0.3, 0.18),
         lid: Color::srgb(0.4, 0.27, 0.16),
         trim: Some(Color::srgb(0.25, 0.25, 0.27)),
@@ -203,9 +220,8 @@ fn container_spec(id: &str) -> &'static ContainerSpec {
         .find(|c| c.id == id)
         .unwrap_or(&CONTAINER_SPECS[0])
 }
-/// Lid angles (radians, 0 = shut): waiting, hovered.
+/// Resting lid angle in radians; each material has its own fully open angle.
 const LID_AJAR: f32 = 1.2;
-const LID_WIDE: f32 = 1.95;
 /// The two rows of crates on deck (z relative to the deck centre).
 const ROWS_Z: [f32; 2] = [-0.34, 0.32];
 const ARRIVE_SECS: f32 = 3.2;
@@ -390,15 +406,15 @@ impl Builder<'_, '_, '_> {
         let lid_id = format!("{}_lid", spec.id);
         if self.model(hinge, &lid_id, Transform::default()).is_none() {
             let lid: Mesh = if spec.round {
-                Cylinder::new(size.x / 2.0 + 0.01, LID_THICKNESS).into()
+                Cylinder::new(size.x / 2.0 + 0.01, spec.lid_height).into()
             } else {
-                Cuboid::new(size.x + 0.02, LID_THICKNESS, size.z + 0.02).into()
+                Cuboid::new(size.x + 0.02, spec.lid_height, size.z + 0.02).into()
             };
             self.part(
                 hinge,
                 lid,
                 spec.lid,
-                Transform::from_xyz(0.0, LID_THICKNESS / 2.0, size.z / 2.0),
+                Transform::from_xyz(0.0, spec.lid_height / 2.0, size.z / 2.0),
             );
         }
         (root, hinge)
@@ -525,24 +541,25 @@ fn spawn_boat(
         let (row, col) = (i / per_row, i % per_row);
         let at = Transform::from_xyz(first_x + col as f32 * step, DECK_Y, ROWS_Z[row]);
         let (item, lid) = b.crate_box(boat, at, &p.container);
-        let top = container_spec(&p.container).size.y;
+        let spec = container_spec(&p.container);
         let product = product_model(
             &mut b.commands,
             b.asset_server,
             b.meshes,
             b.materials,
             &p.id,
-            Vec3::Y * top,
+            Vec3::Y * spec.size.y,
         );
         b.commands.entity(product).insert(ChildOf(item));
         b.commands
             .entity(item)
             .insert(Crate {
                 id: p.id.clone(),
-                top,
+                spec,
                 lid,
                 item: product,
                 lid_angle: 0.0,
+                lid_velocity: 0.0,
                 lift: -0.25,
                 bump: 0.0,
             })
@@ -945,6 +962,7 @@ fn trade_crates(
 /// snap shut for a moment after a sale; the product rises out of the crate.
 fn animate_crates(
     time: Res<Time>,
+    settings: Res<Settings>,
     hovered: Res<HoveredCrate>,
     data: Res<GameData>,
     progress: Res<Progress>,
@@ -955,7 +973,6 @@ fn animate_crates(
     mut parts: Query<&mut Transform, Without<Crate>>,
 ) {
     let dt = time.delta_secs();
-    let t = time.elapsed_secs();
     for (entity, mut item, mut transform) in &mut boxes {
         item.bump = (item.bump - dt).max(0.0);
         let available = blocked(
@@ -966,46 +983,68 @@ fn animate_crates(
             &item.id,
         )
         .is_none();
-        let is_hovered = hovered.0 == Some(entity);
-        let (lid, lift) = if item.bump > 0.25 || !available {
+        let inspecting = hovered.0 == Some(entity);
+        let tapping = !settings.reduced_motion && item.bump > 0.25;
+        let (lid, lift) = if !available || tapping {
             (0.0, -0.25)
-        } else if is_hovered {
-            (LID_WIDE, 0.1 + 0.02 * (t * 5.0).sin())
+        } else if inspecting {
+            (item.spec.wide_angle, 0.11)
         } else {
             (LID_AJAR, 0.0)
         };
-        // Snappy when shutting, a little slower when opening.
-        let rate = if lid < item.lid_angle { 18.0 } else { 7.0 };
-        item.lid_angle += (lid - item.lid_angle) * (dt * rate).min(1.0);
-        item.lift += (lift - item.lift) * (dt * 9.0).min(1.0);
+        if settings.reduced_motion {
+            item.lid_angle = lid;
+            item.lid_velocity = 0.0;
+            item.lift = lift;
+        } else {
+            // A critically damped hinge keeps its momentum on a quick pointer reversal.
+            // The closed-form step also settles consistently at low frame rates.
+            let rate = item.spec.opening_rate * if lid < item.lid_angle { 1.45 } else { 1.0 };
+            let offset = item.lid_angle - lid;
+            let impulse = item.lid_velocity + rate * offset;
+            let decay = (-rate * dt).exp();
+            item.lid_angle = lid + (offset + impulse * dt) * decay;
+            item.lid_velocity = (item.lid_velocity - rate * impulse * dt) * decay;
+            item.lift += (lift - item.lift) * (1.0 - (-11.0 * dt).exp());
+        }
         if let Ok(mut hinge) = parts.get_mut(item.lid) {
             hinge.rotation = Quat::from_rotation_x(-item.lid_angle);
         }
         if let Ok(mut product) = parts.get_mut(item.item) {
-            product.translation.y = item.top + item.lift;
+            product.translation.y = item.spec.size.y + item.lift;
         }
-        // A hop when hovered, a bounce after a sale.
-        let bounce = (item.bump * 12.0).sin().abs() * item.bump * 0.12;
-        let hop = if is_hovered { 0.04 } else { 0.0 };
-        transform.translation.y +=
-            (DECK_Y + hop + bounce - transform.translation.y) * (dt * 12.0).min(1.0);
+        // The load stays planted on hover. A traded container settles back onto the deck once.
+        let tap = if settings.reduced_motion {
+            0.0
+        } else {
+            (item.bump * std::f32::consts::TAU).sin().powi(2)
+        };
+        transform.translation.y = DECK_Y + tap * 0.002 * item.spec.opening_rate;
     }
 }
 
-/// Two by two on the cart, then another layer.
-fn cart_pose(slot: usize) -> Transform {
+/// Four supporting columns, each as high as the closed containers underneath.
+fn cart_pose(slot: usize, base_height: f32) -> Transform {
     let spot = Vec3::new(
         if slot.is_multiple_of(2) { -0.27 } else { 0.27 },
-        CART_BED_HEIGHT + (slot / 4) as f32 * CRATE_SIZE.y * 0.85,
-        if slot % 4 < 2 { -0.18 } else { 0.18 },
+        CART_BED_HEIGHT + base_height * CART_SCALE,
+        if slot % 4 < 2 { -0.20 } else { 0.20 },
     );
-    Transform::from_translation(HARBOR + CART + spot).with_scale(Vec3::splat(0.85))
+    Transform::from_translation(HARBOR + CART + spot).with_scale(Vec3::splat(CART_SCALE))
+}
+
+fn stack_container(heights: &mut [f32; 4], slot: usize, spec: &ContainerSpec) -> f32 {
+    let column = &mut heights[slot % 4];
+    let base = *column;
+    *column += spec.size.y + spec.lid_height;
+    base
 }
 
 /// Match the cart to the purchases after a sale, refund or evening load.
 fn sync_cart(
     commands: Commands,
     bought: Res<BoughtTonight>,
+    settings: Res<Settings>,
     phase: Res<State<Phase>>,
     data: Res<GameData>,
     deck: Query<(&Crate, &GlobalTransform)>,
@@ -1025,6 +1064,7 @@ fn sync_cart(
     };
     let mut missing = bought.0.clone();
     let mut slot = 0;
+    let mut heights = [0.0; 4];
     // Keep the oldest copy of each product first. A return can cancel its
     // latest flight, or remove a landed crate beneath another product.
     let mut current: Vec<_> = cart.iter_mut().collect();
@@ -1036,11 +1076,14 @@ fn sync_cart(
             continue;
         };
         *count -= 1;
-        if cargo.slot != slot {
-            cargo.slot = slot;
-            if !flying {
-                *at = cart_pose(slot);
-            }
+        let Some(product) = data.product(&cargo.product) else {
+            b.commands.entity(entity).despawn();
+            continue;
+        };
+        cargo.base_height = stack_container(&mut heights, slot, container_spec(&product.container));
+        cargo.slot = slot;
+        if !flying {
+            *at = cart_pose(slot, cargo.base_height);
         }
         slot += 1;
     }
@@ -1052,7 +1095,7 @@ fn sync_cart(
             continue;
         };
         // Restored purchases are already stacked when the player arrives.
-        let from = if phase.is_changed() {
+        let from = if phase.is_changed() || settings.reduced_motion {
             None
         } else {
             deck.iter()
@@ -1060,12 +1103,15 @@ fn sync_cart(
                 .map(|(_, at)| at.translation())
         };
         for _ in 0..count {
+            let base_height =
+                stack_container(&mut heights, slot, container_spec(&product.container));
             let mut root = b.commands.spawn((
                 CartCrate {
                     product: id.clone(),
                     slot,
+                    base_height,
                 },
-                cart_pose(slot),
+                cart_pose(slot, base_height),
                 Visibility::default(),
                 DespawnOnExit(Phase::Evening),
             ));
@@ -1086,21 +1132,24 @@ fn sync_cart(
 fn fly_crates(
     mut commands: Commands,
     time: Res<Time>,
+    settings: Res<Settings>,
     mut flying: Query<(Entity, &CartCrate, &mut FlyingCrate, &mut Transform)>,
 ) {
     for (entity, cargo, mut flight, mut transform) in &mut flying {
         flight.age += time.delta_secs();
         let k = (flight.age / FLIGHT_SECS).min(1.0);
-        let target = cart_pose(cargo.slot);
-        if k >= 1.0 {
+        let target = cart_pose(cargo.slot, cargo.base_height);
+        if k >= 1.0 || settings.reduced_motion {
             *transform = target;
             commands.entity(entity).remove::<FlyingCrate>();
             continue;
         }
-        let arc = 4.0 * k * (1.0 - k);
-        transform.translation = flight.from.lerp(target.translation, k) + Vec3::Y * (arc * 1.2);
-        transform.rotation = Quat::from_rotation_y(arc * 0.9) * Quat::from_rotation_z(arc * 0.35);
-        transform.scale = Vec3::ONE.lerp(target.scale, k);
+        let travel = k * k * (3.0 - 2.0 * k);
+        let arc = 4.0 * travel * (1.0 - travel);
+        transform.translation =
+            flight.from.lerp(target.translation, travel) + Vec3::Y * (arc * 0.95);
+        transform.rotation = Quat::from_rotation_y(arc * 0.36) * Quat::from_rotation_z(arc * 0.17);
+        transform.scale = Vec3::ONE.lerp(target.scale, travel);
     }
 }
 
@@ -1347,14 +1396,16 @@ mod tests {
                 ("gear".into(), 1),
                 ("tea_tin".into(), 1),
             ])))
+            .init_resource::<Settings>()
             .add_systems(Update, sync_cart);
         app.world_mut().spawn((
             Crate {
                 id: "gear".into(),
-                top: 0.3,
+                spec: container_spec("crate"),
                 lid: Entity::PLACEHOLDER,
                 item: Entity::PLACEHOLDER,
                 lid_angle: 0.0,
+                lid_velocity: 0.0,
                 lift: 0.0,
                 bump: 0.0,
             },
@@ -1396,6 +1447,31 @@ mod tests {
             .remove("gear");
         app.update();
         assert_eq!(contents(&mut app), [(0, "tea_tin".into(), false)]);
+        app.world_mut().resource_mut::<Settings>().reduced_motion = true;
+        app.world_mut()
+            .resource_mut::<BoughtTonight>()
+            .0
+            .insert("gear".into(), 1);
+        app.update();
+        assert_eq!(
+            contents(&mut app),
+            [(0, "tea_tin".into(), false), (1, "gear".into(), false)]
+        );
+    }
+
+    #[test]
+    fn mixed_cargo_rests_on_the_actual_lid_below_each_slot() {
+        let mut heights = [0.; 4];
+        for (slot, id) in ["basket", "keg", "chest", "crate"].into_iter().enumerate() {
+            assert_eq!(stack_container(&mut heights, slot, container_spec(id)), 0.0);
+        }
+        for (slot, below) in [(4, "basket"), (5, "keg"), (6, "chest"), (7, "crate")] {
+            let spec = container_spec(below);
+            let base = stack_container(&mut heights, slot, container_spec("crate"));
+            assert_eq!(base, spec.size.y + spec.lid_height);
+            let delta = cart_pose(slot, base).translation.y - cart_pose(slot - 4, 0.).translation.y;
+            assert!((delta - base * CART_SCALE).abs() < 0.0001);
+        }
     }
 
     #[test]

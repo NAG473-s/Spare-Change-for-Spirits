@@ -23,13 +23,20 @@ pub struct WorkbenchPlugin;
 
 impl Plugin for WorkbenchPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, use_workbench.run_if(in_state(Phase::Evening)));
+        app.add_message::<Rummaged>().add_systems(
+            Update,
+            use_workbench
+                .run_if(in_state(Phase::Evening))
+                .run_if(crate::menu::shop_unpaused),
+        );
     }
 }
 
 /// `workbench.ron`.
 #[derive(Deserialize, Clone, Debug)]
 pub struct WorkbenchDef {
+    /// The storage on floor tiles the carpenter has yet to clear.
+    pub piles: Vec<crate::upgrades::storage::PileDef>,
     /// What turns up in the junk, how often, and what repairing it costs.
     pub junk: Vec<JunkDef>,
     /// Once all junk is cleared: the chance an evening that the ferryman has
@@ -68,8 +75,15 @@ pub fn has_workbench(layout: &ShopLayout) -> bool {
         .any(|c| c.decor.as_deref() == Some(WORKBENCH))
 }
 
+/// Sent only after a search actually found a broken ware.
+#[derive(Message)]
+pub(crate) struct Rummaged {
+    pub cell: Option<usize>,
+    pub product: String,
+}
+
 #[allow(clippy::too_many_arguments)]
-fn use_workbench(
+pub(crate) fn use_workbench(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
     layout: Res<ShopLayout>,
@@ -81,6 +95,7 @@ fn use_workbench(
     mut stock: ResMut<Stock>,
     mut rng: ResMut<Rng>,
     mut log: ResMut<GameLog>,
+    mut finds: MessageWriter<Rummaged>,
 ) {
     for action in actions.read() {
         if !has_workbench(&layout) {
@@ -88,7 +103,12 @@ fn use_workbench(
         }
         let night = progress.night;
         match action {
-            Action::Rummage if progress.rummaged_on != night => {
+            Action::Rummage(cell) if progress.rummaged_on != night => {
+                if cell.is_some_and(|idx| {
+                    idx >= layout.cells.len() || upgrades.usable(&data, &layout, idx)
+                }) {
+                    continue;
+                }
                 progress.rummaged_on = night;
                 let junk_left =
                     upgrades.area(&data) != (data.config.grid_cols, data.config.grid_rows);
@@ -121,6 +141,10 @@ fn use_workbench(
                         ),
                     )],
                 ));
+                finds.write(Rummaged {
+                    cell: *cell,
+                    product: product.clone(),
+                });
                 progress.broken.push(product);
             }
             Action::Repair(product) if progress.repaired_on != night => {

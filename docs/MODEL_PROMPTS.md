@@ -13,6 +13,8 @@ All models currently requested in this list have been delivered.
 
 ## Delivered models
 
+- The four working storage cases and their separate lids are in `assets/models/shop/`. Their silhouettes, contents and hinge specifications are listed under *Shop improvements*. The existing chair, crate and birdcage piles still occupy some locked tiles.
+
 - The [postcard stand](../assets/models/shop/postcard_stand.glb) on the counter has worn walnut
   rails and brass corners. Its groove runs from end to end. The game seats the postcard in the
   groove and lifts it out to turn it over.
@@ -253,10 +255,10 @@ apply an offset): the floor is **not** part of the room model (the game draws th
 
 ## Shop improvements – `assets/models/shop/<id>.glb`
 
-Improvements are bought at the village market (`assets/data/upgrades.ron`). At the start part of
-the floor is blocked by **old junk**; clearing it is an improvement, so the junk piles disappear
-cell by cell. The game turns each pile a little differently and uses the three in turn. The other
-improvements stand in the shop once bought; the game adds the lantern's light.
+Improvements are bought at the village market (`assets/data/upgrades.ron`). Hedda’s old cargo
+blocks part of the starting floor. The three junk piles share the room with four hinged
+storage cases. Each sits at a slight angle and keeps its place until the carpenter clears
+its tile. The other improvements stand in the shop once bought. The game adds the lantern’s light.
 
 Origin at the **bottom centre**; the front faces **−Y** (towards the camera for things on the
 back wall; the game turns the wall pieces on the left wall towards the room).
@@ -270,6 +272,17 @@ back wall; the game turns the wall pieces on the left wall towards the room).
 | `door_lantern` | 0.3 × 0.45 × 0.3 | A small brass wall lantern with glass panes, its glass front towards −Y and a wrought-iron bracket at the back (+Y) that holds it against the wall; a candle inside with an emissive flame. Mount above the entrance lintel. |
 | `herb_sachets` | 1.0 × 0.5 × 0.15 | Four bundles of dried herbs and small linen sachets tied with string, hanging from a short wooden rail; lavender, sage and rosemary colours. |
 | `ferry_contract` | 0.5 × 0.65 × 0.05 | A framed old contract on yellowed paper with ornate handwriting (no readable words), a red wax seal and a tiny drawing of a boat, in a thin dark wooden frame. Mount above the direction boards beside the shop door. |
+
+### Hedda’s storage cases (delivered)
+
+Each case has a separate `<id>_lid.glb`. The body stands on the centre of its footprint. The lid begins at the rear centre of the rim and extends forwards (+Z in the game). Closed body and lid dimensions are listed separately in `assets/data/workbench.ron`. Keep decoration large enough to read at the normal shop camera distance. The engine opens the lid and presents the ware the player found.
+
+| Model | Body dimensions (W × H × D, m) | Art direction |
+|---|---|---|
+| `post_case` | 0.76 × 0.32 × 0.48 | Low terracotta dispatch case with brass corner stays. Tie a large cream envelope to the lid, fold two dark lines towards a red wax seal and stack old letters inside. |
+| `sea_trunk` | 0.80 × 0.36 × 0.50 | Sailor’s sea-green plank trunk with a barrel-vaulted lid. Two leather straps follow the curve. Use an oversized brass keyhole and brass carrying handles. |
+| `bottle_hamper` | 0.56 × 0.54 × 0.47 | Tapered wicker carrier. Leave the upper weave open around three stoppered apothecary bottles of different colours. Put the arched carrying handle on the woven lid. |
+| `hat_box` | 0.61 × 0.40 × 0.61 | Round plum milliner’s box with a pale hatband, lid piping and a dark lining. Two hollow ribbon loops and loose ends make a recognisable bow on top. |
 
 ## The ferryman – `assets/models/shop/<id>.glb`
 

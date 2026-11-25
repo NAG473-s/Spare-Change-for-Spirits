@@ -7,19 +7,21 @@
 //! each improvement that has one (`assets/models/shop/<id>.glb`, otherwise a
 //! placeholder box).
 
+pub(crate) mod storage;
+
 use std::collections::BTreeSet;
 
 use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
 
 use crate::data::{GameData, UpgradeDef, rgb};
-use crate::scene::floor;
 use crate::shop::{ShopLayout, model_or_box};
 
 pub struct UpgradesPlugin;
 
 impl Plugin for UpgradesPlugin {
     fn build(&self, app: &mut App) {
+        storage::install(app);
         app.init_resource::<Upgrades>().add_systems(
             Update,
             show_upgrades
@@ -92,11 +94,6 @@ impl Upgrades {
 #[derive(Component)]
 struct UpgradeVisual;
 
-/// Size of a pile of old junk on a cell that is not cleared yet.
-pub const JUNK_SIZE: Vec3 = Vec3::new(0.85, 0.75, 0.85);
-/// Junk models, picked by cell: `assets/models/shop/junk_<n>.glb`.
-pub const JUNK_VARIANTS: usize = 3;
-const JUNK_COLOR: Color = Color::srgb(0.32, 0.27, 0.24);
 /// Brightness of an improvement's lamp (a lantern at the door).
 const LAMP_INTENSITY: f32 = 18_000.0;
 const LAMP_RANGE: f32 = 4.0;
@@ -104,7 +101,6 @@ const LAMP_RANGE: f32 = 4.0;
 fn show_upgrades(
     mut commands: Commands,
     data: Res<GameData>,
-    layout: Res<ShopLayout>,
     upgrades: Res<Upgrades>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -113,31 +109,6 @@ fn show_upgrades(
 ) {
     for e in &old {
         commands.entity(e).despawn();
-    }
-    // Old junk on every cell that is not cleared yet. It lets clicks through
-    // to the floor, which explains that the spot is still blocked.
-    for idx in 0..layout.cells.len() {
-        if upgrades.usable(&data, &layout, idx) {
-            continue;
-        }
-        let path = format!("models/shop/junk_{}.glb", idx % JUNK_VARIANTS + 1);
-        let junk = model_or_box(
-            &mut commands,
-            &asset_server,
-            &mut meshes,
-            &mut materials,
-            &path,
-            JUNK_SIZE,
-            JUNK_COLOR,
-        );
-        // A little variety: each pile turned differently.
-        let turn = (idx as f32 * 1.7).sin() * 0.6;
-        commands.entity(junk).insert((
-            UpgradeVisual,
-            Pickable::IGNORE,
-            Transform::from_translation(floor(layout.cell_pos(idx), 0.0))
-                .with_rotation(Quat::from_rotation_y(turn)),
-        ));
     }
     for def in upgrades.owned(&data) {
         let Some(m) = def.model else { continue };

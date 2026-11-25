@@ -49,6 +49,9 @@ class PackageAssetsTests(unittest.TestCase):
                 with self.subTest(asset=rel):
                     self.assertFalse((demo / rel).exists())
 
+            for case in ("post_case", "sea_trunk", "bottle_hamper", "hat_box"):
+                for part in (case, case + "_lid"):
+                    self.assertTrue((demo / "models/shop" / (part + ".glb")).is_file(), part)
             self.assertFalse((demo / "sprites/ghosts/sailor_salute.png").exists())
             english = read_catalog(demo / "i18n/en.ron")
             self.assertEqual(items((demo / "data/errands.ron").read_text(encoding="utf-8")), [])

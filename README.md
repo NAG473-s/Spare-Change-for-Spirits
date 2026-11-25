@@ -157,6 +157,8 @@ Runs for the same ref queue behind the current run.
 
 Select a guest’s name at the counter to look them up. The shop waits while the book is open, including any change already on the tray. A shelf ticket with an hourglass shows how many units of that ware will fade at the coming dawn. The item tooltip spells out the count.
 
+On the shop floor, Hedda left post cases with wax-sealed letters, travelling trunks, bottle hampers and round hatboxes. With a workbench in place, click a pile to search that spot or search from the workbench panel. A successful search shows the broken ware you found.
+
 An old umbrella can appear in a shop mirror on Edwin’s return. Once Ida has repaired the lighthouse, a sailor can recognise her in the queue. Both moments stay in the corresponding guest’s book entry.
 
 If the **atmosphere** (light, warmth, silence, reflection) does not suit a ghost, it flees at the

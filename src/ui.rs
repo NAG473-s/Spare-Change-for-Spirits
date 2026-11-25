@@ -240,7 +240,7 @@ pub enum Action {
     /// Buy the n-th ware of the day from a trader's list.
     MarketBuy(usize, usize),
     /// Search the old junk for something broken (once an evening).
-    Rummage,
+    Rummage(Option<usize>),
     /// Repair a broken thing at the workbench.
     Repair(String),
     /// The season is over: keep the shop open anyway.
@@ -2006,7 +2006,7 @@ fn workbench_section(
     ui.button_in(
         row,
         &lang.t("workbench.rummage"),
-        Action::Rummage,
+        Action::Rummage(None),
         false,
         !rummaged,
     );

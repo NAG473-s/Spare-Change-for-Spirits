@@ -36,6 +36,8 @@ update this file in the same change.
 
 A guest’s name opens their discovered book entry by mouse, keyboard or controller while the shop clock and their patience pause. Returning keeps the counted change. Shelf tickets pair the hourglass with the number of units due to fade, and the product tooltip gives the same information in words. Both guest memories have permanent written descriptions. Reduced motion holds the sailor’s cap and Ida’s nod in a single pose, stops the decorative bob and animated rain, and reveals the mirror painting immediately.
 
+Players can search once per evening using the workbench button or by clicking a pile of old cargo. The written result identifies the find. Reduced motion shows the open case and found item in a still pose. With that setting, inspecting a ferry container switches directly to its open pose, and purchased cargo appears in its place on the cart.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

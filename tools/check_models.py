@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 from i18n_sync import read_catalog
+from package_assets import COMMENTS, fields, items
 
 ROOT = Path(__import__('os').environ.get('SCFS_ROOT', Path(__file__).resolve().parent.parent))
 # Activities a ghost can have a drawn sheet for (src/ghosts/motion.rs, Act::file), in the order
@@ -55,8 +56,21 @@ MARKET_SIZES = {
     "window_flowers": (0.7, 0.35, 0.2),
     "special_tag": (0.14, 0.1, 0.02),
 }
-# Old junk on the floor that is not cleared yet (src/upgrades.rs, JUNK_SIZE).
-JUNK_SIZES = {f"junk_{n}": (0.85, 0.75, 0.85) for n in (1, 2, 3)}
+
+
+def storage_sizes():
+    text = (ROOT / "assets/data/workbench.ron").read_text(encoding="utf-8")
+    text = COMMENTS.sub(lambda m: "" if m[0].startswith("//") else m[0], text)
+    sizes = {}
+    for row in items(fields(text)["piles"]):
+        pile = fields(row)
+        model = json.loads(pile["model"])
+        sizes[model] = tuple(map(float, items(pile["size"])))
+        lid_value = pile.get("lid", "None")
+        if lid_value != "None":
+            lid = fields(lid_value.removeprefix("Some(").removesuffix(")"))
+            sizes[model + "_lid"] = tuple(map(float, items(lid["size"])))
+    return sizes
 
 
 def upgrade_sizes():
@@ -308,7 +322,9 @@ def check(path, target, budget):
         f"{path.relative_to(ROOT)}: {size[0]:.2f} × {size[1]:.2f} × {size[2]:.2f} m, "
         f"bottom at y={lo[1]:.2f}, centre x={(lo[0] + hi[0]) / 2:.2f} z={(lo[2] + hi[2]) / 2:.2f}, {tris} triangles"
     )
-    for i, anchor in enumerate(ORIGIN_AXES.get(path.stem, BOTTOM_CENTRE)):
+    hinged = path.parent.name == "shop" and path.stem.endswith("_lid")
+    default_anchor = ("centre", "minimum", "minimum") if hinged else BOTTOM_CENTRE
+    for i, anchor in enumerate(ORIGIN_AXES.get(path.stem, default_anchor)):
         if anchor is None:
             continue
         anchors = {"minimum": lo[i], "maximum": hi[i], "centre": (lo[i] + hi[i]) / 2}
@@ -361,7 +377,7 @@ def main():
             shop_sign=(1.0, 0.75, 0.05),
             way_board=(0.8, 0.24, 0.05),
             **CONTAINER_SIZES,
-            **JUNK_SIZES,
+            **storage_sizes(),
             **upgrade_sizes(),
         ),
         "harbor": HARBOR_SIZES,
