@@ -55,6 +55,9 @@ MARKET_SIZES = {
     "clock_hand_minute": (0.04, 0.32, 0.02),
     "window_flowers": (0.7, 0.35, 0.2),
     "special_tag": (0.14, 0.1, 0.02),
+    "shopping_basket": (1.5, 1.02, 0.94),
+    "wrapped_parcel": (0.40, 0.245, 0.30),
+    "sold_ticket": (0.30, 0.224, 0.16),
 }
 
 
@@ -117,6 +120,8 @@ HARBOR_SIZES = {
     "village_house": (2.2, 2.4, 1.8),
     "barrel": (0.6, 0.72, 0.6),
     "mooring_post": (0.3, 0.6, 0.3),
+    "cork_fender": (0.34, 0.51, 0.31),
+    "mooring_line": (1.0, 0.16, 0.045),
     "bell_post": (0.6, 1.95, 0.2),
     "ferry_bell": (0.25, 0.22, 0.25),
     "hand_cart": (2.0, 0.75, 1.0),
@@ -137,6 +142,8 @@ BOTTOM_CENTRE = ("centre", "minimum", "centre")
 ORIGIN_AXES = {
     "room": (None, None, None),
     "door_leaf": ("maximum", "minimum", None),
+    "cork_fender": ("centre", "maximum", "centre"),
+    "mooring_line": ("minimum", None, "centre"),
     "door_bell": ("centre", "maximum", "centre"),
     "wall_clock": ("centre", "centre", "minimum"),
     "way_board": ("centre", "centre", "minimum"),
@@ -441,7 +448,8 @@ def main():
         print(("  ok       " if present else "  missing  ") + f"sprites/{name}")
         failures += not present
     for name, size in (("ghosts/sailor_salute.png", (704, 264)), ("memories/edwin_rain.png", (512, 768)),
-                       ("ui/change_tray.png", (432, 162))):
+                       ("ui/change_tray.png", (432, 162)), ("shop/placement_corners.png", (160, 160)),
+                       *((f"shop/placement_{name}.png", (96, 96)) for name in ("place", "swap", "remove", "blocked"))):
         path = ROOT / "assets" / "sprites" / name
         problem = png_size_problem(path, size) if path.is_file() else "missing"
         print(f"  CHECK    sprites/{name}: {problem}" if problem else f"  ok       sprites/{name}")

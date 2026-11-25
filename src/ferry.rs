@@ -4,6 +4,8 @@
 //! still here. Hovering a crate opens its lid and shows what it costs, what
 //! it sells for and how long it keeps. At midnight he poles away again.
 
+mod rigging;
+
 use std::collections::BTreeMap;
 
 use bevy::light::NotShadowCaster;
@@ -30,17 +32,20 @@ pub struct FerryPlugin;
 
 impl Plugin for FerryPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<BoughtTonight>()
+        app.add_message::<CargoWave>()
+            .init_resource::<BoughtTonight>()
             .init_resource::<HoveredCrate>()
             .add_systems(OnEnter(Phase::Evening), spawn_boat)
             .add_systems(OnExit(Phase::Evening), cast_off)
             .add_systems(
                 Update,
                 (
-                    sail_boat,
+                    (sail_boat, rigging::follow)
+                        .chain()
+                        .run_if(crate::menu::shop_unpaused),
                     animate_ferryman,
                     name_ferryman,
-                    make_wake,
+                    make_wake.after(sail_boat),
                     (sync_cart, fly_crates)
                         .chain()
                         .run_if(in_state(Phase::Evening)),
@@ -79,6 +84,7 @@ struct HoveredCrate(Option<Entity>);
 
 #[derive(Component)]
 struct Boat {
+    load: rigging::Load,
     /// Seconds since it appeared, for gliding in.
     age: f32,
     /// Seconds since it cast off, once the shop has opened.
@@ -126,9 +132,12 @@ struct Crate {
 /// A bought crate on its way from the boat into the shop.
 #[derive(Component)]
 struct FlyingCrate {
-    from: Vec3,
+    from: Transform,
     age: f32,
 }
+
+#[derive(Component)]
+struct ReturningToDeck(String);
 
 /// A purchased crate, including those still in flight to their slot.
 #[derive(Component)]
@@ -160,6 +169,8 @@ struct ContainerSpec {
     round: bool,
     lid_height: f32,
     opening_rate: f32,
+    /// Relative loaded mass for the waterline and unloading response.
+    weight: f32,
     wide_angle: f32,
     body: Color,
     lid: Color,
@@ -174,6 +185,7 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         round: false,
         lid_height: 0.05,
         opening_rate: 12.0,
+        weight: 1.0,
         wide_angle: 1.88,
         body: Color::srgb(0.5, 0.36, 0.22),
         lid: Color::srgb(0.44, 0.31, 0.19),
@@ -185,6 +197,7 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         round: false,
         lid_height: 0.06,
         opening_rate: 7.8,
+        weight: 1.45,
         wide_angle: 1.64,
         body: Color::srgb(0.38, 0.17, 0.13),
         lid: Color::srgb(0.32, 0.14, 0.11),
@@ -196,6 +209,7 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         round: true,
         lid_height: 0.05,
         opening_rate: 17.0,
+        weight: 0.65,
         wide_angle: 2.06,
         body: Color::srgb(0.72, 0.56, 0.32),
         lid: Color::srgb(0.66, 0.5, 0.28),
@@ -207,6 +221,7 @@ const CONTAINER_SPECS: [ContainerSpec; 4] = [
         round: true,
         lid_height: 0.04,
         opening_rate: 10.0,
+        weight: 1.25,
         wide_angle: 1.78,
         body: Color::srgb(0.45, 0.3, 0.18),
         lid: Color::srgb(0.4, 0.27, 0.16),
@@ -449,11 +464,14 @@ fn spawn_boat(
             Boat {
                 age: 0.0,
                 leaving: None,
+                load: default(),
             },
             Transform::from_translation(MOORING + Vec3::X * ARRIVE_FROM),
             Visibility::default(),
         ))
         .id();
+
+    rigging::spawn(&mut b, boat);
 
     // The hull: a model, or a long dark box with a raised bow and stern.
     if b.model(boat, "ferry_boat", Transform::from_xyz(0.0, DECK_Y, 0.0))
@@ -733,16 +751,40 @@ fn cast_off(mut boats: Query<&mut Boat>, mut hovered: ResMut<HoveredCrate>) {
     hovered.0 = None;
 }
 
+#[derive(Message)]
+struct CargoWave {
+    spot: Vec2,
+    size: f32,
+}
+
 /// Glides in from the left, rocks at the landing stage, leaves to the right.
 fn sail_boat(
     mut commands: Commands,
     time: Res<Time>,
+    data: Res<GameData>,
+    bought: Res<BoughtTonight>,
+    settings: Res<Settings>,
+    mut waves: MessageWriter<CargoWave>,
     mut boats: Query<(Entity, &mut Boat, &mut Transform)>,
 ) {
     let t = time.elapsed_secs();
     let dt = time.delta_secs();
     for (entity, mut boat, mut transform) in &mut boats {
-        boat.age += dt;
+        let still = settings.reduced_motion;
+        boat.age = if still { ARRIVE_SECS } else { boat.age + dt };
+        if still && boat.leaving.is_some() {
+            commands.entity(entity).despawn();
+            continue;
+        }
+        if boat.leaving.is_none() && (bought.is_changed() || boat.load.new_hull()) {
+            let delta = boat.load.weigh(&bought, &data);
+            if delta != 0.0 && !still {
+                waves.write(CargoWave {
+                    spot: transform.translation.xz() + Vec2::new(-0.65, 0.94),
+                    size: (0.70 + delta.abs() * 0.5).min(2.2),
+                });
+            }
+        }
         let x = if let Some(leaving) = &mut boat.leaving {
             *leaving += dt;
             // Slowly at first, then faster.
@@ -755,7 +797,15 @@ fn sail_boat(
             commands.entity(entity).despawn();
             continue;
         }
-        *transform = float_hull(MOORING + Vec3::X * x, 0.0, BOAT_SIZE.xz() * 0.42, t);
+        let at = MOORING + Vec3::X * x;
+        *transform = if still {
+            Transform::from_translation(at)
+        } else {
+            float_hull(at, 0.0, BOAT_SIZE.xz() * 0.42, t)
+        };
+        let (rise, heel) = boat.load.settle(dt, still);
+        transform.translation.y += rise;
+        transform.rotate_local_x(heel);
     }
 }
 
@@ -763,6 +813,7 @@ fn sail_boat(
 /// and nods after every sale. The bow lantern swings.
 fn animate_ferryman(
     time: Res<Time>,
+    settings: Res<Settings>,
     boats: Query<&Boat>,
     mut men: Query<(&mut Ferryman, &mut Transform, &ChildOf)>,
     mut heads: Query<&mut Transform, (With<FerrymanHead>, Without<Ferryman>)>,
@@ -782,6 +833,23 @@ fn animate_ferryman(
 ) {
     let t = time.elapsed_secs();
     let dt = time.delta_secs();
+    if settings.reduced_motion {
+        for (mut man, mut at, _) in &mut men {
+            man.nod = 0.;
+            at.rotation = Quat::IDENTITY;
+            at.scale = Vec3::ONE;
+        }
+        for mut at in &mut heads {
+            at.rotation = Quat::IDENTITY;
+        }
+        for mut at in &mut poles {
+            at.rotation = Quat::from_rotation_z(0.12);
+        }
+        for mut at in &mut lanterns {
+            at.rotation = Quat::IDENTITY;
+        }
+        return;
+    }
     let mut moving = false;
     for (mut man, mut transform, child_of) in &mut men {
         moving = boats.get(child_of.parent()).is_ok_and(|b| b.moving());
@@ -815,6 +883,8 @@ fn animate_ferryman(
 /// Rings on the water around the hull; a wake while it moves.
 fn make_wake(
     mut commands: Commands,
+    mut cargo: MessageReader<CargoWave>,
+    settings: Res<Settings>,
     time: Res<Time>,
     mesh: Option<Res<RippleMesh>>,
     mut rng: ResMut<Rng>,
@@ -822,6 +892,14 @@ fn make_wake(
     boats: Query<(&Boat, &Transform)>,
 ) {
     let Some(mesh) = mesh else { return };
+    for wave in cargo.read() {
+        if !settings.reduced_motion {
+            spawn_ripple(&mut commands, &mesh, &mut materials, wave.spot, wave.size);
+        }
+    }
+    if settings.reduced_motion {
+        return;
+    }
     let dt = time.delta_secs();
     for (boat, transform) in &boats {
         let rate = if boat.moving() { 3.5 } else { 0.6 };
@@ -1049,6 +1127,7 @@ fn sync_cart(
     data: Res<GameData>,
     deck: Query<(&Crate, &GlobalTransform)>,
     mut cart: Query<(Entity, &mut CartCrate, &mut Transform, Has<FlyingCrate>)>,
+    returns: Query<(Entity, &ReturningToDeck, &Transform), Without<CartCrate>>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -1062,6 +1141,8 @@ fn sync_cart(
         meshes: &mut meshes,
         materials: &mut materials,
     };
+    let animate = !phase.is_changed() && !settings.reduced_motion;
+    let mut returning: Vec<_> = returns.iter().collect();
     let mut missing = bought.0.clone();
     let mut slot = 0;
     let mut heights = [0.0; 4];
@@ -1072,7 +1153,17 @@ fn sync_cart(
     for (entity, mut cargo, mut at, flying) in current {
         let count = missing.get_mut(&cargo.product).filter(|n| **n > 0);
         let Some(count) = count else {
-            b.commands.entity(entity).despawn();
+            if animate && deck.iter().any(|(c, _)| c.id == cargo.product) {
+                b.commands.entity(entity).remove::<CartCrate>().insert((
+                    ReturningToDeck(cargo.product.clone()),
+                    FlyingCrate {
+                        from: *at,
+                        age: 0.0,
+                    },
+                ));
+            } else {
+                b.commands.entity(entity).despawn();
+            }
             continue;
         };
         *count -= 1;
@@ -1095,61 +1186,91 @@ fn sync_cart(
             continue;
         };
         // Restored purchases are already stacked when the player arrives.
-        let from = if phase.is_changed() || settings.reduced_motion {
-            None
-        } else {
-            deck.iter()
-                .find(|(c, _)| c.id == id)
-                .map(|(_, at)| at.translation())
-        };
+        let deck_pose = deck
+            .iter()
+            .find(|(c, _)| c.id == id)
+            .map(|(_, at)| at.compute_transform());
         for _ in 0..count {
-            let base_height =
-                stack_container(&mut heights, slot, container_spec(&product.container));
-            let mut root = b.commands.spawn((
-                CartCrate {
-                    product: id.clone(),
+            let cargo = CartCrate {
+                product: id.clone(),
+                slot,
+                base_height: stack_container(
+                    &mut heights,
                     slot,
-                    base_height,
-                },
-                cart_pose(slot, base_height),
-                Visibility::default(),
-                DespawnOnExit(Phase::Evening),
-            ));
-            if let Some(from) = from {
-                root.insert((
-                    FlyingCrate { from, age: 0.0 },
-                    Transform::from_translation(from),
-                ));
+                    container_spec(&product.container),
+                ),
+            };
+            let target = cart_pose(slot, cargo.base_height);
+            let (root, start) = if let Some(i) = returning.iter().position(|(_, p, _)| p.0 == id) {
+                let (e, _, at) = returning.swap_remove(i);
+                b.commands.entity(e).remove::<ReturningToDeck>();
+                (e, Some(*at))
+            } else {
+                let e = b
+                    .commands
+                    .spawn((Visibility::default(), DespawnOnExit(Phase::Evening)))
+                    .id();
+                b.crate_box(e, Transform::default(), &product.container);
+                (e, deck_pose)
+            };
+            let mut entity = b.commands.entity(root);
+            entity.insert(cargo);
+            if let Some(from) = start.filter(|_| animate) {
+                entity.insert((from, FlyingCrate { from, age: 0.0 }));
+            } else {
+                entity.remove::<FlyingCrate>().insert(target);
             }
-            let root = root.id();
-            b.crate_box(root, Transform::default(), &product.container);
             slot += 1;
         }
     }
 }
 
-/// Each purchased crate flies directly to its current place in the stack.
+/// A refund uses the same physical container, even if it is turned around in midair.
 fn fly_crates(
     mut commands: Commands,
     time: Res<Time>,
     settings: Res<Settings>,
-    mut flying: Query<(Entity, &CartCrate, &mut FlyingCrate, &mut Transform)>,
+    deck: Query<(&Crate, &GlobalTransform)>,
+    mut flying: Query<(
+        Entity,
+        Option<&CartCrate>,
+        Option<&ReturningToDeck>,
+        &mut FlyingCrate,
+        &mut Transform,
+    )>,
 ) {
-    for (entity, cargo, mut flight, mut transform) in &mut flying {
+    for (entity, cargo, returning, mut flight, mut transform) in &mut flying {
+        let target = match (cargo, returning) {
+            (Some(cargo), _) => cart_pose(cargo.slot, cargo.base_height),
+            (_, Some(ware)) => {
+                let Some((_, at)) = deck.iter().find(|(c, _)| c.id == ware.0) else {
+                    commands.entity(entity).despawn();
+                    continue;
+                };
+                at.compute_transform()
+            }
+            _ => continue,
+        };
         flight.age += time.delta_secs();
         let k = (flight.age / FLIGHT_SECS).min(1.0);
-        let target = cart_pose(cargo.slot, cargo.base_height);
         if k >= 1.0 || settings.reduced_motion {
-            *transform = target;
-            commands.entity(entity).remove::<FlyingCrate>();
+            if returning.is_some() {
+                commands.entity(entity).despawn();
+            } else {
+                *transform = target;
+                commands.entity(entity).remove::<FlyingCrate>();
+            }
             continue;
         }
         let travel = k * k * (3.0 - 2.0 * k);
         let arc = 4.0 * travel * (1.0 - travel);
+        let tilt = if returning.is_some() { -arc } else { arc };
         transform.translation =
-            flight.from.lerp(target.translation, travel) + Vec3::Y * (arc * 0.95);
-        transform.rotation = Quat::from_rotation_y(arc * 0.36) * Quat::from_rotation_z(arc * 0.17);
-        transform.scale = Vec3::ONE.lerp(target.scale, travel);
+            flight.from.translation.lerp(target.translation, travel) + Vec3::Y * (arc * 0.95);
+        transform.scale = flight.from.scale.lerp(target.scale, travel);
+        transform.rotation = flight.from.rotation.slerp(target.rotation, travel)
+            * Quat::from_rotation_y(tilt * 0.36)
+            * Quat::from_rotation_z(tilt * 0.17);
     }
 }
 
@@ -1432,6 +1553,12 @@ mod tests {
             .remove("gear");
         app.update();
         assert_eq!(contents(&mut app), [(0, "tea_tin".into(), false)]);
+        let returning = {
+            let w = app.world_mut();
+            w.query_filtered::<Entity, With<ReturningToDeck>>()
+                .single(w)
+                .unwrap()
+        };
         app.world_mut()
             .resource_mut::<BoughtTonight>()
             .0
@@ -1441,6 +1568,8 @@ mod tests {
             contents(&mut app),
             [(0, "tea_tin".into(), false), (1, "gear".into(), true)]
         );
+        assert!(app.world().get::<CartCrate>(returning).is_some());
+        assert!(app.world().get::<ReturningToDeck>(returning).is_none());
         app.world_mut()
             .resource_mut::<BoughtTonight>()
             .0

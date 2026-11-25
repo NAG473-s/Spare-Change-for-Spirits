@@ -40,6 +40,10 @@ Players can search once per evening using the workbench button or by clicking a 
 
 The register shows the product picture, its written name and price. The three tray pockets follow the player’s count, including returns. The total and the exact denomination controls stay available as text. Reduced motion places the money and ware directly at their destinations. The entrance switches between open and closed poses and its bell stays still.
 
+Floor corners and an enamel badge mark the target when moving furniture or using a furnishing tool. A check marks a free placement, opposed arrows an exchange, a cross a blocked action and a minus a removal. Reduced motion moves the furniture directly to the indicated square.
+
+At the market, physical purchases fill a wicker basket and sold single pieces show a sealed envelope. The stall's written offer and tooltip remain available. Reduced motion updates the basket and hovered wares immediately and holds the traders and pennants still. A returned crate travels back from the cart to the deck. At the harbour the ferry stays at its appropriate waterline with the mooring lines fast, and unloading or returning cargo makes no rocking or transfer ripples with reduced motion enabled.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

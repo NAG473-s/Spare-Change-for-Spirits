@@ -9,6 +9,8 @@
 //! day. Like the harbour, the market is a diorama of its own away from the
 //! shop; the camera moves there for the day.
 
+mod basket;
+
 use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
@@ -22,6 +24,7 @@ use crate::harbor::{Location, repeating};
 use crate::i18n::Lang;
 use crate::inventory::Stock;
 use crate::rng::Rng;
+use crate::save::Settings;
 use crate::scene::{LabelKind, billboard_material, billboard_mesh, world_label};
 use crate::shop::{Storeroom, model_or_box, product_model};
 use crate::sign::return_post;
@@ -33,7 +36,8 @@ pub struct MarketPlugin;
 
 impl Plugin for MarketPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<MarketDay>()
+        app.add_message::<basket::Trade>()
+            .init_resource::<MarketDay>()
             .init_resource::<HoveredWare>()
             .add_systems(Startup, spawn_market)
             .add_systems(OnEnter(Phase::Day), (open_market, spawn_vendor_plaques))
@@ -41,8 +45,18 @@ impl Plugin for MarketPlugin {
             .add_systems(
                 Update,
                 (
-                    animate_vendors,
-                    sway_bunting,
+                    (animate_vendors, sway_bunting)
+                        .run_if(resource_equals(Location::Market))
+                        .run_if(crate::menu::shop_unpaused),
+                    (
+                        basket::handoffs,
+                        basket::arrange,
+                        mark_sold.run_if(resource_changed::<MarketDay>),
+                    )
+                        .chain()
+                        .after(buy_from_list)
+                        .run_if(in_state(Phase::Day))
+                        .run_if(crate::menu::shop_unpaused),
                     (ware_tooltip, animate_wares, buy_from_list).run_if(in_state(Phase::Day)),
                 ),
             );
@@ -156,6 +170,9 @@ enum WareKind {
 /// while the ware's hover box stays where it is.
 #[derive(Component)]
 struct WareVisual;
+
+#[derive(Component)]
+struct SoldTicket;
 
 /// Size of a ware's hover box (its width is its place on the table).
 const HIT_HEIGHT: f32 = 0.7;
@@ -769,6 +786,7 @@ fn open_market(
         meshes: &mut meshes,
         materials: &mut materials,
     };
+    basket::spawn(&mut k);
     for (stall, Stall(i)) in &stalls {
         let vendor = &data.vendors[*i];
         // A seasonal trader's stall stands only in its season.
@@ -832,6 +850,26 @@ fn open_market(
             let visual = k.node(Some(item), Transform::default());
             k.commands.entity(visual).insert(WareVisual);
             spawn_ware_visual(&mut k, &data, visual, kind);
+            if matches!(
+                kind,
+                WareKind::Rare(_) | WareKind::Single(_) | WareKind::Hourglass
+            ) {
+                let tag = model_or_box(
+                    &mut k.commands,
+                    k.asset_server,
+                    k.meshes,
+                    k.materials,
+                    "models/market/sold_ticket.glb",
+                    Vec3::new(0.30, 0.224, 0.16),
+                    Color::srgb(0.78, 0.65, 0.44),
+                );
+                k.commands.entity(tag).insert((
+                    SoldTicket,
+                    ChildOf(item),
+                    Visibility::Hidden,
+                    Pickable::IGNORE,
+                ));
+            }
             if *special {
                 spawn_special_tag(&mut k, item);
             }
@@ -1053,16 +1091,10 @@ fn blocked(
     special: bool,
     reputation: i32,
 ) -> Option<&'static str> {
+    if basket::sold_piece(day, vendor, kind) {
+        return Some("market.tip_sold_out");
+    }
     match kind {
-        WareKind::Hourglass if day.hourglass => Some("market.tip_sold_out"),
-        WareKind::Rare(id) | WareKind::Single(id)
-            if day
-                .rare_sold
-                .iter()
-                .any(|(seller, ware)| *seller == vendor && ware == id) =>
-        {
-            Some("market.tip_sold_out")
-        }
         // The Reaper's rare pieces are for shops the spirits speak well of.
         WareKind::Rare(_) if reputation < data.config.reputation_perks.rare_from => {
             Some("market.tip_reputation")
@@ -1080,7 +1112,7 @@ fn blocked(
 struct Shop<'w, 's> {
     commands: Commands<'w, 's>,
     upgrades: ResMut<'w, Upgrades>,
-    items: Query<'w, 's, (Entity, &'static WareItem)>,
+    items: Query<'w, 's, (Entity, &'static WareItem, &'static GlobalTransform)>,
     data: Res<'w, GameData>,
     lang: Res<'w, Lang>,
     drawer: ResMut<'w, Drawer>,
@@ -1091,6 +1123,7 @@ struct Shop<'w, 's> {
     log: ResMut<'w, GameLog>,
     cues: MessageWriter<'w, Cue>,
     figures: Query<'w, 's, &'static mut VendorFigure>,
+    trades: MessageWriter<'w, basket::Trade>,
     progress: Res<'w, Progress>,
 }
 
@@ -1177,7 +1210,7 @@ impl Shop<'_, '_> {
                     self.log.push(lang.t("log.letter_found"));
                 }
                 // Done for good: it leaves the table and the list.
-                for (entity, item) in &self.items {
+                for (entity, item, _) in &self.items {
                     if item.vendor == vendor && item.kind == *kind {
                         self.commands.entity(entity).despawn();
                     }
@@ -1187,7 +1220,7 @@ impl Shop<'_, '_> {
                 }
             }
         }
-        self.sold(vendor);
+        self.sold(vendor, kind, true);
         true
     }
 
@@ -1213,12 +1246,25 @@ impl Shop<'_, '_> {
             "log.market_sold_back",
             &[("item", &self.lang.decor(id)), ("vendor", &name)],
         ));
-        self.sold(vendor);
+        self.sold(vendor, kind, false);
         true
     }
 
     /// The trader nods after a sale.
-    fn sold(&mut self, vendor: usize) {
+    fn sold(&mut self, vendor: usize, kind: &WareKind, bought: bool) {
+        if basket::tangible(kind)
+            && let Some((_, _, at)) = self
+                .items
+                .iter()
+                .find(|(_, item, _)| item.vendor == vendor && &item.kind == kind)
+        {
+            let count = basket::count(&self.day);
+            self.trades.write(basket::Trade {
+                slot: if bought { count - 1 } else { count },
+                sample: at.translation(),
+                bought,
+            });
+        }
         self.cues.write(Cue::Paid);
         for mut figure in &mut self.figures {
             if figure.vendor == vendor {
@@ -1229,7 +1275,7 @@ impl Shop<'_, '_> {
 }
 
 fn on_ware_click(click: On<PointerClick>, mut shop: Shop) {
-    let Ok((_, item)) = shop.items.get(click.event_target()) else {
+    let Ok((_, item, _)) = shop.items.get(click.event_target()) else {
         return;
     };
     let (vendor, kind, special) = (item.vendor, item.kind.clone(), item.special);
@@ -1460,10 +1506,32 @@ fn ware_tooltip(
     HoverTip::show(&mut tip, t);
 }
 
+/// A sold single piece leaves its sealed ticket and keeps its original tooltip hitbox.
+fn mark_sold(
+    day: Res<MarketDay>,
+    items: Query<&WareItem>,
+    mut displays: Query<
+        (&ChildOf, &mut Visibility, Has<SoldTicket>),
+        Or<(With<WareVisual>, With<SoldTicket>)>,
+    >,
+) {
+    for (parent, mut visibility, ticket) in &mut displays {
+        if let Ok(item) = items.get(parent.parent()) {
+            let sold = basket::sold_piece(&day, item.vendor, &item.kind);
+            visibility.set_if_neq(if sold == ticket {
+                Visibility::Inherited
+            } else {
+                Visibility::Hidden
+            });
+        }
+    }
+}
+
 /// The hovered ware lifts a little.
 fn animate_wares(
     time: Res<Time>,
     hovered: Res<HoveredWare>,
+    settings: Res<Settings>,
     mut visuals: Query<(&ChildOf, &mut Transform), With<WareVisual>>,
 ) {
     let dt = time.delta_secs();
@@ -1472,7 +1540,11 @@ fn animate_wares(
         let lift = if is_hovered { 0.06 } else { 0.0 };
         let target = Vec3::Y * lift;
         let now = transform.translation;
-        transform.translation = now + (target - now) * (dt * 10.0).min(1.0);
+        transform.translation = if settings.reduced_motion {
+            target
+        } else {
+            now.lerp(target, 1.0 - (-dt * 10.0).exp())
+        };
         let scale = if is_hovered { 1.12 } else { 1.0 };
         transform.scale = Vec3::splat(scale);
     }
@@ -1480,10 +1552,19 @@ fn animate_wares(
 
 /// Traders breathe and sway, nod after a sale; the wisp floats and the
 /// raven bobs and looks around.
-fn animate_vendors(time: Res<Time>, mut figures: Query<(&mut VendorFigure, &mut Transform)>) {
+fn animate_vendors(
+    time: Res<Time>,
+    settings: Res<Settings>,
+    mut figures: Query<(&mut VendorFigure, &mut Transform)>,
+) {
     let t = time.elapsed_secs();
     let dt = time.delta_secs();
     for (mut f, mut transform) in &mut figures {
+        if settings.reduced_motion {
+            f.nod = 0.0;
+            transform.set_if_neq(Transform::from_translation(f.kind.spot()));
+            continue;
+        }
         f.nod = (f.nod - dt).max(0.0);
         let nod = (f.nod * std::f32::consts::TAU * 1.5).sin() * f.nod.min(0.4) * 0.5;
         let p = f.phase;
@@ -1509,10 +1590,18 @@ fn animate_vendors(time: Res<Time>, mut figures: Query<(&mut VendorFigure, &mut 
     }
 }
 
-fn sway_bunting(time: Res<Time>, mut pennants: Query<(&Pennant, &mut Transform)>) {
+fn sway_bunting(
+    time: Res<Time>,
+    settings: Res<Settings>,
+    mut pennants: Query<(&Pennant, &mut Transform)>,
+) {
     let t = time.elapsed_secs();
     for (p, mut transform) in &mut pennants {
-        transform.rotation = Quat::from_rotation_x(0.35 * (t * 2.1 + p.phase).sin());
+        transform.rotation = if settings.reduced_motion {
+            Quat::IDENTITY
+        } else {
+            Quat::from_rotation_x(0.35 * (t * 2.1 + p.phase).sin())
+        };
     }
 }
 

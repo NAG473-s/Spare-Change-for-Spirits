@@ -24,6 +24,8 @@ See what is still missing (models, ghost sprites, icons):
 python3 tools/check_models.py
 ```
 
+The furnishing guides are delivered in `assets/sprites/shop/`. Paint `placement_corners.png` as four open chalk corners with a dark keyline on a transparent 160 × 160 tile. The four 96 × 96 enamel badges have an aged brass bezel and cream symbols. Use a check for `placement_place`, opposing arrows for `placement_swap`, a cross for `placement_blocked` and a minus for `placement_remove`. Keep them legible at 24 pixels.
+
 ## Delivery status
 
 ### Shop memories and shelf lettering (delivered)

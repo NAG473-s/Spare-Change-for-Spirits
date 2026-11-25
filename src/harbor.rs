@@ -82,6 +82,11 @@ pub const HARBOR: Vec3 = Vec3::new(-80.0, 0.0, 0.0);
 pub const WATER_Y: f32 = -0.12;
 /// Front edge of the quay (local z): water from here towards the camera.
 const QUAY_EDGE: f32 = -0.7;
+pub(crate) const MOORING_POSTS: [Vec3; 3] = [
+    Vec3::new(-4.6, 0.0, QUAY_EDGE - 0.12),
+    Vec3::new(-0.8, 0.0, QUAY_EDGE - 0.12),
+    Vec3::new(3.6, 0.0, QUAY_EDGE - 0.12),
+];
 const QUAY_PAVING: &str = "sprites/harbor/quay_stone.png";
 /// The hand cart on the quay, where bought crates are stacked (local).
 pub const CART: Vec3 = Vec3::new(-2.3, 0.0, -2.3);
@@ -708,8 +713,7 @@ fn spawn_harbor(
     }
 
     // Mooring posts with coils of rope along the edge.
-    for x in [-4.6, -0.8, 3.6] {
-        let base = Vec3::new(x, 0.0, QUAY_EDGE - 0.12);
+    for base in MOORING_POSTS {
         if kit
             .model("mooring_post", Transform::from_translation(base))
             .is_some()

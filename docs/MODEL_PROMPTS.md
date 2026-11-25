@@ -9,6 +9,8 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 ## Open orders
 
+The willow shopping basket, wrapped parcel and sold ticket are delivered for the village market. The ferry's braided lines and netted cork fenders are delivered for the harbour. Replacement specifications follow below.
+
 All models currently requested in this list have been delivered.
 
 ## Delivered models
@@ -313,6 +315,8 @@ glowing glass and windows are just emissive materials.
 | `quay_lantern` | 0.3 × 2.2 × 0.3 | An old, slightly crooked cast-iron lantern post for the quay, origin at the **centre of its foot**, with a small square lantern housing whose glass is **centred at 1.95 m**. Leave the glass plain and **not emissive**, with a little soot and rust, because the game puts its own glow and light inside when the player restores the lantern. Add a ladder bar under the housing for the lamplighter. |
 | `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
 | `barrel` | 0.6 × 0.72 × 0.6 | An old wooden barrel with iron hoops. |
+| `mooring_line` | 1.0 × 0.16 × 0.045 | Three strands of warm hemp with a shallow hanging curve. Start at the origin and finish at (1, 0, 0) in glTF. Both ends remain level. The game fits the span between a cleat and its bollard. |
+| `cork_fender` | 0.34 × 0.51 × 0.31 | A pear-shaped cork fender covered in a diamond net, rope collars and a dark middle binding. Hang from a narrow rope eye at the origin. The cork extends down along glTF −Y. |
 | `mooring_post` | 0.3 × 0.6 × 0.3 | A short weathered wooden mooring post (bollard) with a coil of thick rope around it. |
 | `bell_post` | 0.6 × 1.95 × 0.2 | A wooden post with its origin at the foot. A short arm sticks out to the right (+X), with a hook **0.38 m right of the post, 1.85 m high** for the separate bell. |
 | `ferry_bell` | 0.25 × 0.22 × 0.25 | A small, slightly tarnished brass bell with a clapper and a ring at the top. Origin at the **top of the ring** (where it hangs), the bell below it, so the game can swing it. |
@@ -436,6 +440,9 @@ their origin and face −Y.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
+| `shopping_basket` | 1.5 × 1.02 × 0.94 | Open willow trug with tapered sides, a wrapped bentwood handle, copper rivets and a madder-and-cream checked napkin draped over the front lip. Origin at the bottom centre. Keep room inside for purchases. |
+| `wrapped_parcel` | 0.40 × 0.245 × 0.30 | A small kraft-paper parcel with folded ends, string in both directions and a wax-sealed paper slip. Origin at the bottom centre, front facing +Z in glTF. |
+| `sold_ticket` | 0.30 × 0.224 × 0.16 | A little standing envelope on a brass foot, closed with red wax. Face it towards the customer (+Z in glTF) and place the origin at the bottom centre. No lettering. |
 | `stall_carpenter` | 1.9 × 2.5 × 1.2 | A carpenter's market stall: a sturdy workbench table, a saw and planks leaning on the side, wood shavings, a sand-brown canvas awning. |
 | `stall_candlemaker` | 1.9 × 2.5 × 1.2 | A candle maker's stall: a table with a rack of hanging candles on the side, dripped wax, a honey-yellow awning. |
 | `stall_herbalist` | 1.9 × 2.5 × 1.2 | A witch's herb stall: bundles of herbs hanging from the awning frame, a small bubbling cauldron beside the table (not on it), a moss-green awning. |

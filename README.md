@@ -157,6 +157,8 @@ Runs for the same ref queue behind the current run.
 
 Select a guest’s name at the counter to look them up. The shop waits while the book is open, including any change already on the tray. A shelf ticket with an hourglass shows how many units of that ware will fade at the coming dawn. The item tooltip spells out the count.
 
+In the village market, wrapped purchases travel between the selling stall and a wicker basket beside the cart lane. A sealed ticket takes the place of a sold single piece. On the quay the ferry's lines stay fast to their bollards as the water and cargo move its hull. Returning a crate sends the same container back to the deck. In the shop, chalk corners and a small enamel sign show where a piece will go when furnishing the floor.
+
 At night the door opens onto the moonlit quay when a guest passes. During a sale the product rests on the counter and its picture appears beside the price. The three felt pockets show the buttons, candle stubs and spoons you count out. Click or right-click a filled pocket to put one coin back. On handover the guest takes the ware along.
 
 On the shop floor, Hedda left post cases with wax-sealed letters, travelling trunks, bottle hampers and round hatboxes. With a workbench in place, click a pile to search that spot or search from the workbench panel. A successful search shows the broken ware you found.

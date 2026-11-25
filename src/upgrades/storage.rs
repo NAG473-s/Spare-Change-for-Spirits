@@ -13,7 +13,7 @@ use crate::i18n::Lang;
 use crate::menu::Paused;
 use crate::save::Settings;
 use crate::scene::floor;
-use crate::shop::{ShopLayout, Tool, model_or_box, product_model};
+use crate::shop::{ShopLayout, Tool, bind_floor_target, model_or_box, product_model};
 use crate::tooltip::{HoverTip, TipKind};
 use crate::ui::Action;
 use crate::workbench::{Rummaged, has_workbench, use_workbench};
@@ -144,7 +144,6 @@ fn sync_piles(
                 Transform::from_translation(floor(layout.cell_pos(cell), 0.0))
                     .with_rotation(Quat::from_rotation_y(angle)),
                 Visibility::default(),
-                Hovered::default(),
                 Pickable::IGNORE,
             ))
             .id();
@@ -210,6 +209,7 @@ fn sync_piles(
                 ChildOf(root),
             ))
             .id();
+        bind_floor_target(&mut commands, root, cell);
         // Clicks on the painted mesh and on the simpler hit volume bubble to the same pile.
         commands
             .entity(root)
@@ -254,20 +254,20 @@ fn search_targets(
     piles: Query<&Hovered, With<Pile>>,
     mut targets: Query<(&mut Pickable, &mut Visibility), With<SearchTarget>>,
 ) {
-    let ready = *phase.get() == Phase::Evening
-        && *location == Location::Shop
-        && !paused.0
+    let editing = *phase.get() == Phase::Evening && *location == Location::Shop && !paused.0;
+    let ready = editing
         && *tool == Tool::None
         && progress.rummaged_on != progress.night
         && has_workbench(&layout);
+    let target_active = ready || (editing && *tool != Tool::None);
     for (mut pick, mut visible) in &mut targets {
-        if pick.is_hoverable != ready {
-            *pick = if ready {
+        if pick.is_hoverable != target_active {
+            *pick = if target_active {
                 Pickable::default()
             } else {
                 Pickable::IGNORE
             };
-            *visible = if ready {
+            *visible = if target_active {
                 Visibility::Inherited
             } else {
                 Visibility::Hidden

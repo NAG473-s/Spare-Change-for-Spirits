@@ -5,6 +5,7 @@
 //! In the evening the player picks a tool in the side panel and clicks a cell.
 
 pub(crate) mod entrance;
+mod placement;
 
 use std::collections::BTreeMap;
 
@@ -47,16 +48,26 @@ impl Plugin for ShopPlugin {
             .init_resource::<Storeroom>()
             .init_resource::<HoveredShelfItem>()
             .init_resource::<Dragging>()
-            .add_systems(Startup, spawn_shop)
+            .add_systems(Startup, (spawn_shop, placement::spawn))
+            .add_systems(Update, placement::update.after(follow_drag))
             .add_systems(
                 Update,
                 entrance::animate
                     .run_if(crate::menu::shop_unpaused)
                     .run_if(crate::story_film::outside_film),
             )
-            .add_systems(OnExit(Phase::Evening), |mut t: ResMut<Tool>| {
-                *t = Tool::None
-            })
+            .add_systems(
+                OnExit(Phase::Evening),
+                |mut t: ResMut<Tool>,
+                 mut drag: ResMut<Dragging>,
+                 mut layout: ResMut<ShopLayout>| {
+                    *t = Tool::None;
+                    if drag.from.is_some() {
+                        *drag = Dragging::default();
+                        layout.set_changed();
+                    }
+                },
+            )
             .add_systems(
                 Update,
                 (
@@ -268,8 +279,21 @@ pub enum Tool {
     Remove,
 }
 
+/// A pointer target for one square, either the tile itself or the old cargo covering it.
 #[derive(Component)]
 pub struct GridCell(pub usize);
+
+/// Furnishings attach only to the floor tile, never to the cargo piled above it.
+#[derive(Component)]
+struct FloorTile;
+
+pub(crate) fn bind_floor_target(commands: &mut Commands, entity: Entity, idx: usize) {
+    commands
+        .entity(entity)
+        .insert((GridCell(idx), Hovered::default()))
+        .observe(on_drag_over)
+        .observe(on_drag_leave);
+}
 
 /// A piece of furniture being dragged to another cell (evening, no tool
 /// picked): where it comes from and the cell under the pointer.
@@ -279,18 +303,13 @@ struct Dragging {
     over: Option<usize>,
 }
 
-/// Marks the target cell while dragging.
-#[derive(Component)]
-struct DragMarker;
-
 /// Where a dragged piece's parts sat before the drag.
 #[derive(Component)]
 struct DragBase(Vec3);
 
 /// How high a dragged piece floats above the floor.
 const DRAG_LIFT: f32 = 0.15;
-const DRAG_OK: Color = Color::srgba(0.45, 0.85, 0.5, 0.35);
-const DRAG_BLOCKED: Color = Color::srgba(0.95, 0.4, 0.35, 0.35);
+const DRAG_APPROACH: f32 = 17.0;
 
 /// Grab a piece of furniture: it lifts and follows the pointer cell by cell.
 #[allow(clippy::too_many_arguments)]
@@ -345,16 +364,22 @@ fn on_drag_over(
     }
 }
 
+fn on_drag_leave(leave: On<PointerDragLeave>, cells: Query<&GridCell>, mut drag: ResMut<Dragging>) {
+    if let Ok(cell) = cells.get(leave.event_target())
+        && drag.over == Some(cell.0)
+    {
+        drag.over = None;
+    }
+}
+
 /// Let go: move the piece (with its wares) to the cell, or swap it with the
 /// piece standing there. Old junk blocks the cell.
 #[allow(clippy::too_many_arguments)]
 fn on_drag_end(
     _end: On<PointerDragEnd>,
-    mut commands: Commands,
     data: Res<GameData>,
     upgrades: Res<Upgrades>,
     lang: Res<Lang>,
-    markers: Query<Entity, With<DragMarker>>,
     mut layout: ResMut<ShopLayout>,
     mut dragging: ResMut<Dragging>,
     mut log: ResMut<GameLog>,
@@ -363,9 +388,6 @@ fn on_drag_end(
         return;
     };
     let over = dragging.over.take();
-    for marker in &markers {
-        commands.entity(marker).despawn();
-    }
     match over {
         Some(to) if to != from && upgrades.usable(&data, &layout, to) => {
             layout.cells.swap(from, to);
@@ -379,55 +401,31 @@ fn on_drag_end(
     }
 }
 
-/// The dragged piece hovers over the cell under the pointer, which is
-/// marked green (free or swappable) or red (old junk).
-#[allow(clippy::too_many_arguments)]
+/// Ease the furniture towards the indicated square while its floor target stays fixed.
 fn follow_drag(
-    mut commands: Commands,
+    time: Res<Time>,
+    settings: Res<crate::save::Settings>,
     dragging: Res<Dragging>,
     layout: Res<ShopLayout>,
-    data: Res<GameData>,
-    upgrades: Res<Upgrades>,
-    mut parts: Query<(&DragBase, &mut Transform), Without<DragMarker>>,
-    mut markers: Query<(&mut Transform, &MeshMaterial3d<StandardMaterial>), With<DragMarker>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut parts: Query<(&DragBase, &mut Transform)>,
 ) {
-    let (Some(from), Some(over)) = (dragging.from, dragging.over) else {
-        return;
-    };
+    let Some(from) = dragging.from else { return };
+    let over = dragging.over.unwrap_or(from);
     let shift = layout.cell_pos(over) - layout.cell_pos(from);
-    for (base, mut transform) in &mut parts {
-        transform.translation = base.0 + Vec3::new(shift.x, DRAG_LIFT, shift.y);
-    }
-    let color = if upgrades.usable(&data, &layout, over) {
-        DRAG_OK
+    let lift = if dragging.over.is_some() {
+        DRAG_LIFT
     } else {
-        DRAG_BLOCKED
+        0.0
     };
-    let at = floor(layout.cell_pos(over), 0.02);
-    match markers.single_mut() {
-        Ok((mut transform, material)) => {
-            transform.translation = at;
-            if let Some(mut m) = materials.get_mut(&material.0) {
-                m.base_color = color;
-            }
-        }
-        Err(_) => {
-            commands.spawn((
-                DragMarker,
-                Mesh3d(meshes.add(Plane3d::default().mesh().size(CELL * 0.95, CELL * 0.95))),
-                MeshMaterial3d(materials.add(StandardMaterial {
-                    base_color: color,
-                    alpha_mode: AlphaMode::Blend,
-                    unlit: true,
-                    ..default()
-                })),
-                Transform::from_translation(at),
-                Pickable::IGNORE,
-                NotShadowCaster,
-            ));
-        }
+    let blend = if settings.reduced_motion {
+        1.0
+    } else {
+        1.0 - (-DRAG_APPROACH * time.delta_secs()).exp()
+    };
+    for (base, mut pose) in &mut parts {
+        pose.translation = pose
+            .translation
+            .lerp(base.0 + Vec3::new(shift.x, lift, shift.y), blend);
     }
 }
 
@@ -497,10 +495,9 @@ fn spawn_shop(
     let tile_mesh = meshes.add(Plane3d::default().mesh().size(CELL * 0.97, CELL * 0.97));
     for idx in 0..layout.cells.len() {
         let even = (idx % layout.cols + idx / layout.cols).is_multiple_of(2);
-        commands
+        let tile = commands
             .spawn((
-                GridCell(idx),
-                Hovered::default(),
+                FloorTile,
                 Mesh3d(tile_mesh.clone()),
                 MeshMaterial3d(if even {
                     light_tile.clone()
@@ -512,8 +509,9 @@ fn spawn_shop(
             ))
             .observe(on_cell_click)
             .observe(on_drag_start)
-            .observe(on_drag_over)
-            .observe(on_drag_end);
+            .observe(on_drag_end)
+            .id();
+        bind_floor_target(&mut commands, tile, idx);
     }
 
     entrance::spawn(
@@ -851,17 +849,21 @@ pub fn free_cell_for(
         let cell = &layout.cells[idx];
         match tool {
             Tool::Place(_) => cell.decor.is_none() && upgrades.usable(data, layout, idx),
-            Tool::Stock(product) => cell
-                .decor
-                .as_deref()
-                .and_then(|d| data.decor(d))
-                .filter(|d| d.is_shelf())
-                .is_some_and(|d| {
-                    !cell.products.contains(product) && cell.products.len() < d.slots.len()
-                }),
+            Tool::Stock(product) => room_on_shelf(data, cell, product),
             _ => false,
         }
     })
+}
+
+fn room_on_shelf(data: &GameData, cell: &CellContent, product: &str) -> bool {
+    cell.decor
+        .as_deref()
+        .and_then(|id| data.decor(id))
+        .is_some_and(|d| {
+            d.is_shelf()
+                && cell.products.len() < d.slots.len()
+                && !cell.products.iter().any(|p| p == product)
+        })
 }
 
 /// Can the panel's "first free square / first shelf" button do anything now?
@@ -1059,7 +1061,7 @@ fn sync_cell_visuals(
     lang: Res<Lang>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    cells: Query<(Entity, &GridCell)>,
+    cells: Query<(Entity, &GridCell), With<FloorTile>>,
     labels: Query<Entity, With<CellLabel>>,
     upgrades: Res<Upgrades>,
 ) {
