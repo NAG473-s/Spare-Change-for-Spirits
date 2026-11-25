@@ -276,6 +276,35 @@ pub fn ghost_payment(price: u32, allowed: &[Coin], rng: &mut Rng) -> Purse {
 mod tests {
     use super::*;
 
+    /// Taking coins out of the drawer is all or nothing; merging adds them
+    /// back, and the total follows.
+    #[test]
+    fn removing_coins_is_all_or_nothing() {
+        let mut drawer = Purse {
+            buttons: 3,
+            candles: 1,
+            spoons: 0,
+        };
+        let too_many = Purse {
+            buttons: 1,
+            candles: 0,
+            spoons: 1,
+        };
+        assert!(!drawer.contains(&too_many));
+        assert!(!drawer.remove(&too_many));
+        assert_eq!(drawer.total(), 8, "nothing taken");
+        let some = Purse {
+            buttons: 2,
+            candles: 1,
+            spoons: 0,
+        };
+        assert!(drawer.remove(&some));
+        assert_eq!((drawer.buttons, drawer.candles, drawer.total()), (1, 0, 1));
+        drawer.merge(&some);
+        assert_eq!(drawer.total(), 8);
+        assert!(drawer.contains(&Purse::default()));
+    }
+
     fn purse(spoons: u32, candles: u32, buttons: u32) -> Purse {
         Purse {
             buttons,
