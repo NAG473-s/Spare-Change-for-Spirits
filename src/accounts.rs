@@ -896,6 +896,24 @@ mod tests {
         );
     }
 
+    /// Each unit counts at its crate's price per unit; fractions are summed
+    /// over all wares before rounding, and ids without a product count nothing.
+    #[test]
+    fn the_wares_are_valued_at_their_crate_price_per_unit() {
+        let data = GameData::load();
+        let a = &data.products[0];
+        let b = &data.products[1];
+        let stock = Stock::from_units(BTreeMap::from([
+            (a.id.clone(), vec![0, 1]),
+            (b.id.clone(), vec![0]),
+            ("not_a_product".to_string(), vec![0, 0, 0]),
+        ]));
+        let exact = 2.0 * a.crate_cost as f32 / a.crate_size as f32
+            + b.crate_cost as f32 / b.crate_size as f32;
+        assert_eq!(wares_value(&stock, &data), exact.round() as u32);
+        assert_eq!(wares_value(&Stock::default(), &data), 0);
+    }
+
     #[test]
     fn units_about_to_fade_are_listed() {
         let data = GameData::load();
