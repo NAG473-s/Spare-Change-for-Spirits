@@ -2479,15 +2479,14 @@ mod tests {
             .write_message(Action::AddChange(Coin::Button));
         app.world_mut().write_message(Action::CheckCoin(0));
         app.update();
-        let drawer = app.world().resource::<Drawer>().0.clone();
+        let drawer = app.world().resource::<Drawer>().0;
         let counted = app
             .world()
             .resource::<Register>()
             .sale
             .as_ref()
             .unwrap()
-            .given
-            .clone();
+            .given;
         assert_eq!(counted.buttons, 1);
         app.insert_resource(Paused(true));
         app.world_mut().write_message(Action::ResetChange);
