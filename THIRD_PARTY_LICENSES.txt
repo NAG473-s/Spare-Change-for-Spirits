@@ -400,8 +400,8 @@ yazi 0.2.2                                   Apache-2.0 OR MIT
 yoke 0.8.4                                   Unicode-3.0
 yoke-derive 0.8.4                            Unicode-3.0
 zeno 0.3.3                                   Apache-2.0 OR MIT
-zerocopy 0.8.65                              BSD-2-Clause OR Apache-2.0 OR MIT
-zerocopy-derive 0.8.65                       BSD-2-Clause OR Apache-2.0 OR MIT
+zerocopy 0.8.66                              BSD-2-Clause OR Apache-2.0 OR MIT
+zerocopy-derive 0.8.66                       BSD-2-Clause OR Apache-2.0 OR MIT
 zerofrom 0.1.8                               Unicode-3.0
 zerofrom-derive 0.1.8                        Unicode-3.0
 zerotrie 0.2.5                               Unicode-3.0
@@ -12829,7 +12829,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ==============================================================================
-Used by: zerocopy 0.8.65, zerocopy-derive 0.8.65
+Used by: zerocopy 0.8.66, zerocopy-derive 0.8.66
 ==============================================================================
 
 Apache License
@@ -13035,7 +13035,7 @@ Apache License
    limitations under the License.
 
 ==============================================================================
-Used by: zerocopy 0.8.65, zerocopy-derive 0.8.65
+Used by: zerocopy 0.8.66, zerocopy-derive 0.8.66
 ==============================================================================
 
 Copyright 2019 The Fuchsia Authors.
@@ -13064,7 +13064,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ==============================================================================
-Used by: zerocopy 0.8.65, zerocopy-derive 0.8.65
+Used by: zerocopy 0.8.66, zerocopy-derive 0.8.66
 ==============================================================================
 
 Copyright 2023 The Fuchsia Authors
