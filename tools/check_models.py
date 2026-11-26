@@ -56,6 +56,7 @@ MARKET_SIZES = {
     "window_flowers": (0.7, 0.35, 0.2),
     "special_tag": (0.14, 0.1, 0.02),
     "shopping_basket": (1.5, 1.02, 0.94),
+    "bunting_line": (14.01, 3.35, 0.21),
     "wrapped_parcel": (0.40, 0.245, 0.30),
     "sold_ticket": (0.30, 0.224, 0.16),
 }
@@ -122,6 +123,9 @@ HARBOR_SIZES = {
     "mooring_post": (0.3, 0.6, 0.3),
     "cork_fender": (0.34, 0.51, 0.31),
     "mooring_line": (1.0, 0.16, 0.045),
+    "bank_windmill": (1.70, 2.86, 1.76),
+    "windmill_sails": (2.47, 2.47, 0.30),
+    "riverbank": (36.0, 0.66, 1.57),
     "bell_post": (0.6, 1.95, 0.2),
     "ferry_bell": (0.25, 0.22, 0.25),
     "hand_cart": (2.0, 0.75, 1.0),
@@ -145,6 +149,10 @@ ORIGIN_AXES = {
     "cork_fender": ("centre", "maximum", "centre"),
     "mooring_line": ("minimum", None, "centre"),
     "door_bell": ("centre", "maximum", "centre"),
+    "window_drapery": ("centre", None, None),
+    "curtain_hem": ("centre", "maximum", None),
+    "windmill_sails": ("centre", "centre", None),
+    "riverbank": ("centre", None, "centre"),
     "wall_clock": ("centre", "centre", "minimum"),
     "way_board": ("centre", "centre", "minimum"),
     "shop_sign": ("centre", None, "centre"),
@@ -380,6 +388,8 @@ def main():
             room=None,
             door_leaf=(0.90, 2.024, 0.15),
             door_bell=(0.11, 0.105, 0.11),
+            window_drapery=(2.46, 1.03, 0.30),
+            curtain_hem=(0.41, 0.89, 0.14),
             crate=(0.5, 0.3, 0.42),
             ferryman=(0.7, 1.45, 0.6),
             ferry_boat=(7.4, 0.66, 1.85),
@@ -449,6 +459,8 @@ def main():
         failures += not present
     for name, size in (("ghosts/sailor_salute.png", (704, 264)), ("memories/edwin_rain.png", (512, 768)),
                        ("ui/change_tray.png", (432, 162)), ("shop/placement_corners.png", (160, 160)),
+                       ("harbor/river_valley_day.png", (1536, 512)), ("harbor/river_valley_dusk.png", (1536, 512)),
+                       ("market/fair_pennant.png", (96, 96)), ("shop/window_light.png", (256, 256)),
                        *((f"shop/placement_{name}.png", (96, 96)) for name in ("place", "swap", "remove", "blocked"))):
         path = ROOT / "assets" / "sprites" / name
         problem = png_size_problem(path, size) if path.is_file() else "missing"

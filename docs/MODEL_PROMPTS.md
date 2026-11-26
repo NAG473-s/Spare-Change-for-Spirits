@@ -11,7 +11,7 @@ Hand this whole file to ChatGPT (or another tool that builds models in Blender).
 
 The willow shopping basket, wrapped parcel and sold ticket are delivered for the village market. The ferry's braided lines and netted cork fenders are delivered for the harbour. Replacement specifications follow below.
 
-All models currently requested in this list have been delivered.
+The riverbank, mill tower and sails, market bunting line, shop curtain rail and separate hems have also been delivered. All models currently requested in this list have been delivered.
 
 ## Delivered models
 
@@ -240,6 +240,8 @@ Season 3 products:
 | `door` | 1.1 × 2.3 × 0.2 | Keep the carved walnut jamb, lintel and brass bell bracket fixed. Inside the jamb, show a narrow layered view of the moonlit river, with a moored sailboat, a lantern and lit warehouse windows. The original pane, panels and fittings belong to the moving leaf. |
 | `door_leaf` | 0.90 × 2.024 × 0.15 | Original plank leaf with bevelled rails, rain-streaked round glass, hinge straps and brass handle. Put the hinge on the far jamb, with the origin at its foot and the leaf extending along −X in glTF. It swings into the shop and clears the view of the quay. |
 | `door_bell` | 0.11 × 0.105 × 0.11 | Keep the old cast brass shop bell, clapper and suspension stem together. Its origin is at the top of the stem, with the bell below. |
+| `window_drapery` | 2.46 × 1.03 × 0.30 | A dark brass rail with rings above two gathered petrol-blue curtains. Stitch a thin gold border down each fold and leave the window centre open. Centre the origin on the rod, front towards +Z in glTF. Tie points at x ±0.973, y −0.945. |
+| `curtain_hem` | 0.41 × 0.89 × 0.14 | Pleated cloth below one tieback, with a gold-edged scallop and tassels. Put the origin at the top knot, with the hem below it and the finished face towards +Z. The game swings a copy from each tie. |
 | `room` | see below | *(optional)* The walls of the shop, replacing the plain placeholder walls. |
 | `wall_clock` | 0.78 × 0.78 × 0.08 | A round wall clock in a dark wooden frame with a cream face and twelve tick marks, **no hands** (the game adds and turns them). Origin at the **centre of the back** of the clock, face towards −Y. |
 | `way_board` | 0.8 × 0.24 × 0.05 | A weathered wooden direction board with one pointed end and two old nails, **no lettering** (the game writes "To the harbour" and "To the market" on it). The game mounts two of these flush with the left wall immediately beside the doorframe and paints the anchor or market awning beside the localised wording. Keep the broad front face flat at +0.039 m in glTF Z. Origin at the **centre of the back** of the board, front towards −Y. |
@@ -316,6 +318,9 @@ glowing glass and windows are just emissive materials.
 | `village_house` | 2.2 × 2.4 × 1.8 | A narrow, crooked old fisherman's house in dark stone and timber with a steep roof and a chimney, one small window glowing amber (emissive) on the front. Seen from afar behind the harbour; used several times, so keep it plain. |
 | `barrel` | 0.6 × 0.72 × 0.6 | An old wooden barrel with iron hoops. |
 | `mooring_line` | 1.0 × 0.16 × 0.045 | Three strands of warm hemp with a shallow hanging curve. Start at the origin and finish at (1, 0, 0) in glTF. Both ends remain level. The game fits the span between a cleat and its bollard. |
+| `bank_windmill` | 1.70 × 2.86 × 1.76 | A limewashed round mill with exposed bricks, a plank door, timber gallery and a slate cap. Origin at the bottom centre. Face the door and the axle towards +Z in glTF. The axle meets the sails at (0, 2.08, 0.92). |
+| `windmill_sails` | 2.47 × 2.47 × 0.30 | Four tapered lattice sweeps, each carrying a narrow, stitched strip of linen. Rivet a timber cross to the hub. Centre its origin on the mill axle and spread the sails in the XY plane so they turn about Z. |
+| `riverbank` | 36.0 × 0.66 × 1.57 | A long verge with interrupted courses of dry stone, uneven grass and reeds. Centre the origin along the verge at paving height. Face the exposed stones towards +Z and run the wall along X. |
 | `cork_fender` | 0.34 × 0.51 × 0.31 | A pear-shaped cork fender covered in a diamond net, rope collars and a dark middle binding. Hang from a narrow rope eye at the origin. The cork extends down along glTF −Y. |
 | `mooring_post` | 0.3 × 0.6 × 0.3 | A short weathered wooden mooring post (bollard) with a coil of thick rope around it. |
 | `bell_post` | 0.6 × 1.95 × 0.2 | A wooden post with its origin at the foot. A short arm sticks out to the right (+X), with a hook **0.38 m right of the post, 1.85 m high** for the separate bell. |
@@ -441,6 +446,7 @@ their origin and face −Y.
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
 | `shopping_basket` | 1.5 × 1.02 × 0.94 | Open willow trug with tapered sides, a wrapped bentwood handle, copper rivets and a madder-and-cream checked napkin draped over the front lip. Origin at the bottom centre. Keep room inside for purchases. |
+| `bunting_line` | 14.01 × 3.35 × 0.21 | Two dark timber poles with collars and finials, strung with a thin hemp line. Origin at ground level halfway between them. In glTF run the line from (−6.9, 3.10, 0) to (6.9, 3.10, 0) with a 0.55 m sag at its centre. The game attaches the cloth separately. |
 | `wrapped_parcel` | 0.40 × 0.245 × 0.30 | A small kraft-paper parcel with folded ends, string in both directions and a wax-sealed paper slip. Origin at the bottom centre, front facing +Z in glTF. |
 | `sold_ticket` | 0.30 × 0.224 × 0.16 | A little standing envelope on a brass foot, closed with red wax. Face it towards the customer (+Z in glTF) and place the origin at the bottom centre. No lettering. |
 | `stall_carpenter` | 1.9 × 2.5 × 1.2 | A carpenter's market stall: a sturdy workbench table, a saw and planks leaning on the side, wood shavings, a sand-brown canvas awning. |

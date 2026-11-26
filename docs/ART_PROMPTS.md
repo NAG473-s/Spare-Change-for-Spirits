@@ -28,6 +28,12 @@ The furnishing guides are delivered in `assets/sprites/shop/`. Paint `placement_
 
 ## Delivery status
 
+### River valley, market bunting and shop window (delivered)
+
+- `assets/sprites/harbor/river_valley_day.png` and `river_valley_dusk.png` are matching 1536 × 512 gouache panoramas. Paint a river bending between a stone bridge, willow trees, fields and distant roofs. Keep the bridge, hill contours and horizon in the same places. Use pale sage and gold at the market and layered blue hills with a few warm windows at the harbour. The mill and foreground wall stand in the 3D scene.
+- `assets/sprites/market/fair_pennant.png` is a 96 × 96 transparent forked linen flag with a turned hem and a woven diamond. Use neutral values so it can take the traders’ colours. Pin the top corners on a level line.
+- `assets/sprites/shop/window_light.png` is a 256 × 256 transparent projection of an arched, four-pane window. Leave a soft break at each glazing bar and feather the edges so the wood grain shows through.
+
 ### Shop memories and shelf lettering (delivered)
 
 - **Edwin in the rain** — `assets/sprites/memories/edwin_rain.png`, 512 × 768. Paint the elderly, moustached Edwin from the guest portrait under a mended russet umbrella. Use golden lamplight against a slate-blue rainy street. Keep his face and both hands inside the central oval crop. The whole painting also appears in his book. The moving rain and the reflection's fade are rendered in the shop.

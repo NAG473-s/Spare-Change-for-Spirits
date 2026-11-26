@@ -10,6 +10,7 @@
 //! shop; the camera moves there for the day.
 
 mod basket;
+mod bunting;
 
 use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
@@ -45,7 +46,7 @@ impl Plugin for MarketPlugin {
             .add_systems(
                 Update,
                 (
-                    (animate_vendors, sway_bunting)
+                    (animate_vendors, bunting::sway)
                         .run_if(resource_equals(Location::Market))
                         .run_if(crate::menu::shop_unpaused),
                     (
@@ -177,12 +178,6 @@ struct SoldTicket;
 /// Size of a ware's hover box (its width is its place on the table).
 const HIT_HEIGHT: f32 = 0.7;
 const HIT_DEPTH: f32 = 0.5;
-
-/// A pennant on the bunting; it flutters.
-#[derive(Component)]
-struct Pennant {
-    phase: f32,
-}
 
 /// Spawning helper with the asset collections.
 struct Kit<'a, 'w, 's> {
@@ -337,33 +332,7 @@ fn spawn_market(
         }
     }
 
-    // A string of pennants across the back of the square.
-    let colors: Vec<Color> = data.vendors.iter().map(|v| rgb(v.color)).collect();
-    let (from, to) = (Vec3::new(-6.8, 3.1, -3.6), Vec3::new(7.0, 3.1, -3.6));
-    let count = 30;
-    for i in 0..count {
-        let t = i as f32 / (count - 1) as f32;
-        let sag = 0.55 * 4.0 * t * (1.0 - t);
-        let pos = from.lerp(to, t) - Vec3::Y * sag;
-        let pennant = k.node(Some(root), Transform::from_translation(pos));
-        k.commands.entity(pennant).insert(Pennant {
-            phase: i as f32 * 0.7 + rng.range(0.0, 1.0),
-        });
-        let color = colors
-            .get(i % colors.len().max(1))
-            .copied()
-            .unwrap_or(Color::WHITE);
-        k.part(
-            pennant,
-            Triangle3d::new(
-                Vec3::new(-0.13, 0.0, 0.0),
-                Vec3::new(0.13, 0.0, 0.0),
-                Vec3::new(0.0, -0.3, 0.0),
-            ),
-            color,
-            Transform::default(),
-        );
-    }
+    bunting::spawn(&mut k, root, &data, &mut rng);
 
     // The way back to the shop.
     let sign = return_post(
@@ -1587,21 +1556,6 @@ fn animate_vendors(
                     Quat::from_rotation_y(0.6 * (t * 0.5 + p).sin()) * Quat::from_rotation_x(nod);
             }
         }
-    }
-}
-
-fn sway_bunting(
-    time: Res<Time>,
-    settings: Res<Settings>,
-    mut pennants: Query<(&Pennant, &mut Transform)>,
-) {
-    let t = time.elapsed_secs();
-    for (p, mut transform) in &mut pennants {
-        transform.rotation = if settings.reduced_motion {
-            Quat::IDENTITY
-        } else {
-            Quat::from_rotation_x(0.35 * (t * 2.1 + p.phase).sin())
-        };
     }
 }
 

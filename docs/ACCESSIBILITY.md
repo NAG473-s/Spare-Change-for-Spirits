@@ -44,6 +44,8 @@ Floor corners and an enamel badge mark the target when moving furniture or using
 
 At the market, physical purchases fill a wicker basket and sold single pieces show a sealed envelope. The stall's written offer and tooltip remain available. Reduced motion updates the basket and hovered wares immediately and holds the traders and pennants still. A returned crate travels back from the cart to the deck. At the harbour the ferry stays at its appropriate waterline with the mooring lines fast, and unloading or returning cargo makes no rocking or transfer ripples with reduced motion enabled.
 
+With reduced motion, the windmill holds its angle at both outdoor locations. The shop curtains rest against their ties when the door opens, and the window light stays in place through the night. The open/closed sign remains visible between the curtains.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.
