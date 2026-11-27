@@ -547,6 +547,46 @@ fn end_day(mut actions: MessageReader<Action>, mut next: ResMut<NextState<Phase>
 mod tests {
     use super::*;
 
+    /// The wall clock runs from 00:00 to 05:00 over the night's length and
+    /// stops at 05:00; the night is over once its length has passed.
+    #[test]
+    fn the_night_clock_runs_from_midnight_to_five() {
+        let mut clock = NightClock {
+            elapsed: 0.0,
+            length: 240.0,
+        };
+        assert_eq!(clock.time_string(), "00:00");
+        assert!(!clock.is_over());
+        clock.elapsed = 120.0;
+        assert_eq!(clock.time_string(), "02:30");
+        clock.elapsed = 239.0;
+        assert_eq!(clock.time_string(), "04:58");
+        assert!(!clock.is_over());
+        clock.elapsed = 240.0;
+        assert!(clock.is_over());
+        clock.elapsed = 300.0;
+        assert_eq!(clock.time_string(), "05:00", "it never runs past five");
+        // A clock without a length does not divide by zero.
+        assert_eq!(NightClock::default().time_string(), "00:00");
+    }
+
+    #[test]
+    fn a_recorded_sale_counts_its_price_and_keeps_the_receipt() {
+        let mut report = NightReport::default();
+        report.record_sale("tea_tin", 5, 6, 1);
+        report.record_sale("lavender", 4, 4, 0);
+        assert_eq!((report.sales, report.revenue), (2, 9));
+        assert_eq!(
+            report.receipts[0],
+            SaleReceipt {
+                product: "tea_tin".into(),
+                price: 5,
+                paid: 6,
+                given: 1,
+            }
+        );
+    }
+
     #[test]
     fn the_first_ledger_and_market_buttons_reach_the_second_evening() {
         let mut app = App::new();
