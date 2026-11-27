@@ -200,6 +200,8 @@ class DemoAssets:
 
         sets = [s for s in rows("sets") if all(json.loads(d) in self.decor for d in items(s["decor"]))]
         events = [e for e in rows("events") if int(e["night"]) <= last]
+        self.snow_tracks = self.snow or any(int(e["night"]) > 0 and e.get("weather") in
+                                            {"Some(Snow)", "Some(Blizzard)"} for e in events)
         for row in sets + events:
             if "ghost_weights" in row:
                 row["ghost_weights"] = sequence(w for w in items(row["ghost_weights"])
@@ -273,6 +275,8 @@ class DemoAssets:
             return stem in (self.products if parts[1] == "products" else self.decor)
         if parts[:2] == ("models", "shop") and stem in self.upgrade_ids:
             return stem in self.upgrades
+        if parts == ("models", "props", "boot_print.glb"):
+            return self.snow_tracks
         if parts[:2] == ("models", "harbor"):
             if stem == "apple_snow":
                 return self.snow

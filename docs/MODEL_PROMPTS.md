@@ -19,6 +19,8 @@ The market paving, herb beds, public bench, five upper storeys, fish vane and al
 
 The post house, dyer's house, net cottage, pilot house and four articulated residents are delivered. Their replacement specifications are under *Houses and residents*.
 
+The bakery board, bread stall, two scored loaves, waxcloth, street gate, postal envelope and slot, shoe impression and reflected lamplighter are delivered. See *Working rounds* for the separate pieces and pivots.
+
 ## Delivered models
 
 - The four working storage cases and their separate lids are in `assets/models/shop/`. Their silhouettes, contents and hinge specifications are listed under *Shop improvements*. The existing chair, crate and birdcage piles still occupy some locked tiles.
@@ -424,12 +426,31 @@ Set the origin on the ground between the feet or in the middle of the foundation
 | `dyer_house` | 2.34 × 3.06 × 1.75 | Two-storey rose plaster house with a curved tile roof and a projecting drying gallery. Hang three lengths of folded linen with contrasting woven hems. |
 | `net_cottage` | 2.37 × 2.44 × 1.80 | Low sea-green cottage with pale weatherboards, a round loft light and a corked fishing net drying against the sunny wall. |
 | `pilot_house` | 2.03 × 2.96 × 1.71 | Yellow harbour pilot's house with a compass rose on the gable, a tide board and an eight-sided glazed lookout capped in copper. |
-| `letter_carrier` | 0.69 × 1.45 × 0.41 | Indigo peaked cap, brass pin, leather dispatch satchel on a diagonal strap. Hold a sealed cream envelope in the raised right hand. |
-| `bread_carrier` | 0.73 × 1.45 × 0.52 | A baker in a flour-dusted coif and linen apron. Carry an oval wicker trug with two scored loaves in the right arm. |
+| `letter_carrier` | 0.69 × 1.45 × 0.41 | Indigo peaked cap, brass pin, leather dispatch satchel on a diagonal strap. Leave the right hand open for the separate sealed envelope. |
+| `bread_carrier` | 0.73 × 1.45 × 0.52 | A baker in a flour-dusted coif and linen apron. Carry an empty oval wicker trug on the right arm. The two loaves and weather cover move independently. |
 | `net_mender` | 0.73 × 1.44 × 0.43 | Grey-bearded net mender in a striped sea-green guernsey and fisherman's cap. The right hand holds a loose coil of flax line. |
 | `lamp_keeper` | 0.72 × 1.46 × 0.52 | Harbour keeper in a yellow oilskin and sou'wester. Suspend a brass and amber lantern from the right hand. |
 
 Keep each resident in a single scene. Name the two leg pivots `Hip.L` and `Hip.R` at the tops of the legs and the working arm pivot `Shoulder.R` at the shoulder. Parent the carried item beneath the working shoulder. The game turns these nodes during the walk and lifts the tool when the resident stops. The route and timing live in `assets/data/props.ron`.
+
+### Working rounds
+
+Use the village palette, metres, Y up, front toward +Z, a bottom-centre origin and one scene. Keep the right-hand grip empty where a separate piece is listed. The game moves the loose goods, light and water reflection.
+
+| Model under `assets/models/props/` | Size in metres | Replacement prompt |
+|---|---|---|
+| `bread_board` | 0.92 × 0.76 × 0.52 | A worn flour-dusted serving board on four timber legs, with a folded linen strip set into the top. |
+| `bread_stall` | 1.03 × 1.58 × 0.54 | The same counter height, a striped canvas sunshade and a small sign with a carved loaf. Leave the centre of the counter clear. |
+| `round_loaf` | 0.31 × 0.17 × 0.17 | A single oval amber loaf with three pale cuts. Show flour in the grooves. The same mesh is used twice. |
+| `basket_waxcloth` | 0.43 × 0.13 × 0.34 | Honey-coloured waxed linen domed over a wicker rim, shallow creases and a blue-green hem. |
+| `round_letter` | 0.33 × 0.23 × 0.04 | A cream folded envelope with a diagonal flap and a circular red wax seal facing +Z. |
+| `shop_post_gate` | 0.80 × 1.35 × 0.43 | A short woad-painted shop gate, copper and slate hood and a carved ghost medallion. Leave the front at letter height clear for the separate brass plate. |
+| `door_letter_slot` | 0.47 × 0.14 × 0.07 | A brass letter plate, dark opening and worn screw heads. Mount on the moving door leaf. |
+| `boot_print` | 0.11 × 0.014 × 0.20 | A grey-blue heel and separate toe impression at ground level. Point the toe toward +Z. |
+| `keeper_reflection` | 0.52 × 0.002 × 0.94 | Broken horizontal reflections of the harbour keeper's yellow sou'wester, cape and raised brass lantern. Lay the bands flat on the XZ plane, hat toward +Z. |
+
+The dyer's three lengths of cloth hang from a single upper pivot named `Drying linen`. Keep the gallery rail on the house. On the net rack, anchor `Net mesh` at the upper left fastening and `Loose stitch` at its left knot. Keep the timber frame and cork floats fixed.
+
 
 ## Props at the harbour – `assets/models/props/<id>.glb`
 

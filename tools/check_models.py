@@ -395,16 +395,18 @@ def check(path, target, budget, resident=False):
             f"{len(scenes)} scenes (default {gltf.get('scene', 0)}); the game needs exactly one "
             "– run tools/fix_models.py"
         )
-    if resident and len(scenes) == 1:
+    working_nodes = {"dyer_house": ("Drying linen",), "fishing_net": ("Net mesh", "Loose stitch")}
+    required_nodes = ("Hip.L", "Hip.R", "Shoulder.R") if resident else working_nodes.get(path.stem, ())
+    if required_nodes and len(scenes) == 1:
         stack = list(scenes[0].get("nodes", []))
         names = []
         while stack:
             node = gltf["nodes"][stack.pop()]
             names.append(node.get("name"))
             stack.extend(node.get("children", []))
-        for joint in ("Hip.L", "Hip.R", "Shoulder.R"):
+        for joint in required_nodes:
             if names.count(joint) != 1:
-                problems.append(f"expected one {joint} joint in the resident's scene")
+                problems.append(f"expected one {joint} pivot in the scene")
     return line, problems
 
 
@@ -443,7 +445,9 @@ def main():
             **upgrade_sizes(),
         ),
         "harbor": HARBOR_SIZES,
-        "props": props,
+        "props": dict(props, round_loaf=(0.31, 0.17, 0.17), basket_waxcloth=(0.43, 0.13, 0.34),
+                      round_letter=(0.33, 0.23, 0.04), door_letter_slot=(0.47, 0.14, 0.06),
+                      boot_print=(0.11, 0.014, 0.20), keeper_reflection=(0.52, 0.002, 0.94)),
         "critters": CRITTER_SIZES,
         "market": MARKET_SIZES,
         "incidents": incident_sizes(),

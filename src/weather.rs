@@ -1,6 +1,6 @@
 //! The weather of tonight's event (`weather` in `assets/data/events.ron`),
-//! visible from the evening until dawn: rain and snow running down the shop
-//! window and falling over the harbour, slanting rain in a storm (the candles
+//! visible during the market day and the following evening and night. Rain and snow run down the shop
+//! window and fall over the square or harbour, with slanting rain in a storm (the candles
 //! flicker harder, see `fx.rs`), and fog drifting over the shop floor and the
 //! harbour water. On rainy nights the dark shape of a ghost waiting outside
 //! shows behind the wet window now and then (`rain_silhouette`). Everything
@@ -44,7 +44,7 @@ pub enum Weather {
     Fog,
 }
 
-/// The weather showing right now (none in the morning and at the market).
+/// The calendar weather in the village, harbour and shop.
 #[derive(Resource, Default, PartialEq)]
 pub struct WeatherNow(pub Option<Weather>);
 
@@ -228,7 +228,7 @@ fn spawn_weather(
     }
 }
 
-/// Tonight's weather from the evening until dawn.
+/// The day's event reaches the market before the shop opens.
 fn choose_weather(
     data: Res<GameData>,
     progress: Res<Progress>,
@@ -236,7 +236,7 @@ fn choose_weather(
     mut now: ResMut<WeatherNow>,
 ) {
     let wanted = WeatherNow(
-        matches!(phase.get(), Phase::Evening | Phase::Night)
+        matches!(phase.get(), Phase::Day | Phase::Evening | Phase::Night)
             .then(|| data.event(progress.calendar(&data)))
             .flatten()
             .and_then(|e| e.weather),
@@ -258,30 +258,44 @@ fn fall(
     time: Res<Time>,
     now: Res<WeatherNow>,
     location: Res<Location>,
+    settings: Res<crate::save::Settings>,
+    mut was_market: Local<bool>,
     mut drops: Query<(&Drop, &mut Transform, &mut Visibility)>,
 ) {
     let storm = now.stormy();
     let raining = now.is(Weather::Rain) || now.is(Weather::Storm);
     let snowing = now.is(Weather::Snow) || now.is(Weather::Blizzard);
     let (dt, t) = (time.delta_secs(), time.elapsed_secs());
-    let changed = now.is_changed() || location.is_changed();
+    let changed = now.is_changed() || location.is_changed() || settings.is_changed();
     if !changed && ((!raining && !snowing) || dt == 0.0) {
         return;
     }
+    // Share the outdoor drops between the two towns the camera can visit.
+    let market = *location == Location::Market;
+    let shift = crate::market::MARKET - HARBOR;
     for (d, mut transform, visibility) in &mut drops {
         let here = if d.on_glass {
             Location::Shop
+        } else if market {
+            Location::Market
         } else {
             Location::Harbor
         };
-        let on = here == *location && if d.snow { snowing } else { raining };
+        if !d.on_glass && market != *was_market {
+            transform.translation += if market { shift } else { -shift };
+        }
+        let on =
+            !settings.reduced_motion && here == *location && if d.snow { snowing } else { raining };
         if changed {
             show(visibility, on);
         }
         if !on {
             continue;
         }
-        let (centre, half) = d.area;
+        let (mut centre, half) = d.area;
+        if market && !d.on_glass {
+            centre += shift;
+        }
         let speed = if storm {
             d.speed * STORM_SPEED
         } else {
@@ -311,6 +325,7 @@ fn fall(
             Quat::IDENTITY
         };
     }
+    *was_market = market;
 }
 
 /// Fog patches sway slowly to and fro.

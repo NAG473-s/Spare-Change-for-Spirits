@@ -123,6 +123,16 @@ impl Journal {
             || (live.ida_sailor_met && !self.ida_sailor_met);
         self.edwin_mirror_seen |= live.edwin_mirror_seen;
         self.ida_sailor_met |= live.ida_sailor_met;
+        for (saved, current) in self.postcards.iter_mut().zip(&live.postcards) {
+            if saved.in_mailbox
+                && !current.in_mailbox
+                && saved.name == current.name
+                && saved.ghost == current.ghost
+            {
+                changed = true;
+                saved.in_mailbox = false;
+            }
+        }
         for (kind, observed) in &live.book {
             let saved = if let Some(saved) = self.book.get_mut(kind) {
                 saved

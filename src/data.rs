@@ -65,6 +65,9 @@ pub enum Shape {
 /// An out-and-back walk in scene metres. Durations and the starting offset are in seconds.
 #[derive(Deserialize, Clone, Copy, Debug)]
 pub struct WalkDef {
+    /// Optional street corner between the two stops, in scene coordinates.
+    #[serde(default)]
+    pub via: Option<(f32, f32)>,
     pub to: (f32, f32),
     pub travel: f32,
     pub pause: f32,

@@ -27,6 +27,7 @@ mod fx;
 mod gamepad;
 mod ghosts;
 mod guide;
+mod handoff;
 mod harbor;
 mod i18n;
 mod incidents;
@@ -75,6 +76,10 @@ fn main() {
     if let Some(i) = args.iter().position(|a| a == "--simulate") {
         let runs = args.get(i + 1).and_then(|r| r.parse().ok()).unwrap_or(500);
         sim::run(&data, runs);
+        return;
+    }
+    if args.iter().any(|arg| arg == "--check-demo-handoff") {
+        handoff::run(data);
         return;
     }
     let automatic = i18n::AutomaticLanguage::at_launch();

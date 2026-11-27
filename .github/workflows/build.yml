@@ -2,6 +2,11 @@ name: Desktop builds
 
 on:
   workflow_dispatch:
+    inputs:
+      verify_only:
+        description: Test the packages without uploading downloadable artifacts
+        type: boolean
+        default: false
   push:
     branches: [main]
     tags: ["v*"]
@@ -33,3 +38,4 @@ jobs:
     with:
       runner: ${{ matrix.runner }}
       platform: ${{ matrix.platform }}
+      verify_only: ${{ inputs.verify_only || false }}

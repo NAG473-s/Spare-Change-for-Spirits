@@ -32,6 +32,7 @@ pub struct FerryPlugin;
 
 impl Plugin for FerryPlugin {
     fn build(&self, app: &mut App) {
+        install_trade(app);
         app.add_message::<CargoWave>()
             .init_resource::<BoughtTonight>()
             .init_resource::<HoveredCrate>()
@@ -49,16 +50,15 @@ impl Plugin for FerryPlugin {
                     (sync_cart, fly_crates)
                         .chain()
                         .run_if(in_state(Phase::Evening)),
-                    (
-                        trade_crates,
-                        animate_crates,
-                        update_crate_labels,
-                        update_tooltip,
-                    )
+                    (animate_crates, update_crate_labels, update_tooltip)
                         .run_if(in_state(Phase::Evening)),
                 ),
             );
     }
+}
+
+pub(crate) fn install_trade(app: &mut App) {
+    app.add_systems(Update, trade_crates.run_if(in_state(Phase::Evening)));
 }
 
 /// Crates bought per product this evening (they can be given back).

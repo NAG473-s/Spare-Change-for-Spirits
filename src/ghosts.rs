@@ -577,6 +577,24 @@ struct GhostArt<'w> {
     materials: ResMut<'w, Assets<StandardMaterial>>,
 }
 
+/// Run the customer and story logic in the packaged handoff check without a display.
+pub(crate) fn install_headless_customers(app: &mut App) {
+    app.insert_resource(SpawnTimer(2.0))
+        .init_resource::<Queue>()
+        .add_systems(
+            Update,
+            (
+                spawn_ghosts,
+                spawn_story_ghost,
+                spawn_ordering,
+                ghost_ai,
+                move_ghosts,
+            )
+                .chain()
+                .run_if(in_state(Phase::Night)),
+        );
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum VisitKind {
     Customer,

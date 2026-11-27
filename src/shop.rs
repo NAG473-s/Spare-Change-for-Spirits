@@ -82,6 +82,7 @@ impl Plugin for ShopPlugin {
                             .or_else(resource_changed::<UiFont>)
                             .or_else(resource_changed::<Upgrades>),
                     ),
+                    update_shelf_pins.after(sync_cell_visuals),
                     translate_counter.run_if(resource_changed::<UiFont>),
                     (shelf_tooltip, furnishing_tooltip).chain(),
                 ),
@@ -732,6 +733,16 @@ fn shelf_tooltip(
         title: lang.product(&p.id),
         ..default()
     };
+    for order in progress
+        .orders
+        .iter()
+        .filter(|o| o.pinned && o.state == crate::orders::OrderState::Open && o.product == p.id)
+    {
+        t.line(
+            TipKind::Good,
+            crate::orders::marked(order.label(&lang), true),
+        );
+    }
     t.line(
         TipKind::Text,
         lang.f(
@@ -787,7 +798,7 @@ fn shelf_tooltip(
 /// first shelf with room for it, the selected furniture onto the first free
 /// square.
 #[allow(clippy::too_many_arguments)]
-fn use_tool_anywhere(
+pub(crate) fn use_tool_anywhere(
     mut actions: MessageReader<Action>,
     tool: Res<Tool>,
     data: Res<GameData>,
@@ -885,7 +896,7 @@ pub fn can_use_tool_anywhere(
     left && free_cell_for(data, layout, upgrades, tool).is_some()
 }
 
-fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
+pub(crate) fn select_tool(mut actions: MessageReader<Action>, mut tool: ResMut<Tool>) {
     for action in actions.read() {
         let new = match action {
             Action::ToolPlace(id) => Tool::Place(id.clone()),
@@ -1038,9 +1049,29 @@ fn furnishing_tooltip(
 #[derive(Component)]
 struct CellLabel;
 
+#[derive(Component)]
+struct ShelfTicket(Vec<(String, String)>);
+
+fn update_shelf_pins(progress: Res<Progress>, mut tickets: Query<(Ref<ShelfTicket>, &mut Text)>) {
+    for (ticket, mut text) in &mut tickets {
+        if ticket.0.is_empty() || (!ticket.is_added() && !progress.is_changed()) {
+            continue;
+        }
+        let caption = ticket
+            .0
+            .iter()
+            .map(|(id, count)| crate::orders::marked(count.clone(), progress.pinned_for(id)))
+            .collect::<Vec<_>>()
+            .join(" · ");
+        if text.0 != caption {
+            text.0 = caption;
+        }
+    }
+}
+
 /// Wares that are sold out (or have faded) leave the shelves, so no empty
 /// "×0" slot stays behind; the slot is free for something else.
-fn clear_sold_out(stock: Res<Stock>, mut layout: ResMut<ShopLayout>) {
+pub(crate) fn clear_sold_out(stock: Res<Stock>, mut layout: ResMut<ShopLayout>) {
     let sold_out = |p: &String| stock.count(p) == 0;
     if !layout.cells.iter().any(|c| c.products.iter().any(sold_out)) {
         return;
@@ -1161,6 +1192,7 @@ fn sync_cell_visuals(
 
         // Shelves say how many they hold (and what, while the product has no
         // model to show it); placeholders say what they are.
+        let mut ticket = Vec::new();
         let text = if content.products.is_empty() {
             (!has_model).then(|| lang.decor(&def.id))
         } else {
@@ -1177,7 +1209,7 @@ fn sync_cell_visuals(
                         )
                     };
                     let due = stock.fading_next_dawn(p, &data, bonus);
-                    if due == 0 {
+                    let label = if due == 0 {
                         total
                     } else if font.signs.is_some() {
                         format!("{total} ⌛{due}")
@@ -1186,7 +1218,9 @@ fn sync_cell_visuals(
                             "{total} ({})",
                             lang.f("shelf.dawn_count", &[("count", &due)])
                         )
-                    }
+                    };
+                    ticket.push((p.clone(), label.clone()));
+                    label
                 })
                 .collect();
             Some(counts.join(" · "))
@@ -1196,7 +1230,7 @@ fn sync_cell_visuals(
                 CellLabel,
                 world_label(
                     &font,
-                    Text::new(text),
+                    (Text::new(text), ShelfTicket(ticket)),
                     LabelKind::Stock,
                     entity,
                     Vec3::new(0.0, size.y + 0.15, 0.0),

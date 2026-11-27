@@ -26,7 +26,7 @@ use crate::shop::{CellContent, ShopLayout, Storeroom};
 use crate::upgrades::Upgrades;
 
 /// Bump when the save format changes incompatibly; older saves are ignored.
-pub const SAVE_VERSION: u32 = 7;
+pub const SAVE_VERSION: u32 = 8;
 /// Environment variable to put saves somewhere else (tests, smoke runs).
 pub const SAVE_DIR_ENV: &str = "SCFS_SAVE_DIR";
 
@@ -333,7 +333,7 @@ fn read_save_at(path: &Path) -> Option<SaveGame> {
     let text = std::fs::read_to_string(path).ok()?;
     match ron::from_str::<SaveGame>(&text) {
         Ok(mut save) if (4..=SAVE_VERSION).contains(&save.version) => {
-            // Later versions add only defaulted guide, order and ghost-book fields.
+            // Later versions add defaulted guide, order, ghost-book and physical delivery fields.
             if save.version < 7 {
                 save.journal.recover_recorded_sales();
             }

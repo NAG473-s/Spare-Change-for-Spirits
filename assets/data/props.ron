@@ -96,14 +96,19 @@
     (id: "pilot_house", scene: Harbor, pos: (0.02, 0.0, -5.78), turn: -8.0,
         size: (2.03, 2.96, 1.71), shape: House, color: (0.76, 0.57, 0.38)),
 
+    // The shop's street-side letter hatch stands beside the road home.
+    (id: "shop_post_gate", scene: Market, pos: (-4.75, 0.0, 4.48), size: (0.80, 1.35, 0.43), color: (0.37, 0.47, 0.43)),
+    // Boards flanking the bakery lane and the bread stall. Tops are at 0.76 m.
+    (id: "bread_board", scene: Market, pos: (1.56, 0.0, -5.39), size: (0.92, 0.76, 0.52), color: (0.54, 0.42, 0.30)),
+    (id: "bread_stall", scene: Market, pos: (2.18, 0.0, 2.92), size: (1.03, 1.58, 0.54), color: (0.54, 0.42, 0.30)),
     // Residents use the front footway, the mosaic lane, the net walk and the wooden
     // jetty. Each pauses at both ends. The height stays fixed along the entire walk.
-    (id: "letter_carrier", scene: Market, pos: (-2.65, 0.0, 4.53), size: (0.69, 1.45, 0.41),
-        color: (0.33, 0.46, 0.60), walk: Some((to: (-0.02, 5.12), travel: 5.4, pause: 3.1, offset: 2.0))),
-    (id: "bread_carrier", scene: Market, pos: (1.87, 0.0, 1.43), size: (0.73, 1.45, 0.52),
-        color: (0.73, 0.48, 0.33), walk: Some((to: (2.69, -2.82), travel: 8.6, pause: 4.0, offset: 9.2))),
+    (id: "letter_carrier", scene: Market, pos: (-7.40, 0.0, -5.39), size: (0.69, 1.45, 0.41),
+        color: (0.33, 0.46, 0.60), walk: Some((to: (-4.46, 4.98), via: Some((-7.49, 3.39)), travel: 15.0, pause: 3.1, offset: 2.0))),
+    (id: "bread_carrier", scene: Market, pos: (1.81, 0.0, -4.94), size: (0.73, 1.45, 0.52),
+        color: (0.73, 0.48, 0.33), walk: Some((to: (1.93, 2.43), via: Some((2.22, -2.70)), travel: 9.5, pause: 4.0, offset: 25.0))),
     (id: "net_mender", scene: Harbor, pos: (-1.10, 0.0, -1.75), size: (0.73, 1.44, 0.43),
-        color: (0.27, 0.49, 0.47), walk: Some((to: (1.00, -1.93), travel: 6.0, pause: 3.7, offset: 7.8))),
+        color: (0.27, 0.49, 0.47), walk: Some((to: (-0.24, -2.22), travel: 4.5, pause: 3.7, offset: 7.8))),
     (id: "lamp_keeper", scene: Harbor, pos: (5.90, 0.06, 0.04), size: (0.72, 1.46, 0.52),
         color: (0.77, 0.56, 0.24), walk: Some((to: (5.90, 2.62), travel: 5.9, pause: 4.2, offset: 2.5))),
 ]

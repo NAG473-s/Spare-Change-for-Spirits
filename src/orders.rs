@@ -80,7 +80,26 @@ impl Order {
     }
 }
 
+pub fn marked(text: String, pinned: bool) -> String {
+    if pinned {
+        format!("{PIN_MARK} {text}")
+    } else {
+        text
+    }
+}
+
 impl Progress {
+    pub fn pinned_order(
+        &self,
+        index: Option<usize>,
+        product: &str,
+        state: OrderState,
+    ) -> Option<&Order> {
+        self.orders
+            .get(index?)
+            .filter(|order| order.pinned && order.product == product && order.state == state)
+    }
+
     pub fn pinned_for(&self, product: &str) -> bool {
         self.orders
             .iter()
@@ -225,6 +244,22 @@ mod tests {
             ["order_slips.missing", "order_slips.counter"]
         );
         assert!(!progress.pinned_for("lavender"));
+        assert!(
+            progress
+                .pinned_order(Some(1), "lavender", OrderState::AtRegister)
+                .is_some()
+        );
+        for (index, ware) in [
+            (Some(0), "lavender"),
+            (None, "lavender"),
+            (Some(1), "tea_tin"),
+        ] {
+            assert!(
+                progress
+                    .pinned_order(index, ware, OrderState::AtRegister)
+                    .is_none()
+            );
+        }
         stock.add("lavender", 1);
         assert_eq!(
             status(&progress, &stock),

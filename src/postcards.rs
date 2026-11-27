@@ -67,6 +67,8 @@ pub struct Postcard {
     pub item: String,
     /// Showing its back (the words) rather than the picture.
     pub turned: bool,
+    /// New cards can be picked up at the door as well as read in the book.
+    pub in_mailbox: bool,
 }
 
 impl Postcard {
@@ -140,6 +142,7 @@ fn deliver(lang: Res<Lang>, mut progress: ResMut<Progress>, mut log: ResMut<Game
                 .clone()
                 .unwrap_or_else(|| r.favourite.clone()),
             turned: false,
+            in_mailbox: true,
         })
         .collect();
     for card in arriving {
@@ -544,6 +547,7 @@ mod tests {
         let journal = &world.resource::<Progress>().journal;
         assert_eq!(journal.postcards.len(), 1);
         let card = &journal.postcards[0];
+        assert!(card.in_mailbox);
         assert_eq!(
             (card.name, card.night, card.item.as_str()),
             (1, 12, "tea_tin")
@@ -573,6 +577,27 @@ mod tests {
                 None
             );
         }
+    }
+
+    #[test]
+    fn old_cards_stay_delivered_and_opening_the_mail_survives_a_night_rewind() {
+        let old: Postcard = ron::from_str(r#"(name: 2, ghost: "cat", turned: true)"#).unwrap();
+        assert!(!old.in_mailbox);
+        let mut opening = crate::book::Journal::default();
+        opening.postcards = vec![
+            old,
+            Postcard {
+                name: 3,
+                ghost: "shy".into(),
+                in_mailbox: true,
+                ..default()
+            },
+        ];
+        let mut live = opening.clone();
+        live.postcards[1].in_mailbox = false;
+        assert!(opening.remember_discoveries(&live));
+        assert!(!opening.remember_discoveries(&live));
+        assert_eq!(opening.postcards, live.postcards);
     }
 
     #[test]

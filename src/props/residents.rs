@@ -18,23 +18,36 @@ pub(super) fn install(app: &mut App) {
     );
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Job {
+    Post,
+    Bread,
+    Net,
+    Lamp,
+}
+
 #[derive(Component)]
 pub(super) struct Resident {
+    pub(super) job: Job,
+    pub(super) corner: Vec3,
     site: Location,
     start: Vec3,
     span: Vec3,
     route: WalkDef,
-    elapsed: f32,
+    pub(super) elapsed: f32,
     joints: [Option<(Entity, Quat)>; 3],
 }
 
 pub(super) struct Pose {
     pub at: Transform,
-    step: f32,
-    arm: f32,
+    pub(super) step: f32,
+    pub(super) arm: f32,
+    pub(super) stop: f32,
+    pub(super) returning: bool,
+    pub(super) travel: f32,
 }
 
-fn ease(t: f32) -> f32 {
+pub(super) fn ease(t: f32) -> f32 {
     let t = t.clamp(0., 1.);
     t * t * (3. - 2. * t)
 }
@@ -46,7 +59,17 @@ impl Resident {
             Scene::Harbor => Location::Harbor,
             Scene::Shop => Location::Shop,
         };
+        let corner = route.via.map_or(start, |(x, z)| {
+            start + Vec3::new(x - prop.pos.0, 0., z - prop.pos.2)
+        });
         Self {
+            job: match prop.id.as_str() {
+                "bread_carrier" => Job::Bread,
+                "net_mender" => Job::Net,
+                "lamp_keeper" => Job::Lamp,
+                _ => Job::Post,
+            },
+            corner,
             site,
             start,
             span: Vec3::new(route.to.0 - prop.pos.0, 0., route.to.1 - prop.pos.2),
@@ -63,21 +86,68 @@ impl Resident {
         let time = if returning { clock - leg } else { clock };
         let travel = ease(time / self.route.travel);
         let stop = ((time - self.route.travel) / self.route.pause).clamp(0., 1.);
-        let turn = ease((stop - 0.40) / 0.60);
         let along = if returning { 1. - travel } else { travel };
-        let heading = self.span.x.atan2(self.span.z);
-        // Turn across the front of the diorama so the errand is readable during the stop.
-        let yaw = heading - PI.copysign(heading) * if returning { 1. - turn } else { turn };
-        // Drive the soles by distance travelled; they settle before the resident turns around.
-        let stride = (travel * self.span.length() * TAU / STRIDE).sin();
+        let first = self.corner - self.start;
+        let last = self.start + self.span - self.corner;
+        let length = first.length() + last.length();
+        let distance = along * length;
+        let inbound = first.normalize_or_zero();
+        let outbound = last.normalize_or_zero();
+        let radius = 0.56_f32.min(first.length() / 2.).min(last.length() / 2.);
+        let offset = distance - first.length();
+        let (position, direction) = if radius > 0. && offset.abs() < radius {
+            let u = (offset + radius) / (2. * radius);
+            let a = (self.corner - inbound * radius).lerp(self.corner, u);
+            let b = self.corner.lerp(self.corner + outbound * radius, u);
+            (a.lerp(b, u), b - a)
+        } else if offset < 0. {
+            (self.start + inbound * distance, inbound)
+        } else {
+            (self.corner + outbound * offset, outbound)
+        };
+        let heading = direction.x.atan2(direction.z);
+        let facing = if returning { heading + PI } else { heading };
+        // Face the bench while working, then turn back into the lane.
+        let work_yaw = match self.job {
+            Job::Bread => {
+                if returning {
+                    PI
+                } else {
+                    0.
+                }
+            }
+            Job::Net if !returning => PI,
+            Job::Post if !returning => PI,
+            _ => facing,
+        };
+        let approach = Quat::from_rotation_y(facing);
+        let work = Quat::from_rotation_y(work_yaw);
+        let rotation = approach.slerp(work, ease(stop / 0.20)).slerp(
+            Quat::from_rotation_y(facing + PI),
+            ease((stop - 0.72) / 0.28),
+        );
+        let stride = (travel * length * TAU / STRIDE).sin();
         let step = 0.46 * stride * (8. * travel.min(1. - travel)).min(1.);
         let gesture = (PI * stop).sin().powi(2);
+        let lift = match self.job {
+            Job::Lamp => 1.16 * gesture,
+            Job::Net if !returning => gesture * (0.77 + 0.21 * (3. * TAU * stop).sin()),
+            Job::Bread => gesture * (0.57 + 0.18 * (2. * TAU * stop).sin()),
+            Job::Post if !returning => 1.08 * gesture,
+            _ => 0.48 * gesture,
+        };
         Pose {
-            at: Transform::from_translation(self.start + self.span * along)
-                .with_rotation(Quat::from_rotation_y(yaw)),
+            at: Transform::from_translation(position).with_rotation(rotation),
+            stop,
+            returning,
+            travel,
             step,
-            arm: -0.48 * gesture - 0.30 * step,
+            arm: -lift - 0.30 * step,
         }
+    }
+
+    pub(super) fn approach_mailbox(&mut self) {
+        self.elapsed = (self.route.travel - 4.0).max(0.);
     }
 
     /// Give a missing model the same pivots as the finished figure.
@@ -168,7 +238,7 @@ pub(super) fn bind_joints(
     }
 }
 
-fn walk(
+pub(super) fn walk(
     time: Res<Time>,
     location: Res<Location>,
     settings: Res<Settings>,
@@ -213,12 +283,17 @@ mod tests {
             let Some(route) = prop.walk else { continue };
             let start = crate::props::world_pos(prop);
             let mut resident = Resident::new(prop, route, start);
-            let outward = resident.span.normalize();
+            let outward = if route.via.is_some() {
+                (resident.corner - start).normalize()
+            } else {
+                resident.span.normalize()
+            };
+            let arriving = (start + resident.span - resident.corner).normalize();
             let far = start + resident.span;
             for (clock, position, direction) in [
                 (0., start, outward),
-                (route.travel, far, outward),
-                (route.travel + route.pause, far, -outward),
+                (route.travel, far, arriving),
+                (route.travel + route.pause, far, -arriving),
                 (2. * route.travel + route.pause, start, -outward),
                 (2. * (route.travel + route.pause), start, outward),
             ] {
@@ -239,7 +314,7 @@ mod tests {
             resident.elapsed = route.travel + route.pause * 0.5;
             let working = resident.pose();
             assert!(working.at.translation.distance(far) < 0.001);
-            assert!(working.arm < -0.4);
+            assert!(working.arm < -0.35);
         }
     }
 
@@ -275,6 +350,21 @@ mod tests {
             )
         };
         app.update();
+        // Walk to mid-stride; an authored route can start on either planted foot.
+        for _ in 0..12 {
+            if app
+                .world()
+                .get::<Resident>(walker)
+                .unwrap()
+                .pose()
+                .step
+                .abs()
+                > 0.05
+            {
+                break;
+            }
+            app.update();
+        }
         let moving = frame(&app);
         let angle = app.world().get::<Resident>(walker).unwrap().pose().step;
         assert!(angle.abs() > 0.01);

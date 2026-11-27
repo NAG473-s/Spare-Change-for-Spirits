@@ -1,7 +1,9 @@
 //! Shop fittings, houses and neighbours from `assets/data/props.ron`.
 //! Each loads its own model or a primitive stand-in at the same position.
 
+pub(crate) mod mail;
 mod residents;
+mod rounds;
 
 use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
@@ -16,6 +18,8 @@ impl Plugin for PropsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_props);
         residents::install(app);
+        rounds::install(app);
+        mail::install(app);
     }
 }
 
@@ -53,6 +57,9 @@ fn spawn_props(
                 Pickable::IGNORE,
             ))
             .id();
+        if prop.id == "shop_post_gate" {
+            commands.entity(root).insert(mail::PostGate);
+        }
         let mut resident = prop
             .walk
             .map(|walk| residents::Resident::new(prop, walk, position));
@@ -64,6 +71,9 @@ fn spawn_props(
                 ChildOf(root),
             ));
             model.observe(crate::scene::ignore_scene_picking);
+            if matches!(prop.id.as_str(), "dyer_house" | "fishing_net") {
+                model.observe(rounds::bind_fabric);
+            }
             if prop.walk.is_some() {
                 model.observe(residents::bind_joints);
             }
@@ -75,7 +85,18 @@ fn spawn_props(
                 root,
                 rgb(prop.color),
             );
+        } else if prop.id == "fishing_net" {
+            rounds::fallback_fabric(&mut commands, &mut meshes, &mut materials, root, false);
         } else {
+            if prop.id == "dyer_house" {
+                rounds::fallback_fabric(&mut commands, &mut meshes, &mut materials, root, true);
+            }
+            // Keep the plate in front of a replacement gate and the loaves on top of an empty counter.
+            let size = match prop.id.as_str() {
+                "shop_post_gate" => Vec3::new(size.x, size.y, 0.18),
+                "bread_stall" => Vec3::new(size.x, 0.752, size.z),
+                _ => size,
+            };
             let mut body = size;
             let mesh = match prop.shape {
                 Shape::Box => meshes.add(Cuboid::from_size(size)),

@@ -528,7 +528,7 @@ fn leave_pause(mut paused: ResMut<Paused>, mut time: ResMut<Time<Virtual>>) {
     time.unpause();
 }
 
-fn main_menu_actions(
+pub(crate) fn main_menu_actions(
     mut actions: MessageReader<Action>,
     data: Res<GameData>,
     mut lang: ResMut<Lang>,
@@ -1021,6 +1021,26 @@ fn pause_actions(
             }
             Action::BookClose => {
                 origin.close(&mut paused, &mut save_menu);
+                continue;
+            }
+            Action::ReadDelivery => {
+                if state
+                    .progress
+                    .journal
+                    .postcards
+                    .iter()
+                    .any(|p| p.in_mailbox)
+                {
+                    for card in &mut state.progress.journal.postcards {
+                        card.in_mailbox = false;
+                    }
+                    if let Some(save) =
+                        save_now(*phase.get(), &state, &data, &night_start, &register)
+                    {
+                        write_slot(profile.0, Slot::Auto, &save);
+                    }
+                    origin.open(SaveMenu::Letters, &mut paused, &mut save_menu);
+                }
                 continue;
             }
             Action::OpenBook => {

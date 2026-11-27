@@ -17,6 +17,8 @@ For a Steam depot upload, use the local packages under `dist/full/<platform>/` a
 `dist/demo/<platform>/` for the respective editions. Unpack the Linux tarball and macOS app
 archive before uploading. See [Desktop builds](../README.md#desktop-builds).
 
+Each desktop packaging job also starts the packaged demo with a fresh local profile, plays its five nights, and starts the packaged full game against that profile. The check verifies Continue, the shop and its ledger before opening night six. A manual Desktop builds run can select **Test the packages without uploading downloadable artifacts**.
+
 ## Steam Cloud – full game and demo
 
 Saves are small `.ron` files. Use **Auto-Cloud** (Steamworks → App Admin → *Steam Cloud*) for

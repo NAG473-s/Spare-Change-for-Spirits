@@ -218,6 +218,7 @@ pub enum Action {
     ChooseLedgerKeepsake(usize),
     OpenCredits,
     /// Turn a postcard over, or put it up by the till (`postcards.rs`).
+    ReadDelivery,
     TurnPostcard(usize),
     DisplayPostcard(usize),
     /// Restore the next quay lantern (`lanterns.rs`).
@@ -1346,6 +1347,9 @@ fn build_evening_panel(
 ) {
     let night = progress.calendar(&data);
     let mut ui = PanelBuilder::side(&mut commands, *parts, &font);
+    if *location == Location::Shop && progress.journal.postcards.iter().any(|p| p.in_mailbox) {
+        ui.primary(&lang.t("postcard.title"), Action::ReadDelivery);
+    }
     let max_crates = upgrades.crates_tonight(&data, night);
     let bought_units = bought.units(&data);
     let odds = crate::sets::odds_tonight(&data, &layout, &progress, &stock);
@@ -1641,7 +1645,7 @@ fn build_evening_panel(
         ui.icon_button_in(
             row,
             icons.product(&p.id),
-            &label,
+            &crate::orders::marked(label, progress.pinned_for(&p.id)),
             Action::ToolStock(p.id.clone()),
             selected,
             true,
@@ -2053,6 +2057,7 @@ fn workbench_section(
 #[derive(PartialEq)]
 struct NightPanelShows {
     guiding: bool,
+    pinned: bool,
     front: Option<(Entity, GhostState)>,
     line: usize,
     meeting: bool,
@@ -2324,7 +2329,22 @@ fn build_night_panel(
             }
         }
     }
+    let pinned = if let Some(sale) = &register.sale {
+        ghosts.get(sale.ghost).ok().and_then(|g| {
+            progress.pinned_order(
+                g.order,
+                &sale.product,
+                crate::orders::OrderState::AtRegister,
+            )
+        })
+    } else {
+        queue
+            .front()
+            .and_then(|e| ghosts.get(e).ok())
+            .and_then(|g| progress.pinned_order(g.order, &g.wish, crate::orders::OrderState::Open))
+    };
     let shows = NightPanelShows {
+        pinned: pinned.is_some(),
         guiding: progress.guiding_first_sale(),
         front,
         line: if waiting { 0 } else { line },
@@ -2386,7 +2406,13 @@ fn build_night_panel(
                 .regular
                 .and_then(|i| progress.journal.regulars.get(i))
                 .map_or_else(|| lang.ghost(&data.ghosts[ghost.def].id), |r| r.name(&lang));
-            guest_book_link(&mut ui, &data, &progress, ghost.def, &name);
+            guest_book_link(
+                &mut ui,
+                &data,
+                &progress,
+                ghost.def,
+                &crate::orders::marked(name, pinned.is_some()),
+            );
         }
         if let Ok(ghost) = ghosts.get(sale.ghost)
             && let Some(memory) = &ghost.memory
@@ -2400,7 +2426,7 @@ fn build_night_panel(
                 ],
             ));
         }
-        register_art::receipt(&mut ui, &icons, sale, &lang);
+        register_art::receipt(&mut ui, &icons, sale, &lang, pinned.is_some());
         let paid = sale.paid();
         ui.text(&lang.f(
             "night.paid",
@@ -2541,7 +2567,13 @@ fn build_night_panel(
             } else {
                 lang.f("night.whispers", &[("who", &lang.ghost_the(&def.id))])
             };
-            guest_book_link(&mut ui, &data, &progress, ghost.def, &speaker);
+            guest_book_link(
+                &mut ui,
+                &data,
+                &progress,
+                ghost.def,
+                &crate::orders::marked(speaker, pinned.is_some()),
+            );
             ui.text(&lang.f("quote", &[("text", &ghost.whisper(&lang))]));
             // The ferryman's parcel holds exactly what a story ghost needs:
             // said in words and offered as the main button, so it is not
@@ -2603,7 +2635,7 @@ fn build_night_panel(
                 ui.icon_button_in(
                     row,
                     icons.product(&id),
-                    &label,
+                    &crate::orders::marked(label, pinned.is_some_and(|o| o.product == id)),
                     Action::Offer(id.clone()),
                     false,
                     true,

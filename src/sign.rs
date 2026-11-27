@@ -195,7 +195,7 @@ fn on_sign_click(
 }
 
 /// The sign or the button: back into the shop if needed, then open.
-fn start_opening(
+pub(crate) fn start_opening(
     mut actions: MessageReader<Action>,
     mut opening: ResMut<Opening>,
     mut location: ResMut<Location>,
@@ -221,7 +221,7 @@ fn start_opening(
 }
 
 /// Runs the clock on to midnight, lets it strike, then opens the shop.
-fn run_opening(
+pub(crate) fn run_opening(
     time: Res<Time>,
     mut opening: ResMut<Opening>,
     mut clock_override: ResMut<ClockOverride>,

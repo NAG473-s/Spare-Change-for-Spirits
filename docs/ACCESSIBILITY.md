@@ -52,6 +52,8 @@ On the market square the copper fish turns with the breeze. With reduced motion 
 
 The four residents on the market and quay are scenery. Clicks pass through their clothes, parcels and tools. Reduced motion and the pause menu hold them in place, including their feet and hand gestures.
 
+The postal delivery can be skipped. Each card is available immediately in the Letters chapter. Picking up the envelope opens that chapter, and an evening panel button supports keyboard and controller use. Reduced motion shows the delivered envelope immediately and holds the residents and their tools still. The shelf ticket, order customer and receipt use the same star as the ferry crates.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

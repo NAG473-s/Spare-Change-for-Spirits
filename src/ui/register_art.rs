@@ -14,7 +14,13 @@ const LAYERS: usize = 3;
 
 pub(super) const TRAY_ART: &str = "sprites/ui/change_tray.png";
 
-pub(super) fn receipt(ui: &mut PanelBuilder, icons: &Icons, sale: &Sale, lang: &Lang) {
+pub(super) fn receipt(
+    ui: &mut PanelBuilder,
+    icons: &Icons,
+    sale: &Sale,
+    lang: &Lang,
+    pinned: bool,
+) {
     // The product portrait shares a line with the two existing receipt fields.
     let card = ui.node(
         ui.root(),
@@ -49,7 +55,13 @@ pub(super) fn receipt(ui: &mut PanelBuilder, icons: &Icons, sale: &Sale, lang: &
     );
     ui.add_text(
         lines,
-        &lang.f("night.item", &[("item", &lang.product(&sale.product))]),
+        &lang.f(
+            "night.item",
+            &[(
+                "item",
+                &crate::orders::marked(lang.product(&sale.product), pinned),
+            )],
+        ),
         true,
         15.0,
         TEXT,
