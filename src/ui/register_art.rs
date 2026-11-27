@@ -117,31 +117,42 @@ fn token(
     )
 }
 
-pub(super) fn change_tray(ui: &mut PanelBuilder, icons: &Icons, sale: &Sale, lang: &Lang) {
-    let row = ui.node(
-        ui.root(),
+pub(super) fn change_tray(
+    ui: &mut PanelBuilder,
+    parent: Entity,
+    icons: &Icons,
+    sale: &Sale,
+    lang: &Lang,
+    show_due: bool,
+) {
+    let summary = ui.node(
+        parent,
         (
             Node {
-                align_items: AlignItems::Center,
-                flex_wrap: FlexWrap::Wrap,
-                column_gap: px(5),
+                width: percent(46),
+                min_width: px(TRAY_W),
                 flex_shrink: 0.0,
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                row_gap: px(2),
                 ..default()
             },
             Pickable::IGNORE,
         ),
     );
-    let line = ui.add_text(row, &counted_line(lang, sale), true, 15.0, TEXT);
-    ui.commands.entity(line).insert((
-        CountedLine,
-        Node {
-            flex_grow: 1.0,
-            flex_basis: px(100),
-            ..default()
-        },
-    ));
+    if show_due {
+        ui.add_text(
+            summary,
+            &lang.f("night.change_due", &[("amount", &sale.change_due())]),
+            false,
+            13.0,
+            TEXT_DIM,
+        );
+    }
+    let line = ui.add_text(summary, &counted_line(lang, sale), true, 14.0, TEXT);
+    ui.commands.entity(line).insert(CountedLine);
     let tray = ui.node(
-        row,
+        summary,
         (
             Node {
                 width: px(TRAY_W),

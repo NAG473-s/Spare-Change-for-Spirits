@@ -38,7 +38,7 @@ A guest’s name opens their discovered book entry by mouse, keyboard or control
 
 Players can search once per evening using the workbench button or by clicking a pile of old cargo. The written result identifies the find. Reduced motion shows the open case and found item in a still pose. With that setting, inspecting a ferry container switches directly to its open pose, and purchased cargo appears in its place on the cart.
 
-The register shows the product picture, its written name and price. The three tray pockets follow the player’s count, including returns. The total and the exact denomination controls stay available as text. Reduced motion places the money and ware directly at their destinations. The entrance switches between open and closed poses and its bell stays still.
+The register shows the product picture, its written name and price. The three tray pockets follow the player’s count, including returns. The counted total, optional change due, three labelled drawer buttons and Hand over stay in the fixed footer while the receipt and instructions scroll. Reduced motion places the money and ware directly at their destinations. The entrance switches between open and closed poses and its bell stays still.
 
 Floor corners and an enamel badge mark the target when moving furniture or using a furnishing tool. A check marks a free placement, opposed arrows an exchange, a cross a blocked action and a minus a removal. Reduced motion moves the furniture directly to the indicated square.
 

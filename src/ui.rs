@@ -23,7 +23,7 @@ use crate::ghosts::{Ghost, GhostState, Queue};
 use crate::harbor::Location;
 use crate::i18n::Lang;
 use crate::inventory::{CratesOrdered, Stock};
-use crate::register::Register;
+use crate::register::{Register, Sale};
 use crate::save::{Knob, Slot};
 use crate::shop::{ShopLayout, Storeroom, Tool};
 use crate::upgrades::Upgrades;
@@ -98,7 +98,10 @@ impl Plugin for UiPlugin {
             )
             .add_systems(
                 PostUpdate,
-                align_to_direction.before(bevy::ui::UiSystems::Content),
+                (
+                    align_to_direction.before(bevy::ui::UiSystems::Content),
+                    reveal_recount.after(bevy::ui::UiSystems::Layout),
+                ),
             )
             // Before Update, so every rebuild this frame already uses the new font.
             .add_systems(PreUpdate, apply_language.run_if(resource_changed::<Lang>))
@@ -2102,7 +2105,7 @@ fn on_change_coin_click(
 }
 
 impl ChangeCoin {
-    fn label(self, lang: &Lang, drawer: &Drawer, sale: &crate::register::Sale) -> (String, bool) {
+    fn label(self, lang: &Lang, drawer: &Drawer, sale: &Sale) -> (String, bool) {
         match self {
             Self::Drawer(coin) => {
                 let left = drawer.get(coin).saturating_sub(sale.given.get(coin));
@@ -2126,9 +2129,36 @@ impl ChangeCoin {
             }
         }
     }
+
+    fn button(
+        self,
+        ui: &mut PanelBuilder,
+        parent: Entity,
+        icons: &Icons,
+        lang: &Lang,
+        drawer: &Drawer,
+        sale: &Sale,
+    ) {
+        let (coin, action) = match self {
+            Self::Drawer(c) => (c, Action::AddChange(c)),
+            Self::Tray(c) => (c, Action::RemoveChange(c)),
+        };
+        let (label, enabled) = self.label(lang, drawer, sale);
+        let button = ui.icon_button_in(parent, icons.coin(coin), &label, action, false, enabled);
+        ui.commands.entity(button).insert(self);
+        match self {
+            Self::Drawer(_) => ui.adjust(button, |n| {
+                n.justify_content = JustifyContent::Start;
+                n.padding = UiRect::axes(px(4), px(2));
+            }),
+            Self::Tray(_) if !enabled => ui.adjust(button, |n| n.display = Display::None),
+            Self::Tray(_) => {}
+        }
+        ui.coin_pointer_target(button, coin);
+    }
 }
 
-fn counted_line(lang: &Lang, sale: &crate::register::Sale) -> String {
+fn counted_line(lang: &Lang, sale: &Sale) -> String {
     lang.f("register.change_tray", &[("total", &sale.given.total())])
 }
 
@@ -2136,6 +2166,32 @@ fn counted_line(lang: &Lang, sale: &crate::register::Sale) -> String {
 /// The row of the change tray (hidden while it is empty).
 #[derive(Component)]
 struct TrayRow;
+
+#[derive(Component)]
+struct RecountNotice(Entity);
+
+/// Reveal each new correction (or a repeated attempt to hand over that amount).
+/// Between attempts the player can freely scroll back to the paid coins.
+fn reveal_recount(
+    mut actions: MessageReader<Action>,
+    notices: Query<&RecountNotice>,
+    mut previous_guest: Local<Option<Entity>>,
+    parts: Res<SidePanelParts>,
+    mut bodies: Query<(&ComputedNode, &mut ScrollPosition)>,
+) {
+    let submitted = actions
+        .read()
+        .any(|action| matches!(action, Action::GiveChange));
+    let guest = notices.single().ok().map(|notice| notice.0);
+    let new_notice = *previous_guest != guest;
+    *previous_guest = guest;
+    if guest.is_some()
+        && (new_notice || submitted)
+        && let Ok((node, mut scroll)) = bodies.get_mut(parts.body)
+    {
+        scroll.y = (node.content_size().y - node.size().y).max(0.0) * node.inverse_scale_factor();
+    }
+}
 
 fn refresh_change(
     register: Res<Register>,
@@ -2367,43 +2423,14 @@ fn build_night_panel(
             );
             ui.coin_pointer_target(button, c.coin);
         }
-        if settings.change_hint {
-            ui.dim(&lang.f("night.change_due", &[("amount", &sale.change_due())]));
-        }
-        register_art::change_tray(&mut ui, &icons, sale, &lang);
         ui.dim(&lang.t("register.undo_hint"));
-        // Coins from the drawer first, the tray below, so the drawer's
-        // buttons never move under the pointer as coins are laid out. Only
-        // the coins on the tray take room; an empty tray takes none.
-        let tray_empty = sale.given.total() == 0;
-        for tray in [false, true] {
-            let row = ui.row();
-            if tray {
-                ui.commands.entity(row).insert(TrayRow);
-                if tray_empty {
-                    ui.commands.entity(row).entry::<Node>().and_modify(|mut n| {
-                        n.display = Display::None;
-                    });
-                }
-            }
-            for coin in Coin::ASCENDING {
-                let (control, action) = if tray {
-                    (ChangeCoin::Tray(coin), Action::RemoveChange(coin))
-                } else {
-                    (ChangeCoin::Drawer(coin), Action::AddChange(coin))
-                };
-                let (label, enabled) = control.label(&lang, &drawer, sale);
-                let button =
-                    ui.icon_button_in(row, icons.coin(coin), &label, action, false, enabled);
-                let mut entity = ui.commands.entity(button);
-                entity.insert(control);
-                if tray && !enabled {
-                    entity
-                        .entry::<Node>()
-                        .and_modify(|mut n| n.display = Display::None);
-                }
-                ui.coin_pointer_target(button, coin);
-            }
+        let returns = ui.row();
+        ui.commands.entity(returns).insert(TrayRow);
+        if sale.given.total() == 0 {
+            ui.adjust(returns, |n| n.display = Display::None);
+        }
+        for coin in Coin::ASCENDING {
+            ChangeCoin::Tray(coin).button(&mut ui, returns, &icons, &lang, &drawer, sale);
         }
         let row = ui.row();
         ui.button_in(
@@ -2429,24 +2456,53 @@ fn build_night_panel(
         }
         ui.spacer();
         if sale.recount {
-            // Keep the correction beside Hand over, even in a scrolled panel.
+            // Reveal the correction just above the fixed controls. The player can
+            // still scroll back to the receipt and inspect the original payment.
             let key = if sale.given.total() < due {
                 "register.change_short"
             } else {
                 "register.change_over"
             };
-            ui.add_text(ui.footer, &lang.t(key), true, 14.0, TEXT);
+            let warning = ui.add_text(ui.root(), &lang.t(key), true, 14.0, TEXT);
+            ui.commands
+                .entity(warning)
+                .insert(RecountNotice(sale.ghost));
             let guided_sale = ghosts.get(sale.ghost).is_ok_and(|g| g.first_customer)
                 && progress.guiding_first_sale();
             if !guided_sale {
                 ui.button_in(
-                    ui.footer,
+                    ui.root(),
                     &lang.t("register.give_anyway"),
                     Action::GiveChangeAnyway,
                     false,
                     true,
                 );
             }
+        }
+        // The receipt and the optional return buttons can scroll independently.
+        // Keep the counted amount and all three denominations next to Hand over.
+        let till = ui.node(
+            ui.footer,
+            Node {
+                align_items: AlignItems::Center,
+                column_gap: px(8),
+                ..default()
+            },
+        );
+        register_art::change_tray(&mut ui, till, &icons, sale, &lang, settings.change_hint);
+        let drawer_buttons = ui.node(
+            till,
+            Node {
+                flex_direction: FlexDirection::Column,
+                flex_grow: 1.0,
+                flex_basis: px(0),
+                min_width: px(0),
+                row_gap: px(3),
+                ..default()
+            },
+        );
+        for coin in Coin::ASCENDING {
+            ChangeCoin::Drawer(coin).button(&mut ui, drawer_buttons, &icons, &lang, &drawer, sale);
         }
         ui.primary(&lang.t("night.hand_over"), Action::GiveChange);
         return;
@@ -3597,6 +3653,63 @@ mod tests {
     }
 
     #[test]
+    fn the_drawer_and_its_total_stay_in_the_fixed_footer_even_during_a_recount() {
+        let mut app = register_panel();
+        let body = app.world().resource::<SidePanelParts>().body;
+        app.world_mut().entity_mut(body).insert((
+            ComputedNode {
+                size: Vec2::new(700.0, 160.0),
+                content_size: Vec2::new(700.0, 560.0),
+                inverse_scale_factor: 0.5,
+                ..default()
+            },
+            ScrollPosition(Vec2::new(0.0, 15.0)),
+        ));
+        app.add_systems(PostUpdate, reveal_recount);
+        for recount in [false, true] {
+            app.world_mut()
+                .resource_mut::<Register>()
+                .sale
+                .as_mut()
+                .unwrap()
+                .recount = recount;
+            app.update();
+            let world = app.world_mut();
+            let parts = *world.resource::<SidePanelParts>();
+            let mut buttons = world.query::<(Entity, &ActionButton)>();
+            let total = world
+                .query_filtered::<Entity, With<CountedLine>>()
+                .single(world)
+                .unwrap();
+            let inside = |entity, parent| {
+                std::iter::successors(Some(entity), |&e| {
+                    world.get::<ChildOf>(e).map(ChildOf::parent)
+                })
+                .any(|e| e == parent)
+            };
+            let mut button = |action| buttons.iter(world).find(|(_, b)| b.0 == action).unwrap().0;
+            assert!(inside(button(Action::CheckCoin(0)), parts.body));
+            assert!(inside(total, parts.footer));
+            for coin in Coin::ASCENDING {
+                assert!(inside(button(Action::AddChange(coin)), parts.footer));
+            }
+            assert!(inside(button(Action::GiveChange), parts.footer));
+            assert_eq!(
+                world.get::<ScrollPosition>(body).unwrap().y,
+                if recount { 200.0 } else { 15.0 }
+            );
+        }
+        // Reading the receipt is independent of counting. Submitting an incorrect
+        // amount again brings the existing correction back into view.
+        app.world_mut().get_mut::<ScrollPosition>(body).unwrap().y = 20.0;
+        app.update();
+        assert_eq!(app.world().get::<ScrollPosition>(body).unwrap().y, 20.0);
+        app.world_mut().write_message(Action::GiveChange);
+        app.update();
+        assert_eq!(app.world().get::<ScrollPosition>(body).unwrap().y, 200.0);
+    }
+
+    #[test]
     fn the_register_hides_the_due_amount_without_the_assist_and_updates_the_tray_in_place() {
         use crate::save::Settings;
         let mut app = register_panel();
@@ -3621,7 +3734,7 @@ mod tests {
             .find(|(_, action)| action.0 == Action::RemoveChange(Coin::Candle))
             .unwrap()
             .0;
-        // An empty tray takes no room; it lies below the drawer's buttons.
+        // The optional return buttons only occupy space once a coin is on the tray.
         assert_eq!(world.get::<Node>(tray).unwrap().display, Display::None);
         world
             .resource_mut::<Register>()
