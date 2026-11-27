@@ -103,6 +103,7 @@ class DemoAssets:
         self.companions = set()
         self.finale_guests = set()
         self.flowers = False
+        self.snow = False
         self.butterfly = False
         self.fares = False
         keepsakes = set()
@@ -124,6 +125,7 @@ class DemoAssets:
                 if gift := option(chapter.get("keepsake", "None")):
                     keepsakes.add(gift)
             if len(available) == len(chapters):
+                self.snow |= story.get("snow") == "true"
                 self.films.add(ghost)
                 self.butterfly |= story.get("blossom") == "true"
                 if visitor := option(story.get("finale_guest", "None")):
@@ -271,6 +273,11 @@ class DemoAssets:
             return stem in (self.products if parts[1] == "products" else self.decor)
         if parts[:2] == ("models", "shop") and stem in self.upgrade_ids:
             return stem in self.upgrades
+        if parts[:2] == ("models", "harbor"):
+            if stem == "apple_snow":
+                return self.snow
+            if stem in {"apple_blossom", "apple_petal"}:
+                return self.flowers
         if parts[:2] == ("models", "market"):
             if stem.startswith(("stall_", "vendor_")):
                 return stem.split("_", 1)[1] in self.vendors

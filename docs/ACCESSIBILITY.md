@@ -46,6 +46,8 @@ At the market, physical purchases fill a wicker basket and sold single pieces sh
 
 With reduced motion, the windmill holds its angle at both outdoor locations. The shop curtains rest against their ties when the door opens, and the window light stays in place through the night. The open/closed sign remains visible between the curtains.
 
+The crab apples beside the market road and on the quay show russet fruit, snow along the bare branches, then five-petalled flowers as the stories advance. The pitcher in the shop holds cut branches from the same trees. With reduced motion all branches hold still and the trees keep their leaves and petals.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

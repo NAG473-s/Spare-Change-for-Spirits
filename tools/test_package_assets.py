@@ -34,6 +34,8 @@ class PackageAssetsTests(unittest.TestCase):
                         "models/market/shopping_basket.glb", "models/market/wrapped_parcel.glb", "models/market/sold_ticket.glb",
                         "models/harbor/mooring_line.glb", "models/harbor/cork_fender.glb", "sprites/shop/placement_corners.png",
                         "models/harbor/bank_windmill.glb", "models/harbor/windmill_sails.glb", "models/harbor/riverbank.glb",
+                        "models/harbor/apple_trunk.glb", "models/harbor/apple_bough.glb", "models/harbor/apple_autumn.glb",
+                        "models/harbor/apple_leaf.glb", "models/shop/apple_jug.glb",
                         "sprites/harbor/river_valley_day.png", "sprites/harbor/river_valley_dusk.png",
                         "models/shop/window_drapery.glb", "models/shop/curtain_hem.glb", "sprites/shop/window_light.png",
                         "models/market/bunting_line.glb", "sprites/market/fair_pennant.png",
@@ -54,6 +56,7 @@ class PackageAssetsTests(unittest.TestCase):
                         "models/decor/toy_sledge.glb", "sprites/decor/toy_sledge.png",
                         "models/errands/lotte_sledge_clue_1.glb", "models/errands/lotte_sledge_clue_2.glb",
                         "models/critters/butterfly_body.glb", "models/critters/butterfly_wing.glb",
+                        "models/harbor/apple_snow.glb", "models/harbor/apple_blossom.glb", "models/harbor/apple_petal.glb",
                         "models/market/vendor_frost.glb", "models/market/window_flowers.glb", "sounds/evening_music_spring.ogg"):
                 with self.subTest(asset=rel):
                     self.assertFalse((demo / rel).exists())

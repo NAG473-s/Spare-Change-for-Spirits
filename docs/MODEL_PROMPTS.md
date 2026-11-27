@@ -13,6 +13,8 @@ The willow shopping basket, wrapped parcel and sold ticket are delivered for the
 
 The riverbank, mill tower and sails, market bunting line, shop curtain rail and separate hems have also been delivered. All models currently requested in this list have been delivered.
 
+The crab apple wood, seasonal foliage, loose leaf and petal, and the shop's glazed pitcher are delivered. Their replacement specifications are under *Village crab apples*.
+
 ## Delivered models
 
 - The four working storage cases and their separate lids are in `assets/models/shop/`. Their silhouettes, contents and hinge specifications are listed under *Shop improvements*. The existing chair, crate and birdcage piles still occupy some locked tiles.
@@ -330,6 +332,20 @@ glowing glass and windows are just emissive materials.
 | `rowboat` | 0.8 × 0.45 × 2.0 | A small wooden rowboat, length along Y, with two seats, crossed oars and a rolled canvas bundle lashed with rope. |
 | `jetty` | 1.1 × 0.7 × 3.8 | A narrow wooden jetty: a deck of planks running along the Y axis (3.8 m long, 1.0 m wide) on four posts. Origin at the **centre of the deck surface**; the posts reach about 0.6 m below it. |
 | `paper_lantern` | 0.26 × 0.34 × 0.26 | A small floating paper lantern on a tiny round wooden raft: a box of warm paper glowing amber (emissive). |
+
+### Village crab apples
+
+The trees stand on the market road and the dry side of the quay. Use the same crooked grey-brown wood for the cut sprays in the shop. Keep the spaces between twigs open against the painted rooftops. Dimensions below are width × height × depth in metres, in glTF coordinates (+Y up). The game bends each bough at its graft and carries the seasonal layer with it.
+
+| File | Size (m) | Replacement design and origin |
+| --- | --- | --- |
+| `harbor/apple_trunk.glb` | 1.48 × 1.81 × 1.48 | Low forked trunk with flared roots and an oval pruning scar, set in a segmented stone surround with cast-iron ribs over the earth. Origin at the foot. Keep the five graft sockets at the positions in `src/scene/orchard.rs`. |
+| `harbor/apple_bough.glb` | 1.24 × 1.04 × 0.91 | A tapered fruiting branch growing towards +X and upwards, with short spurs and closed copper buds. Put its graft at the origin. |
+| `harbor/apple_autumn.glb` | 1.36 × 0.65 × 1.25 | Attach folded ochre and olive leaves and a handful of small russet crab apples to the bough. Use the same graft origin for all three seasonal layers. |
+| `harbor/apple_snow.glb` | 1.17 × 0.97 × 0.90 | Broken ridges of blue-shadowed snow resting on the upper surfaces of the wood. Leave the forks visible. |
+| `harbor/apple_blossom.glb` | 1.26 × 0.69 × 1.16 | Clusters of ivory and blush five-petalled flowers with ochre centres and small sage-green leaves at the twig tips. |
+| `harbor/apple_leaf.glb`, `harbor/apple_petal.glb` | 0.17 × 0.06 × 0.12 and 0.095 × 0.021 × 0.058 | One creased ochre leaf and one cupped pale petal, each with its origin near the centre and faces visible from both sides. |
+| `shop/apple_jug.glb` | 0.60 × 0.75 × 0.53 | A heavy teal salt-glaze pitcher with a curved handle, a small pouring lip and a cream slip-painted leaf motif. Origin at the foot. Leave the neck open for cuttings at 0.715 m. |
 
 ## Containers on the boat – `assets/models/shop/<id>.glb`
 

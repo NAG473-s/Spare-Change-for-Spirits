@@ -27,7 +27,8 @@ GESTURES = ("pay", "ascend", "impatient", "goodbye", "browse", "arrive", "approa
 MODELS = ROOT / "assets" / "models"
 
 PRODUCT_SIZE = (0.25, 0.25, 0.25)
-SHOP_SIZES = {"counter": (4.5, 1.2, 0.81), "door": (1.1, 2.3, 0.2), "postcard_stand": (0.2, 0.04, 0.07)}
+SHOP_SIZES = {"counter": (4.5, 1.2, 0.81), "door": (1.1, 2.3, 0.2),
+              "postcard_stand": (0.2, 0.04, 0.07), "apple_jug": (0.60, 0.75, 0.53)}
 TRIANGLE_BUDGET = {
     "products": 1000,
     "decor": 3500,
@@ -126,6 +127,13 @@ HARBOR_SIZES = {
     "bank_windmill": (1.70, 2.86, 1.76),
     "windmill_sails": (2.47, 2.47, 0.30),
     "riverbank": (36.0, 0.66, 1.57),
+    "apple_trunk": (1.48, 1.81, 1.48),
+    "apple_bough": (1.24, 1.04, 0.91),
+    "apple_autumn": (1.36, 0.65, 1.25),
+    "apple_snow": (1.17, 0.97, 0.90),
+    "apple_blossom": (1.26, 0.69, 1.16),
+    "apple_leaf": (0.17, 0.06, 0.12),
+    "apple_petal": (0.095, 0.021, 0.058),
     "bell_post": (0.6, 1.95, 0.2),
     "ferry_bell": (0.25, 0.22, 0.25),
     "hand_cart": (2.0, 0.75, 1.0),
@@ -153,6 +161,12 @@ ORIGIN_AXES = {
     "curtain_hem": ("centre", "maximum", None),
     "windmill_sails": ("centre", "centre", None),
     "riverbank": ("centre", None, "centre"),
+    # Seasonal layers share the bough's graft, below and to the left of the foliage.
+    "apple_bough": ("minimum", "minimum", "centre"),
+    "apple_autumn": ("minimum", None, "centre"),
+    "apple_snow": ("minimum", "minimum", "centre"),
+    "apple_blossom": ("minimum", None, "centre"),
+    "apple_leaf": ("centre", None, "centre"),
     "wall_clock": ("centre", "centre", "minimum"),
     "way_board": ("centre", "centre", "minimum"),
     "shop_sign": ("centre", None, "centre"),

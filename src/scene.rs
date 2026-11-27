@@ -13,6 +13,7 @@ use crate::day_cycle::{NightClock, Phase};
 use crate::harbor::Location;
 use crate::shop::entrance::{DoorSwing, PIVOT as DOOR_PIVOT};
 mod labels;
+mod orchard;
 pub(crate) mod village;
 mod window;
 pub(crate) use labels::{LabelEnabled, LabelKind, world_label};
@@ -59,6 +60,7 @@ pub(crate) struct PlaceWorldLabels;
 impl Plugin for ScenePlugin {
     fn build(&self, app: &mut App) {
         village::install(app);
+        orchard::install(app);
         window::install(app);
         app.insert_resource(GlobalAmbientLight {
             color: Color::srgb(0.75, 0.75, 1.0),

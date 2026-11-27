@@ -34,6 +34,10 @@ impl Default for Breeze {
 }
 
 impl Breeze {
+    pub(super) fn elapsed_secs(&self) -> f32 {
+        self.elapsed
+    }
+
     /// A gust reaches the pennants in order along the line.
     pub(crate) fn gust(&self, along: f32) -> f32 {
         0.55 + 0.28 * (self.elapsed * 0.91 - along * 0.39).sin()
