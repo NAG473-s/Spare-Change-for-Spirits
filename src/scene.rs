@@ -19,6 +19,8 @@ pub(crate) mod village;
 mod window;
 pub(crate) use labels::{LabelEnabled, LabelKind, world_label};
 
+pub(crate) const DIORAMA_FOV: f32 = 0.62;
+
 /// Where the camera looks; shifted right so the scene sits left of the side panel.
 /// Camera at the harbour and the market (relative to their origin).
 pub const CAMERA_TARGET: Vec3 = Vec3::new(2.9, 0.0, -0.7);
@@ -118,7 +120,7 @@ fn spawn_camera(mut commands: Commands) {
         Camera3d::default(),
         RenderLayers::none(),
         Projection::Perspective(PerspectiveProjection {
-            fov: 0.62,
+            fov: DIORAMA_FOV,
             ..default()
         }),
         Transform::from_translation(SHOP_CAMERA_POS).looking_at(SHOP_CAMERA_TARGET, Vec3::Y),

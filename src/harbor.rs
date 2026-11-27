@@ -51,7 +51,12 @@ impl Plugin for HarborPlugin {
                     walk.run_if(in_state(Phase::Evening)),
                     update_door_boards,
                     way_hints,
-                    move_camera.run_if(resource_changed::<Location>),
+                    (
+                        move_camera.run_if(resource_changed::<Location>),
+                        crate::market::framing::fit_stalls
+                            .run_if(resource_equals(Location::Market)),
+                    )
+                        .chain(),
                     drift_lanterns,
                     drift_mist,
                     spread_ripples,

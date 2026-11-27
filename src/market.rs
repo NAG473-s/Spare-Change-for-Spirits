@@ -11,6 +11,7 @@
 
 mod basket;
 mod bunting;
+pub(crate) mod framing;
 mod square;
 
 use bevy::light::NotShadowCaster;
@@ -18,7 +19,7 @@ use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 
 use crate::accounts::Accounts;
-use crate::data::{Exchange, GameData, Ware, asset_exists, rgb};
+use crate::data::{Exchange, GameData, VendorDef, Ware, asset_exists, rgb};
 use crate::day_cycle::{Phase, Progress};
 use crate::economy::{Coin, Drawer, Purse};
 use crate::fx::Cue;
@@ -70,8 +71,10 @@ impl Plugin for MarketPlugin {
 pub const MARKET: Vec3 = Vec3::new(-160.0, 0.0, 0.0);
 /// The stall's table (w, h, d); wares stand on it.
 const TABLE: Vec3 = Vec3::new(1.7, 0.85, 0.7);
-/// At the front rail, towards the trader's end of the stall.
-const PLAQUE_OFFSET: Vec3 = Vec3::new(-0.65, 0.51, 0.48);
+/// Outer edges of the awning in local X and Z.
+const STALL_HALF_FOOTPRINT: Vec2 = Vec2::new(0.95, 0.65);
+/// Local centre of the customer-facing rail, below the clickable samples.
+const PLAQUE_OFFSET: Vec3 = Vec3::new(0.0, 0.40, 0.53);
 /// Furniture is shown as a small sample: its largest side, in metres.
 const SAMPLE_SIZE: f32 = 0.5;
 /// A rolled-up plan stands for improvements without a model of their own
@@ -131,6 +134,14 @@ struct VendorFigure {
 }
 
 impl FigureKind {
+    fn for_vendor(id: &str) -> Self {
+        match id {
+            "candlemaker" => Self::Wisp,
+            "raven" => Self::Bird,
+            _ => Self::Standing,
+        }
+    }
+
     fn spot(self) -> Vec3 {
         match self {
             FigureKind::Bird => PERCH_SPOT,
@@ -259,6 +270,11 @@ impl Kit<'_, '_, '_> {
     }
 }
 
+fn stall_transform(vendor: &VendorDef) -> Transform {
+    Transform::from_xyz(vendor.pos.0, 0.0, vendor.pos.1)
+        .with_rotation(Quat::from_rotation_y(vendor.turn.to_radians()))
+}
+
 fn spawn_market(
     commands: Commands,
     data: Res<GameData>,
@@ -284,7 +300,21 @@ fn spawn_market(
             Vec2::new(8.0, 5.0),
         )
     };
-    let ground = k.meshes.add(Plane3d::default().mesh().size(32.0, 20.0));
+    // Keep the painted 32 × 20 m square under the pitches. Mirror its edges
+    // into the foreground and side margins revealed by the compact market view.
+    let uv: Vec<_> = [0., 1., 0.]
+        .into_iter()
+        .flat_map(|v| [1., 0., 1., 0.].map(|u| [u, v]))
+        .collect();
+    let ground = k.meshes.add(
+        Plane3d::default()
+            .mesh()
+            .size(96., 40.)
+            .subdivisions_x(2)
+            .subdivisions_z(1)
+            .build()
+            .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv),
+    );
     let ground_mat = k.materials.add(StandardMaterial {
         base_color: if cobbles.is_some() {
             Color::WHITE
@@ -299,7 +329,7 @@ fn spawn_market(
     k.commands.spawn((
         Mesh3d(ground),
         MeshMaterial3d(ground_mat),
-        Transform::from_xyz(1.0, 0.0, -1.0),
+        Transform::from_xyz(1.0, 0.0, 9.0),
         ChildOf(root),
     ));
 
@@ -325,19 +355,13 @@ fn spawn_market(
         if cfg!(feature = "demo") && v.from_night > data.config.final_night() {
             continue;
         }
-        let at = Transform::from_xyz(v.pos.0, 0.0, v.pos.1)
-            .with_rotation(Quat::from_rotation_y(v.turn.to_radians()));
-        let stall = k.node(Some(root), at);
+        let stall = k.node(Some(root), stall_transform(v));
         k.commands.entity(stall).insert(Stall(i));
         let path = format!("models/market/stall_{}.glb", v.id);
         if !k.model(stall, &path, Transform::default()) {
             spawn_stall_placeholder(&mut k, stall, rgb(v.color));
         }
-        let kind = match v.id.as_str() {
-            "candlemaker" => FigureKind::Wisp,
-            "raven" => FigureKind::Bird,
-            _ => FigureKind::Standing,
-        };
+        let kind = FigureKind::for_vendor(&v.id);
         let figure = k.node(Some(stall), Transform::from_translation(kind.spot()));
         k.commands.entity(figure).insert(VendorFigure {
             vendor: i,
@@ -367,13 +391,13 @@ fn spawn_market(
 
 fn spawn_vendor_plaques(
     mut commands: Commands,
-    stalls: Query<(Entity, &Stall)>,
+    stalls: Query<(Entity, &Stall, &Transform)>,
     data: Res<GameData>,
     lang: Res<Lang>,
     font: Res<UiFont>,
     progress: Res<Progress>,
 ) {
-    for (stall, Stall(index)) in &stalls {
+    for (stall, Stall(index), at) in &stalls {
         if !data.vendors[*index].here(&data, progress.calendar(&data)) {
             continue;
         }
@@ -384,7 +408,7 @@ fn spawn_vendor_plaques(
                 Text::new(lang.t(&key)),
                 LabelKind::Sign,
                 stall,
-                PLAQUE_OFFSET,
+                at.rotation * PLAQUE_OFFSET,
             ),
             DespawnOnExit(Phase::Day),
         ));

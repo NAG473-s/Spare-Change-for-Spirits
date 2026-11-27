@@ -206,3 +206,36 @@ pub(super) fn turn_vane(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::GameData;
+    use crate::market::{FigureKind, STALL_HALF_FOOTPRINT, stall_transform};
+
+    #[test]
+    fn permanent_and_seasonal_pitches_leave_a_walkable_ring_around_the_button() {
+        let paving_radius = 1.60;
+        let clearance = 0.30;
+        for vendor in &GameData::load().vendors {
+            let pitch = stall_transform(vendor);
+            let centre = pitch
+                .compute_affine()
+                .inverse()
+                .transform_point3(BUTTON)
+                .xz();
+            let outside = (centre.abs() - STALL_HALF_FOOTPRINT).max(Vec2::ZERO);
+            let trader = FigureKind::for_vendor(&vendor.id).spot().xz();
+            assert!(
+                outside.length() >= paving_radius + clearance,
+                "{} awning",
+                vendor.id
+            );
+            assert!(
+                centre.distance(trader) - 0.35 >= paving_radius + clearance,
+                "{} trader",
+                vendor.id
+            );
+        }
+    }
+}
