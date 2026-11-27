@@ -8,7 +8,6 @@ use crate::save::Settings;
 use crate::shop::entrance::{self, DoorSwing};
 use crate::{weather::WeatherNow, winter};
 use bevy::prelude::*;
-use bevy::world_serialization::WorldInstanceReady;
 
 const MARKET_TREE: Vec3 = Vec3::new(3.67, 0., 5.66);
 const QUAY_TREE: Vec3 = Vec3::new(-3.76, 0., -4.04);
@@ -117,24 +116,13 @@ impl Art {
         match self {
             Self::Scene(scene) => {
                 e.insert(WorldAssetRoot(scene.clone()))
-                    .observe(ignore_meshes);
+                    .observe(super::ignore_scene_picking);
             }
             Self::Shape(mesh, material) => {
                 e.insert((Mesh3d(mesh.clone()), MeshMaterial3d(material.clone())));
             }
         }
         e.id()
-    }
-}
-
-/// The camera can see a trader or a furnishing square through the leaves.
-fn ignore_meshes(
-    ready: On<WorldInstanceReady>,
-    children: Query<&Children>,
-    mut commands: Commands,
-) {
-    for child in children.iter_descendants(ready.entity) {
-        commands.entity(child).insert(Pickable::IGNORE);
     }
 }
 

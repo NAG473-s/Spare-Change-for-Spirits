@@ -48,6 +48,8 @@ With reduced motion, the windmill holds its angle at both outdoor locations. The
 
 The crab apples beside the market road and on the quay show russet fruit, snow along the bare branches, then five-petalled flowers as the stories advance. The pitcher in the shop holds cut branches from the same trees. With reduced motion all branches hold still and the trees keep their leaves and petals.
 
+On the market square the copper fish turns with the breeze. With reduced motion it rests on its spindle. The cloth borders and under-counter displays let clicks pass through to the wares on the tables. Players can also buy from the trader list.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

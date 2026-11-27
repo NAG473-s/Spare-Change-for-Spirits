@@ -11,6 +11,7 @@
 use std::f32::consts::TAU;
 
 use bevy::light::NotShadowCaster;
+use bevy::mesh::VertexAttributeValues;
 use bevy::prelude::*;
 
 use crate::data::{GameData, asset_exists};
@@ -319,7 +320,7 @@ fn fall_snow(
 /// struck: (centre, size) of each patch, how opaque it gets and how many
 /// seconds it takes to settle.
 const SNOW_COVER: [(Vec3, Vec2); 2] = [
-    (Vec3::new(0.5, 0.03, -1.5), Vec2::new(17.0, 9.0)),
+    (Vec3::new(0.5, 0.03, -0.8), Vec2::new(19.6, 12.0)),
     (Vec3::new(1.0, 0.012, -3.2), Vec2::new(20.0, 4.6)),
 ];
 const SNOW_COVER_ALPHA: f32 = 0.5;
@@ -329,13 +330,49 @@ const SNOW_SETTLE_SECS: f32 = 10.0;
 #[derive(Component)]
 struct SnowCover(Handle<StandardMaterial>);
 
+/// Fade the existing snow layer into the cobbles. Feet and cart wheels leave two
+/// thinner lanes, one past the button and the other along the house fronts.
+fn market_snow_surface(centre: Vec3, size: Vec2) -> Mesh {
+    let mut mesh = Plane3d::default()
+        .mesh()
+        .size(size.x, size.y)
+        .subdivisions_x(48)
+        .subdivisions_z(32)
+        .build();
+    if let Some(VertexAttributeValues::Float32x3(vertices)) =
+        mesh.attribute(Mesh::ATTRIBUTE_POSITION)
+    {
+        let colors: Vec<_> = vertices
+            .iter()
+            .map(|&[x, _, z]| {
+                let rim = (size * 0.5 - Vec2::new(x, z).abs()).min_element();
+                let x = centre.x + x;
+                let z = centre.z + z;
+                let drift =
+                    0.5 + 0.25 * (x * 1.4 + z * 0.9).sin() + 0.25 * (z * 2.3 - x * 0.62).cos();
+                let feather = ((rim - 0.12 - 0.34 * drift) / (1.4 + 0.75 * drift)).clamp(0., 1.);
+                let cart_lane = (x - 2.05 - 0.13 * (z * 0.62).sin()).abs() / 1.08;
+                let house_lane = (z + 4.43 - 0.12 * (x * 0.65).sin()).abs() / 0.8;
+                let cover = 0.24 + 0.76 * cart_lane.min(house_lane).min(1.);
+                [1., 1., 1., feather * cover * (0.83 + 0.17 * drift)]
+            })
+            .collect();
+        mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
+    }
+    mesh
+}
+
 fn spawn_snow_cover(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (i, (centre, size)) in SNOW_COVER.into_iter().enumerate() {
-        let origin = if i == 0 { MARKET } else { HARBOR };
+        let (origin, surface) = if i == 0 {
+            (MARKET, market_snow_surface(centre, size))
+        } else {
+            (HARBOR, Mesh::from(Plane3d::new(Vec3::Y, size / 2.0)))
+        };
         let material = materials.add(StandardMaterial {
             base_color: Color::srgba(0.95, 0.97, 1.0, 0.0),
             perceptual_roughness: 1.0,
@@ -344,7 +381,7 @@ fn spawn_snow_cover(
         });
         commands.spawn((
             SnowCover(material.clone()),
-            Mesh3d(meshes.add(Plane3d::new(Vec3::Y, size / 2.0))),
+            Mesh3d(meshes.add(surface)),
             MeshMaterial3d(material),
             Transform::from_translation(origin + centre),
             NotShadowCaster,

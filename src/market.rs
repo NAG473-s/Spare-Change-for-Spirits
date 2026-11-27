@@ -11,6 +11,7 @@
 
 mod basket;
 mod bunting;
+mod square;
 
 use bevy::light::NotShadowCaster;
 use bevy::picking::pointer::PointerButton;
@@ -46,7 +47,7 @@ impl Plugin for MarketPlugin {
             .add_systems(
                 Update,
                 (
-                    (animate_vendors, bunting::sway)
+                    (animate_vendors, bunting::sway, square::turn_vane)
                         .run_if(resource_equals(Location::Market))
                         .run_if(crate::menu::shop_unpaused),
                     (
@@ -202,7 +203,13 @@ impl Kit<'_, '_, '_> {
             ..default()
         });
         self.commands
-            .spawn((Mesh3d(mesh), MeshMaterial3d(material), at, ChildOf(parent)))
+            .spawn((
+                Mesh3d(mesh),
+                MeshMaterial3d(material),
+                at,
+                Pickable::IGNORE,
+                ChildOf(parent),
+            ))
             .id()
     }
 
@@ -224,19 +231,22 @@ impl Kit<'_, '_, '_> {
             .id()
     }
 
-    /// `assets/<path>` under `parent` if it exists.
+    /// Market scenery and ware art are transparent to the dedicated ware hit boxes.
     fn model(&mut self, parent: Entity, path: &str, at: Transform) -> bool {
         if !asset_exists(path) {
             return false;
         }
-        self.commands.spawn((
-            WorldAssetRoot(
-                self.asset_server
-                    .load(GltfAssetLabel::Scene(0).from_asset(path.to_string())),
-            ),
-            at,
-            ChildOf(parent),
-        ));
+        self.commands
+            .spawn((
+                WorldAssetRoot(
+                    self.asset_server
+                        .load(GltfAssetLabel::Scene(0).from_asset(path.to_string())),
+                ),
+                at,
+                Pickable::IGNORE,
+                ChildOf(parent),
+            ))
+            .observe(crate::scene::ignore_scene_picking);
         true
     }
 
@@ -293,45 +303,7 @@ fn spawn_market(
         ChildOf(root),
     ));
 
-    // Houses round the square (the village's models, or plain blocks).
-    for (i, (x, z, w, h)) in [
-        (-5.0, -6.0, 2.2, 2.2),
-        (-2.2, -6.6, 1.8, 2.6),
-        (0.6, -6.2, 2.4, 2.0),
-        (3.4, -6.7, 2.0, 2.5),
-        (6.0, -6.1, 2.2, 2.1),
-    ]
-    .into_iter()
-    .enumerate()
-    {
-        let at = Transform::from_xyz(x, 0.0, z).with_scale(Vec3::new(w / 2.2, h / 2.4, 1.0));
-        let house = k.node(Some(root), at);
-        let variant = format!("models/harbor/village_house_{}.glb", i % 4 + 1);
-        if !k.model(house, &variant, Transform::default())
-            && !k.model(
-                house,
-                "models/harbor/village_house.glb",
-                Transform::default(),
-            )
-        {
-            k.part(
-                house,
-                Cuboid::new(2.2, 2.4, 1.8),
-                Color::srgb(0.55, 0.5, 0.48),
-                Transform::from_xyz(0.0, 1.2, 0.0),
-            );
-            for side in [-1.0, 1.0] {
-                k.part(
-                    house,
-                    Cuboid::new(1.4, 0.1, 2.0),
-                    Color::srgb(0.35, 0.22, 0.2),
-                    Transform::from_xyz(side * 0.52, 2.72, 0.0)
-                        .with_rotation(Quat::from_rotation_z(-side * 0.6)),
-                );
-            }
-        }
-    }
-
+    square::spawn(&mut k, root);
     bunting::spawn(&mut k, root, &data, &mut rng);
 
     // The way back to the shop.

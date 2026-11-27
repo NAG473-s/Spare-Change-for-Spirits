@@ -15,6 +15,8 @@ The riverbank, mill tower and sails, market bunting line, shop curtain rail and 
 
 The crab apple wood, seasonal foliage, loose leaf and petal, and the shop's glazed pitcher are delivered. Their replacement specifications are under *Village crab apples*.
 
+The market paving, herb beds, public bench, five upper storeys, fish vane and all nine fitted stall fronts are delivered. Their replacement specifications are under *The village market*.
+
 ## Delivered models
 
 - The four working storage cases and their separate lids are in `assets/models/shop/`. Their silhouettes, contents and hinge specifications are listed under *Shop improvements*. The existing chair, crate and birdcage piles still occupy some locked tiles.
@@ -461,6 +463,16 @@ their origin and face −Y.
 
 | id | Size (w × h × d, m) | Prompt |
 |---|---|---|
+| `button_paving` | 3.20 × 0.11 × 3.20 | A flush circular pavement of worn limestone setts, a laurel ring in green and ochre tile, and four dark buttonholes joined by two short brass stitches. Origin at the ground centre, face up (+Y in glTF). |
+| `shopfront_walk` | 13.60 × 0.17 × 1.31 | Three staggered courses of flagstones with capped kerbs, drain grilles and three shallow entrance steps. Ground-centred, running along X with the steps facing the square (+Z in glTF). |
+| `square_bench` | 1.87 × 0.95 × 0.59 | Slatted green wooden seat with cast scroll ends, brass handrails, a small button on the back and four stone feet. Origin at the ground centre, seat facing +Z. |
+| `herb_border` | 3.98 × 1.09 × 0.74 | A low dressed-stone herb bed between two capped piers. Open iron hoops rise behind silver sage and rosemary. Ground-centred, long axis X, planting facing +Z. |
+| `gable_sail_loft` | 1.74 × 1.88 × 1.21 | Teal shingle courses over a timber sail loft with a compass roundel. Include the fixed copper spindle ending at (0, 1.88, −0.04) for the separate vane. |
+| `gable_cloth_hall` | 1.68 × 1.80 × 1.31 | Stepped brick gable with pale coping, double arched windows and a projecting loft pulley. |
+| `gable_bakehouse` | 1.87 × 1.62 × 1.18 | A broad clay-tiled dormer with a flared eave, an amber fanlight and three gilded ears of wheat. |
+| `gable_bell_lodge` | 1.28 × 2.03 × 1.00 | Open stone belfry with a hanging brass bell, an octagonal verdigris cap and a narrow finial. Keep the arches open to the sky. |
+| `gable_stationer` | 1.73 × 1.71 × 1.18 | Plum slate over three narrow windows, timber braces and an open painted book in the peak. |
+| `fish_vane` | 1.06 × 0.31 × 0.09 | A cut copper fish on an arrow, worked on both sides. Origin at the bottom swivel, +Y up, arrow pointing +X. The game turns it in the village breeze. |
 | `shopping_basket` | 1.5 × 1.02 × 0.94 | Open willow trug with tapered sides, a wrapped bentwood handle, copper rivets and a madder-and-cream checked napkin draped over the front lip. Origin at the bottom centre. Keep room inside for purchases. |
 | `bunting_line` | 14.01 × 3.35 × 0.21 | Two dark timber poles with collars and finials, strung with a thin hemp line. Origin at ground level halfway between them. In glTF run the line from (−6.9, 3.10, 0) to (6.9, 3.10, 0) with a 0.55 m sag at its centre. The game attaches the cloth separately. |
 | `wrapped_parcel` | 0.40 × 0.245 × 0.30 | A small kraft-paper parcel with folded ends, string in both directions and a wax-sealed paper slip. Origin at the bottom centre, front facing +Z in glTF. |
@@ -486,6 +498,10 @@ their origin and face −Y.
 | `vendor_frost` | 0.7 × 1.7 × 0.6 | Ilse Icicle, a tall, friendly frost spirit in a long white-blue coat with fur trim, frost on her eyebrows, rosy cheeks, holding a steaming cup. |
 | `stall_florist` | 1.9 × 2.5 × 1.2 | Bluma's spring stall: like the other stalls (table top empty at 0.85 m), with a pastel pink awning, flower garlands and ivy, buckets of tulips beside the table, the emblem a tulip. |
 | `vendor_florist` | 0.7 × 1.7 × 0.6 | Bluma the florist, a cheerful plump ghost lady with a flowery headscarf, a green apron, garden gloves and a watering can. |
+
+The five gable models use glTF +Y up and +Z towards the market. Centre each origin on the underside of its sill. They fit the upper floor of the village houses and leave the spring flower boxes in front of the lower windows.
+
+The nine stall models include woven borders to either side of the roof embroidery. Give the seven year-round traders individually cut front hems. Keep the winter icicles and spring garland visible. Set each trade's fittings below the 0.85 m tabletop on the customer side (+Z in glTF). Use a plank stack and chisel rack for Bones, tubs of wax tapers for Flicker, glass jars and drying sprigs for Mother Moss, leaded sample panes for Count Glass, folded and rolled cloth for Wolfgang, coin drawers for Corvus, and small framed hourglasses for the Reaper. Ilse keeps folded wool and cut ice on her lower shelf. Bluma keeps flowering terracotta pots on hers.
 
 ## Delivery
 

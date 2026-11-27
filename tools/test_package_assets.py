@@ -39,6 +39,9 @@ class PackageAssetsTests(unittest.TestCase):
                         "sprites/harbor/river_valley_day.png", "sprites/harbor/river_valley_dusk.png",
                         "models/shop/window_drapery.glb", "models/shop/curtain_hem.glb", "sprites/shop/window_light.png",
                         "models/market/bunting_line.glb", "sprites/market/fair_pennant.png",
+                        *(f"models/market/{part}.glb" for part in (
+                            "button_paving", "shopfront_walk", "square_bench", "herb_border", "fish_vane",
+                            "gable_sail_loft", "gable_cloth_hall", "gable_bakehouse", "gable_bell_lodge", "gable_stationer")),
                         *(f"sprites/shop/placement_{s}.png" for s in ("place", "swap", "remove", "blocked")),
                         "models/shop/door.glb", "models/shop/door_leaf.glb", "models/shop/door_bell.glb",
                         "models/props/change_tray.glb", "sprites/ui/change_tray.png",
@@ -49,7 +52,8 @@ class PackageAssetsTests(unittest.TestCase):
                         "models/market/clock_hand_minute.glb", "sounds/CREDITS.txt", "fonts/Noto-LICENSE.txt"):
                 with self.subTest(asset=rel):
                     self.assertEqual((demo / rel).read_bytes(), (full / rel).read_bytes())
-            for rel in ("data/achievements.ron", "videos/endings/ida.avi", "sounds/endings/anselm",
+            for rel in ("models/market/stall_frost.glb", "models/market/stall_florist.glb",
+                        "data/achievements.ron", "videos/endings/ida.avi", "sounds/endings/anselm",
                         "sprites/ghosts/hedda.png", "sprites/ghosts/lantern_child.png", "sprites/ghosts/ida_pay.png",
                         "sprites/ghosts/shade_pay.png", "sprites/ghosts/edwin_flee.png",
                         "models/products/storm_lantern.glb", "models/decor/apron.glb", "models/critters/dog_tail.glb",

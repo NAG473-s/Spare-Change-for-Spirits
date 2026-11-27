@@ -7,6 +7,7 @@
 use bevy::camera::visibility::RenderLayers;
 use bevy::light::{CascadeShadowConfigBuilder, NotShadowCaster};
 use bevy::prelude::*;
+use bevy::world_serialization::WorldInstanceReady;
 
 use crate::data::asset_exists;
 use crate::day_cycle::{NightClock, Phase};
@@ -88,6 +89,18 @@ impl Plugin for ScenePlugin {
                 turn_clock_hands,
             ),
         );
+    }
+}
+
+/// Scene children are instantiated after their root. Let clicks pass through their meshes
+/// to the gameplay target behind them, just as they do for primitive scenery.
+pub(crate) fn ignore_scene_picking(
+    ready: On<WorldInstanceReady>,
+    children: Query<&Children>,
+    mut commands: Commands,
+) {
+    for child in children.iter_descendants(ready.entity) {
+        commands.entity(child).insert(Pickable::IGNORE);
     }
 }
 
