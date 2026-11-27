@@ -1,7 +1,7 @@
-//! Decoration from `assets/data/props.ron`: things on the counter and the
-//! shop walls, odds and ends on the harbour quay. Each is a model from
-//! `assets/models/props/<id>.glb`, or a simple coloured box or cylinder of
-//! its size until the model exists. Some carry a flickering candle light.
+//! Shop fittings, houses and neighbours from `assets/data/props.ron`.
+//! Each loads its own model or a primitive stand-in at the same position.
+
+mod residents;
 
 use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
@@ -15,6 +15,7 @@ pub struct PropsPlugin;
 impl Plugin for PropsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_props);
+        residents::install(app);
     }
 }
 
@@ -43,25 +44,58 @@ fn spawn_props(
     for (i, prop) in data.props.iter().enumerate() {
         let path = prop_model_path(&prop.id);
         let size = Vec3::new(prop.size.0, prop.size.1, prop.size.2);
+        let position = world_pos(prop);
         let root = commands
             .spawn((
-                Transform::from_translation(world_pos(prop))
+                Transform::from_translation(position)
                     .with_rotation(Quat::from_rotation_y(prop.turn.to_radians())),
                 Visibility::default(),
                 Pickable::IGNORE,
             ))
             .id();
+        let mut resident = prop
+            .walk
+            .map(|walk| residents::Resident::new(prop, walk, position));
         let has_model = asset_exists(&path);
         if has_model {
-            commands.spawn((
+            let mut model = commands.spawn((
                 WorldAssetRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(path))),
                 Transform::default(),
                 ChildOf(root),
             ));
+            model.observe(crate::scene::ignore_scene_picking);
+            if prop.walk.is_some() {
+                model.observe(residents::bind_joints);
+            }
+        } else if let Some(resident) = &mut resident {
+            resident.stand_in(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                root,
+                rgb(prop.color),
+            );
         } else {
+            let mut body = size;
             let mesh = match prop.shape {
                 Shape::Box => meshes.add(Cuboid::from_size(size)),
                 Shape::Cylinder => meshes.add(Cylinder::new(size.x.max(size.z) / 2.0, size.y)),
+                Shape::House => {
+                    body *= Vec3::new(0.91, 0.61, 0.91);
+                    let gable = Triangle2d::new(
+                        Vec2::new(-size.x * 0.5, 0.),
+                        Vec2::new(size.x * 0.5, 0.),
+                        Vec2::new(0., size.y - body.y),
+                    );
+                    commands.spawn((
+                        Mesh3d(meshes.add(Extrusion::new(gable, size.z))),
+                        MeshMaterial3d(materials.add(Color::srgb(0.32, 0.38, 0.40))),
+                        Transform::from_xyz(0., body.y, 0.),
+                        Pickable::IGNORE,
+                        ChildOf(root),
+                    ));
+                    meshes.add(Cuboid::from_size(body))
+                }
             };
             commands.spawn((
                 Mesh3d(mesh),
@@ -70,10 +104,13 @@ fn spawn_props(
                     perceptual_roughness: 0.8,
                     ..default()
                 })),
-                Transform::from_xyz(0.0, size.y / 2.0, 0.0),
+                Transform::from_xyz(0.0, body.y / 2.0, 0.0),
                 Pickable::IGNORE,
                 ChildOf(root),
             ));
+        }
+        if let Some(resident) = resident {
+            commands.entity(root).insert((resident.pose().at, resident));
         }
         if let Some((height, strength)) = prop.light {
             let light = commands

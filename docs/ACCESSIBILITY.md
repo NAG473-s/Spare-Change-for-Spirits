@@ -50,6 +50,8 @@ The crab apples beside the market road and on the quay show russet fruit, snow a
 
 On the market square the copper fish turns with the breeze. With reduced motion it rests on its spindle. The cloth borders and under-counter displays let clicks pass through to the wares on the tables. Players can also buy from the trader list. At narrow window widths or larger interface sizes, the market camera fits the counters and traders beside that list. Each nameplate follows the front rail of its counter.
 
+The four residents on the market and quay are scenery. Clicks pass through their clothes, parcels and tools. Reduced motion and the pause menu hold them in place, including their feet and hand gestures.
+
 ## Rules for new content
 
 - Never show important information by colour alone: add a sign, an icon, a shape or a word.

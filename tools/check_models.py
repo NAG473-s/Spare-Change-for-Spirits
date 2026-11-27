@@ -199,13 +199,19 @@ ORIGIN_AXES = {
 }
 
 
-def prop_sizes():
-    """Every model id in assets/data/props.ron with its size (first entry wins)."""
+def prop_specs():
+    """Target sizes and the figures whose joints the game animates."""
     text = (ROOT / "assets/data/props.ron").read_text(encoding="utf-8")
+    text = COMMENTS.sub(lambda m: "" if m[0].startswith("//") else m[0], text)
     sizes = {}
-    for m in re.finditer(r'id: "([^"]+)".*?size: \(([^)]*)\)', text, re.S):
-        sizes.setdefault(m.group(1), tuple(float(v) for v in m.group(2).split(",")))
-    return sizes
+    residents = set()
+    for entry in items(text):
+        prop = fields(entry)
+        name = json.loads(prop["id"])
+        sizes.setdefault(name, tuple(map(float, items(prop["size"]))))
+        if prop.get("walk", "None") != "None":
+            residents.add(name)
+    return sizes, residents
 
 
 def ids(path, pattern):
@@ -349,7 +355,7 @@ def bounds_and_triangles(gltf):
     return lo, hi, tris
 
 
-def check(path, target, budget):
+def check(path, target, budget, resident=False):
     problems = []
     try:
         gltf = read_glb(path)
@@ -389,6 +395,16 @@ def check(path, target, budget):
             f"{len(scenes)} scenes (default {gltf.get('scene', 0)}); the game needs exactly one "
             "– run tools/fix_models.py"
         )
+    if resident and len(scenes) == 1:
+        stack = list(scenes[0].get("nodes", []))
+        names = []
+        while stack:
+            node = gltf["nodes"][stack.pop()]
+            names.append(node.get("name"))
+            stack.extend(node.get("children", []))
+        for joint in ("Hip.L", "Hip.R", "Shoulder.R"):
+            if names.count(joint) != 1:
+                problems.append(f"expected one {joint} joint in the resident's scene")
     return line, problems
 
 
@@ -404,6 +420,7 @@ def png_size_problem(path, expected):
 
 
 def main():
+    props, residents = prop_specs()
     expected = {
         "decor": decor_sizes(),
         "products": {i: PRODUCT_SIZE for i in ids("assets/data/products.ron", r'id: "([^"]+)"')},
@@ -426,7 +443,7 @@ def main():
             **upgrade_sizes(),
         ),
         "harbor": HARBOR_SIZES,
-        "props": prop_sizes(),
+        "props": props,
         "critters": CRITTER_SIZES,
         "market": MARKET_SIZES,
         "incidents": incident_sizes(),
@@ -440,7 +457,8 @@ def main():
                 print(f"  missing  models/{folder}/{model_id}.glb")
                 failures += 1
                 continue
-            line, problems = check(path, target, TRIANGLE_BUDGET[folder])
+            line, problems = check(path, target, TRIANGLE_BUDGET[folder],
+                                   resident=folder == "props" and path.stem in residents)
             print(("  ok       " if not problems else "  CHECK    ") + line)
             for p in problems:
                 print(f"           - {p}")

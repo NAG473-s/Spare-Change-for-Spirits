@@ -59,6 +59,16 @@ pub enum Shape {
     #[default]
     Box,
     Cylinder,
+    House,
+}
+
+/// An out-and-back walk in scene metres. Durations and the starting offset are in seconds.
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub struct WalkDef {
+    pub to: (f32, f32),
+    pub travel: f32,
+    pub pause: f32,
+    pub offset: f32,
 }
 
 /// A piece of decoration that only adds atmosphere (`props.ron`).
@@ -81,6 +91,9 @@ pub struct PropDef {
     /// strength.
     #[serde(default)]
     pub light: Option<(f32, f32)>,
+    /// A resident walks from this prop's position to a second stop at the same height.
+    #[serde(default)]
+    pub walk: Option<WalkDef>,
 }
 
 fn one_f32() -> f32 {
@@ -803,6 +816,22 @@ impl GameData {
 
     fn validate(&self) {
         let c = &self.config;
+        for prop in &self.props {
+            if let Some(walk) = prop.walk {
+                assert!(
+                    walk.travel.is_finite()
+                        && walk.travel > 0.
+                        && walk.pause.is_finite()
+                        && walk.pause > 0.
+                        && walk.offset.is_finite()
+                        && walk.to.0.is_finite()
+                        && walk.to.1.is_finite()
+                        && walk.to != (prop.pos.0, prop.pos.2),
+                    "{} needs two distinct stops and positive walk and pause durations",
+                    prop.id
+                );
+            }
+        }
         for day in 1..=WEEK_DAYS {
             assert!(
                 self.events.iter().any(|e| e.week_day == Some(day)),

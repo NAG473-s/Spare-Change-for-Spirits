@@ -17,6 +17,8 @@ The crab apple wood, seasonal foliage, loose leaf and petal, and the shop's glaz
 
 The market paving, herb beds, public bench, five upper storeys, fish vane and all nine fitted stall fronts are delivered. Their replacement specifications are under *The village market*.
 
+The post house, dyer's house, net cottage, pilot house and four articulated residents are delivered. Their replacement specifications are under *Houses and residents*.
+
 ## Delivered models
 
 - The four working storage cases and their separate lids are in `assets/models/shop/`. Their silhouettes, contents and hinge specifications are listed under *Shop improvements*. The existing chair, crate and birdcage piles still occupy some locked tiles.
@@ -411,6 +413,23 @@ surface; items on the wall hang with their back against it (back at +Y in Blende
 |---|---|---|
 | `town_pump` | 0.95 × 1.37 × 0.67 | A green cast-iron village pump with a curved handle and brass spout over a low stone trough. Centre the origin on the ground, face the trough towards −Y. |
 | `village_planter` | 0.54 × 0.54 × 0.48 | A small terracotta pot with a gold rim, filled with leaves and cottage flowers. Origin at the bottom centre. The same pot fits beside the market pump and outside the harbour hut. |
+
+## Houses and residents – `assets/models/props/<id>.glb`
+
+Set the origin on the ground between the feet or in the middle of the foundation. The front faces glTF +Z and height follows +Y. Give the houses a complete roof and side walls for the raised camera angle. The warm glass carries its own emissive material.
+
+| Model | Size (w × h × d, m) | Replacement prompt |
+|---|---|---|
+| `post_house` | 2.18 × 3.03 × 1.77 | Ochre post house with a grey slate roof, pigeon loft and brass finial. Hang an enamel postbox beneath the folded-envelope relief. |
+| `dyer_house` | 2.34 × 3.06 × 1.75 | Two-storey rose plaster house with a curved tile roof and a projecting drying gallery. Hang three lengths of folded linen with contrasting woven hems. |
+| `net_cottage` | 2.37 × 2.44 × 1.80 | Low sea-green cottage with pale weatherboards, a round loft light and a corked fishing net drying against the sunny wall. |
+| `pilot_house` | 2.03 × 2.96 × 1.71 | Yellow harbour pilot's house with a compass rose on the gable, a tide board and an eight-sided glazed lookout capped in copper. |
+| `letter_carrier` | 0.69 × 1.45 × 0.41 | Indigo peaked cap, brass pin, leather dispatch satchel on a diagonal strap. Hold a sealed cream envelope in the raised right hand. |
+| `bread_carrier` | 0.73 × 1.45 × 0.52 | A baker in a flour-dusted coif and linen apron. Carry an oval wicker trug with two scored loaves in the right arm. |
+| `net_mender` | 0.73 × 1.44 × 0.43 | Grey-bearded net mender in a striped sea-green guernsey and fisherman's cap. The right hand holds a loose coil of flax line. |
+| `lamp_keeper` | 0.72 × 1.46 × 0.52 | Harbour keeper in a yellow oilskin and sou'wester. Suspend a brass and amber lantern from the right hand. |
+
+Keep each resident in a single scene. Name the two leg pivots `Hip.L` and `Hip.R` at the tops of the legs and the working arm pivot `Shoulder.R` at the shoulder. Parent the carried item beneath the working shoulder. The game turns these nodes during the walk and lifts the tool when the resident stops. The route and timing live in `assets/data/props.ron`.
 
 ## Props at the harbour – `assets/models/props/<id>.glb`
 
