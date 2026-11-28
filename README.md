@@ -314,6 +314,7 @@ src/
   orders.rs      wares promised to a customer for the next night
   achievements.rs achievements of the full game, kept in the save and passed to Steam
   story_film.rs  full-screen illustrated films at the end of a ghost's last chapter
+  handoff.rs     checks that a finished demo save continues in the full game (separate processes)
 assets/
   data/          config.ron, products.ron, ghosts.ron, decor.ron, story.ron, events.ron,
                  props.ron, market.ron, upgrades.ron, workbench.ron, incidents.ron, sets.ron,
