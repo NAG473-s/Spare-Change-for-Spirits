@@ -583,16 +583,18 @@ mod tests {
     fn old_cards_stay_delivered_and_opening_the_mail_survives_a_night_rewind() {
         let old: Postcard = ron::from_str(r#"(name: 2, ghost: "cat", turned: true)"#).unwrap();
         assert!(!old.in_mailbox);
-        let mut opening = crate::book::Journal::default();
-        opening.postcards = vec![
-            old,
-            Postcard {
-                name: 3,
-                ghost: "shy".into(),
-                in_mailbox: true,
-                ..default()
-            },
-        ];
+        let mut opening = crate::book::Journal {
+            postcards: vec![
+                old,
+                Postcard {
+                    name: 3,
+                    ghost: "shy".into(),
+                    in_mailbox: true,
+                    ..default()
+                },
+            ],
+            ..default()
+        };
         let mut live = opening.clone();
         live.postcards[1].in_mailbox = false;
         assert!(opening.remember_discoveries(&live));
